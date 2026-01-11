@@ -2,10 +2,10 @@ const { Plugin, TFile, Notice, Modal, ItemView, setIcon } = require('obsidian');
 
 class HexWorldEditorPlugin extends Plugin {
     async onload() {
-        this.registerView('hex-world-editor', (leaf) => new HexWorldEditorView(leaf, this));
+        this.registerView('hexworld-editor', (leaf) => new HexWorldEditorView(leaf, this));
 
         // Registriere .hexworld.md Extension
-        this.registerExtensions(['hexworld.md'], 'hex-world-editor');
+        this.registerExtensions(['hexworld.md'], 'hexworld-editor');
 
         // KRITISCH: Stelle sicher, dass .hexworld.md Dateien mit dem Editor geöffnet werden
         // Methode 1: Direktes Monkey-Patching der openFile Methode
@@ -21,9 +21,9 @@ class HexWorldEditorPlugin extends Plugin {
                         state: { ...openViewState?.state, file: file.path }
                     });
                     // Erzwinge View-Typ nach dem Öffnen
-                    if (leaf.view.getViewType() !== 'hex-world-editor') {
+                    if (leaf.view.getViewType() !== 'hexworld-editor') {
                         await leaf.setViewState({
-                            type: 'hex-world-editor',
+                            type: 'hexworld-editor',
                             state: { file: file.path }
                         });
                     }
@@ -48,7 +48,7 @@ class HexWorldEditorPlugin extends Plugin {
                     // Wenn es die Markdown-Ansicht ist, wechsle zum Hex World Editor
                     if (leaf.view.getViewType() === 'markdown') {
                         await leaf.setViewState({
-                            type: 'hex-world-editor',
+                            type: 'hexworld-editor',
                             state: { file: file.path }
                         });
                     }
@@ -99,7 +99,7 @@ class HexWorldEditorPlugin extends Plugin {
         );
 
         this.registerEvent(this.app.vault.on('delete', (file) => {
-            const leaves = this.app.workspace.getLeavesOfType('hex-world-editor');
+            const leaves = this.app.workspace.getLeavesOfType('hexworld-editor');
             leaves.forEach(leaf => {
                 if (leaf.view instanceof HexWorldEditorView && leaf.view.file && leaf.view.file.path === file.path) {
                     if (leaf.view.saveTimeout) clearTimeout(leaf.view.saveTimeout);
@@ -109,7 +109,7 @@ class HexWorldEditorPlugin extends Plugin {
         }));
 
         this.registerEvent(this.app.vault.on('modify', (file) => {
-            const leaves = this.app.workspace.getLeavesOfType('hex-world-editor');
+            const leaves = this.app.workspace.getLeavesOfType('hexworld-editor');
             leaves.forEach(leaf => {
                 const view = leaf.view;
                 if (view instanceof HexWorldEditorView && view.file && view.file.path === file.path) {
@@ -121,7 +121,7 @@ class HexWorldEditorPlugin extends Plugin {
         }));
 
         this.registerEvent(this.app.vault.on('rename', (file, oldPath) => {
-            const leaves = this.app.workspace.getLeavesOfType('hex-world-editor');
+            const leaves = this.app.workspace.getLeavesOfType('hexworld-editor');
             leaves.forEach((leaf) => {
                 const view = leaf.view;
                 if (view instanceof HexWorldEditorView && view.file && view.file.path === oldPath) {
@@ -147,7 +147,7 @@ class HexWorldEditorPlugin extends Plugin {
         this.registerEvent(this.app.workspace.on('file-open', (file) => {
             if (!file || file.extension !== 'hexworld') return;
 
-            const leaves = this.app.workspace.getLeavesOfType('hex-world-editor');
+            const leaves = this.app.workspace.getLeavesOfType('hexworld-editor');
             leaves.forEach((leaf) => {
                 const view = leaf.view;
                 if (view instanceof HexWorldEditorView && view.file && view.file.path === file.path) {
@@ -209,7 +209,7 @@ class HexWorldEditorPlugin extends Plugin {
             const file = await this.app.vault.create(filePath, content);
             const leaf = this.app.workspace.getLeaf('tab');
             await leaf.setViewState({
-                type: 'hex-world-editor',
+                type: 'hexworld-editor',
                 active: true,
                 state: { file: file.path }
             });
@@ -422,7 +422,7 @@ class HexWorldEditorView extends ItemView {
         this.lastUsedTextShadowOpacity = 50;
     }
 
-    getViewType() { return 'hex-world-editor'; }
+    getViewType() { return 'hexworld-editor'; }
     getDisplayText() {
         if (!this.file) return 'Hex World Editor';
         // Entferne ".hexworld" aus dem Tab-Namen (wie im File Explorer)
@@ -479,7 +479,7 @@ class HexWorldEditorView extends ItemView {
         for (const [key, filename] of Object.entries(symbolMap)) {
             try {
                 // Verwende relativen Pfad vom Vault-Root
-                const svgPath = '.obsidian/plugins/hex-world-editor/symbols/' + filename;
+                const svgPath = '.obsidian/plugins/hexworld-editor/symbols/' + filename;
                 console.log(`Attempting to load SVG from: ${svgPath}`);
 
                 const svgContent = await this.app.vault.adapter.read(svgPath);
@@ -580,7 +580,7 @@ class HexWorldEditorView extends ItemView {
                 this.file = file;
                 await this.reloadFile();
 
-                const existingLeaves = this.app.workspace.getLeavesOfType('hex-world-editor');
+                const existingLeaves = this.app.workspace.getLeavesOfType('hexworld-editor');
                 const existingLeaf = existingLeaves.find(leaf => {
                     const view = leaf.view;
                     return view !== this && view instanceof HexWorldEditorView &&

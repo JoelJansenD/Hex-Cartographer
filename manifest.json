@@ -1,10 +1,10 @@
 {
-    "id": "hex-world-editor",
-    "name": "Hex World Editor",
+    "id": "hexworld-editor",
+    "name": "Hexworld Editor",
     "version": "1.0.0",
-    "minAppVersion": "0.15.0",
-    "description": "Ein wabenförmiger Welten-Editor für Obsidian. Erstelle und bearbeite hexagonale Karten mit Symbolen, Farben, Flüssen, Straßen und Texten.",
+    "minAppVersion": "0.0.1",
+    "description": "Visual hex map editor for Obsidian. Create fantasy world maps in Markdown with custom SVG symbols, terrain, rivers, roads, and text annotations. Features color palettes and pattern tools. Perfect for RPG campaigns, novel writing, and worldbuilding.",
     "author": "Christoph Werner",
-    "authorUrl": "",
+    "authorUrl": "https://github.com/Taroslord/Hexworld-Editor",
     "isDesktopOnly": false
 }
