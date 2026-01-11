@@ -1,0 +1,10 @@
+{
+    "id": "hex-world-editor",
+    "name": "Hex World Editor",
+    "version": "1.0.0",
+    "minAppVersion": "0.15.0",
+    "description": "Ein wabenförmiger Welten-Editor für Obsidian. Erstelle und bearbeite hexagonale Karten mit Symbolen, Farben, Flüssen, Straßen und Texten.",
+    "author": "Christoph Werner",
+    "authorUrl": "",
+    "isDesktopOnly": false
+}
