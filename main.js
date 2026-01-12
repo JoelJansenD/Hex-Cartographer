@@ -392,7 +392,7 @@ class HexWorldEditorView extends ItemView {
             // Bäume
             'bush': { size: 0.35, align: 'center', marginX: 0, marginY: 0 },
             'tree': { size: 0.35, align: 'center', marginX: 0, marginY: -6 },
-            'pine': { size: 0.30, align: 'center', marginX: 0, marginY: 0 },
+            'pine': { size: 0.45, align: 'center', marginX: 0, marginY: 0 },
             'palm': { size: 0.30, align: 'center', marginX: 0, marginY: 0 },
 
             // Berge
@@ -458,7 +458,7 @@ class HexWorldEditorView extends ItemView {
             // Bäume
             'bush': 'bush-001.svg',
             'tree': 'tree-001.svg',
-            'pine': 'tree-001.svg',
+            'pine': 'pine-001.svg',
             'palm': 'tree-001.svg',
             // Berge
             'hill': 'hill-001.svg',
