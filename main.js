@@ -965,16 +965,15 @@ class HexWorldEditorView extends ItemView {
 
         toolbar.createSpan({ style: 'width: 1px; background: var(--divider-color); margin: 0 4px; height: 24px;' });
 
+        // Musterwerkzeug (neben Gebäude)
+        this.createPatternTool(toolbar);
+
+        toolbar.createSpan({ style: 'width: 1px; background: var(--divider-color); margin: 0 4px; height: 24px;' });
         // Werkzeug-Gruppen mit Varianten
         this.createToolGroupButton(toolbar, 'grass');
         this.createToolGroupButton(toolbar, 'tree');
         this.createToolGroupButton(toolbar, 'mountain');
         this.createToolGroupButton(toolbar, 'building');
-
-        // Musterwerkzeug (neben Gebäude)
-        this.createPatternTool(toolbar);
-
-        toolbar.createSpan({ style: 'width: 1px; background: var(--divider-color); margin: 0 4px; height: 24px;' });
 
         // Farbpalette
         this.createColorPalette(toolbar);
@@ -1533,28 +1532,44 @@ class HexWorldEditorView extends ItemView {
                 this.data.roads = [];
             } else if (this.currentToolGroup === 'text') {
                 this.data.texts = [];
+            } else if (this.currentToolGroup === 'pattern' && this.patternData) {
+                // Lösche alle Waben, die dem aktuellen Muster entsprechen
+                Object.keys(this.data.hexes).forEach(key => {
+                    if (this.hexMatchesPattern(this.data.hexes[key], this.patternData)) {
+                        delete this.data.hexes[key];
+                    }
+                });
             } else if (this.currentToolGroup) {
-                // Lösche alle Symbole dieses Typs
+                // Lösche nur das aktive Symbol (nicht alle Varianten der Gruppe)
                 const config = this.toolConfigs[this.currentToolGroup];
                 if (config) {
-                    const variantIds = config.variants.map(v => v.id);
+                    const activeSymbol = config.currentVariant;
                     Object.values(this.data.hexes).forEach(h => {
-                        if (variantIds.includes(h.symbol)) {
+                        if (h.symbol === activeSymbol) {
                             delete h.symbol;
                             delete h.symbolColor;
                             // Farbe nur löschen wenn backgroundEnabled aktiv ist
                             if (config.backgroundEnabled) {
                                 delete h.color;
+                                delete h.backgroundColor;
                             }
                         }
                     });
                 }
             } else {
-                // Lösche alle Waben mit der aktiven Farbe
+                // Lösche nur die Farbe (nicht das Symbol) bei allen Waben mit der aktiven Farbe
                 const targetColor = this.colorPalette[this.activeColorSlot];
                 Object.keys(this.data.hexes).forEach(key => {
-                    if (this.data.hexes[key].color === targetColor) {
-                        delete this.data.hexes[key];
+                    const h = this.data.hexes[key];
+                    // Prüfe beide Farbfelder (color und backgroundColor für Kompatibilität)
+                    const hexColor = h.backgroundColor || h.color;
+                    if (hexColor === targetColor) {
+                        delete h.color;
+                        delete h.backgroundColor;
+                        // Nur komplett löschen, wenn auch kein Symbol vorhanden
+                        if (!h.symbol) {
+                            delete this.data.hexes[key];
+                        }
                     }
                 });
             }
@@ -2163,10 +2178,11 @@ class HexWorldEditorView extends ItemView {
 
         // Muster anwenden
         if (this.currentToolGroup === 'pattern' && this.patternData) {
-            h.color = this.patternData.color;
+            // Farbe: backgroundColor hat Vorrang (für Kompatibilität mit alten Mustern)
+            h.color = this.patternData.backgroundColor || this.patternData.color;
             h.symbol = this.patternData.symbol;
             h.symbolColor = this.patternData.symbolColor;
-            h.backgroundColor = this.patternData.backgroundColor;
+            // backgroundColor nicht mehr setzen - alle Farben einheitlich in color
             return;
         }
 
@@ -2196,19 +2212,22 @@ class HexWorldEditorView extends ItemView {
         } else if (this.currentToolGroup === 'river' || this.currentToolGroup === 'road') {
             const type = this.currentToolGroup === 'river' ? 'rivers' : 'roads';
             this.data[type] = this.data[type].filter(p => !(p.to.q === hex.q && p.to.r === hex.r));
+        } else if (this.currentToolGroup === 'pattern') {
+            // Radierer im Muster-Modus: Lösche die gesamte Wabe (alle Arten von Mustern)
+            const key = `${hex.q}_${hex.r}`;
+            delete this.data.hexes[key];
         } else {
             const key = `${hex.q}_${hex.r}`;
             const h = this.data.hexes[key];
 
             if (h) {
                 if (this.currentToolGroup && this.toolConfigs[this.currentToolGroup]) {
-                    // Lösche nur Symbol dieses Typs
+                    // Lösche ALLE Symbole (nicht nur das aktive)
                     const config = this.toolConfigs[this.currentToolGroup];
-                    const variantIds = config.variants.map(v => v.id);
-                    if (variantIds.includes(h.symbol)) {
+                    if (h.symbol) {
                         delete h.symbol;
                         delete h.symbolColor;
-                        // Farbe nur löschen, wenn backgroundEnabled aktiv war
+                        // Farbe nur löschen, wenn backgroundEnabled aktiv ist
                         if (config.backgroundEnabled) {
                             delete h.color;
                         }
@@ -2218,9 +2237,10 @@ class HexWorldEditorView extends ItemView {
                         }
                     }
                 } else if (this.currentToolGroup === null) {
-                    // Lösche alle Hintergrundfarben (nicht nur die aktive Farbe)
-                    if (h.color) {
+                    // Lösche alle Hintergrundfarben (color und backgroundColor)
+                    if (h.color || h.backgroundColor) {
                         delete h.color;
+                        delete h.backgroundColor;
                         // Wenn keine Symbole mehr vorhanden, lösche die Hex komplett
                         if (!h.symbol) {
                             delete this.data.hexes[key];
@@ -2230,6 +2250,16 @@ class HexWorldEditorView extends ItemView {
                 // Kein else-Block mehr - leere Hexes werden NICHT gelöscht, wenn ein Werkzeug aktiv ist
             }
         }
+    }
+
+    hexMatchesPattern(hex, pattern) {
+        // Prüft ob eine Wabe dem Muster entspricht
+        // Farbe: backgroundColor hat Vorrang (für Kompatibilität mit alten Mustern)
+        const hexColor = hex.backgroundColor || hex.color;
+        const patternColor = pattern.backgroundColor || pattern.color;
+        return hexColor === patternColor &&
+               hex.symbol === pattern.symbol &&
+               hex.symbolColor === pattern.symbolColor;
     }
 
     handleFillTool(startHex) {
