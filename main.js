@@ -400,8 +400,8 @@ class HexWorldEditorView extends ItemView {
             'mountain': { size: 0.60, align: 'center', marginX: 0, marginY: 0 },
 
             // Gebäude
-            'tent': { size: 0.30, align: 'center', marginX: 0, marginY: 0 },
-            'house': { size: 0.30, align: 'center', marginX: 0, marginY: 0 },
+            'tent': { size: 0.35, align: 'center', marginX: 0, marginY: 0 },
+            'house': { size: 0.375, align: 'center', marginX: 0, marginY: 0 },
             'village': { size: 0.30, align: 'center', marginX: 0, marginY: 0 },
             'city': { size: 0.30, align: 'center', marginX: 0, marginY: 0 },
             'castle': { size: 0.30, align: 'center', marginX: 0, marginY: 0 },
@@ -464,8 +464,8 @@ class HexWorldEditorView extends ItemView {
             'hill': 'hill-001.svg',
             'mountain': 'mountain-001.svg',
             // Gebäude
-            'tent': 'tree-001.svg',
-            'house': 'tree-001.svg',
+            'tent': 'tent-001.svg',
+            'house': 'house-001.svg',
             'village': 'tree-001.svg',
             'city': 'tree-001.svg',
             'castle': 'tree-001.svg',
