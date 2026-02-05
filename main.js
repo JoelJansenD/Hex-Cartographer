@@ -349,9 +349,10 @@ class HexWorldEditorView extends ItemView {
                     { id: 'tent', label: 'Zelt', icon: 'tent' },
                     { id: 'house', label: 'Haus', icon: 'home' },
                     { id: 'village', label: 'Dorf', icon: 'school' },
-                    { id: 'city', label: 'Stadt', icon: 'castle' },
+                    { id: 'town', label: 'Stadt', icon: 'castle' },
                     { id: 'castle', label: 'Burg', icon: 'shield' },
                     { id: 'monastery', label: 'Kloster', icon: 'church' },
+                    { id: 'harbor', label: 'Hafen', icon: 'ship' },
                     { id: 'tower', label: 'Turm', icon: 'tower' },
                     { id: 'ruin', label: 'Ruine', icon: 'archive' },
                     { id: 'cave', label: 'Höhle', icon: 'circle' },
@@ -401,10 +402,11 @@ class HexWorldEditorView extends ItemView {
 
             // Gebäude
             'tent': { size: 0.35, align: 'center', marginX: 0, marginY: 0 },
-            'house': { size: 0.375, align: 'center', marginX: 0, marginY: 0 },
-            'village': { size: 0.30, align: 'center', marginX: 0, marginY: 0 },
-            'city': { size: 0.30, align: 'center', marginX: 0, marginY: 0 },
+            'house': { size: 0.325, align: 'center', marginX: 0, marginY: -2 },
+            'village': { size: 0.55, align: 'center', marginX: 0, marginY: 0 },
+            'town': { size: 0.70, align: 'center', marginX: 0, marginY: -3 },
             'castle': { size: 0.30, align: 'center', marginX: 0, marginY: 0 },
+            'harbor': { size: 0.30, align: 'center', marginX: 0, marginY: 0 },
             'monastery': { size: 0.30, align: 'center', marginX: 0, marginY: 0 },
             'tower': { size: 0.30, align: 'center', marginX: 0, marginY: 0 },
             'ruin': { size: 0.30, align: 'center', marginX: 0, marginY: 0 },
@@ -419,7 +421,7 @@ class HexWorldEditorView extends ItemView {
         this.lastUsedTextBold = false;
         this.lastUsedTextShadow = false;
         this.lastUsedTextShadowDistance = 5;
-        this.lastUsedTextShadowOpacity = 50;
+        this.lastUsedTextShadowOpatown = 50;
     }
 
     getViewType() { return 'hexworld-editor'; }
@@ -466,14 +468,15 @@ class HexWorldEditorView extends ItemView {
             // Gebäude
             'tent': 'tent-001.svg',
             'house': 'house-001.svg',
-            'village': 'tree-001.svg',
-            'city': 'tree-001.svg',
-            'castle': 'tree-001.svg',
-            'monastery': 'tree-001.svg',
-            'tower': 'tree-001.svg',
-            'ruin': 'tree-001.svg',
-            'cave': 'tree-001.svg',
-            'oasis': 'tree-001.svg'
+            'village': 'village-001.svg',
+            'town': 'town-001.svg',
+            'castle': 'castle-001.svg',
+            'harbor': 'harbor-001.svg',
+            'monastery': 'monastery-001.svg',
+            'tower': 'tower-001.svg',
+            'ruin': 'ruin-001.svg',
+            'cave': 'cave-001.svg',
+            'oasis': 'oasis-001.svg'
         };
 
         for (const [key, filename] of Object.entries(symbolMap)) {
@@ -1121,7 +1124,7 @@ class HexWorldEditorView extends ItemView {
         colorBar.createDiv({
             cls: 'bg-color-indicator',
             attr: {
-                style: `flex: 1; background: ${config.backgroundColor}; opacity: ${config.backgroundEnabled ? '1' : '0.3'};`
+                style: `flex: 1; background: ${config.backgroundColor}; opatown: ${config.backgroundEnabled ? '1' : '0.3'};`
             }
         });
 
@@ -1132,7 +1135,7 @@ class HexWorldEditorView extends ItemView {
             currentConfig.backgroundEnabled = !currentConfig.backgroundEnabled;
             const bgIndicator = colorBar.querySelector('.bg-color-indicator');
             if (bgIndicator) {
-                bgIndicator.style.opacity = currentConfig.backgroundEnabled ? '1' : '0.3';
+                bgIndicator.style.opatown = currentConfig.backgroundEnabled ? '1' : '0.3';
             }
             btn.style.background = currentConfig.backgroundEnabled ? currentConfig.backgroundColor : '#ffffff';
             this.requestSave();
@@ -1391,7 +1394,7 @@ class HexWorldEditorView extends ItemView {
                 picker.style.position = 'fixed';
                 picker.style.left = e.clientX + 'px';
                 picker.style.top = e.clientY + 'px';
-                picker.style.opacity = '0';
+                picker.style.opatown = '0';
                 picker.style.pointerEvents = 'none';
 
                 document.body.appendChild(picker);
@@ -1499,7 +1502,7 @@ class HexWorldEditorView extends ItemView {
             }
             if (bgIndicator) {
                 bgIndicator.style.background = config.backgroundColor;
-                bgIndicator.style.opacity = config.backgroundEnabled ? '1' : '0.3';
+                bgIndicator.style.opatown = config.backgroundEnabled ? '1' : '0.3';
             }
         });
 
@@ -1714,11 +1717,11 @@ class HexWorldEditorView extends ItemView {
                                 if (v) {
                                     hitText.text = v; hitText.size = s; hitText.link = l;
                                     hitText.color = c; hitText.outline = o; hitText.bold = b;
-                                    hitText.shadow = sh; hitText.shadowDistance = shd; hitText.shadowOpacity = sho;
+                                    hitText.shadow = sh; hitText.shadowDistance = shd; hitText.shadowOpatown = sho;
                                 }
                                 else { this.data.texts = this.data.texts.filter(t => t !== hitText); }
                                 this.render(); this.requestSave();
-                            }, hitText.text, hitText.size, hitText.link, hitText.color, hitText.outline, hitText.bold, hitText.shadow, hitText.shadowDistance, hitText.shadowOpacity, this.colorPalette).open();
+                            }, hitText.text, hitText.size, hitText.link, hitText.color, hitText.outline, hitText.bold, hitText.shadow, hitText.shadowDistance, hitText.shadowOpatown, this.colorPalette).open();
                         } else if (hitText.link) {
                             this.app.workspace.openLinkText(hitText.link, this.file.path, true);
                         }
@@ -2059,11 +2062,11 @@ class HexWorldEditorView extends ItemView {
                                     if (v) {
                                         hitText.text = v; hitText.size = s; hitText.link = l;
                                         hitText.color = c; hitText.outline = o; hitText.bold = b;
-                                        hitText.shadow = sh; hitText.shadowDistance = shd; hitText.shadowOpacity = sho;
+                                        hitText.shadow = sh; hitText.shadowDistance = shd; hitText.shadowOpatown = sho;
                                     }
                                     else { this.data.texts = this.data.texts.filter(t => t !== hitText); }
                                     this.render(); this.requestSave();
-                                }, hitText.text, hitText.size, hitText.link, hitText.color, hitText.outline, hitText.bold, hitText.shadow, hitText.shadowDistance, hitText.shadowOpacity, this.colorPalette).open();
+                                }, hitText.text, hitText.size, hitText.link, hitText.color, hitText.outline, hitText.bold, hitText.shadow, hitText.shadowDistance, hitText.shadowOpatown, this.colorPalette).open();
                             } else if (hitText.link) {
                                 this.app.workspace.openLinkText(hitText.link, this.file.path, true);
                             }
@@ -2141,12 +2144,12 @@ class HexWorldEditorView extends ItemView {
             if (!existingText) {
                 new TextInputModal(this.app, (v, s, l, c, o, b, sh, shd, sho) => {
                     if(v) {
-                        this.data.texts.push({text: v, x: world.x, y: world.y, size: s, link: l, color: c, outline: o, bold: b, shadow: sh, shadowDistance: shd, shadowOpacity: sho});
+                        this.data.texts.push({text: v, x: world.x, y: world.y, size: s, link: l, color: c, outline: o, bold: b, shadow: sh, shadowDistance: shd, shadowOpatown: sho});
                         this.lastUsedTextSize = s; this.lastUsedTextColor = c; this.lastUsedTextOutline = o; this.lastUsedTextBold = b;
-                        this.lastUsedTextShadow = sh; this.lastUsedTextShadowDistance = shd; this.lastUsedTextShadowOpacity = sho;
+                        this.lastUsedTextShadow = sh; this.lastUsedTextShadowDistance = shd; this.lastUsedTextShadowOpatown = sho;
                         this.render(); this.requestSave();
                     }
-                }, '', this.lastUsedTextSize, '', this.lastUsedTextColor, this.lastUsedTextOutline, this.lastUsedTextBold, this.lastUsedTextShadow, this.lastUsedTextShadowDistance, this.lastUsedTextShadowOpacity, this.colorPalette).open();
+                }, '', this.lastUsedTextSize, '', this.lastUsedTextColor, this.lastUsedTextOutline, this.lastUsedTextBold, this.lastUsedTextShadow, this.lastUsedTextShadowDistance, this.lastUsedTextShadowOpatown, this.colorPalette).open();
             }
             return;
         }
@@ -2544,7 +2547,7 @@ class HexWorldEditorView extends ItemView {
             ['hill', 'mountain'],
             ['grass', 'swamp'],
             ['bush', 'tree', 'pine', 'palm'],
-            ['tent', 'house', 'village', 'city', 'castle', 'monastery', 'tower', 'ruin', 'cave', 'oasis']
+            ['tent', 'house', 'village', 'town', 'castle', 'harbor', 'monastery', 'tower', 'ruin', 'cave', 'oasis']
         ];
 
         // SVG-Symbole sammeln für DOM-Rendering (Vektoren)
@@ -2618,8 +2621,8 @@ class HexWorldEditorView extends ItemView {
 
             if (t.shadow) {
                 const distance = t.shadowDistance || 5;
-                const opacity = (t.shadowOpacity || 50) / 100;
-                this.textCtx.fillStyle = `rgba(0, 0, 0, ${opacity})`;
+                const opatown = (t.shadowOpatown || 50) / 100;
+                this.textCtx.fillStyle = `rgba(0, 0, 0, ${opatown})`;
                 this.textCtx.fillText(t.text, t.x + distance, t.y + distance);
             }
 
@@ -2850,7 +2853,7 @@ class HexWorldEditorView extends ItemView {
                 this.ctx.lineTo(ox+s*0.2, oy+s*0.3);
                 this.ctx.stroke();
             }
-        } else if (type === 'city') {
+        } else if (type === 'town') {
             // Stadt mit Brunnen (Häuser um Kreis)
             this.ctx.arc(0, 0, s * 0.15, 0, Math.PI * 2);
             this.ctx.stroke();
@@ -2877,6 +2880,10 @@ class HexWorldEditorView extends ItemView {
             this.ctx.lineTo(s*0.6, -s*0.3);
             this.ctx.lineTo(s*0.6, s*0.5);
             this.ctx.closePath();
+            this.ctx.stroke();
+        } else if (type === 'harbor') {
+            // Hafen (Rechteck mit Wellen)
+            this.ctx.rect(-s*0.5, -s*0.3, s*1.0, s*0.6);
             this.ctx.stroke();
         } else if (type === 'monastery') {
             // Kloster (Haus mit Kreuz)
@@ -3173,7 +3180,7 @@ class FileSelectorModal extends Modal {
 }
 
 class TextInputModal extends Modal {
-    constructor(app, onSubmit, val = '', size = 16, link = '', color = '#ffffff', outline = true, bold = false, shadow = false, shadowDistance = 5, shadowOpacity = 50, colorPalette = null) {
+    constructor(app, onSubmit, val = '', size = 16, link = '', color = '#ffffff', outline = true, bold = false, shadow = false, shadowDistance = 5, shadowOpatown = 50, colorPalette = null) {
         super(app);
         this.onSubmit = onSubmit;
         this.val = val;
@@ -3184,7 +3191,7 @@ class TextInputModal extends Modal {
         this.bold = bold;
         this.shadow = shadow;
         this.shadowDistance = shadowDistance;
-        this.shadowOpacity = shadowOpacity;
+        this.shadowOpatown = shadowOpatown;
         this.colorPalette = colorPalette || ['#ffffff', '#000000', '#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff'];
     }
 
@@ -3272,16 +3279,16 @@ class TextInputModal extends Modal {
         shadowDistanceInput.style.width = '100%';
         shadowDistanceInput.style.padding = '6px';
 
-        const opacityDiv = shadowParams.createDiv();
-        opacityDiv.createEl('label', { text: 'Transparenz (%):', style: 'display: block; margin-bottom: 5px; font-size: 12px;' });
-        const shadowOpacityInput = opacityDiv.createEl('input', {
+        const opatownDiv = shadowParams.createDiv();
+        opatownDiv.createEl('label', { text: 'Transparenz (%):', style: 'display: block; margin-bottom: 5px; font-size: 12px;' });
+        const shadowOpatownInput = opatownDiv.createEl('input', {
             type: 'number',
-            value: this.shadowOpacity.toString()
+            value: this.shadowOpatown.toString()
         });
-        shadowOpacityInput.style.width = '100%';
-        shadowOpacityInput.style.padding = '6px';
-        shadowOpacityInput.min = '0';
-        shadowOpacityInput.max = '100';
+        shadowOpatownInput.style.width = '100%';
+        shadowOpatownInput.style.padding = '6px';
+        shadowOpatownInput.min = '0';
+        shadowOpatownInput.max = '100';
 
         // Link-Sektion
         const linkSection = contentEl.createDiv({ style: 'margin-bottom: 20px;' });
@@ -3318,9 +3325,9 @@ class TextInputModal extends Modal {
         const btnRow = contentEl.createDiv({ style: 'display: flex; gap: 10px; margin-top: 25px; padding-top: 15px; border-top: 1px solid var(--background-modifier-border);' });
         const okBtn = btnRow.createEl('button', { text: 'OK', cls: 'mod-cta', style: 'flex: 1;' });
         okBtn.onclick = () => {
-            const opacityValue = shadowOpacityInput.value === '' ? 0 : parseInt(shadowOpacityInput.value);
-            const clampedOpacity = Math.max(0, Math.min(100, opacityValue));
-            const shadowEnabled = clampedOpacity === 0 ? false : shadowInput.checked;
+            const opatownValue = shadowOpatownInput.value === '' ? 0 : parseInt(shadowOpatownInput.value);
+            const clampedOpatown = Math.max(0, Math.min(100, opatownValue));
+            const shadowEnabled = clampedOpatown === 0 ? false : shadowInput.checked;
 
             this.onSubmit(
                 mainInput.value,
@@ -3331,7 +3338,7 @@ class TextInputModal extends Modal {
                 boldInput.checked,
                 shadowEnabled,
                 parseInt(shadowDistanceInput.value) || 5,
-                clampedOpacity
+                clampedOpatown
             );
             this.close();
         };
