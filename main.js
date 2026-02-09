@@ -302,7 +302,8 @@ class HexWorldEditorView extends ItemView {
         this.startHex = null;
         this.pathPreview = [];
         this.pathWidths = { river: 5, road: 3 };
-        this.borderSettings = { percent: 100, repeats: 1, color: '#FF0000' };
+        this.borderSettings = { percent: 100, repeats: 1, color: '#FF0000', activeRegionId: null };
+        this.borderPickMode = false;
 
         // Farbpalette mit 8 Slots
         this.colorPalette = ['#3295D2', '#6CC261', '#DDC88D', '#808080', '#CD6155', '#FFD700', '#000000', '#FFFFFF'];
@@ -727,6 +728,10 @@ class HexWorldEditorView extends ItemView {
 
             // Stelle sicher, dass borders-Array existiert (Kompatibilität mit alten Dateien)
             if (!newData.borders) newData.borders = [];
+            // Migration: altes Flat-Array [{q,r}] → neues Regionen-Format [{id, color, hexes}]
+            if (newData.borders.length > 0 && newData.borders[0].q !== undefined) {
+                newData.borders = [{ id: 1, color: '#FF0000', hexes: newData.borders }];
+            }
 
             if (JSON.stringify(this.data) !== JSON.stringify(newData)) {
                 this.data = Object.assign({}, newData);
@@ -1481,7 +1486,7 @@ class HexWorldEditorView extends ItemView {
             style: 'display: inline-flex; flex-direction: column; gap: 2px;'
         });
 
-        // Obere Zeile: Button + Farbfeld
+        // Obere Zeile: Button + Farbfeld + Picker
         const topRow = wrapper.createDiv({ style: 'display: flex; gap: 2px;' });
 
         const btn = topRow.createEl('button', { cls: 'hex-tool-btn', attr: { title: 'Grenze' } });
@@ -1490,6 +1495,7 @@ class HexWorldEditorView extends ItemView {
 
         btn.onclick = () => {
             const wasPatternActive = this.currentToolGroup === 'pattern';
+            this.borderPickMode = false;
             this.currentToolGroup = 'border';
             this.drawMode = 'pen';
             this.updateToolbarState(toolbar);
@@ -1503,10 +1509,26 @@ class HexWorldEditorView extends ItemView {
             value: this.borderSettings.color || '#FF0000',
             attr: { title: 'Grenzfarbe', style: 'padding: 1px; border: 1px solid var(--divider-color); border-radius: 3px; cursor: pointer; box-sizing: border-box;' }
         });
+        this.borderColorInput = colorInput;
         this.makeInputInteractive(colorInput);
         colorInput.oninput = (e) => {
+            // Neue Farbe = neue Region
             this.borderSettings.color = e.target.value;
+            this.borderSettings.activeRegionId = null; // Neue Region beim nächsten Zeichnen
             this.render();
+        };
+
+        // Picker-Button
+        const pickerBtn = topRow.createEl('button', { cls: 'hex-tool-btn', attr: { title: 'Grenzfarbe aufnehmen' } });
+        setIcon(pickerBtn, 'pipette');
+        this.borderPickerBtn = pickerBtn;
+        pickerBtn.onclick = () => {
+            this.borderPickMode = !this.borderPickMode;
+            this.currentToolGroup = 'border';
+            this.drawMode = 'pen';
+            pickerBtn.style.background = this.borderPickMode ? 'var(--interactive-accent)' : '';
+            pickerBtn.style.color = this.borderPickMode ? 'var(--text-on-accent)' : '';
+            this.updateToolbarState(toolbar);
         };
 
         // Untere Zeile: Eingabefelder
@@ -1535,12 +1557,16 @@ class HexWorldEditorView extends ItemView {
             this.render();
         };
 
-        // Breiten abgleichen: jedes Input exakt so breit wie das Element darüber
+        // Breiten abgleichen
         setTimeout(() => {
-            colorInput.style.width = `${btn.offsetWidth}px`;
+            const btnW = btn.offsetWidth;
+            colorInput.style.width = `${btnW}px`;
             colorInput.style.height = `${btn.offsetHeight}px`;
-            percentInput.style.width = `${btn.offsetWidth}px`;
-            repeatsInput.style.width = `${colorInput.offsetWidth}px`;
+            pickerBtn.style.width = `${btnW}px`;
+            // Inputs zusammen = volle Breite der oberen Zeile
+            const totalTop = btnW * 3 + 2 * 2; // 3 Elemente + 2 gaps
+            percentInput.style.width = `${Math.floor(totalTop / 2)}px`;
+            repeatsInput.style.width = `${Math.floor(totalTop / 2)}px`;
         }, 0);
     }
 
@@ -1626,6 +1652,7 @@ class HexWorldEditorView extends ItemView {
                 this.data.roads = [];
             } else if (this.currentToolGroup === 'border') {
                 this.data.borders = [];
+                this.borderSettings.activeRegionId = null;
             } else if (this.currentToolGroup === 'text') {
                 this.data.texts = [];
             } else if (this.currentToolGroup === 'pattern' && this.patternData) {
@@ -1680,6 +1707,7 @@ class HexWorldEditorView extends ItemView {
                 this.data.roads = [];
                 this.data.texts = [];
                 this.data.borders = [];
+                this.borderSettings.activeRegionId = null;
                 this.render();
                 this.requestSave();
             }
@@ -1752,6 +1780,43 @@ class HexWorldEditorView extends ItemView {
                 }
                 this.render();
                 this.requestSave(); // Speichere Muster sofort
+                return;
+            }
+
+            // Grenzfarbe aufnehmen
+            if (this.borderPickMode) {
+                const clickedHex = this.startHex;
+                let foundRegion = null;
+                if (this.data.borders) {
+                    for (const region of this.data.borders) {
+                        if (region.hexes.some(b => b.q === clickedHex.q && b.r === clickedHex.r)) {
+                            foundRegion = region;
+                            break;
+                        }
+                    }
+                }
+                if (foundRegion) {
+                    this.borderSettings.activeRegionId = foundRegion.id;
+                    this.borderSettings.color = foundRegion.color;
+                    if (this.borderColorInput) {
+                        this.borderColorInput.value = foundRegion.color;
+                    }
+                    new Notice(`Grenze #${foundRegion.id} ausgewählt`);
+                } else {
+                    new Notice('Keine Grenze an dieser Position');
+                }
+                this.borderPickMode = false;
+                if (this.borderPickerBtn) {
+                    this.borderPickerBtn.style.background = '';
+                    this.borderPickerBtn.style.color = '';
+                }
+                this.currentToolGroup = 'border';
+                this.drawMode = 'pen';
+                const toolbar = this.containerEl.querySelector('.hex-toolbar');
+                if (toolbar) {
+                    this.updateToolbarState(toolbar);
+                }
+                this.render();
                 return;
             }
 
@@ -2268,9 +2333,28 @@ class HexWorldEditorView extends ItemView {
 
     addBorderHex(hex) {
         if (!this.data.borders) this.data.borders = [];
-        const exists = this.data.borders.some(b => b.q === hex.q && b.r === hex.r);
+
+        // Aktive Region finden oder neue erstellen
+        let region = this.data.borders.find(r => r.id === this.borderSettings.activeRegionId);
+        if (!region) {
+            const maxId = this.data.borders.reduce((max, r) => Math.max(max, r.id || 0), 0);
+            region = { id: maxId + 1, color: this.borderSettings.color, hexes: [] };
+            this.data.borders.push(region);
+            this.borderSettings.activeRegionId = region.id;
+        }
+
+        // Hex aus allen anderen Regionen entfernen (überschreiben)
+        this.data.borders.forEach(r => {
+            if (r.id !== region.id) {
+                r.hexes = r.hexes.filter(b => !(b.q === hex.q && b.r === hex.r));
+            }
+        });
+        // Leere Regionen aufräumen
+        this.data.borders = this.data.borders.filter(r => r.hexes.length > 0 || r.id === region.id);
+
+        const exists = region.hexes.some(b => b.q === hex.q && b.r === hex.r);
         if (!exists) {
-            this.data.borders.push({ q: hex.q, r: hex.r });
+            region.hexes.push({ q: hex.q, r: hex.r });
         }
     }
 
@@ -2317,7 +2401,14 @@ class HexWorldEditorView extends ItemView {
             const hit = this.getTextAt(x, y);
             if (hit) this.data.texts = this.data.texts.filter(t => t !== hit);
         } else if (this.currentToolGroup === 'border') {
-            this.data.borders = this.data.borders.filter(b => !(b.q === hex.q && b.r === hex.r));
+            const region = this.data.borders.find(r => r.id === this.borderSettings.activeRegionId);
+            if (region) {
+                region.hexes = region.hexes.filter(b => !(b.q === hex.q && b.r === hex.r));
+                // Leere Region entfernen
+                if (region.hexes.length === 0) {
+                    this.data.borders = this.data.borders.filter(r => r.id !== region.id);
+                }
+            }
         } else if (this.currentToolGroup === 'river' || this.currentToolGroup === 'road') {
             const type = this.currentToolGroup === 'river' ? 'rivers' : 'roads';
             this.data[type] = this.data[type].filter(p => !(p.to.q === hex.q && p.to.r === hex.r));
@@ -2852,7 +2943,6 @@ class HexWorldEditorView extends ItemView {
         const inset = lineWidth / 2 + 1;
         const factor = (s - inset) / s;
 
-        // Nachbar-Richtungen für pointy-top Hexagone (Edge i → Nachbar)
         const neighbors = [
             { dq: 1, dr: 0 },   // Edge 0: Ost
             { dq: 0, dr: 1 },   // Edge 1: Süd-Ost
@@ -2862,65 +2952,64 @@ class HexWorldEditorView extends ItemView {
             { dq: 1, dr: -1 }   // Edge 5: Nord-Ost
         ];
 
-        // Set für schnellen Lookup
-        const borderSet = new Set(this.data.borders.map(b => `${b.q}_${b.r}`));
-
         const percent = this.borderSettings.percent;
         const repeats = this.borderSettings.repeats;
 
         this.ctx.save();
-        this.ctx.strokeStyle = this.borderSettings.color || '#FF0000';
         this.ctx.lineWidth = lineWidth;
         this.ctx.lineCap = 'round';
 
-        this.data.borders.forEach(b => {
-            const pos = this.hexToPixel(b);
+        // Jede Region einzeln zeichnen
+        this.data.borders.forEach(region => {
+            if (!region.hexes || region.hexes.length === 0) return;
 
-            // Ecken berechnen (nach innen versetzt)
-            const corners = [];
-            for (let i = 0; i < 6; i++) {
-                const a = (Math.PI / 180) * (60 * i - 30);
-                corners.push({
-                    x: pos.x + s * factor * Math.cos(a),
-                    y: pos.y + s * factor * Math.sin(a)
-                });
-            }
+            const regionSet = new Set(region.hexes.map(b => `${b.q}_${b.r}`));
+            this.ctx.strokeStyle = region.color || '#FF0000';
 
-            // Jede Kante prüfen
-            for (let i = 0; i < 6; i++) {
-                const nb = neighbors[i];
-                const neighborKey = `${b.q + nb.dq}_${b.r + nb.dr}`;
+            region.hexes.forEach(b => {
+                const pos = this.hexToPixel(b);
 
-                // Kante nur zeichnen, wenn der Nachbar NICHT in der Grenze ist
-                if (!borderSet.has(neighborKey)) {
-                    const p1 = corners[i];
-                    const p2 = corners[(i + 1) % 6];
+                const corners = [];
+                for (let i = 0; i < 6; i++) {
+                    const a = (Math.PI / 180) * (60 * i - 30);
+                    corners.push({
+                        x: pos.x + s * factor * Math.cos(a),
+                        y: pos.y + s * factor * Math.sin(a)
+                    });
+                }
 
-                    if (percent >= 100 && repeats <= 1) {
-                        // Durchgehende Linie
-                        this.ctx.beginPath();
-                        this.ctx.moveTo(p1.x, p1.y);
-                        this.ctx.lineTo(p2.x, p2.y);
-                        this.ctx.stroke();
-                    } else {
-                        // Gestrichelte Linie
-                        const dx = p2.x - p1.x;
-                        const dy = p2.y - p1.y;
-                        const segLen = 1.0 / repeats;
-                        const drawFrac = (percent / 100) * segLen;
+                for (let i = 0; i < 6; i++) {
+                    const nb = neighbors[i];
+                    const neighborKey = `${b.q + nb.dq}_${b.r + nb.dr}`;
 
-                        for (let r = 0; r < repeats; r++) {
-                            const startFrac = r * segLen;
-                            const endFrac = startFrac + drawFrac;
+                    if (!regionSet.has(neighborKey)) {
+                        const p1 = corners[i];
+                        const p2 = corners[(i + 1) % 6];
 
+                        if (percent >= 100 && repeats <= 1) {
                             this.ctx.beginPath();
-                            this.ctx.moveTo(p1.x + dx * startFrac, p1.y + dy * startFrac);
-                            this.ctx.lineTo(p1.x + dx * endFrac, p1.y + dy * endFrac);
+                            this.ctx.moveTo(p1.x, p1.y);
+                            this.ctx.lineTo(p2.x, p2.y);
                             this.ctx.stroke();
+                        } else {
+                            const dx = p2.x - p1.x;
+                            const dy = p2.y - p1.y;
+                            const segLen = 1.0 / repeats;
+                            const drawFrac = (percent / 100) * segLen;
+
+                            for (let r = 0; r < repeats; r++) {
+                                const startFrac = r * segLen;
+                                const endFrac = startFrac + drawFrac;
+
+                                this.ctx.beginPath();
+                                this.ctx.moveTo(p1.x + dx * startFrac, p1.y + dy * startFrac);
+                                this.ctx.lineTo(p1.x + dx * endFrac, p1.y + dy * endFrac);
+                                this.ctx.stroke();
+                            }
                         }
                     }
                 }
-            }
+            });
         });
 
         this.ctx.restore();
