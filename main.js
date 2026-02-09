@@ -302,7 +302,7 @@ class HexWorldEditorView extends ItemView {
         this.startHex = null;
         this.pathPreview = [];
         this.pathWidths = { river: 5, road: 3 };
-        this.borderSettings = { percent: 100, repeats: 1 };
+        this.borderSettings = { percent: 100, repeats: 1, color: '#FF0000' };
 
         // Farbpalette mit 8 Slots
         this.colorPalette = ['#3295D2', '#6CC261', '#DDC88D', '#808080', '#CD6155', '#FFD700', '#000000', '#FFFFFF'];
@@ -1478,12 +1478,13 @@ class HexWorldEditorView extends ItemView {
 
     createBorderButton(toolbar) {
         const wrapper = toolbar.createDiv({
-            style: 'display: inline-flex; flex-direction: column; align-items: flex-start; gap: 2px;'
+            style: 'display: inline-flex; flex-direction: column; gap: 2px;'
         });
 
-        // Button
-        const btnWrapper = wrapper.createDiv({ style: 'position: relative; display: inline-block;' });
-        const btn = btnWrapper.createEl('button', { cls: 'hex-tool-btn', attr: { title: 'Grenze' } });
+        // Obere Zeile: Button + Farbfeld
+        const topRow = wrapper.createDiv({ style: 'display: flex; gap: 2px;' });
+
+        const btn = topRow.createEl('button', { cls: 'hex-tool-btn', attr: { title: 'Grenze' } });
         btn.dataset.toolGroup = 'border';
         setIcon(btn, 'shield');
 
@@ -1497,14 +1498,24 @@ class HexWorldEditorView extends ItemView {
             }
         };
 
-        // Eingabefelder-Zeile unter dem Button
+        const colorInput = topRow.createEl('input', {
+            type: 'color',
+            value: this.borderSettings.color || '#FF0000',
+            attr: { title: 'Grenzfarbe', style: 'padding: 1px; border: 1px solid var(--divider-color); border-radius: 3px; cursor: pointer; box-sizing: border-box;' }
+        });
+        this.makeInputInteractive(colorInput);
+        colorInput.oninput = (e) => {
+            this.borderSettings.color = e.target.value;
+            this.render();
+        };
+
+        // Untere Zeile: Eingabefelder
         const inputRow = wrapper.createDiv({ style: 'display: flex; gap: 2px;' });
 
-        // Erstes Feld: Prozent (0-100)
         const percentInput = inputRow.createEl('input', {
             type: 'number',
             value: this.borderSettings.percent.toString(),
-            attr: { title: 'Linienlänge %', min: '0', max: '100', style: 'height: 20px; font-size: 11px; padding: 2px; box-sizing: border-box; width: 32px;' }
+            attr: { title: 'Linienlänge %', min: '0', max: '100', style: 'height: 20px; font-size: 11px; padding: 2px; box-sizing: border-box;' }
         });
         this.makeInputInteractive(percentInput);
         percentInput.onchange = (e) => {
@@ -1513,17 +1524,24 @@ class HexWorldEditorView extends ItemView {
             this.render();
         };
 
-        // Zweites Feld: Wiederholungen
         const repeatsInput = inputRow.createEl('input', {
             type: 'number',
             value: this.borderSettings.repeats.toString(),
-            attr: { title: 'Wiederholungen', min: '1', style: 'height: 20px; font-size: 11px; padding: 2px; box-sizing: border-box; width: 32px;' }
+            attr: { title: 'Wiederholungen', min: '1', style: 'height: 20px; font-size: 11px; padding: 2px; box-sizing: border-box;' }
         });
         this.makeInputInteractive(repeatsInput);
         repeatsInput.onchange = (e) => {
             this.borderSettings.repeats = Math.max(1, parseInt(e.target.value) || 1);
             this.render();
         };
+
+        // Breiten abgleichen: jedes Input exakt so breit wie das Element darüber
+        setTimeout(() => {
+            colorInput.style.width = `${btn.offsetWidth}px`;
+            colorInput.style.height = `${btn.offsetHeight}px`;
+            percentInput.style.width = `${btn.offsetWidth}px`;
+            repeatsInput.style.width = `${colorInput.offsetWidth}px`;
+        }, 0);
     }
 
     makeInputInteractive(input) {
@@ -2851,7 +2869,7 @@ class HexWorldEditorView extends ItemView {
         const repeats = this.borderSettings.repeats;
 
         this.ctx.save();
-        this.ctx.strokeStyle = '#FF0000';
+        this.ctx.strokeStyle = this.borderSettings.color || '#FF0000';
         this.ctx.lineWidth = lineWidth;
         this.ctx.lineCap = 'round';
 
