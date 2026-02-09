@@ -2440,14 +2440,12 @@ class HexWorldEditorView extends ItemView {
             const hit = this.getTextAt(x, y);
             if (hit) this.data.texts = this.data.texts.filter(t => t !== hit);
         } else if (this.currentToolGroup === 'border') {
-            const region = this.data.borders.find(r => r.id === this.borderSettings.activeRegionId);
-            if (region) {
-                region.hexes = region.hexes.filter(b => !(b.q === hex.q && b.r === hex.r));
-                // Leere Region entfernen
-                if (region.hexes.length === 0) {
-                    this.data.borders = this.data.borders.filter(r => r.id !== region.id);
-                }
-            }
+            // Hex aus allen Regionen entfernen
+            this.data.borders.forEach(r => {
+                r.hexes = r.hexes.filter(b => !(b.q === hex.q && b.r === hex.r));
+            });
+            // Leere Regionen aufräumen
+            this.data.borders = this.data.borders.filter(r => r.hexes.length > 0);
         } else if (this.currentToolGroup === 'river' || this.currentToolGroup === 'road') {
             const type = this.currentToolGroup === 'river' ? 'rivers' : 'roads';
             this.data[type] = this.data[type].filter(p => !(p.to.q === hex.q && p.to.r === hex.r));
