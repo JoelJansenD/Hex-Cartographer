@@ -302,7 +302,7 @@ class HexWorldEditorView extends ItemView {
         this.startHex = null;
         this.pathPreview = [];
         this.pathWidths = { river: 5, road: 3 };
-        this.borderSettings = { percent: 100, repeats: 1, color: '#FF0000', activeRegionId: null };
+        this.borderSettings = { percent: 100, repeats: 1, color: '#FF0000', activeRegionId: null, visible: true };
         this.borderPickMode = false;
 
         // Farbpalette mit 8 Slots
@@ -1531,6 +1531,19 @@ class HexWorldEditorView extends ItemView {
             this.updateToolbarState(toolbar);
         };
 
+        // Sichtbarkeit-Button
+        const visBtn = topRow.createEl('button', { cls: 'hex-tool-btn', attr: { title: 'Grenzen ein-/ausblenden' } });
+        setIcon(visBtn, this.borderSettings.visible ? 'eye' : 'eye-off');
+        visBtn.style.opacity = this.borderSettings.visible ? '1' : '0.4';
+        visBtn.onclick = () => {
+            this.borderSettings.visible = !this.borderSettings.visible;
+            setIcon(visBtn, this.borderSettings.visible ? 'eye' : 'eye-off');
+            visBtn.style.opacity = this.borderSettings.visible ? '1' : '0.4';
+            this.render();
+            this.requestSave();
+        };
+        this.borderVisBtn = visBtn;
+
         // Untere Zeile: Eingabefelder
         const inputRow = wrapper.createDiv({ style: 'display: flex; gap: 2px;' });
 
@@ -1563,8 +1576,9 @@ class HexWorldEditorView extends ItemView {
             colorInput.style.width = `${btnW}px`;
             colorInput.style.height = `${btn.offsetHeight}px`;
             pickerBtn.style.width = `${btnW}px`;
+            visBtn.style.width = `${btnW}px`;
             // Inputs zusammen = volle Breite der oberen Zeile
-            const totalTop = btnW * 3 + 2 * 2; // 3 Elemente + 2 gaps
+            const totalTop = btnW * 4 + 2 * 3; // 4 Elemente + 3 gaps
             percentInput.style.width = `${Math.floor(totalTop / 2)}px`;
             repeatsInput.style.width = `${Math.floor(totalTop / 2)}px`;
         }, 0);
@@ -1579,6 +1593,12 @@ class HexWorldEditorView extends ItemView {
     }
 
     updateToolbarState(toolbar) {
+        // Grenzen-Sichtbarkeit synchronisieren
+        if (this.borderVisBtn) {
+            setIcon(this.borderVisBtn, this.borderSettings.visible ? 'eye' : 'eye-off');
+            this.borderVisBtn.style.opacity = this.borderSettings.visible ? '1' : '0.4';
+        }
+
         // Zeichenmodus-Buttons
         toolbar.querySelectorAll('[data-draw-mode]').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.drawMode === this.drawMode);
@@ -2936,7 +2956,7 @@ class HexWorldEditorView extends ItemView {
     }
 
     drawBorders() {
-        if (!this.data.borders || this.data.borders.length === 0) return;
+        if (!this.data.borders || this.data.borders.length === 0 || !this.borderSettings.visible) return;
 
         const s = this.data.gridSize;
         const lineWidth = 3;
