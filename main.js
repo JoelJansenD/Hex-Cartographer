@@ -300,7 +300,8 @@ class HexWorldEditorView extends ItemView {
         this.draggedText = null;
 
         this.startHex = null;
-        this.borderSettings = { percent: 100, repeats: 1, color: '#FF0000', activeRegionId: null, visible: true };
+        this.borderSettings = { percent: 100, repeats: 1, activeRegionId: null, pickedHex: null, visible: true };
+        this.borderHighlightWidth = 3; // Rahmenstärke für aktive Grenzregion
         this.borderPickMode = false;
         this.riverSettings = { width: 5, activeRiverId: null, editMode: false, insertAfter: null };
         this.roadSettings = { width: 3, activeRoadId: null, editMode: false, insertAfter: null };
@@ -1591,6 +1592,10 @@ class HexWorldEditorView extends ItemView {
                 return;
             }
             this.pathPickMode = !this.pathPickMode;
+            if (this.pathPickMode) {
+                this.borderPickMode = false;
+                if (this.borderPickerBtn) { this.borderPickerBtn.style.background = ''; this.borderPickerBtn.style.color = ''; }
+            }
             this.drawMode = 'pen';
             pickerBtn.style.background = this.pathPickMode ? 'var(--interactive-accent)' : '';
             pickerBtn.style.color = this.pathPickMode ? 'var(--text-on-accent)' : '';
@@ -1709,6 +1714,10 @@ class HexWorldEditorView extends ItemView {
             const road = this.data.roads && this.data.roads.find(r => r.id === this.roadSettings.activeRoadId);
             if (road) { road.color = this.masterColor; this.render(); this.requestSave(); }
         }
+        if (this.borderSettings.activeRegionId !== null && this.currentToolGroup === 'border') {
+            const region = this.data.borders && this.data.borders.find(r => r.id === this.borderSettings.activeRegionId);
+            if (region) { region.color = this.masterColor; this.render(); this.requestSave(); }
+        }
     }
 
     exitPathEditMode() {
@@ -1749,6 +1758,8 @@ class HexWorldEditorView extends ItemView {
             const wasHidden = !this.borderSettings.visible;
             this.exitPathEditMode();
             this.borderPickMode = false;
+            this.borderSettings.activeRegionId = null;
+            this.borderSettings.pickedHex = null;
             this.currentToolGroup = 'border';
             this.drawMode = 'pen';
             if (wasHidden) this.borderSettings.visible = true;
@@ -1758,26 +1769,16 @@ class HexWorldEditorView extends ItemView {
             }
         };
 
-        const colorInput = topRow.createEl('input', {
-            type: 'color',
-            value: this.borderSettings.color || '#FF0000',
-            attr: { title: 'Grenzfarbe', style: 'padding: 1px; border: 1px solid var(--divider-color); border-radius: 3px; cursor: pointer; box-sizing: border-box;' }
-        });
-        this.borderColorInput = colorInput;
-        this.makeInputInteractive(colorInput);
-        colorInput.oninput = (e) => {
-            // Neue Farbe = neue Region
-            this.borderSettings.color = e.target.value;
-            this.borderSettings.activeRegionId = null; // Neue Region beim nächsten Zeichnen
-            this.render();
-        };
-
         // Picker-Button
         const pickerBtn = topRow.createEl('button', { cls: 'hex-tool-btn', attr: { title: 'Grenzfarbe aufnehmen' } });
         setIcon(pickerBtn, 'pipette');
         this.borderPickerBtn = pickerBtn;
         pickerBtn.onclick = () => {
             this.borderPickMode = !this.borderPickMode;
+            if (this.borderPickMode) {
+                this.pathPickMode = false;
+                if (this.pathPickerBtn) { this.pathPickerBtn.style.background = ''; this.pathPickerBtn.style.color = ''; }
+            }
             this.currentToolGroup = 'border';
             this.drawMode = 'pen';
             pickerBtn.style.background = this.borderPickMode ? 'var(--interactive-accent)' : '';
@@ -1832,20 +1833,10 @@ class HexWorldEditorView extends ItemView {
             this.render();
         };
 
-        // Breiten abgleichen
+        // Breiten der Inputs an ihre jeweiligen Buttons anpassen
         setTimeout(() => {
-            const btnW = btn.offsetWidth;
-            const btnH = btn.offsetHeight;
-            colorInput.style.width = `${btnW}px`;
-            colorInput.style.height = `${btnH}px`;
-            pickerBtn.style.width = `${btnW}px`;
-            visBtn.style.width = `${btnW}px`;
-            // Untere Zeile = exakte Breite der oberen Zeile
-            const totalTop = topRow.offsetWidth;
-            const gap = 2;
-            const halfW = Math.floor((totalTop - gap) / 2);
-            percentInput.style.width = `${halfW}px`;
-            repeatsInput.style.width = `${totalTop - halfW - gap}px`;
+            percentInput.style.width = `${btn.offsetWidth}px`;
+            repeatsInput.style.width = `${pickerBtn.offsetWidth}px`;
         }, 0);
     }
 
@@ -1885,7 +1876,6 @@ class HexWorldEditorView extends ItemView {
         }
 
         // Grenzen-Inputs synchronisieren
-        if (this.borderColorInput) this.borderColorInput.value = this.borderSettings.color;
         if (this.borderPercentInput) this.borderPercentInput.value = this.borderSettings.percent.toString();
         if (this.borderRepeatsInput) this.borderRepeatsInput.value = this.borderSettings.repeats.toString();
 
@@ -1963,8 +1953,12 @@ class HexWorldEditorView extends ItemView {
                 this.roadSettings.editMode = false;
                 this.roadSettings.insertAfter = null;
             } else if (this.currentToolGroup === 'border') {
-                this.data.borders = [];
-                this.borderSettings.activeRegionId = null;
+                if (this.borderSettings.activeRegionId !== null) {
+                    this.data.borders = this.data.borders.filter(r => r.id !== this.borderSettings.activeRegionId);
+                    this.borderSettings.activeRegionId = null;
+                } else {
+                    this.data.borders = [];
+                }
             } else if (this.currentToolGroup === 'text') {
                 this.data.texts = [];
             } else if (this.currentToolGroup === 'pattern' && this.patternData) {
@@ -2124,12 +2118,11 @@ class HexWorldEditorView extends ItemView {
                 }
                 if (foundRegion) {
                     this.borderSettings.activeRegionId = foundRegion.id;
-                    this.borderSettings.color = foundRegion.color;
+                    this.borderSettings.pickedHex = { q: clickedHex.q, r: clickedHex.r };
                     this.borderSettings.percent = foundRegion.percent !== undefined ? foundRegion.percent : 100;
                     this.borderSettings.repeats = foundRegion.repeats !== undefined ? foundRegion.repeats : 1;
-                    if (this.borderColorInput) {
-                        this.borderColorInput.value = foundRegion.color;
-                    }
+                    this.masterColor = foundRegion.color;
+                    if (this.masterColorInput) this.masterColorInput.value = this.masterColor;
                     if (this.borderPercentInput) {
                         this.borderPercentInput.value = this.borderSettings.percent.toString();
                     }
@@ -2468,10 +2461,11 @@ class HexWorldEditorView extends ItemView {
                             }
                             if (foundRegion) {
                                 this.borderSettings.activeRegionId = foundRegion.id;
-                                this.borderSettings.color = foundRegion.color;
+                                this.borderSettings.pickedHex = { q: clickedHex.q, r: clickedHex.r };
                                 this.borderSettings.percent = foundRegion.percent !== undefined ? foundRegion.percent : 100;
                                 this.borderSettings.repeats = foundRegion.repeats !== undefined ? foundRegion.repeats : 1;
-                                if (this.borderColorInput) this.borderColorInput.value = foundRegion.color;
+                                this.masterColor = foundRegion.color;
+                                if (this.masterColorInput) this.masterColorInput.value = this.masterColor;
                                 if (this.borderPercentInput) this.borderPercentInput.value = this.borderSettings.percent.toString();
                                 if (this.borderRepeatsInput) this.borderRepeatsInput.value = this.borderSettings.repeats.toString();
                                 new Notice(`Grenze #${foundRegion.id} ausgewählt`);
@@ -2686,10 +2680,11 @@ class HexWorldEditorView extends ItemView {
                         }
                         if (foundRegion) {
                             this.borderSettings.activeRegionId = foundRegion.id;
-                            this.borderSettings.color = foundRegion.color;
+                            this.borderSettings.pickedHex = { q: clickedHex.q, r: clickedHex.r };
                             this.borderSettings.percent = foundRegion.percent !== undefined ? foundRegion.percent : 100;
                             this.borderSettings.repeats = foundRegion.repeats !== undefined ? foundRegion.repeats : 1;
-                            if (this.borderColorInput) this.borderColorInput.value = foundRegion.color;
+                            this.masterColor = foundRegion.color;
+                            if (this.masterColorInput) this.masterColorInput.value = this.masterColor;
                             if (this.borderPercentInput) this.borderPercentInput.value = this.borderSettings.percent.toString();
                             if (this.borderRepeatsInput) this.borderRepeatsInput.value = this.borderSettings.repeats.toString();
                             new Notice(`Grenze #${foundRegion.id} ausgewählt`);
@@ -2908,7 +2903,7 @@ class HexWorldEditorView extends ItemView {
         let region = this.data.borders.find(r => r.id === this.borderSettings.activeRegionId);
         if (!region) {
             const maxId = this.data.borders.reduce((max, r) => Math.max(max, r.id || 0), 0);
-            region = { id: maxId + 1, color: this.borderSettings.color, percent: this.borderSettings.percent, repeats: this.borderSettings.repeats, hexes: [] };
+            region = { id: maxId + 1, color: this.masterColor, percent: this.borderSettings.percent, repeats: this.borderSettings.repeats, hexes: [] };
             this.data.borders.push(region);
             this.borderSettings.activeRegionId = region.id;
         }
@@ -3842,6 +3837,30 @@ class HexWorldEditorView extends ItemView {
                 }
             });
         });
+
+        // Angeklickte Grenz-Wabe hervorheben
+        const ph = this.borderSettings.pickedHex;
+        if (ph && this.currentToolGroup === 'border') {
+            const activeRegion = this.data.borders.find(r => r.id === this.borderSettings.activeRegionId);
+            if (activeRegion) {
+                this.ctx.strokeStyle = activeRegion.color || '#FF0000';
+                this.ctx.lineWidth = this.borderHighlightWidth;
+                this.ctx.setLineDash([4, 4]);
+                const pos = this.hexToPixel(ph);
+                const hlInset = (s - this.borderHighlightWidth / 2 - 1) / s;
+                this.ctx.beginPath();
+                for (let i = 0; i < 6; i++) {
+                    const a = (Math.PI / 180) * (60 * i - 30);
+                    const cx = pos.x + s * hlInset * Math.cos(a);
+                    const cy = pos.y + s * hlInset * Math.sin(a);
+                    if (i === 0) this.ctx.moveTo(cx, cy);
+                    else this.ctx.lineTo(cx, cy);
+                }
+                this.ctx.closePath();
+                this.ctx.stroke();
+                this.ctx.setLineDash([]);
+            }
+        }
 
         this.ctx.restore();
     }
