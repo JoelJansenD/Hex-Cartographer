@@ -3453,8 +3453,13 @@ class HexWorldEditorView extends ItemView {
             const currentSymbol = hexData ? hexData.symbol : null;
             const currentColor = hexData ? hexData.color : null;
 
-            // Prüfe ob Symbol UND Hintergrundfarbe übereinstimmen (beide Bedingungen müssen erfüllt sein)
-            if (currentSymbol !== targetSymbol || currentColor !== targetColor) continue;
+            // Symbol hat Vorrang: wenn Startwabe ein Symbol hatte, nur nach Symbol matchen
+            if (targetSymbol) {
+                if (currentSymbol !== targetSymbol) continue;
+            } else {
+                // Kein Symbol auf Startwabe: nach Farbe matchen (nur Waben ohne Symbol)
+                if (currentSymbol || currentColor !== targetColor) continue;
+            }
 
             // Setze neues Symbol
             if (!hexData) {
