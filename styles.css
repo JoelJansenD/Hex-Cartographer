@@ -42,6 +42,19 @@
     border-color: #3a8eef;
 }
 
+/* Masterfarbe: quadratisch ausfüllend */
+input[type="color"][title="Werkzeugfarbe"]::-webkit-color-swatch-wrapper {
+    padding: 0;
+}
+input[type="color"][title="Werkzeugfarbe"]::-webkit-color-swatch {
+    border: none;
+    border-radius: 3px;
+}
+input[type="color"][title="Werkzeugfarbe"]::-moz-color-swatch {
+    border: none;
+    border-radius: 3px;
+}
+
 .hex-color-picker {
     width: 50px;
     height: 35px;

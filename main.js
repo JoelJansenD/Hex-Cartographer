@@ -308,6 +308,9 @@ class HexWorldEditorView extends ItemView {
         this.riverDragIndex = null;
         this.roadDragIndex = null;
         this.lastWaypointClick = null;
+        this.pendingHistory = false;
+
+        this.masterColor = '#6CC261';
 
         // Farbpalette mit 8 Slots
         this.colorPalette = ['#3295D2', '#6CC261', '#DDC88D', '#808080', '#CD6155', '#FFD700', '#000000', '#FFFFFF'];
@@ -732,6 +735,10 @@ class HexWorldEditorView extends ItemView {
                     this.roadSettings.activeRoadId = null;
                     this.roadSettings.insertAfter = null;
                 }
+                if (newData.settings.masterColor) {
+                    this.masterColor = newData.settings.masterColor;
+                    if (this.masterColorInput) this.masterColorInput.value = this.masterColor;
+                }
             } else {
                 // Keine Settings vorhanden - verwende SVG-basierte Defaults für neue Dateien
                 this.updateToolConfigsWithAvailableSVGs();
@@ -815,6 +822,13 @@ class HexWorldEditorView extends ItemView {
         this.history.push(JSON.stringify(dataToSave));
         if (this.history.length > this.maxHistory) this.history.shift();
         this.redoStack = [];
+        this.pendingHistory = false;
+    }
+
+    pushHistoryIfNeeded() {
+        if (this.pendingHistory) {
+            this.pushHistory();
+        }
     }
 
     undo() {
@@ -995,12 +1009,62 @@ class HexWorldEditorView extends ItemView {
     }
 
     createToolbar(toolbar) {
+        // Master-Farbfeld
+        const masterColorInput = toolbar.createEl('input', {
+            type: 'color',
+            value: this.masterColor,
+            attr: { title: 'Werkzeugfarbe', style: '-webkit-appearance: none; appearance: none; padding: 0; border: 1px solid var(--divider-color); border-radius: 4px; cursor: pointer; box-sizing: border-box; vertical-align: middle; background: none;' }
+        });
+        this.masterColorInput = masterColorInput;
+        this.makeInputInteractive(masterColorInput);
+        masterColorInput.oninput = (e) => {
+            this.masterColor = e.target.value;
+        };
+        masterColorInput.addEventListener('change', () => {
+            this.requestSave();
+        });
+        // Größe an Pfeil-Button anpassen
+        setTimeout(() => {
+            const firstBtn = toolbar.querySelector('.hex-tool-btn');
+            if (firstBtn) {
+                const h = firstBtn.offsetHeight;
+                masterColorInput.style.width = `${h}px`;
+                masterColorInput.style.height = `${h}px`;
+            }
+        }, 0);
+
         // Zeichenmodus-Werkzeuge
         this.createDrawModeButton(toolbar, 'pointer', 'mouse-pointer', 'Pfeil (Navigation)');
-        this.createDrawModeButton(toolbar, 'pen', 'pen-tool', 'Stift (Zeichnen)');
+
+        // Waben-Farbwerkzeug (Masterfarbe)
+        const hexColorBtn = toolbar.createEl('button', { cls: 'hex-tool-btn', attr: { title: 'Wabe einfärben (Masterfarbe)' } });
+        hexColorBtn.dataset.toolGroup = 'hexcolor';
+        setIcon(hexColorBtn, 'hexagon');
+        hexColorBtn.onclick = () => {
+            const wasPatternActive = this.currentToolGroup === 'pattern';
+            this.exitPathEditMode();
+            if (this.currentToolGroup === 'hexcolor') {
+                // Bereits aktiv → zurück auf Stift
+                this.drawMode = 'pen';
+            } else {
+                this.currentToolGroup = 'hexcolor';
+                this.drawMode = this.drawMode === 'eraser' ? 'eraser' : 'pen';
+            }
+            this.updateToolbarState(toolbar);
+            if (wasPatternActive) this.render();
+        };
+
+        // Werkzeug-Gruppen mit Varianten
+        this.createToolGroupButton(toolbar, 'grass');
+        this.createToolGroupButton(toolbar, 'tree');
+        this.createToolGroupButton(toolbar, 'mountain');
+        this.createToolGroupButton(toolbar, 'building');
+
+        toolbar.createSpan({ style: 'width: 1px; background: var(--divider-color); margin: 0 4px; height: 24px;' });
+
         this.createDrawModeButton(toolbar, 'fill', 'paint-bucket', 'Fülleimer');
 
-        // Text-Werkzeug (neben Fülleimer)
+        // Text-Werkzeug
         const textBtn = toolbar.createEl('button', { cls: 'hex-tool-btn', attr: { title: 'Text' } });
         textBtn.dataset.toolGroup = 'text';
         setIcon(textBtn, 'type');
@@ -1008,14 +1072,9 @@ class HexWorldEditorView extends ItemView {
             const wasPatternActive = this.currentToolGroup === 'pattern';
             this.exitPathEditMode();
             this.currentToolGroup = 'text';
-            // Textmodus schaltet auf 'none' - kein Zeichenmodus aktiv
             this.drawMode = 'none';
             this.updateToolbarState(toolbar);
-
-            // Render neu, wenn Muster-Werkzeug verlassen wurde (um roten Rahmen zu entfernen)
-            if (wasPatternActive) {
-                this.render();
-            }
+            if (wasPatternActive) this.render();
         };
 
         this.createDrawModeButton(toolbar, 'eraser', 'eraser', 'Radierer');
@@ -1028,18 +1087,8 @@ class HexWorldEditorView extends ItemView {
 
         toolbar.createSpan({ style: 'width: 1px; background: var(--divider-color); margin: 0 4px; height: 24px;' });
 
-        // Musterwerkzeug (neben Gebäude)
+        // Musterwerkzeug
         this.createPatternTool(toolbar);
-
-        toolbar.createSpan({ style: 'width: 1px; background: var(--divider-color); margin: 0 4px; height: 24px;' });
-        // Werkzeug-Gruppen mit Varianten
-        this.createToolGroupButton(toolbar, 'grass');
-        this.createToolGroupButton(toolbar, 'tree');
-        this.createToolGroupButton(toolbar, 'mountain');
-        this.createToolGroupButton(toolbar, 'building');
-
-        // Farbpalette
-        this.createColorPalette(toolbar);
 
         toolbar.createSpan({ style: 'flex-grow: 1' });
 
@@ -1048,6 +1097,11 @@ class HexWorldEditorView extends ItemView {
         this.createBorderButton(toolbar);
 
         toolbar.createSpan({ style: 'flex-grow: 1' });
+
+        toolbar.createSpan({ style: 'width: 1px; background: var(--divider-color); margin: 0 4px; height: 24px;' });
+
+        // Farbpalette
+        this.createColorPalette(toolbar);
 
         // Ganze Karte zeigen Button
         const fitBtn = toolbar.createEl('button', { cls: 'hex-tool-btn', attr: { title: 'Ganze Karte zeigen' } });
@@ -1080,6 +1134,11 @@ class HexWorldEditorView extends ItemView {
             // Pfeil deaktiviert alle anderen Modi
             if (mode === 'pointer') {
                 this.currentToolGroup = null;
+            }
+            // Fülleimer ohne aktives Werkzeug → Wabenwerkzeug aktivieren
+            else if (mode === 'fill' && (!this.currentToolGroup || this.currentToolGroup === 'text' || this.currentToolGroup === 'river' || this.currentToolGroup === 'road' || this.currentToolGroup === 'border')) {
+                this.exitPathEditMode();
+                this.currentToolGroup = 'hexcolor';
             }
             // Andere Zeichenmodi deaktivieren Textmodus
             else if (this.currentToolGroup === 'text') {
@@ -1146,14 +1205,7 @@ class HexWorldEditorView extends ItemView {
             const wasPatternActive = this.currentToolGroup === 'pattern';
             this.exitPathEditMode();
             this.currentToolGroup = groupId;
-
-            // Aktiviere automatisch den Stift-Modus, AUSSER:
-            // - wenn Füllmodus aktiv ist (bleibt im Füllmodus)
-            // - wenn Radierer aktiv ist (bleibt im Radierer-Modus)
-            // Aber IMMER aktivieren, wenn Pfeilmodus aktiv ist
-            if (this.drawMode === 'pointer' || (this.drawMode !== 'fill' && this.drawMode !== 'eraser')) {
-                this.drawMode = 'pen';
-            }
+            this.drawMode = this.drawMode === 'eraser' ? 'eraser' : 'pen';
 
             this.updateToolbarState(toolbar);
 
@@ -1417,74 +1469,63 @@ class HexWorldEditorView extends ItemView {
 
     createColorPalette(toolbar) {
         const wrapper = toolbar.createDiv({ style: 'display: flex; align-items: center; gap: 3px;' });
-        wrapper.createEl('span', { text: 'Palette:', attr: { style: 'font-size: 11px; margin-right: 2px;' } });
 
         this.colorPalette.forEach((color, index) => {
-            const colorBtn = wrapper.createEl('button', {
-                cls: 'hex-color-slot hex-tool-btn',
+            // Sichtbarer Button
+            const btn = wrapper.createEl('button', {
+                cls: 'hex-color-slot',
                 attr: {
-                    style: `width: 24px; height: 24px; min-width: 24px; border: 2px solid ${index === this.activeColorSlot ? '#3295D2' : 'transparent'}; border-radius: 3px; background: ${color}; cursor: pointer; padding: 0;`
+                    title: 'Klick: Masterfarbe setzen | Rechtsklick: Farbe ändern',
+                    style: 'width: 24px; height: 24px; min-width: 24px; border: none; border-radius: 3px; cursor: pointer; padding: 0;'
                 }
             });
+            btn.style.backgroundColor = color;
 
-            colorBtn.dataset.colorIndex = index;
+            // Versteckter Color-Input für Rechtsklick/Long-Press
+            const hiddenInput = wrapper.createEl('input', {
+                type: 'color',
+                value: color,
+                attr: { style: 'position: absolute; width: 0; height: 0; opacity: 0; pointer-events: none;' }
+            });
 
-            colorBtn.onclick = () => {
-                const wasPatternActive = this.currentToolGroup === 'pattern';
-                this.exitPathEditMode();
-                this.activeColorSlot = index;
-                this.currentToolGroup = null; // Farbpalette aktiviert
-
-                // Aktiviere automatisch den Stift-Modus, AUSSER:
-                // - wenn Füllmodus aktiv ist (bleibt im Füllmodus)
-                // - wenn Radierer aktiv ist (bleibt im Radierer-Modus)
-                // Aber IMMER aktivieren, wenn Pfeilmodus aktiv ist
-                if (this.drawMode === 'pointer' || (this.drawMode !== 'fill' && this.drawMode !== 'eraser')) {
-                    this.drawMode = 'pen';
-                }
-
-                this.updateToolbarState(toolbar);
-
-                // Render neu, wenn Muster-Werkzeug verlassen wurde (um roten Rahmen zu entfernen)
-                if (wasPatternActive) {
-                    this.render();
-                }
+            // Linksklick: Masterfarbe setzen
+            btn.onclick = () => {
+                this.masterColor = this.colorPalette[index];
+                if (this.masterColorInput) this.masterColorInput.value = this.masterColor;
             };
 
-            colorBtn.oncontextmenu = (e) => {
+            // Rechtsklick: Farbwahl öffnen
+            btn.oncontextmenu = (e) => {
                 e.preventDefault();
-
-                // Erstelle versteckten Color Picker an der Mausposition
-                const picker = document.createElement('input');
-                picker.type = 'color';
-                picker.value = color;
-                picker.style.position = 'fixed';
-                picker.style.left = e.clientX + 'px';
-                picker.style.top = e.clientY + 'px';
-                picker.style.opatown = '0';
-                picker.style.pointerEvents = 'none';
-
-                document.body.appendChild(picker);
-
-                picker.onchange = () => {
-                    this.colorPalette[index] = picker.value;
-                    colorBtn.style.background = picker.value;
-                    this.requestSave(); // Speichere Änderung
-                    document.body.removeChild(picker);
-                };
-
-                picker.onblur = () => {
-                    setTimeout(() => {
-                        if (document.body.contains(picker)) {
-                            document.body.removeChild(picker);
-                        }
-                    }, 100);
-                };
-
-                // Trigger click to open color picker
-                picker.click();
-                picker.focus();
+                hiddenInput.click();
             };
+
+            // Long-Press (Touch): Farbwahl öffnen
+            let longPressTimer = null;
+            btn.addEventListener('touchstart', (e) => {
+                longPressTimer = setTimeout(() => {
+                    e.preventDefault();
+                    hiddenInput.click();
+                    longPressTimer = null;
+                }, 500);
+            }, { passive: false });
+            btn.addEventListener('touchend', () => {
+                if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+            });
+            btn.addEventListener('touchmove', () => {
+                if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+            });
+
+            // Farbänderung aus dem Dialog
+            hiddenInput.oninput = (e) => {
+                this.colorPalette[index] = e.target.value;
+                btn.style.backgroundColor = e.target.value;
+                this.masterColor = e.target.value;
+                if (this.masterColorInput) this.masterColorInput.value = this.masterColor;
+            };
+            hiddenInput.addEventListener('change', () => {
+                this.requestSave();
+            });
         });
     }
 
@@ -1907,13 +1948,9 @@ class HexWorldEditorView extends ItemView {
             }
         });
 
-        // Farbpalette - aktualisiere sowohl Zustand als auch Farben
-        toolbar.querySelectorAll('.hex-color-slot').forEach((btn, index) => {
-            const isActive = index === this.activeColorSlot && this.currentToolGroup === null;
-            btn.style.border = isActive ? '3px solid #3295D2' : '3px solid transparent';
-            btn.style.boxShadow = isActive ? '0 0 4px rgba(255,255,255,0.8)' : 'none';
-            // Aktualisiere die Hintergrundfarbe aus der Palette
-            btn.style.background = this.colorPalette[index];
+        // Farbpalette - Farben aktualisieren
+        toolbar.querySelectorAll('.hex-color-slot').forEach((slot, index) => {
+            slot.style.backgroundColor = this.colorPalette[index];
         });
     }
 
@@ -1941,6 +1978,15 @@ class HexWorldEditorView extends ItemView {
                 Object.keys(this.data.hexes).forEach(key => {
                     if (this.hexMatchesPattern(this.data.hexes[key], this.patternData)) {
                         delete this.data.hexes[key];
+                    }
+                });
+            } else if (this.currentToolGroup === 'hexcolor') {
+                // Lösche alle Waben mit der Masterfarbe
+                Object.keys(this.data.hexes).forEach(key => {
+                    const h = this.data.hexes[key];
+                    if (h.color === this.masterColor) {
+                        delete h.color;
+                        if (!h.symbol) delete this.data.hexes[key];
                     }
                 });
             } else if (this.currentToolGroup) {
@@ -2035,7 +2081,7 @@ class HexWorldEditorView extends ItemView {
                 return;
             }
 
-            this.pushHistory();
+            this.pendingHistory = true;
             this.isMouseDown = true;
             this.mouseDownPos = { x: world.x, y: world.y };
             this.startHex = this.pixelToHex(world.x, world.y);
@@ -2123,6 +2169,7 @@ class HexWorldEditorView extends ItemView {
 
             let hitText = this.getTextAt(world.x, world.y);
             if (hitText && this.currentToolGroup === 'text' && this.drawMode === 'none') {
+                this.pushHistoryIfNeeded();
                 this.draggedText = hitText;
             } else {
                 this.processInput(e, true);
@@ -2148,6 +2195,7 @@ class HexWorldEditorView extends ItemView {
                         const curQ = road.waypoints[this.roadDragIndex.idx].q;
                         const curR = road.waypoints[this.roadDragIndex.idx].r;
                         if (curQ !== currentHex.q || curR !== currentHex.r) {
+                            this.pushHistoryIfNeeded();
                             road.waypoints.forEach(wp => {
                                 if (wp.q === curQ && wp.r === curR) {
                                     wp.q = currentHex.q;
@@ -2165,6 +2213,7 @@ class HexWorldEditorView extends ItemView {
                         const curQ = river.waypoints[this.riverDragIndex.idx].q;
                         const curR = river.waypoints[this.riverDragIndex.idx].r;
                         if (curQ !== currentHex.q || curR !== currentHex.r) {
+                            this.pushHistoryIfNeeded();
                             river.waypoints.forEach(wp => {
                                 if (wp.q === curQ && wp.r === curR) {
                                     wp.q = currentHex.q;
@@ -2376,7 +2425,7 @@ class HexWorldEditorView extends ItemView {
                     // Nur ausführen, wenn immer noch ein Finger und kein zweiter hinzugekommen ist
                     if (this.touchState.pendingTouchStart && !this.touchState.isTwoFingerGesture) {
                         const world = this.getWorldCoords(this.touchState.pendingTouchStart.mouseEvent);
-                        this.pushHistory();
+                        this.pendingHistory = true;
                         this.isMouseDown = true;
                         this.mouseDownPos = { x: world.x, y: world.y };
                         this.startHex = this.pixelToHex(world.x, world.y);
@@ -2455,6 +2504,7 @@ class HexWorldEditorView extends ItemView {
 
                         let hitText = this.getTextAt(world.x, world.y);
                         if (hitText && this.currentToolGroup === 'text' && this.drawMode === 'none') {
+                            this.pushHistoryIfNeeded();
                             this.draggedText = hitText;
                         } else {
                             this.processInput(this.touchState.pendingTouchStart.mouseEvent, true);
@@ -2536,6 +2586,7 @@ class HexWorldEditorView extends ItemView {
                             const curQ = road.waypoints[this.roadDragIndex.idx].q;
                             const curR = road.waypoints[this.roadDragIndex.idx].r;
                             if (curQ !== currentHex.q || curR !== currentHex.r) {
+                                this.pushHistoryIfNeeded();
                                 road.waypoints.forEach(wp => {
                                     if (wp.q === curQ && wp.r === curR) {
                                         wp.q = currentHex.q;
@@ -2553,6 +2604,7 @@ class HexWorldEditorView extends ItemView {
                             const curQ = river.waypoints[this.riverDragIndex.idx].q;
                             const curR = river.waypoints[this.riverDragIndex.idx].r;
                             if (curQ !== currentHex.q || curR !== currentHex.r) {
+                                this.pushHistoryIfNeeded();
                                 river.waypoints.forEach(wp => {
                                     if (wp.q === curQ && wp.r === curR) {
                                         wp.q = currentHex.q;
@@ -2590,7 +2642,7 @@ class HexWorldEditorView extends ItemView {
                 if (this.touchState.pendingTouchStart && !this.isMouseDown) {
                     // Schneller Tap ohne Bewegung - führe die Aktion sofort aus
                     const world = this.getWorldCoords(this.touchState.pendingTouchStart.mouseEvent);
-                    this.pushHistory();
+                    this.pendingHistory = true;
                     this.isMouseDown = true;
                     this.mouseDownPos = { x: world.x, y: world.y };
                     this.startHex = this.pixelToHex(world.x, world.y);
@@ -2672,6 +2724,7 @@ class HexWorldEditorView extends ItemView {
 
                     let hitText = this.getTextAt(world.x, world.y);
                     if (hitText && this.currentToolGroup === 'text' && this.drawMode === 'none') {
+                        this.pushHistoryIfNeeded();
                         this.draggedText = hitText;
                     } else {
                         this.processInput(this.touchState.pendingTouchStart.mouseEvent, true);
@@ -2812,6 +2865,7 @@ class HexWorldEditorView extends ItemView {
     }
 
     processInput(e, isInitial) {
+        this.pushHistoryIfNeeded();
         const world = this.getWorldCoords(e);
         const hex = this.pixelToHex(world.x, world.y);
 
@@ -3107,6 +3161,12 @@ class HexWorldEditorView extends ItemView {
             return;
         }
 
+        // Waben-Farbwerkzeug (Masterfarbe) - NUR Farbe ändern, Symbole bleiben erhalten
+        if (this.currentToolGroup === 'hexcolor') {
+            h.color = this.masterColor;
+            return;
+        }
+
         // Werkzeug-Gruppen
         if (this.currentToolGroup && this.toolConfigs[this.currentToolGroup]) {
             const config = this.toolConfigs[this.currentToolGroup];
@@ -3141,6 +3201,13 @@ class HexWorldEditorView extends ItemView {
             this.erasePathElement(this.data.rivers, hex);
         } else if (this.currentToolGroup === 'road') {
             this.erasePathElement(this.data.roads, hex);
+        } else if (this.currentToolGroup === 'hexcolor') {
+            const key = `${hex.q}_${hex.r}`;
+            const h = this.data.hexes[key];
+            if (h) {
+                delete h.color;
+                if (!h.symbol) delete this.data.hexes[key];
+            }
         } else if (this.currentToolGroup === 'pattern') {
             // Radierer im Muster-Modus: Lösche die gesamte Wabe (alle Arten von Mustern)
             const key = `${hex.q}_${hex.r}`;
@@ -3210,6 +3277,11 @@ class HexWorldEditorView extends ItemView {
             const targetColor = startData.color;
             const targetSymbol = startData.symbol;
             this.floodFillPattern(startHex, targetColor, targetSymbol);
+        }
+        // Füllen mit Masterfarbe (Wabenwerkzeug)
+        else if (this.currentToolGroup === 'hexcolor') {
+            const targetColor = startData.color;
+            this.floodFillColor(startHex, targetColor, this.masterColor);
         }
         // Füllen mit Farbe
         else if (this.currentToolGroup === null) {
@@ -3422,6 +3494,13 @@ class HexWorldEditorView extends ItemView {
                     symbol: this.patternData.symbol,
                     symbolColor: this.patternData.symbolColor,
                     backgroundColor: this.patternData.backgroundColor
+                };
+            } else if (this.currentToolGroup === 'hexcolor') {
+                // Masterfarbe
+                this.data.hexes[key] = {
+                    q: hex.q,
+                    r: hex.r,
+                    color: this.masterColor
                 };
             } else if (this.currentToolGroup === null) {
                 // Farbpalette
@@ -4086,7 +4165,8 @@ class HexWorldEditorView extends ItemView {
                     patternSourceHex: this.patternSourceHex,
                     borderSettings: this.borderSettings,
                     riverSettings: this.riverSettings,
-                    roadSettings: this.roadSettings
+                    roadSettings: this.roadSettings,
+                    masterColor: this.masterColor
                 };
 
                 // Erstelle MD-Format mit Frontmatter und JSON-Codeblock
