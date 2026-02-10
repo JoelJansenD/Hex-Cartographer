@@ -1213,6 +1213,8 @@ class HexWorldEditorView extends ItemView {
             this.exitPathEditMode();
             this.currentToolGroup = groupId;
             this.drawMode = this.drawMode === 'eraser' ? 'eraser' : 'pen';
+            this.masterColor = config.symbolColor;
+            if (this.masterColorInput) this.masterColorInput.value = this.masterColor;
 
             this.updateToolbarState(toolbar);
 
@@ -1228,48 +1230,6 @@ class HexWorldEditorView extends ItemView {
             this.showVariantMenu(groupId, wrapper);
         };
 
-        // Farbindikator-Leiste unter dem Button
-        const colorBar = wrapper.createDiv({
-            attr: {
-                title: 'Klick: Hintergrund ein/aus | Rechtsklick: Hintergrundfarbe',
-                style: `display: flex; height: 20px; width: 100%; border-radius: 3px; overflow: hidden; cursor: pointer; border: 1px solid var(--divider-color);`
-            }
-        });
-
-        // Linke Hälfte: Symbolfarbe
-        colorBar.createDiv({
-            cls: 'symbol-color-indicator',
-            attr: {
-                style: `flex: 1; background: ${config.symbolColor}; border-right: 1px solid rgba(0,0,0,0.2);`
-            }
-        });
-
-        // Rechte Hälfte: Hintergrundfarbe
-        colorBar.createDiv({
-            cls: 'bg-color-indicator',
-            attr: {
-                style: `flex: 1; background: ${config.backgroundColor}; opatown: ${config.backgroundEnabled ? '1' : '0.3'};`
-            }
-        });
-
-        // Klick auf Farbbalken = Toggle Hintergrund
-        colorBar.onclick = () => {
-            // WICHTIG: Hole die Config jedes Mal neu, um sicherzustellen, dass wir die richtige verwenden
-            const currentConfig = this.toolConfigs[groupId];
-            currentConfig.backgroundEnabled = !currentConfig.backgroundEnabled;
-            const bgIndicator = colorBar.querySelector('.bg-color-indicator');
-            if (bgIndicator) {
-                bgIndicator.style.opatown = currentConfig.backgroundEnabled ? '1' : '0.3';
-            }
-            btn.style.background = currentConfig.backgroundEnabled ? currentConfig.backgroundColor : '#ffffff';
-            this.requestSave();
-        };
-
-        // Rechtsklick auf Farbbalken = Farbauswahl-Modal öffnen
-        colorBar.oncontextmenu = (e) => {
-            e.preventDefault();
-            this.openColorPickerModal(groupId, wrapper);
-        };
     }
 
     createPatternTool(toolbar) {
@@ -1394,37 +1354,12 @@ class HexWorldEditorView extends ItemView {
     openColorPickerModal(groupId, wrapper) {
         const config = this.toolConfigs[groupId];
         const btn = wrapper.querySelector('.hex-tool-btn');
-        const symbolIndicator = wrapper.querySelector('.symbol-color-indicator');
-        const bgIndicator = wrapper.querySelector('.bg-color-indicator');
 
         const modal = new Modal(this.app);
-        modal.contentEl.createEl('h3', { text: `${config.name} - Farbauswahl` });
-
-        // Symbolfarbe
-        const symbolSection = modal.contentEl.createDiv({ style: 'margin: 15px 0;' });
-        symbolSection.createEl('h4', { text: 'Symbolfarbe', attr: { style: 'margin-bottom: 10px;' } });
-
-        const symbolRow = symbolSection.createDiv({ style: 'display: flex; gap: 10px; align-items: center; margin-bottom: 10px;' });
-        symbolRow.createEl('label', { text: 'Farbe:' });
-        const symbolPicker = symbolRow.createEl('input', { type: 'color', value: config.symbolColor || '#000000' });
-
-        // Palette für Symbolfarbe
-        const symbolPaletteRow = symbolSection.createDiv({ style: 'display: flex; gap: 5px; flex-wrap: wrap;' });
-        symbolPaletteRow.createEl('span', { text: 'Palette:', attr: { style: 'width: 100%; font-size: 11px; margin-bottom: 5px;' } });
-        this.colorPalette.forEach(color => {
-            const paletteBtn = symbolPaletteRow.createEl('button', {
-                attr: {
-                    style: `width: 30px; height: 30px; background: ${color}; border: 2px solid var(--divider-color); border-radius: 3px; cursor: pointer;`
-                }
-            });
-            paletteBtn.onclick = () => {
-                symbolPicker.value = color;
-            };
-        });
+        modal.contentEl.createEl('h3', { text: `${config.name} - Hintergrundfarbe` });
 
         // Hintergrundfarbe
         const bgSection = modal.contentEl.createDiv({ style: 'margin: 15px 0;' });
-        bgSection.createEl('h4', { text: 'Hintergrundfarbe', attr: { style: 'margin-bottom: 10px;' } });
 
         const bgRow = bgSection.createDiv({ style: 'display: flex; gap: 10px; align-items: center; margin-bottom: 10px;' });
         bgRow.createEl('label', { text: 'Farbe:' });
@@ -1449,20 +1384,10 @@ class HexWorldEditorView extends ItemView {
 
         const okBtn = btnRow.createEl('button', { text: 'OK', cls: 'mod-cta' });
         okBtn.onclick = () => {
-            config.symbolColor = symbolPicker.value;
             config.backgroundColor = bgPicker.value;
-
-            btn.style.color = config.symbolColor;
-            if (symbolIndicator) {
-                symbolIndicator.style.background = config.symbolColor;
-            }
-            if (bgIndicator) {
-                bgIndicator.style.background = config.backgroundColor;
-            }
             if (config.backgroundEnabled) {
                 btn.style.background = config.backgroundColor;
             }
-
             modal.close();
             this.requestSave();
             this.render();
@@ -1715,6 +1640,11 @@ class HexWorldEditorView extends ItemView {
             const region = this.data.borders && this.data.borders.find(r => r.id === this.borderSettings.activeRegionId);
             if (region) { region.color = this.masterColor; this.render(); this.requestSave(); }
         }
+        if (this.currentToolGroup && this.toolConfigs[this.currentToolGroup]) {
+            this.toolConfigs[this.currentToolGroup].symbolColor = this.masterColor;
+            const toolbar = this.containerEl.querySelector('.hex-toolbar');
+            if (toolbar) this.updateToolbarState(toolbar);
+        }
     }
 
     exitPathEditMode() {
@@ -1906,18 +1836,6 @@ class HexWorldEditorView extends ItemView {
             // Dicker Rahmen wenn aktiv (blaue Farbe)
             btn.style.border = isActive ? '3px solid #4A9EFF' : '';
             btn.style.boxShadow = isActive ? '0 0 8px rgba(74, 158, 255, 0.4)' : '';
-
-            // Aktualisiere Farb-Indikatoren
-            const symbolIndicator = wrapper.querySelector('.symbol-color-indicator');
-            const bgIndicator = wrapper.querySelector('.bg-color-indicator');
-
-            if (symbolIndicator) {
-                symbolIndicator.style.background = config.symbolColor;
-            }
-            if (bgIndicator) {
-                bgIndicator.style.background = config.backgroundColor;
-                bgIndicator.style.opatown = config.backgroundEnabled ? '1' : '0.3';
-            }
         });
 
         // Andere Tool-Group-Buttons (pattern, river, road, text) - nur Active-Status
@@ -3153,7 +3071,8 @@ class HexWorldEditorView extends ItemView {
         if (this.currentToolGroup && this.toolConfigs[this.currentToolGroup]) {
             const config = this.toolConfigs[this.currentToolGroup];
             h.symbol = config.currentVariant;
-            h.symbolColor = config.symbolColor;
+            h.symbolColor = this.masterColor;
+            config.symbolColor = this.masterColor;
 
             // Hintergrundfarbe nur setzen, wenn der Toggle aktiv ist
             if (config.backgroundEnabled) {
