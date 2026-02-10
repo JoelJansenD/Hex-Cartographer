@@ -1129,10 +1129,7 @@ class HexWorldEditorView extends ItemView {
         setIcon(btn, icon);
         btn.onclick = () => {
             const wasPatternActive = this.currentToolGroup === 'pattern';
-            // Edit-Modus nur beenden wenn Werkzeuggruppe wechselt (Pfeil/Text)
-            if (mode === 'pointer' || this.currentToolGroup === 'text') {
-                this.exitPathEditMode();
-            }
+            this.exitPathEditMode();
             // Erneutes Drücken des aktiven Radierers schaltet ihn aus
             if (mode === 'eraser' && this.drawMode === 'eraser') {
                 this.drawMode = 'pen';
@@ -2183,11 +2180,9 @@ class HexWorldEditorView extends ItemView {
                         const curR = road.waypoints[this.roadDragIndex.idx].r;
                         if (curQ !== currentHex.q || curR !== currentHex.r) {
                             this.pushHistoryIfNeeded();
-                            road.waypoints.forEach(wp => {
-                                if (wp.q === curQ && wp.r === curR) {
-                                    wp.q = currentHex.q;
-                                    wp.r = currentHex.r;
-                                }
+                            this.roadDragIndex.group.forEach(i => {
+                                road.waypoints[i].q = currentHex.q;
+                                road.waypoints[i].r = currentHex.r;
                             });
                             this.render();
                         }
@@ -2201,11 +2196,9 @@ class HexWorldEditorView extends ItemView {
                         const curR = river.waypoints[this.riverDragIndex.idx].r;
                         if (curQ !== currentHex.q || curR !== currentHex.r) {
                             this.pushHistoryIfNeeded();
-                            river.waypoints.forEach(wp => {
-                                if (wp.q === curQ && wp.r === curR) {
-                                    wp.q = currentHex.q;
-                                    wp.r = currentHex.r;
-                                }
+                            this.riverDragIndex.group.forEach(i => {
+                                river.waypoints[i].q = currentHex.q;
+                                river.waypoints[i].r = currentHex.r;
                             });
                             this.render();
                         }
@@ -2575,11 +2568,9 @@ class HexWorldEditorView extends ItemView {
                             const curR = road.waypoints[this.roadDragIndex.idx].r;
                             if (curQ !== currentHex.q || curR !== currentHex.r) {
                                 this.pushHistoryIfNeeded();
-                                road.waypoints.forEach(wp => {
-                                    if (wp.q === curQ && wp.r === curR) {
-                                        wp.q = currentHex.q;
-                                        wp.r = currentHex.r;
-                                    }
+                                this.roadDragIndex.group.forEach(i => {
+                                    road.waypoints[i].q = currentHex.q;
+                                    road.waypoints[i].r = currentHex.r;
                                 });
                                 this.render();
                             }
@@ -2593,11 +2584,9 @@ class HexWorldEditorView extends ItemView {
                             const curR = river.waypoints[this.riverDragIndex.idx].r;
                             if (curQ !== currentHex.q || curR !== currentHex.r) {
                                 this.pushHistoryIfNeeded();
-                                river.waypoints.forEach(wp => {
-                                    if (wp.q === curQ && wp.r === curR) {
-                                        wp.q = currentHex.q;
-                                        wp.r = currentHex.r;
-                                    }
+                                this.riverDragIndex.group.forEach(i => {
+                                    river.waypoints[i].q = currentHex.q;
+                                    river.waypoints[i].r = currentHex.r;
                                 });
                                 this.render();
                             }
@@ -2966,7 +2955,9 @@ class HexWorldEditorView extends ItemView {
         if (this.roadSettings.editMode) {
             const existingIdx = road.waypoints.findIndex(w => w.q === hex.q && w.r === hex.r);
             if (existingIdx !== -1) {
-                this.roadDragIndex = { idx: existingIdx, origQ: hex.q, origR: hex.r };
+                const dragGroup = [];
+                road.waypoints.forEach((wp, i) => { if (wp.q === hex.q && wp.r === hex.r) dragGroup.push(i); });
+                this.roadDragIndex = { idx: existingIdx, origQ: hex.q, origR: hex.r, group: dragGroup };
                 return;
             }
 
@@ -3095,7 +3086,9 @@ class HexWorldEditorView extends ItemView {
         if (this.riverSettings.editMode) {
             const existingIdx = river.waypoints.findIndex(w => w.q === hex.q && w.r === hex.r);
             if (existingIdx !== -1) {
-                this.riverDragIndex = { idx: existingIdx, origQ: hex.q, origR: hex.r };
+                const dragGroup = [];
+                river.waypoints.forEach((wp, i) => { if (wp.q === hex.q && wp.r === hex.r) dragGroup.push(i); });
+                this.riverDragIndex = { idx: existingIdx, origQ: hex.q, origR: hex.r, group: dragGroup };
                 return;
             }
 
@@ -4142,13 +4135,15 @@ class HexWorldEditorView extends ItemView {
             }
         }
 
-        // Zähle wie oft jede Koordinate als Ketten-Endpunkt vorkommt
-        const coordCount = {};
+        // Zähle Segmente pro Koordinate (1 = Sackgasse, 2+ = verbunden/Kreuzung)
+        const segCount = {};
         chains.forEach(chain => {
-            const startKey = `${chain[0].q}_${chain[0].r}`;
-            const endKey = `${chain[chain.length - 1].q}_${chain[chain.length - 1].r}`;
-            coordCount[startKey] = (coordCount[startKey] || 0) + 1;
-            coordCount[endKey] = (coordCount[endKey] || 0) + 1;
+            for (let i = 0; i < chain.length - 1; i++) {
+                const k1 = `${chain[i].q}_${chain[i].r}`;
+                const k2 = `${chain[i + 1].q}_${chain[i + 1].r}`;
+                segCount[k1] = (segCount[k1] || 0) + 1;
+                segCount[k2] = (segCount[k2] || 0) + 1;
+            }
         });
 
         // Jede Kette zeichnen
@@ -4160,8 +4155,8 @@ class HexWorldEditorView extends ItemView {
             }
             const startKey = `${chain[0].q}_${chain[0].r}`;
             const endKey = `${chain[chain.length - 1].q}_${chain[chain.length - 1].r}`;
-            const trimStart = coordCount[startKey] === 1;
-            const trimEnd = coordCount[endKey] === 1;
+            const trimStart = segCount[startKey] === 1;
+            const trimEnd = segCount[endKey] === 1;
             this.drawWavyLines(segments, path.color, path.width, trimStart, trimEnd);
         });
     }
