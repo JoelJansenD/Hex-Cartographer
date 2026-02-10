@@ -301,9 +301,12 @@ class HexWorldEditorView extends ItemView {
 
         this.startHex = null;
         this.pathPreview = [];
-        this.pathWidths = { river: 5, road: 3 };
+        this.pathWidths = { river: 5 };
         this.borderSettings = { percent: 100, repeats: 1, color: '#FF0000', activeRegionId: null, visible: true };
         this.borderPickMode = false;
+        this.roadSettings = { color: '#f5deb3', width: 3, activeRoadId: null, editMode: false, insertAfter: null };
+        this.roadPickMode = false;
+        this.roadDragIndex = null;
 
         // Farbpalette mit 8 Slots
         this.colorPalette = ['#3295D2', '#6CC261', '#DDC88D', '#808080', '#CD6155', '#FFD700', '#000000', '#FFFFFF'];
@@ -673,12 +676,9 @@ class HexWorldEditorView extends ItemView {
                 if (newData.settings.activeColorSlot !== undefined) {
                     this.activeColorSlot = newData.settings.activeColorSlot;
                 }
-                if (newData.settings.drawMode) {
-                    this.drawMode = newData.settings.drawMode;
-                }
-                if (newData.settings.currentToolGroup !== undefined) {
-                    this.currentToolGroup = newData.settings.currentToolGroup;
-                }
+                // Immer mit Pfeil-Werkzeug starten
+                this.drawMode = 'pointer';
+                this.currentToolGroup = null;
                 if (newData.settings.toolConfigs) {
                     // Werkzeug-Konfigurationen wiederherstellen
                     // WICHTIG: Explizit jeden Key einzeln laden, um sicherzustellen,
@@ -719,6 +719,13 @@ class HexWorldEditorView extends ItemView {
                 if (newData.settings.borderSettings) {
                     this.borderSettings = newData.settings.borderSettings;
                 }
+                if (newData.settings.roadSettings) {
+                    this.roadSettings = newData.settings.roadSettings;
+                    // Edit-Modus nicht über Sessions hinweg beibehalten
+                    this.roadSettings.editMode = false;
+                    this.roadSettings.activeRoadId = null;
+                    this.roadSettings.insertAfter = null;
+                }
             } else {
                 // Keine Settings vorhanden - verwende SVG-basierte Defaults für neue Dateien
                 this.updateToolConfigsWithAvailableSVGs();
@@ -731,6 +738,20 @@ class HexWorldEditorView extends ItemView {
             // Migration: altes Flat-Array [{q,r}] → neues Regionen-Format [{id, color, hexes}]
             if (newData.borders.length > 0 && newData.borders[0].q !== undefined) {
                 newData.borders = [{ id: 1, color: '#FF0000', hexes: newData.borders }];
+            }
+
+            // Stelle sicher, dass roads-Array existiert
+            if (!newData.roads) newData.roads = [];
+            // Migration: altes Segment-Format [{from, to, width}] → neues Waypoint-Format
+            if (newData.roads.length > 0 && newData.roads[0].from !== undefined) {
+                const waypoints = [];
+                newData.roads.forEach(seg => {
+                    if (waypoints.length === 0 || waypoints[waypoints.length - 1].q !== seg.from.q || waypoints[waypoints.length - 1].r !== seg.from.r) {
+                        waypoints.push({ q: seg.from.q, r: seg.from.r });
+                    }
+                    waypoints.push({ q: seg.to.q, r: seg.to.r });
+                });
+                newData.roads = waypoints.length > 0 ? [{ id: 1, color: '#f5deb3', width: 3, waypoints }] : [];
             }
 
             if (JSON.stringify(this.data) !== JSON.stringify(newData)) {
@@ -1003,7 +1024,7 @@ class HexWorldEditorView extends ItemView {
 
         // Fluss/Weg-Werkzeuge
         this.createPathButton(toolbar, 'river', 'waves', 'Fluss');
-        this.createPathButton(toolbar, 'road', 'route', 'Weg');
+        this.createRoadButton(toolbar);
         this.createBorderButton(toolbar);
 
         toolbar.createSpan({ style: 'flex-grow: 1' });
@@ -1481,6 +1502,106 @@ class HexWorldEditorView extends ItemView {
         };
     }
 
+    createRoadButton(toolbar) {
+        const wrapper = toolbar.createDiv({
+            style: 'display: inline-flex; flex-direction: column; gap: 2px;'
+        });
+
+        // Obere Zeile: Button + Farbfeld + Picker/OK
+        const topRow = wrapper.createDiv({ style: 'display: flex; gap: 2px; align-items: center;' });
+
+        const btn = topRow.createEl('button', { cls: 'hex-tool-btn', attr: { title: 'Weg' } });
+        btn.dataset.toolGroup = 'road';
+        setIcon(btn, 'route');
+
+        btn.onclick = () => {
+            const wasPatternActive = this.currentToolGroup === 'pattern';
+            this.roadPickMode = false;
+            this.currentToolGroup = 'road';
+            this.drawMode = 'pen';
+            this.updateToolbarState(toolbar);
+            if (wasPatternActive) {
+                this.render();
+            }
+        };
+
+        const colorInput = topRow.createEl('input', {
+            type: 'color',
+            value: this.roadSettings.color || '#f5deb3',
+            attr: { title: 'Wegfarbe', style: 'padding: 1px; border: 1px solid var(--divider-color); border-radius: 3px; cursor: pointer; box-sizing: border-box;' }
+        });
+        this.roadColorInput = colorInput;
+        this.makeInputInteractive(colorInput);
+        colorInput.oninput = (e) => {
+            this.roadSettings.color = e.target.value;
+            if (this.roadSettings.editMode) {
+                // Farbe des aktiven Wegs ändern
+                const road = this.data.roads && this.data.roads.find(r => r.id === this.roadSettings.activeRoadId);
+                if (road) road.color = e.target.value;
+            } else {
+                // Neue Farbe = neuer Weg beim nächsten Zeichnen
+                this.roadSettings.activeRoadId = null;
+                this.roadSettings.insertAfter = null;
+            }
+            this.render();
+        };
+
+        // Picker/OK-Button
+        const pickerBtn = topRow.createEl('button', { cls: 'hex-tool-btn', attr: { title: 'Weg aufnehmen' } });
+        setIcon(pickerBtn, 'pipette');
+        this.roadPickerBtn = pickerBtn;
+        pickerBtn.onclick = () => {
+            if (this.roadSettings.editMode) {
+                // OK-Button: Edit-Modus beenden
+                this.roadSettings.editMode = false;
+                this.roadSettings.activeRoadId = null;
+                this.roadSettings.insertAfter = null;
+                setIcon(pickerBtn, 'pipette');
+                pickerBtn.style.background = '';
+                pickerBtn.style.color = '';
+                pickerBtn.setAttribute('title', 'Weg aufnehmen');
+                this.render();
+                return;
+            }
+            this.roadPickMode = !this.roadPickMode;
+            this.currentToolGroup = 'road';
+            this.drawMode = 'pen';
+            pickerBtn.style.background = this.roadPickMode ? 'var(--interactive-accent)' : '';
+            pickerBtn.style.color = this.roadPickMode ? 'var(--text-on-accent)' : '';
+            this.updateToolbarState(toolbar);
+        };
+
+        // Untere Zeile: Breiten-Eingabefeld
+        const inputRow = wrapper.createDiv({ style: 'display: flex; gap: 2px;' });
+
+        const widthInput = inputRow.createEl('input', {
+            type: 'number',
+            value: this.roadSettings.width.toString(),
+            attr: { title: 'Breite', min: '1', style: 'height: 20px; font-size: 11px; padding: 2px; box-sizing: border-box;' }
+        });
+        this.makeInputInteractive(widthInput);
+        this.roadWidthInput = widthInput;
+        widthInput.onchange = (e) => {
+            this.roadSettings.width = Math.max(1, parseInt(e.target.value) || 3);
+            // Aktiven Weg aktualisieren
+            const road = this.data.roads && this.data.roads.find(r => r.id === this.roadSettings.activeRoadId);
+            if (road) road.width = this.roadSettings.width;
+            this.render();
+        };
+
+        // Breiten abgleichen
+        setTimeout(() => {
+            const btnW = btn.offsetWidth;
+            const btnH = btn.offsetHeight;
+            colorInput.style.width = `${btnW}px`;
+            colorInput.style.height = `${btnH}px`;
+            pickerBtn.style.width = `${btnW}px`;
+            // Untere Zeile = exakte Breite der oberen Zeile
+            const totalTop = topRow.offsetWidth;
+            widthInput.style.width = `${totalTop}px`;
+        }, 0);
+    }
+
     createBorderButton(toolbar) {
         const wrapper = toolbar.createDiv({
             style: 'display: inline-flex; flex-direction: column; gap: 2px;'
@@ -1610,6 +1731,30 @@ class HexWorldEditorView extends ItemView {
             this.borderVisBtn.style.opacity = this.borderSettings.visible ? '1' : '0.4';
         }
 
+        // Weg-Inputs synchronisieren
+        if (this.roadColorInput) this.roadColorInput.value = this.roadSettings.color;
+        if (this.roadWidthInput) this.roadWidthInput.value = this.roadSettings.width.toString();
+
+        // Weg-Edit-Modus synchronisieren
+        if (this.roadPickerBtn) {
+            if (this.roadSettings.editMode) {
+                setIcon(this.roadPickerBtn, 'check');
+                this.roadPickerBtn.style.background = 'var(--interactive-accent)';
+                this.roadPickerBtn.style.color = 'var(--text-on-accent)';
+                this.roadPickerBtn.setAttribute('title', 'Weg abschließen');
+            } else if (!this.roadPickMode) {
+                setIcon(this.roadPickerBtn, 'pipette');
+                this.roadPickerBtn.style.background = '';
+                this.roadPickerBtn.style.color = '';
+                this.roadPickerBtn.setAttribute('title', 'Weg aufnehmen');
+            }
+        }
+
+        // Grenzen-Inputs synchronisieren
+        if (this.borderColorInput) this.borderColorInput.value = this.borderSettings.color;
+        if (this.borderPercentInput) this.borderPercentInput.value = this.borderSettings.percent.toString();
+        if (this.borderRepeatsInput) this.borderRepeatsInput.value = this.borderSettings.repeats.toString();
+
         // Zeichenmodus-Buttons
         toolbar.querySelectorAll('[data-draw-mode]').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.drawMode === this.drawMode);
@@ -1681,6 +1826,9 @@ class HexWorldEditorView extends ItemView {
                 this.data.rivers = [];
             } else if (this.currentToolGroup === 'road') {
                 this.data.roads = [];
+                this.roadSettings.activeRoadId = null;
+                this.roadSettings.editMode = false;
+                this.roadSettings.insertAfter = null;
             } else if (this.currentToolGroup === 'border') {
                 this.data.borders = [];
                 this.borderSettings.activeRegionId = null;
@@ -1859,6 +2007,41 @@ class HexWorldEditorView extends ItemView {
                 return;
             }
 
+            // Weg aufnehmen (Picker)
+            if (this.roadPickMode) {
+                const clickedHex = this.startHex;
+                const foundRoad = this.findRoadAtHex(clickedHex);
+                if (foundRoad) {
+                    this.roadSettings.activeRoadId = foundRoad.id;
+                    this.roadSettings.color = foundRoad.color;
+                    this.roadSettings.width = foundRoad.width;
+                    this.roadSettings.editMode = true;
+                    this.roadSettings.insertAfter = foundRoad.waypoints.length - 1;
+                    if (this.roadColorInput) {
+                        this.roadColorInput.value = foundRoad.color;
+                    }
+                    if (this.roadWidthInput) {
+                        this.roadWidthInput.value = foundRoad.width.toString();
+                    }
+                    new Notice(`Weg #${foundRoad.id} ausgewählt`);
+                } else {
+                    new Notice('Kein Weg an dieser Position');
+                }
+                this.roadPickMode = false;
+                if (this.roadPickerBtn) {
+                    this.roadPickerBtn.style.background = '';
+                    this.roadPickerBtn.style.color = '';
+                }
+                this.currentToolGroup = 'road';
+                this.drawMode = 'pen';
+                const toolbar = this.containerEl.querySelector('.hex-toolbar');
+                if (toolbar) {
+                    this.updateToolbarState(toolbar);
+                }
+                this.render();
+                return;
+            }
+
             let hitText = this.getTextAt(world.x, world.y);
             if (hitText && this.currentToolGroup === 'text' && this.drawMode === 'none') {
                 this.draggedText = hitText;
@@ -1878,9 +2061,27 @@ class HexWorldEditorView extends ItemView {
                 this.draggedText.y = world.y;
                 this.render();
             } else if (this.isMouseDown) {
-                if (['river', 'road'].includes(this.currentToolGroup) && this.drawMode === 'pen') {
+                // Waypoint-Drag im Weg-Edit-Modus
+                if (this.roadDragIndex !== null && this.roadSettings.editMode) {
+                    const road = this.data.roads && this.data.roads.find(r => r.id === this.roadSettings.activeRoadId);
+                    if (road) {
+                        const currentHex = this.pixelToHex(world.x, world.y);
+                        // Alle Waypoints mit den aktuellen Koordinaten des Drag-Punkts verschieben
+                        const curQ = road.waypoints[this.roadDragIndex.idx].q;
+                        const curR = road.waypoints[this.roadDragIndex.idx].r;
+                        if (curQ !== currentHex.q || curR !== currentHex.r) {
+                            road.waypoints.forEach(wp => {
+                                if (wp.q === curQ && wp.r === curR) {
+                                    wp.q = currentHex.q;
+                                    wp.r = currentHex.r;
+                                }
+                            });
+                            this.render();
+                        }
+                    }
+                } else if (this.currentToolGroup === 'river' && this.drawMode === 'pen') {
                     const currentHex = this.pixelToHex(world.x, world.y);
-                    this.pathPreview = this.calculateHexPath(this.startHex, currentHex, this.pathWidths[this.currentToolGroup]);
+                    this.pathPreview = this.calculateHexPath(this.startHex, currentHex, this.pathWidths['river']);
                     this.render();
                 } else {
                     this.processInput(e, false);
@@ -1901,10 +2102,42 @@ class HexWorldEditorView extends ItemView {
         const stop = (e) => {
             const world = this.getWorldCoords(e);
             if (this.isMouseDown && this.mouseDownPos) {
-                if (this.pathPreview.length > 0) {
-                    const type = this.currentToolGroup === 'river' ? 'rivers' : 'roads';
-                    if (!this.data[type]) this.data[type] = [];
-                    this.data[type].push(...this.pathPreview);
+                // Waypoint-Drag beenden oder Klick → Modal
+                if (this.roadDragIndex !== null && this.roadSettings.editMode) {
+                    const dist = Math.sqrt((world.x - this.mouseDownPos.x)**2 + (world.y - this.mouseDownPos.y)**2);
+                    if (dist < 5) {
+                        // Klick ohne Drag → Verbinden-Modal
+                        const road = this.data.roads && this.data.roads.find(r => r.id === this.roadSettings.activeRoadId);
+                        if (road) {
+                            const wp = road.waypoints[this.roadDragIndex.idx];
+                            new ConnectWaypointModal(this.app, (connect) => {
+                                if (connect) {
+                                    road.waypoints.push({ q: wp.q, r: wp.r });
+                                } else {
+                                    road.waypoints.push({ q: wp.q, r: wp.r, break: true });
+                                }
+                                this.roadSettings.insertAfter = road.waypoints.length - 1;
+                                this.render();
+                                this.requestSave();
+                            }).open();
+                        }
+                    }
+                    // Drag beendet → speichern
+                    this.roadDragIndex = null;
+                    this.requestSave();
+                    this.isMouseDown = false;
+                    this.isDraggingMap = false;
+                    this.draggedText = null;
+                    this.lastHex = null;
+                    this.startHex = null;
+                    this.pathPreview = [];
+                    this.render();
+                    return;
+                }
+
+                if (this.pathPreview.length > 0 && this.currentToolGroup === 'river') {
+                    if (!this.data.rivers) this.data.rivers = [];
+                    this.data.rivers.push(...this.pathPreview);
                 }
                 const dist = Math.sqrt((world.x - this.mouseDownPos.x)**2 + (world.y - this.mouseDownPos.y)**2);
                 if (dist < 5 && this.drawMode !== 'eraser') {
@@ -1930,6 +2163,7 @@ class HexWorldEditorView extends ItemView {
             this.isMouseDown = false;
             this.isDraggingMap = false;
             this.draggedText = null;
+            this.roadDragIndex = null;
             this.lastHex = null;
             this.startHex = null;
             this.pathPreview = [];
@@ -2084,6 +2318,68 @@ class HexWorldEditorView extends ItemView {
                             return;
                         }
 
+                        // Grenzfarbe aufnehmen (Touch delayed)
+                        if (this.borderPickMode) {
+                            const clickedHex = this.startHex;
+                            let foundRegion = null;
+                            if (this.data.borders) {
+                                for (const region of this.data.borders) {
+                                    if (region.hexes.some(b => b.q === clickedHex.q && b.r === clickedHex.r)) {
+                                        foundRegion = region;
+                                        break;
+                                    }
+                                }
+                            }
+                            if (foundRegion) {
+                                this.borderSettings.activeRegionId = foundRegion.id;
+                                this.borderSettings.color = foundRegion.color;
+                                this.borderSettings.percent = foundRegion.percent !== undefined ? foundRegion.percent : 100;
+                                this.borderSettings.repeats = foundRegion.repeats !== undefined ? foundRegion.repeats : 1;
+                                if (this.borderColorInput) this.borderColorInput.value = foundRegion.color;
+                                if (this.borderPercentInput) this.borderPercentInput.value = this.borderSettings.percent.toString();
+                                if (this.borderRepeatsInput) this.borderRepeatsInput.value = this.borderSettings.repeats.toString();
+                                new Notice(`Grenze #${foundRegion.id} ausgewählt`);
+                            } else {
+                                new Notice('Keine Grenze an dieser Position');
+                            }
+                            this.borderPickMode = false;
+                            if (this.borderPickerBtn) { this.borderPickerBtn.style.background = ''; this.borderPickerBtn.style.color = ''; }
+                            this.currentToolGroup = 'border';
+                            this.drawMode = 'pen';
+                            const toolbar = this.containerEl.querySelector('.hex-toolbar');
+                            if (toolbar) this.updateToolbarState(toolbar);
+                            this.render();
+                            this.touchState.pendingTouchStart = null;
+                            return;
+                        }
+
+                        // Weg aufnehmen (Touch delayed)
+                        if (this.roadPickMode) {
+                            const clickedHex = this.startHex;
+                            const foundRoad = this.findRoadAtHex(clickedHex);
+                            if (foundRoad) {
+                                this.roadSettings.activeRoadId = foundRoad.id;
+                                this.roadSettings.color = foundRoad.color;
+                                this.roadSettings.width = foundRoad.width;
+                                this.roadSettings.editMode = true;
+                                this.roadSettings.insertAfter = foundRoad.waypoints.length - 1;
+                                if (this.roadColorInput) this.roadColorInput.value = foundRoad.color;
+                                if (this.roadWidthInput) this.roadWidthInput.value = foundRoad.width.toString();
+                                new Notice(`Weg #${foundRoad.id} ausgewählt`);
+                            } else {
+                                new Notice('Kein Weg an dieser Position');
+                            }
+                            this.roadPickMode = false;
+                            if (this.roadPickerBtn) { this.roadPickerBtn.style.background = ''; this.roadPickerBtn.style.color = ''; }
+                            this.currentToolGroup = 'road';
+                            this.drawMode = 'pen';
+                            const toolbar = this.containerEl.querySelector('.hex-toolbar');
+                            if (toolbar) this.updateToolbarState(toolbar);
+                            this.render();
+                            this.touchState.pendingTouchStart = null;
+                            return;
+                        }
+
                         let hitText = this.getTextAt(world.x, world.y);
                         if (hitText && this.currentToolGroup === 'text' && this.drawMode === 'none') {
                             this.draggedText = hitText;
@@ -2159,9 +2455,26 @@ class HexWorldEditorView extends ItemView {
                     this.draggedText.y = world.y;
                     this.render();
                 } else if (this.isMouseDown) {
-                    if (['river', 'road'].includes(this.currentToolGroup) && this.drawMode === 'pen') {
+                    // Waypoint-Drag im Weg-Edit-Modus (Touch)
+                    if (this.roadDragIndex !== null && this.roadSettings.editMode) {
+                        const road = this.data.roads && this.data.roads.find(r => r.id === this.roadSettings.activeRoadId);
+                        if (road) {
+                            const currentHex = this.pixelToHex(world.x, world.y);
+                            const curQ = road.waypoints[this.roadDragIndex.idx].q;
+                            const curR = road.waypoints[this.roadDragIndex.idx].r;
+                            if (curQ !== currentHex.q || curR !== currentHex.r) {
+                                road.waypoints.forEach(wp => {
+                                    if (wp.q === curQ && wp.r === curR) {
+                                        wp.q = currentHex.q;
+                                        wp.r = currentHex.r;
+                                    }
+                                });
+                                this.render();
+                            }
+                        }
+                    } else if (this.currentToolGroup === 'river' && this.drawMode === 'pen') {
                         const currentHex = this.pixelToHex(world.x, world.y);
-                        this.pathPreview = this.calculateHexPath(this.startHex, currentHex, this.pathWidths[this.currentToolGroup]);
+                        this.pathPreview = this.calculateHexPath(this.startHex, currentHex, this.pathWidths['river']);
                         this.render();
                     } else {
                         this.processInput(mouseEvent, false);
@@ -2227,6 +2540,70 @@ class HexWorldEditorView extends ItemView {
                         return;
                     }
 
+                    // Grenzfarbe aufnehmen (Touch)
+                    if (this.borderPickMode) {
+                        const clickedHex = this.startHex;
+                        let foundRegion = null;
+                        if (this.data.borders) {
+                            for (const region of this.data.borders) {
+                                if (region.hexes.some(b => b.q === clickedHex.q && b.r === clickedHex.r)) {
+                                    foundRegion = region;
+                                    break;
+                                }
+                            }
+                        }
+                        if (foundRegion) {
+                            this.borderSettings.activeRegionId = foundRegion.id;
+                            this.borderSettings.color = foundRegion.color;
+                            this.borderSettings.percent = foundRegion.percent !== undefined ? foundRegion.percent : 100;
+                            this.borderSettings.repeats = foundRegion.repeats !== undefined ? foundRegion.repeats : 1;
+                            if (this.borderColorInput) this.borderColorInput.value = foundRegion.color;
+                            if (this.borderPercentInput) this.borderPercentInput.value = this.borderSettings.percent.toString();
+                            if (this.borderRepeatsInput) this.borderRepeatsInput.value = this.borderSettings.repeats.toString();
+                            new Notice(`Grenze #${foundRegion.id} ausgewählt`);
+                        } else {
+                            new Notice('Keine Grenze an dieser Position');
+                        }
+                        this.borderPickMode = false;
+                        if (this.borderPickerBtn) { this.borderPickerBtn.style.background = ''; this.borderPickerBtn.style.color = ''; }
+                        this.currentToolGroup = 'border';
+                        this.drawMode = 'pen';
+                        const toolbar = this.containerEl.querySelector('.hex-toolbar');
+                        if (toolbar) this.updateToolbarState(toolbar);
+                        this.render();
+                        this.touchState.pendingTouchStart = null;
+                        this.isMouseDown = false;
+                        return;
+                    }
+
+                    // Weg aufnehmen (Touch)
+                    if (this.roadPickMode) {
+                        const clickedHex = this.startHex;
+                        const foundRoad = this.findRoadAtHex(clickedHex);
+                        if (foundRoad) {
+                            this.roadSettings.activeRoadId = foundRoad.id;
+                            this.roadSettings.color = foundRoad.color;
+                            this.roadSettings.width = foundRoad.width;
+                            this.roadSettings.editMode = true;
+                            this.roadSettings.insertAfter = foundRoad.waypoints.length - 1;
+                            if (this.roadColorInput) this.roadColorInput.value = foundRoad.color;
+                            if (this.roadWidthInput) this.roadWidthInput.value = foundRoad.width.toString();
+                            new Notice(`Weg #${foundRoad.id} ausgewählt`);
+                        } else {
+                            new Notice('Kein Weg an dieser Position');
+                        }
+                        this.roadPickMode = false;
+                        if (this.roadPickerBtn) { this.roadPickerBtn.style.background = ''; this.roadPickerBtn.style.color = ''; }
+                        this.currentToolGroup = 'road';
+                        this.drawMode = 'pen';
+                        const toolbar = this.containerEl.querySelector('.hex-toolbar');
+                        if (toolbar) this.updateToolbarState(toolbar);
+                        this.render();
+                        this.touchState.pendingTouchStart = null;
+                        this.isMouseDown = false;
+                        return;
+                    }
+
                     let hitText = this.getTextAt(world.x, world.y);
                     if (hitText && this.currentToolGroup === 'text' && this.drawMode === 'none') {
                         this.draggedText = hitText;
@@ -2246,10 +2623,40 @@ class HexWorldEditorView extends ItemView {
                 const world = this.getWorldCoords(mouseEvent);
 
                 if (this.isMouseDown && this.mouseDownPos) {
-                    if (this.pathPreview.length > 0) {
-                        const type = this.currentToolGroup === 'river' ? 'rivers' : 'roads';
-                        if (!this.data[type]) this.data[type] = [];
-                        this.data[type].push(...this.pathPreview);
+                    // Waypoint-Drag beenden oder Klick → Modal (Touch)
+                    if (this.roadDragIndex !== null && this.roadSettings.editMode) {
+                        const dist = Math.sqrt((world.x - this.mouseDownPos.x)**2 + (world.y - this.mouseDownPos.y)**2);
+                        if (dist < 5) {
+                            const road = this.data.roads && this.data.roads.find(r => r.id === this.roadSettings.activeRoadId);
+                            if (road) {
+                                const wp = road.waypoints[this.roadDragIndex.idx];
+                                new ConnectWaypointModal(this.app, (connect) => {
+                                    if (connect) {
+                                        road.waypoints.push({ q: wp.q, r: wp.r });
+                                    } else {
+                                        road.waypoints.push({ q: wp.q, r: wp.r, break: true });
+                                    }
+                                    this.roadSettings.insertAfter = road.waypoints.length - 1;
+                                    this.render();
+                                    this.requestSave();
+                                }).open();
+                            }
+                        }
+                        this.roadDragIndex = null;
+                        this.requestSave();
+                        this.isMouseDown = false;
+                        this.draggedText = null;
+                        this.lastHex = null;
+                        this.startHex = null;
+                        this.pathPreview = [];
+                        this.touchState.pendingTouchStart = null;
+                        this.render();
+                        return;
+                    }
+
+                    if (this.pathPreview.length > 0 && this.currentToolGroup === 'river') {
+                        if (!this.data.rivers) this.data.rivers = [];
+                        this.data.rivers.push(...this.pathPreview);
                     }
                     const dist = Math.sqrt((world.x - this.mouseDownPos.x)**2 + (world.y - this.mouseDownPos.y)**2);
                     if (dist < 5 && this.drawMode !== 'eraser') {
@@ -2274,6 +2681,7 @@ class HexWorldEditorView extends ItemView {
                 if (this.isMouseDown || this.draggedText) this.requestSave();
                 this.isMouseDown = false;
                 this.draggedText = null;
+                this.roadDragIndex = null;
                 this.lastHex = null;
                 this.startHex = null;
                 this.pathPreview = [];
@@ -2364,6 +2772,8 @@ class HexWorldEditorView extends ItemView {
         } else if (this.drawMode === 'pen') {
             if (this.currentToolGroup === 'border') {
                 this.addBorderHex(hex);
+            } else if (this.currentToolGroup === 'road' && isInitial) {
+                this.addRoadWaypoint(hex);
             } else if (!['river', 'road', 'text'].includes(this.currentToolGroup)) {
                 this.paintHex(hex);
             }
@@ -2395,6 +2805,76 @@ class HexWorldEditorView extends ItemView {
         if (!exists) {
             region.hexes.push({ q: hex.q, r: hex.r });
         }
+    }
+
+    findRoadAtHex(hex) {
+        if (!this.data.roads) return null;
+        for (const road of this.data.roads) {
+            if (!road.waypoints || road.waypoints.length === 0) continue;
+            // Direkt auf Waypoint?
+            if (road.waypoints.some(w => w.q === hex.q && w.r === hex.r)) return road;
+            // Auf Segment zwischen Waypoints?
+            for (let i = 0; i < road.waypoints.length - 1; i++) {
+                const segs = this.calculateHexPath(road.waypoints[i], road.waypoints[i + 1], road.width);
+                for (const seg of segs) {
+                    if (seg.to.q === hex.q && seg.to.r === hex.r) return road;
+                    if (seg.from.q === hex.q && seg.from.r === hex.r) return road;
+                }
+            }
+        }
+        return null;
+    }
+
+    addRoadWaypoint(hex) {
+        if (!this.data.roads) this.data.roads = [];
+
+        // Aktiven Weg finden oder neuen erstellen
+        let road = this.data.roads.find(r => r.id === this.roadSettings.activeRoadId);
+        if (!road) {
+            const maxId = this.data.roads.reduce((max, r) => Math.max(max, r.id || 0), 0);
+            road = { id: maxId + 1, color: this.roadSettings.color, width: this.roadSettings.width, waypoints: [] };
+            this.data.roads.push(road);
+            this.roadSettings.activeRoadId = road.id;
+            this.roadSettings.editMode = true;
+            this.roadSettings.insertAfter = null;
+            // Picker-Button auf OK umschalten
+            if (this.roadPickerBtn) {
+                setIcon(this.roadPickerBtn, 'check');
+                this.roadPickerBtn.style.background = 'var(--interactive-accent)';
+                this.roadPickerBtn.style.color = 'var(--text-on-accent)';
+                this.roadPickerBtn.setAttribute('title', 'Weg abschließen');
+            }
+        }
+
+        // Im Edit-Modus: Klick auf bestehenden Waypoint → Drag starten (Klick → Modal bei mouseup)
+        if (this.roadSettings.editMode) {
+            const existingIdx = road.waypoints.findIndex(w => w.q === hex.q && w.r === hex.r);
+            if (existingIdx !== -1) {
+                this.roadDragIndex = { idx: existingIdx, origQ: hex.q, origR: hex.r };
+                return;
+            }
+
+            // Klick auf Segment zwischen zwei Waypoints → neuen Waypoint einfügen
+            for (let i = 0; i < road.waypoints.length - 1; i++) {
+                const to = road.waypoints[i + 1];
+                if (to.break) continue;
+                const from = road.waypoints[i];
+                const segs = this.calculateHexPath(from, to, road.width);
+                const onSegment = segs.some(s =>
+                    (s.from.q === hex.q && s.from.r === hex.r) ||
+                    (s.to.q === hex.q && s.to.r === hex.r)
+                );
+                if (onSegment) {
+                    road.waypoints.splice(i + 1, 0, { q: hex.q, r: hex.r });
+                    this.roadSettings.insertAfter = i + 1;
+                    return;
+                }
+            }
+        }
+
+        // Waypoint am Ende anhängen
+        road.waypoints.push({ q: hex.q, r: hex.r });
+        this.roadSettings.insertAfter = road.waypoints.length - 1;
     }
 
     paintHex(hex) {
@@ -2446,9 +2926,15 @@ class HexWorldEditorView extends ItemView {
             });
             // Leere Regionen aufräumen
             this.data.borders = this.data.borders.filter(r => r.hexes.length > 0);
-        } else if (this.currentToolGroup === 'river' || this.currentToolGroup === 'road') {
-            const type = this.currentToolGroup === 'river' ? 'rivers' : 'roads';
-            this.data[type] = this.data[type].filter(p => !(p.to.q === hex.q && p.to.r === hex.r));
+        } else if (this.currentToolGroup === 'river') {
+            this.data.rivers = this.data.rivers.filter(p => !(p.to.q === hex.q && p.to.r === hex.r));
+        } else if (this.currentToolGroup === 'road') {
+            // Waypoint aus allen Wegen entfernen
+            this.data.roads.forEach(r => {
+                r.waypoints = r.waypoints.filter(w => !(w.q === hex.q && w.r === hex.r));
+            });
+            // Wege mit weniger als 2 Waypoints entfernen
+            this.data.roads = this.data.roads.filter(r => r.waypoints.length > 1);
         } else if (this.currentToolGroup === 'pattern') {
             // Radierer im Muster-Modus: Lösche die gesamte Wabe (alle Arten von Mustern)
             const key = `${hex.q}_${hex.r}`;
@@ -2774,7 +3260,7 @@ class HexWorldEditorView extends ItemView {
         this.drawWavyLines(this.data.rivers, '#3295D2', 5);
 
         // Wege
-        this.drawWavyLines(this.data.roads, '#f5deb3', 3);
+        this.drawRoads();
 
         // Grenzen
         this.drawBorders();
@@ -2809,11 +3295,10 @@ class HexWorldEditorView extends ItemView {
         // Render SVG-Symbole im DOM als Vektoren
         this.renderSVGSymbols(svgSymbols);
 
-        // Path-Preview (vor Texten, damit Texte darüber erscheinen)
-        if (this.pathPreview.length > 0) {
+        // Path-Preview (vor Texten, damit Texte darüber erscheinen) - nur für Flüsse
+        if (this.pathPreview.length > 0 && this.currentToolGroup === 'river') {
             this.ctx.globalAlpha = 0.5;
-            const color = this.currentToolGroup === 'river' ? '#3295D2' : '#f5deb3';
-            this.drawWavyLines(this.pathPreview, color, this.pathWidths[this.currentToolGroup]);
+            this.drawWavyLines(this.pathPreview, '#3295D2', this.pathWidths['river']);
             this.ctx.globalAlpha = 1.0;
         }
 
@@ -3261,6 +3746,41 @@ class HexWorldEditorView extends ItemView {
         this.ctx.restore();
     }
 
+    drawRoads() {
+        if (!this.data.roads) return;
+        this.data.roads.forEach(road => {
+            if (!road.waypoints || road.waypoints.length === 0) return;
+
+            // Segmente zwischen aufeinanderfolgenden Waypoints berechnen und zeichnen
+            if (road.waypoints.length >= 2) {
+                const segments = [];
+                for (let i = 0; i < road.waypoints.length - 1; i++) {
+                    const to = road.waypoints[i + 1];
+                    // break-Flag: kein Segment vom vorherigen Punkt (Abzweigung ohne Verbindung)
+                    if (to.break) continue;
+                    const from = road.waypoints[i];
+                    const pathSegs = this.calculateHexPath(from, to, road.width);
+                    segments.push(...pathSegs);
+                }
+                this.drawWavyLines(segments, road.color, road.width);
+            }
+
+            // Nur Start, Ende, Kreuzungen und aktiven Punkt markieren (Edit-Modus)
+            if (this.roadSettings.editMode && road.id === this.roadSettings.activeRoadId) {
+                const activeIdx = this.roadSettings.insertAfter;
+
+                road.waypoints.forEach((wp, idx) => {
+                    const isActive = activeIdx !== null && idx === activeIdx;
+                    const pos = this.hexToPixel(wp);
+                    this.ctx.beginPath();
+                    this.ctx.arc(pos.x, pos.y, 4, 0, Math.PI * 2);
+                    this.ctx.fillStyle = isActive ? '#FF0000' : '#000000';
+                    this.ctx.fill();
+                });
+            }
+        });
+    }
+
     drawWavyLines(lines, color, defaultWidth) {
         if (!lines) return;
         this.ctx.strokeStyle = color;
@@ -3332,7 +3852,8 @@ class HexWorldEditorView extends ItemView {
                     toolConfigs: toolConfigsToSave,
                     patternData: this.patternData,
                     patternSourceHex: this.patternSourceHex,
-                    borderSettings: this.borderSettings
+                    borderSettings: this.borderSettings,
+                    roadSettings: this.roadSettings
                 };
 
                 // Erstelle MD-Format mit Frontmatter und JSON-Codeblock
@@ -3670,6 +4191,27 @@ class TextInputModal extends Modal {
         };
 
         mainInput.focus();
+    }
+}
+
+class ConnectWaypointModal extends Modal {
+    constructor(app, onResult) {
+        super(app);
+        this.onResult = onResult;
+    }
+
+    onOpen() {
+        const { contentEl } = this;
+        contentEl.createEl('p', { text: 'Verbinden?', style: 'text-align: center; margin-bottom: 12px; font-weight: bold;' });
+        const btnRow = contentEl.createDiv({ style: 'display: flex; gap: 8px; justify-content: center;' });
+        const yesBtn = btnRow.createEl('button', { text: 'Ja', cls: 'mod-cta', style: 'flex: 1;' });
+        yesBtn.onclick = () => { this.close(); this.onResult(true); };
+        const noBtn = btnRow.createEl('button', { text: 'Nein', style: 'flex: 1;' });
+        noBtn.onclick = () => { this.close(); this.onResult(false); };
+    }
+
+    onClose() {
+        this.contentEl.empty();
     }
 }
 
