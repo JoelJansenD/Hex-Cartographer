@@ -190,7 +190,7 @@ class HexWorldEditorPlugin extends Plugin {
             settings: {
                 colorPalette: ['#3295D2', '#6CC261', '#DDC88D', '#808080', '#CD6155', '#FFD700', '#000000', '#FFFFFF'],
                 activeColorSlot: 1,
-                drawMode: 'pointer',
+                drawMode: 'pen',
                 currentToolGroup: null,
                 // toolConfigs absichtlich NICHT gesetzt - wird beim ersten Laden automatisch
                 // mit den ersten verfügbaren SVG-Symbolen initialisiert
@@ -295,6 +295,7 @@ class HexWorldEditorView extends ItemView {
         this.isMouseDown = false;
         this.isDraggingMap = false;
         this.lastHex = null;
+        this.lastErasedHex = null;
         this.isReloading = false;
         this.isSaving = false;
         this.draggedText = null;
@@ -379,7 +380,8 @@ class HexWorldEditorView extends ItemView {
         };
 
         // Zeichenmodi
-        this.drawMode = 'pointer'; // pointer, pen, fill, eraser
+        this.editMode = false; // Edit-Modus: true = Werkzeuge sichtbar, false = nur Navigation
+        this.drawMode = 'pen'; // pen, fill, eraser
         this.currentToolGroup = null; // grass, tree, mountain, building, oder null für Farbpalette
 
         // Musterwerkzeug
@@ -683,8 +685,9 @@ class HexWorldEditorView extends ItemView {
                 if (newData.settings.activeColorSlot !== undefined) {
                     this.activeColorSlot = newData.settings.activeColorSlot;
                 }
-                // Immer mit Pfeil-Werkzeug starten
-                this.drawMode = 'pointer';
+                // Immer mit Stift-Werkzeug starten
+                this.drawMode = 'pen';
+                this.editMode = false;
                 this.currentToolGroup = null;
                 if (newData.settings.toolConfigs) {
                     // Werkzeug-Konfigurationen wiederherstellen
@@ -1012,8 +1015,34 @@ class HexWorldEditorView extends ItemView {
     }
 
     createToolbar(toolbar) {
+        // Edit-Modus-Button (immer sichtbar)
+        const editModeBtn = toolbar.createEl('button', { cls: 'hex-tool-btn', attr: { title: 'Edit-Modus' } });
+        setIcon(editModeBtn, 'wrench');
+        this.editModeBtn = editModeBtn;
+        editModeBtn.onclick = () => {
+            this.editMode = !this.editMode;
+            if (!this.editMode) {
+                this.exitPathEditMode();
+                this.drawMode = 'pen';
+                this.currentToolGroup = null;
+                this.borderPickMode = false;
+                this.pathPickMode = false;
+            }
+            this.editContent.style.display = this.editMode ? 'contents' : 'none';
+            editModeBtn.classList.toggle('active', this.editMode);
+            this.updateToolbarState(toolbar);
+            if (this.editMode) {
+                setTimeout(() => this.recalcToolbarWidths(), 0);
+            }
+            this.render();
+        };
+
+        // Container für alle Edit-Werkzeuge (wird ein-/ausgeblendet)
+        const editContent = toolbar.createDiv({ style: this.editMode ? 'display: contents;' : 'display: none;' });
+        this.editContent = editContent;
+
         // Master-Farbfeld
-        const masterColorInput = toolbar.createEl('input', {
+        const masterColorInput = editContent.createEl('input', {
             type: 'color',
             value: this.masterColor,
             attr: { title: 'Werkzeugfarbe', style: '-webkit-appearance: none; appearance: none; padding: 0; border: 1px solid var(--divider-color); border-radius: 4px; cursor: pointer; box-sizing: border-box; vertical-align: middle; background: none;' }
@@ -1027,98 +1056,92 @@ class HexWorldEditorView extends ItemView {
         masterColorInput.addEventListener('change', () => {
             this.requestSave();
         });
-        // Größe an Pfeil-Button anpassen
+        // Größe an Edit-Button anpassen
         setTimeout(() => {
-            const firstBtn = toolbar.querySelector('.hex-tool-btn');
-            if (firstBtn) {
-                const h = firstBtn.offsetHeight;
-                masterColorInput.style.width = `${h}px`;
-                masterColorInput.style.height = `${h}px`;
-            }
+            const h = editModeBtn.offsetHeight;
+            masterColorInput.style.width = `${h}px`;
+            masterColorInput.style.height = `${h}px`;
         }, 0);
 
-        // Zeichenmodus-Werkzeuge
-        this.createDrawModeButton(toolbar, 'pointer', 'mouse-pointer', 'Pfeil (Navigation)');
-
         // Waben-Farbwerkzeug (Masterfarbe)
-        const hexColorBtn = toolbar.createEl('button', { cls: 'hex-tool-btn', attr: { title: 'Wabe einfärben (Masterfarbe)' } });
+        const hexColorBtn = editContent.createEl('button', { cls: 'hex-tool-btn', attr: { title: 'Wabe einfärben (Masterfarbe)' } });
         hexColorBtn.dataset.toolGroup = 'hexcolor';
         setIcon(hexColorBtn, 'hexagon');
         hexColorBtn.onclick = () => {
-            const wasPatternActive = this.currentToolGroup === 'pattern';
+            const needsRender = this.currentToolGroup === 'pattern' || this.borderSettings.pickedHex;
             this.exitPathEditMode();
             if (this.currentToolGroup === 'hexcolor') {
-                // Bereits aktiv → zurück auf Stift
                 this.drawMode = 'pen';
             } else {
                 this.currentToolGroup = 'hexcolor';
                 this.drawMode = this.drawMode === 'eraser' ? 'eraser' : 'pen';
             }
             this.updateToolbarState(toolbar);
-            if (wasPatternActive) this.render();
+            if (needsRender) this.render();
         };
 
         // Werkzeug-Gruppen mit Varianten
-        this.createToolGroupButton(toolbar, 'grass');
-        this.createToolGroupButton(toolbar, 'tree');
-        this.createToolGroupButton(toolbar, 'mountain');
-        this.createToolGroupButton(toolbar, 'building');
+        this.createToolGroupButton(editContent, 'grass');
+        this.createToolGroupButton(editContent, 'tree');
+        this.createToolGroupButton(editContent, 'mountain');
+        this.createToolGroupButton(editContent, 'building');
 
-        toolbar.createSpan({ style: 'width: 1px; background: var(--divider-color); margin: 0 4px; height: 24px;' });
+        editContent.createSpan({ style: 'width: 1px; background: var(--divider-color); margin: 0 4px; height: 24px;' });
 
-        this.createDrawModeButton(toolbar, 'fill', 'paint-bucket', 'Fülleimer');
+        this.createDrawModeButton(editContent, 'fill', 'paint-bucket', 'Fülleimer');
 
         // Text-Werkzeug
-        const textBtn = toolbar.createEl('button', { cls: 'hex-tool-btn', attr: { title: 'Text' } });
+        const textBtn = editContent.createEl('button', { cls: 'hex-tool-btn', attr: { title: 'Text' } });
         textBtn.dataset.toolGroup = 'text';
         setIcon(textBtn, 'type');
         textBtn.onclick = () => {
-            const wasPatternActive = this.currentToolGroup === 'pattern';
+            const needsRender = this.currentToolGroup === 'pattern' || this.borderSettings.pickedHex;
             this.exitPathEditMode();
             this.currentToolGroup = 'text';
             this.drawMode = 'none';
             this.updateToolbarState(toolbar);
-            if (wasPatternActive) this.render();
+            if (needsRender) this.render();
         };
 
-        this.createDrawModeButton(toolbar, 'eraser', 'eraser', 'Radierer');
+        this.createDrawModeButton(editContent, 'eraser', 'eraser', 'Radierer');
 
         // Mülleimer (neben Radierer)
-        const clearBtn = toolbar.createEl('button', { cls: 'hex-tool-btn', attr: { title: 'Löschen' } });
+        const clearBtn = editContent.createEl('button', { cls: 'hex-tool-btn', attr: { title: 'Löschen' } });
         setIcon(clearBtn, 'trash-2');
         clearBtn.style.color = 'var(--text-error)';
         clearBtn.onclick = () => this.handleClearButton();
 
-        toolbar.createSpan({ style: 'width: 1px; background: var(--divider-color); margin: 0 4px; height: 24px;' });
+        editContent.createSpan({ style: 'width: 1px; background: var(--divider-color); margin: 0 4px; height: 24px;' });
 
         // Musterwerkzeug
-        this.createPatternTool(toolbar);
+        this.createPatternTool(editContent);
 
-        toolbar.createSpan({ style: 'flex-grow: 1' });
+        editContent.createSpan({ style: 'flex-grow: 1' });
 
         // Fluss/Weg-Werkzeuge
-        this.createPathToolbar(toolbar);
-        this.createBorderButton(toolbar);
+        this.createPathToolbar(editContent);
+        this.createBorderButton(editContent);
 
-        toolbar.createSpan({ style: 'flex-grow: 1' });
+        editContent.createSpan({ style: 'flex-grow: 1' });
 
-        toolbar.createSpan({ style: 'width: 1px; background: var(--divider-color); margin: 0 4px; height: 24px;' });
+        editContent.createSpan({ style: 'width: 1px; background: var(--divider-color); margin: 0 4px; height: 24px;' });
 
         // Farbpalette
-        this.createColorPalette(toolbar);
+        this.createColorPalette(editContent);
 
-        // Ganze Karte zeigen Button
-        const fitBtn = toolbar.createEl('button', { cls: 'hex-tool-btn', attr: { title: 'Ganze Karte zeigen' } });
-        setIcon(fitBtn, 'maximize-2');
-        fitBtn.onclick = () => this.fitMapToView();
-
-        const undoBtn = toolbar.createEl('button', { cls: 'hex-tool-btn', attr: { title: 'Rückgängig (Strg+Z)' } });
+        // Undo/Redo
+        const undoBtn = editContent.createEl('button', { cls: 'hex-tool-btn', attr: { title: 'Rückgängig (Strg+Z)' } });
         setIcon(undoBtn, 'undo-2');
         undoBtn.onclick = () => this.undo();
 
-        const redoBtn = toolbar.createEl('button', { cls: 'hex-tool-btn', attr: { title: 'Wiederholen (Strg+Y)' } });
+        const redoBtn = editContent.createEl('button', { cls: 'hex-tool-btn', attr: { title: 'Wiederholen (Strg+Y)' } });
         setIcon(redoBtn, 'redo-2');
         redoBtn.onclick = () => this.redo();
+
+        // Ganze Karte zeigen Button (immer sichtbar, außerhalb editContent)
+        const fitBtn = toolbar.createEl('button', { cls: 'hex-tool-btn', attr: { title: 'Ganze Karte zeigen' } });
+        setIcon(fitBtn, 'maximize-2');
+        fitBtn.onclick = () => this.fitMapToView();
 
         this.updateToolbarState(toolbar);
     }
@@ -1128,8 +1151,8 @@ class HexWorldEditorView extends ItemView {
         btn.dataset.drawMode = mode;
         setIcon(btn, icon);
         btn.onclick = () => {
-            const wasPatternActive = this.currentToolGroup === 'pattern';
-            this.exitPathEditMode();
+            const needsRender = this.currentToolGroup === 'pattern' || this.borderSettings.pickedHex;
+            if (mode !== 'eraser') this.exitPathEditMode();
             // Erneutes Drücken des aktiven Radierers schaltet ihn aus
             if (mode === 'eraser' && this.drawMode === 'eraser') {
                 this.drawMode = 'pen';
@@ -1138,12 +1161,8 @@ class HexWorldEditorView extends ItemView {
             }
             this.drawMode = mode;
 
-            // Pfeil deaktiviert alle anderen Modi
-            if (mode === 'pointer') {
-                this.currentToolGroup = null;
-            }
             // Fülleimer ohne aktives Werkzeug → Wabenwerkzeug aktivieren
-            else if (mode === 'fill' && (!this.currentToolGroup || this.currentToolGroup === 'text' || this.currentToolGroup === 'river' || this.currentToolGroup === 'road' || this.currentToolGroup === 'border')) {
+            if (mode === 'fill' && (!this.currentToolGroup || this.currentToolGroup === 'text' || this.currentToolGroup === 'river' || this.currentToolGroup === 'road' || this.currentToolGroup === 'border')) {
                 this.exitPathEditMode();
                 this.currentToolGroup = 'hexcolor';
             }
@@ -1154,8 +1173,7 @@ class HexWorldEditorView extends ItemView {
 
             this.updateToolbarState(toolbar);
 
-            // Render neu, wenn Muster-Werkzeug verlassen wurde (um roten Rahmen zu entfernen)
-            if (wasPatternActive && this.currentToolGroup !== 'pattern') {
+            if (needsRender && this.currentToolGroup !== 'pattern') {
                 this.render();
             }
         };
@@ -1209,7 +1227,7 @@ class HexWorldEditorView extends ItemView {
         });
 
         btn.onclick = () => {
-            const wasPatternActive = this.currentToolGroup === 'pattern';
+            const needsRender = this.currentToolGroup === 'pattern' || this.borderSettings.pickedHex;
             this.exitPathEditMode();
             this.currentToolGroup = groupId;
             this.drawMode = this.drawMode === 'eraser' ? 'eraser' : 'pen';
@@ -1218,8 +1236,7 @@ class HexWorldEditorView extends ItemView {
 
             this.updateToolbarState(toolbar);
 
-            // Render neu, wenn Muster-Werkzeug verlassen wurde (um roten Rahmen zu entfernen)
-            if (wasPatternActive) {
+            if (needsRender) {
                 this.render();
             }
         };
@@ -1472,27 +1489,29 @@ class HexWorldEditorView extends ItemView {
         const topRow = wrapper.createDiv({ style: 'display: flex; gap: 2px; align-items: center;' });
 
         const riverBtn = topRow.createEl('button', { cls: 'hex-tool-btn', attr: { title: 'Fluss' } });
+        this.riverBtn = riverBtn;
         riverBtn.dataset.toolGroup = 'river';
         setIcon(riverBtn, 'waves');
         riverBtn.onclick = () => {
-            const wasPatternActive = this.currentToolGroup === 'pattern';
+            const needsRender = this.currentToolGroup === 'pattern' || this.borderSettings.pickedHex;
             this.exitPathEditMode();
             this.currentToolGroup = 'river';
             this.drawMode = 'pen';
             this.updateToolbarState(toolbar);
-            if (wasPatternActive) this.render();
+            if (needsRender) this.render();
         };
 
         const roadBtn = topRow.createEl('button', { cls: 'hex-tool-btn', attr: { title: 'Weg' } });
+        this.roadBtn = roadBtn;
         roadBtn.dataset.toolGroup = 'road';
         setIcon(roadBtn, 'route');
         roadBtn.onclick = () => {
-            const wasPatternActive = this.currentToolGroup === 'pattern';
+            const needsRender = this.currentToolGroup === 'pattern' || this.borderSettings.pickedHex;
             this.exitPathEditMode();
             this.currentToolGroup = 'road';
             this.drawMode = 'pen';
             this.updateToolbarState(toolbar);
-            if (wasPatternActive) this.render();
+            if (needsRender) this.render();
         };
 
         // Shared Picker/OK-Button (kontextabhängig)
@@ -1677,6 +1696,7 @@ class HexWorldEditorView extends ItemView {
         const topRow = wrapper.createDiv({ style: 'display: flex; gap: 2px; align-items: center;' });
 
         const btn = topRow.createEl('button', { cls: 'hex-tool-btn', attr: { title: 'Grenze' } });
+        this.borderBtn = btn;
         btn.dataset.toolGroup = 'border';
         setIcon(btn, 'shield');
 
@@ -1775,7 +1795,27 @@ class HexWorldEditorView extends ItemView {
         input.addEventListener('pointerdown', (e) => e.stopPropagation());
     }
 
+    recalcToolbarWidths() {
+        if (this.editModeBtn && this.masterColorInput) {
+            const h = this.editModeBtn.offsetHeight;
+            this.masterColorInput.style.width = `${h}px`;
+            this.masterColorInput.style.height = `${h}px`;
+        }
+        if (this.riverBtn && this.roadBtn && this.riverWidthInput && this.roadWidthInput) {
+            this.riverWidthInput.style.width = `${this.riverBtn.offsetWidth}px`;
+            this.roadWidthInput.style.width = `${this.roadBtn.offsetWidth}px`;
+        }
+        if (this.borderBtn && this.borderPickerBtn && this.borderPercentInput && this.borderRepeatsInput) {
+            this.borderPercentInput.style.width = `${this.borderBtn.offsetWidth}px`;
+            this.borderRepeatsInput.style.width = `${this.borderPickerBtn.offsetWidth}px`;
+        }
+    }
+
     updateToolbarState(toolbar) {
+        // Edit-Modus synchronisieren
+        if (this.editModeBtn) this.editModeBtn.classList.toggle('active', this.editMode);
+        if (this.editContent) this.editContent.style.display = this.editMode ? 'contents' : 'none';
+
         // Grenzen-Sichtbarkeit synchronisieren
         if (this.borderVisBtn) {
             setIcon(this.borderVisBtn, this.borderSettings.visible ? 'eye' : 'eye-off');
@@ -2078,6 +2118,18 @@ class HexWorldEditorView extends ItemView {
             }
         });
 
+        // Doppelklick: Areal-Löschung im Radierer-Modus
+        this.canvas.addEventListener('dblclick', (e) => {
+            if (!this.editMode || this.drawMode !== 'eraser') return;
+            const world = this.getWorldCoords(e);
+            const hex = this.pixelToHex(world.x, world.y);
+            // History-Eintrag vom 2. Klick entfernen, damit ein Undo alles rückgängig macht
+            if (this.history.length > 0) this.history.pop();
+            this.handleEraserFlood(hex);
+            this.render();
+            this.requestSave();
+        });
+
         this.containerEl.addEventListener('mousemove', (e) => {
             const world = this.getWorldCoords(e);
             if (this.isDraggingMap) {
@@ -2248,7 +2300,9 @@ class HexWorldEditorView extends ItemView {
             isTwoFingerGesture: false,
             touchStartTimeout: null,
             pendingTouchStart: null,
-            hasMovedSinceStart: false
+            hasMovedSinceStart: false,
+            lastTapTime: 0,
+            lastTapHex: null
         };
 
         this.canvas.addEventListener('touchstart', (e) => {
@@ -2698,6 +2752,33 @@ class HexWorldEditorView extends ItemView {
                     }
                 }
                 if (this.isMouseDown || this.draggedText) this.requestSave();
+
+                // Touch Doppel-Tap: Areal-Löschung im Radierer-Modus
+                if (this.editMode && this.drawMode === 'eraser' && e.changedTouches.length > 0) {
+                    const tapTouch = e.changedTouches[0];
+                    const tapEvent = new MouseEvent('mouseup', { clientX: tapTouch.clientX, clientY: tapTouch.clientY, bubbles: true, cancelable: true });
+                    const tapWorld = this.getWorldCoords(tapEvent);
+                    const tapHex = this.pixelToHex(tapWorld.x, tapWorld.y);
+                    const now = Date.now();
+
+                    if (this.touchState.lastTapTime &&
+                        now - this.touchState.lastTapTime < 400 &&
+                        this.touchState.lastTapHex &&
+                        this.touchState.lastTapHex.q === tapHex.q &&
+                        this.touchState.lastTapHex.r === tapHex.r) {
+                        // History-Eintrag vom 2. Tap entfernen, damit ein Undo alles rückgängig macht
+                        if (this.history.length > 0) this.history.pop();
+                        this.handleEraserFlood(tapHex);
+                        this.render();
+                        this.requestSave();
+                        this.touchState.lastTapTime = 0;
+                        this.touchState.lastTapHex = null;
+                    } else {
+                        this.touchState.lastTapTime = now;
+                        this.touchState.lastTapHex = { q: tapHex.q, r: tapHex.r };
+                    }
+                }
+
                 this.isMouseDown = false;
                 this.draggedText = null;
                 this.roadDragIndex = null;
@@ -2781,8 +2862,8 @@ class HexWorldEditorView extends ItemView {
             return;
         }
 
-        // Pointer-Modus oder 'none'-Modus ohne Text: Navigation only
-        if (this.drawMode === 'pointer' || this.drawMode === 'none') {
+        // Edit-Modus aus oder 'none'-Modus ohne Text: Navigation only
+        if (!this.editMode || this.drawMode === 'none') {
             return;
         }
 
@@ -3088,6 +3169,47 @@ class HexWorldEditorView extends ItemView {
     }
 
     handleEraser(hex, x, y) {
+        // Speichere Hex-Daten VOR dem Löschen für Doppelklick-Areal-Löschung
+        // Nicht überschreiben wenn bereits aktuelle Daten für dieses Hex vorliegen (2. Klick des Doppelklicks)
+        const hasRecentData = this.lastErasedHex &&
+            this.lastErasedHex.q === hex.q && this.lastErasedHex.r === hex.r &&
+            Date.now() - this.lastErasedHex.timestamp < 1000;
+
+        if (!hasRecentData) {
+            const preKey = `${hex.q}_${hex.r}`;
+            const preData = this.data.hexes[preKey];
+            const tg = this.currentToolGroup;
+
+            if (tg && this.toolConfigs[tg] && preData && preData.symbol) {
+                this.lastErasedHex = { q: hex.q, r: hex.r, type: 'symbol', symbol: preData.symbol, timestamp: Date.now() };
+            } else if ((tg === 'hexcolor' || tg === null) && preData && preData.color) {
+                this.lastErasedHex = { q: hex.q, r: hex.r, type: 'color', color: preData.color, toolGroup: tg, timestamp: Date.now() };
+            } else if (tg === 'river' || tg === 'road') {
+                const paths = tg === 'river' ? (this.data.rivers || []) : (this.data.roads || []);
+                const pathIds = [];
+                for (const p of paths) {
+                    if (p.waypoints && p.waypoints.some(w => w.q === hex.q && w.r === hex.r)) {
+                        pathIds.push(p.id);
+                        continue;
+                    }
+                    if (p.waypoints && p.waypoints.length >= 2) {
+                        let found = false;
+                        for (let i = 0; i < p.waypoints.length - 1 && !found; i++) {
+                            if (p.waypoints[i + 1].break) continue;
+                            const segs = this.calculateHexPath(p.waypoints[i], p.waypoints[i + 1], p.width);
+                            if (segs.some(s => (s.from.q === hex.q && s.from.r === hex.r) || (s.to.q === hex.q && s.to.r === hex.r))) {
+                                pathIds.push(p.id);
+                                found = true;
+                            }
+                        }
+                    }
+                }
+                this.lastErasedHex = pathIds.length > 0 ? { q: hex.q, r: hex.r, type: tg, pathIds, toolGroup: tg, timestamp: Date.now() } : null;
+            } else {
+                this.lastErasedHex = null;
+            }
+        }
+
         if (this.currentToolGroup === 'text') {
             const hit = this.getTextAt(x, y);
             if (hit) this.data.texts = this.data.texts.filter(t => t !== hit);
@@ -3145,6 +3267,86 @@ class HexWorldEditorView extends ItemView {
                     }
                 }
                 // Kein else-Block mehr - leere Hexes werden NICHT gelöscht, wenn ein Werkzeug aktiv ist
+            }
+        }
+    }
+
+    handleEraserFlood(hex) {
+        const last = this.lastErasedHex;
+        if (!last) return;
+        // Zeitfenster: max 1 Sekunde seit letztem Einzel-Radieren
+        if (Date.now() - last.timestamp > 1000) return;
+        // Gleiche Koordinate wie der letzte Einzel-Radier-Klick
+        if (last.q !== hex.q || last.r !== hex.r) return;
+
+        if (last.type === 'symbol') {
+            this.floodEraseSymbol(hex, last.symbol);
+        } else if (last.type === 'color') {
+            this.floodEraseColor(hex, last.color);
+        } else if (last.type === 'river' || last.type === 'road') {
+            const paths = last.type === 'river' ? this.data.rivers : this.data.roads;
+            this.floodEraseEntirePath(paths, last.pathIds);
+        }
+        this.lastErasedHex = null;
+    }
+
+    floodEraseSymbol(startHex, targetSymbol) {
+        const visited = new Set();
+        const queue = this.getHexNeighbors(startHex);
+
+        while (queue.length > 0) {
+            const hex = queue.shift();
+            const key = `${hex.q}_${hex.r}`;
+            if (visited.has(key)) continue;
+            visited.add(key);
+
+            const hexData = this.data.hexes[key];
+            if (!hexData || hexData.symbol !== targetSymbol) continue;
+
+            // Symbol löschen
+            delete hexData.symbol;
+            delete hexData.symbolColor;
+            // Wabe komplett löschen wenn leer
+            if (!hexData.color) {
+                delete this.data.hexes[key];
+            }
+
+            const neighbors = this.getHexNeighbors(hex);
+            neighbors.forEach(n => queue.push(n));
+        }
+    }
+
+    floodEraseColor(startHex, targetColor) {
+        const visited = new Set();
+        const queue = this.getHexNeighbors(startHex);
+
+        while (queue.length > 0) {
+            const hex = queue.shift();
+            const key = `${hex.q}_${hex.r}`;
+            if (visited.has(key)) continue;
+            visited.add(key);
+
+            const hexData = this.data.hexes[key];
+            const currentColor = hexData ? hexData.color : null;
+            if (currentColor !== targetColor) continue;
+
+            // Farbe löschen
+            delete hexData.color;
+            // Wabe komplett löschen wenn kein Symbol
+            if (!hexData.symbol) {
+                delete this.data.hexes[key];
+            }
+
+            const neighbors = this.getHexNeighbors(hex);
+            neighbors.forEach(n => queue.push(n));
+        }
+    }
+
+    floodEraseEntirePath(paths, pathIds) {
+        if (!paths || !pathIds || pathIds.length === 0) return;
+        for (let i = paths.length - 1; i >= 0; i--) {
+            if (pathIds.includes(paths[i].id)) {
+                paths.splice(i, 1);
             }
         }
     }
