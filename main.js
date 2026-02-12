@@ -745,6 +745,8 @@ class HexWorldEditorView extends ItemView {
                 }
                 if (newData.settings.borderSettings) {
                     this.borderSettings = newData.settings.borderSettings;
+                    this.borderSettings.activeRegionId = null;
+                    this.borderSettings.pickedHex = null;
                 }
                 if (newData.settings.riverSettings) {
                     this.riverSettings = newData.settings.riverSettings;
@@ -1761,12 +1763,27 @@ class HexWorldEditorView extends ItemView {
             }
         };
 
-        // Picker-Button
+        // Picker/OK-Button (kontextabhängig wie beim Pfad-Werkzeug)
         const pickerBtn = topRow.createEl('button', { cls: 'hex-tool-btn', attr: { title: 'Grenzfarbe aufnehmen' } });
         setIcon(pickerBtn, 'mouse-pointer');
         this.borderPickerBtn = pickerBtn;
         pickerBtn.onclick = () => {
             this.exitPathEditMode();
+            // Wenn aktive Grenzregion → OK-Logik
+            if (this.borderSettings.activeRegionId !== null) {
+                if (this.drawMode === 'eraser') {
+                    // Radierer ausschalten, Grenze bleibt aktiv
+                    this.drawMode = 'pen';
+                } else {
+                    // Grenze abschließen, neue kann begonnen werden
+                    this.borderSettings.activeRegionId = null;
+                    this.borderSettings.pickedHex = null;
+                }
+                this.updateToolbarState(toolbar);
+                this.render();
+                return;
+            }
+            // Sonst: Picker-Modus toggeln
             this.borderPickMode = !this.borderPickMode;
             if (this.borderPickMode) {
                 this.pathPickMode = false;
@@ -1880,6 +1897,21 @@ class HexWorldEditorView extends ItemView {
                 this.pathPickerBtn.style.background = '';
                 this.pathPickerBtn.style.color = '';
                 this.pathPickerBtn.setAttribute('title', 'Aufnehmen');
+            }
+        }
+
+        // Grenzen-Picker/OK synchronisieren (analog zu Pfad-Werkzeug)
+        if (this.borderPickerBtn) {
+            if (this.borderSettings.activeRegionId !== null) {
+                setIcon(this.borderPickerBtn, 'check');
+                this.borderPickerBtn.style.background = 'var(--interactive-accent)';
+                this.borderPickerBtn.style.color = 'var(--text-on-accent)';
+                this.borderPickerBtn.setAttribute('title', 'Abschließen');
+            } else if (!this.borderPickMode) {
+                setIcon(this.borderPickerBtn, 'mouse-pointer');
+                this.borderPickerBtn.style.background = '';
+                this.borderPickerBtn.style.color = '';
+                this.borderPickerBtn.setAttribute('title', 'Grenzfarbe aufnehmen');
             }
         }
 
@@ -2858,6 +2890,10 @@ class HexWorldEditorView extends ItemView {
         if (!exists) {
             region.hexes.push({ q: hex.q, r: hex.r });
         }
+
+        // Toolbar aktualisieren, damit Picker → OK wechselt
+        const toolbar = this.containerEl.querySelector('.hex-toolbar');
+        if (toolbar) this.updateToolbarState(toolbar);
     }
 
     findRoadAtHex(hex) {
