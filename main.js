@@ -337,19 +337,22 @@ class HexWorldEditorView extends ItemView {
         // Werkzeug-Konfigurationen
         this.toolConfigs = {
             grass: {
-                name: 'Vegetation',
+                name: 'Extras',
                 variants: [
-                    { id: 'grass', label: 'Gras', icon: 'sprout' },
-                    { id: 'swamp', label: 'Sumpf', icon: 'waves' }
+                    { id: 'question', label: 'Fragezeichen', icon: 'help-circle' },
+                    { id: 'exclamation', label: 'Ausrufezeichen', icon: 'alert-circle' },
+                    { id: 'cross', label: 'Kreuz', icon: 'x' }
                 ],
-                currentVariant: 'grass',
+                currentVariant: 'question',
                 symbolColor: '#228B22',
                 backgroundColor: '#6CC261',
                 backgroundEnabled: false
             },
             tree: {
-                name: 'Baum',
+                name: 'Vegetation',
                 variants: [
+                    { id: 'grass', label: 'Gras', icon: 'sprout' },
+                    { id: 'swamp', label: 'Sumpf', icon: 'waves' },
                     { id: 'bush', label: 'Strauch', icon: 'leaf' },
                     { id: 'tree', label: 'Laubbaum', icon: 'trees' },
                     { id: 'pine', label: 'Nadelbaum', icon: 'triangle' },
@@ -415,11 +418,14 @@ class HexWorldEditorView extends ItemView {
         // marginX: Horizontale Verschiebung in % der Hex-Breite (-100 bis +100)
         // marginY: Vertikale Verschiebung in % der Hex-Höhe (-100 bis +100)
         this.svgSymbolConfig = {
+            // Extras
+            'question': { size: 0.5, align: 'center', marginX: 0, marginY: 0 },
+            'exclamation': { size: 0.5, align: 'center', marginX: 0, marginY: 0 },
+            'cross': { size: 0.5, align: 'center', marginX: 0, marginY: 0 },
+
             // Vegetation
             'grass': { size: 0.30, align: 'center', marginX: 0, marginY: 0 },
-            'swamp': { size: 0.35, align: 'center', marginX: 0, marginY: 0 },
-
-            // Bäume
+            'swamp': { size: 0.30, align: 'center', marginX: 0, marginY: 0 },
             'bush': { size: 0.35, align: 'center', marginX: 0, marginY: 0 },
             'tree': { size: 0.35, align: 'center', marginX: 0, marginY: -6 },
             'pine': { size: 0.45, align: 'center', marginX: 0, marginY: 0 },
@@ -483,10 +489,13 @@ class HexWorldEditorView extends ItemView {
         // HINWEIS: Alle Symbole verwenden aktuell die gleiche SVG-Datei (tree-001.svg)
         // Diese können später durch eigene SVG-Dateien ersetzt werden
         const symbolMap = {
+            // Extras
+            'question': 'question-001.svg',
+            'exclamation': 'exclamation-001.svg',
+            'cross': 'cross-001.svg',
             // Vegetation
             'grass': 'grass-001.svg',
             'swamp': 'swamp-001.svg',
-            // Bäume
             'bush': 'bush-001.svg',
             'tree': 'tree-001.svg',
             'pine': 'pine-001.svg',
@@ -702,9 +711,9 @@ class HexWorldEditorView extends ItemView {
                 if (newData.settings.activeColorSlot !== undefined) {
                     this.activeColorSlot = newData.settings.activeColorSlot;
                 }
-                // Immer mit Stift-Werkzeug starten
+                // Stift-Werkzeug starten
                 this.drawMode = 'pen';
-                this.editMode = false;
+                this.editMode = newData.settings.editMode === true;
                 this.currentToolGroup = null;
                 if (newData.settings.toolConfigs) {
                     // Werkzeug-Konfigurationen wiederherstellen
@@ -1073,6 +1082,7 @@ class HexWorldEditorView extends ItemView {
                 setTimeout(() => this.recalcToolbarWidths(), 0);
             }
             this.render();
+            this.requestSave();
         };
 
         // Container für alle Edit-Werkzeuge (wird ein-/ausgeblendet)
@@ -3729,14 +3739,14 @@ class HexWorldEditorView extends ItemView {
         // Flüsse
         this.drawRivers();
 
-        // Gras
-        drawSymbolLayer(['grass', 'swamp']);
+        // Extras
+        drawSymbolLayer(['question', 'exclamation', 'cross']);
 
         // Wege
         this.drawRoads();
 
-        // Bäume
-        drawSymbolLayer(['bush', 'tree', 'pine', 'palm']);
+        // Vegetation
+        drawSymbolLayer(['swamp','grass', 'bush', 'tree', 'pine', 'palm']);
 
         // Berg
         drawSymbolLayer(['hill', 'mountain']);
@@ -4078,7 +4088,6 @@ class HexWorldEditorView extends ItemView {
             }
             this.ctx.stroke();
         }
-        // Bäume
         else if (type === 'bush') {
             // Kleiner runder Busch
             this.ctx.arc(0, 0, s * 0.3, 0, Math.PI * 2);
@@ -4432,7 +4441,8 @@ class HexWorldEditorView extends ItemView {
                     borderSettings: this.borderSettings,
                     riverSettings: this.riverSettings,
                     roadSettings: this.roadSettings,
-                    masterColor: this.masterColor
+                    masterColor: this.masterColor,
+                    editMode: this.editMode
                 };
 
                 // Erstelle MD-Format mit Frontmatter und JSON-Codeblock
