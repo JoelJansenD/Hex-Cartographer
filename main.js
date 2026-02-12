@@ -1731,6 +1731,13 @@ class HexWorldEditorView extends ItemView {
             this.pathPickerBtn.setAttribute('title', 'Aufnehmen');
         }
         this.pathPickMode = false;
+        // Auch aktive Grenzregion abschließen + Radierer ausschalten
+        if (this.borderSettings.activeRegionId !== null) {
+            this.borderSettings.activeRegionId = null;
+            this.borderSettings.pickedHex = null;
+            if (this.drawMode === 'eraser') this.drawMode = 'pen';
+            changed = true;
+        }
         if (changed) this.render();
     }
 
@@ -1768,7 +1775,6 @@ class HexWorldEditorView extends ItemView {
         setIcon(pickerBtn, 'mouse-pointer');
         this.borderPickerBtn = pickerBtn;
         pickerBtn.onclick = () => {
-            this.exitPathEditMode();
             // Wenn aktive Grenzregion → OK-Logik
             if (this.borderSettings.activeRegionId !== null) {
                 if (this.drawMode === 'eraser') {
@@ -1783,6 +1789,7 @@ class HexWorldEditorView extends ItemView {
                 this.render();
                 return;
             }
+            this.exitPathEditMode();
             // Sonst: Picker-Modus toggeln
             this.borderPickMode = !this.borderPickMode;
             if (this.borderPickMode) {
