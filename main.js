@@ -1228,6 +1228,8 @@ class HexWorldEditorView extends ItemView {
         btn.dataset.drawMode = mode;
         setIcon(btn, icon);
         btn.onclick = () => {
+            // Radierer blockieren, wenn ein Aufnehmen-Modus aktiv ist
+            if (mode === 'eraser' && (this.patternPickMode || this.pathPickMode || this.borderPickMode)) return;
             const needsRender = this.currentToolGroup === 'pattern' || this.borderSettings.pickedHex;
             if (mode !== 'eraser') this.exitPathEditMode();
             // Erneutes Drücken des aktiven Radierers schaltet ihn aus
@@ -1357,11 +1359,15 @@ class HexWorldEditorView extends ItemView {
         setIcon(pickerBtn, 'pipette');
 
         pickerBtn.onclick = () => {
-            this.patternPickMode = !this.patternPickMode;
+            const wasActive = this.patternPickMode;
+            this.exitPathEditMode();
+            this.patternPickMode = !wasActive;
             pickerBtn.style.background = this.patternPickMode ? 'var(--interactive-accent)' : '';
             if (this.patternPickMode) {
+                this.currentToolGroup = null;
                 new Notice('Klicke auf eine Wabe, um das Muster aufzunehmen');
             }
+            this.updateToolbarState(toolbar);
         };
 
         // Speichere Referenz für spätere Updates
@@ -1523,9 +1529,18 @@ class HexWorldEditorView extends ItemView {
             });
 
             btn.onclick = () => {
+                // Von Muster/Aufnehmen-Werkzeugen zum Waben-Werkzeug wechseln
+                if (this.currentToolGroup === 'pattern' || this.patternPickMode || this.pathPickMode || this.borderPickMode) {
+                    this.exitPathEditMode();
+                    this.currentToolGroup = 'hexcolor';
+                    this.drawMode = 'pen';
+                }
                 this.masterColor = this[paletteKey][index];
+                if (this.currentToolGroup === 'hexcolor') this.hexColorColor = this.masterColor;
                 if (this.masterColorInput) { this.masterColorInput.value = this.masterColor; if (this.masterColorBtn) this.masterColorBtn.style.backgroundColor = this.masterColor; }
                 this.updateActivePathColor();
+                const toolbar = this.containerEl.querySelector('.hex-toolbar');
+                if (toolbar) this.updateToolbarState(toolbar);
             };
 
             btn.oncontextmenu = (e) => {
@@ -1615,6 +1630,9 @@ class HexWorldEditorView extends ItemView {
             }
             this.pathPickMode = !this.pathPickMode;
             if (this.pathPickMode) {
+                this.currentToolGroup = null;
+                this.patternPickMode = false;
+                if (this.patternPickerBtn) { this.patternPickerBtn.style.background = ''; }
                 this.borderPickMode = false;
                 if (this.borderPickerBtn) { this.borderPickerBtn.style.background = ''; this.borderPickerBtn.style.color = ''; }
             }
@@ -1769,6 +1787,17 @@ class HexWorldEditorView extends ItemView {
             this.pathPickerBtn.setAttribute('title', 'Aufnehmen');
         }
         this.pathPickMode = false;
+        // Muster-Picker deaktivieren
+        this.patternPickMode = false;
+        if (this.patternPickerBtn) {
+            this.patternPickerBtn.style.background = '';
+        }
+        // Grenz-Picker deaktivieren
+        this.borderPickMode = false;
+        if (this.borderPickerBtn) {
+            this.borderPickerBtn.style.background = '';
+            this.borderPickerBtn.style.color = '';
+        }
         // Auch aktive Grenzregion abschließen + Radierer ausschalten
         if (this.borderSettings.activeRegionId !== null) {
             this.borderSettings.activeRegionId = null;
@@ -1827,14 +1856,11 @@ class HexWorldEditorView extends ItemView {
                 this.render();
                 return;
             }
+            const wasActive = this.borderPickMode;
             this.exitPathEditMode();
             // Sonst: Picker-Modus toggeln
-            this.borderPickMode = !this.borderPickMode;
-            if (this.borderPickMode) {
-                this.pathPickMode = false;
-                if (this.pathPickerBtn) { this.pathPickerBtn.style.background = ''; this.pathPickerBtn.style.color = ''; }
-            }
-            this.currentToolGroup = 'border';
+            this.borderPickMode = !wasActive;
+            this.currentToolGroup = this.borderPickMode ? null : 'border';
             this.drawMode = 'pen';
             pickerBtn.style.background = this.borderPickMode ? 'var(--interactive-accent)' : '';
             pickerBtn.style.color = this.borderPickMode ? 'var(--text-on-accent)' : '';
