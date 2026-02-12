@@ -328,6 +328,7 @@ class HexWorldEditorView extends ItemView {
         this.pendingHistory = false;
 
         this.masterColor = '#000000';
+        this.hexColorColor = '#6CC261'; // Zuletzt verwendete Wabenfarbe
 
         // Standard-Farbpalette (kann pro Datei angepasst werden)
         this.colorPalette = [...DEFAULT_PALETTE];
@@ -769,12 +770,18 @@ class HexWorldEditorView extends ItemView {
                     this.roadSettings.activeRoadId = null;
                     this.roadSettings.insertAfter = null;
                 }
+                if (newData.settings.hexColorColor) {
+                    this.hexColorColor = newData.settings.hexColorColor;
+                }
                 if (newData.settings.masterColor) {
                     this.masterColor = newData.settings.masterColor;
                     if (this.masterColorInput) { this.masterColorInput.value = this.masterColor; if (this.masterColorBtn) this.masterColorBtn.style.backgroundColor = this.masterColor; }
                 }
-                // Wenn ein Werkzeug aktiv war, dessen symbolColor als masterColor setzen
-                if (this.currentToolGroup && this.toolConfigs[this.currentToolGroup]) {
+                // Wenn ein Werkzeug aktiv war, dessen Farbe als masterColor setzen
+                if (this.currentToolGroup === 'hexcolor') {
+                    this.masterColor = this.hexColorColor;
+                    if (this.masterColorInput) { this.masterColorInput.value = this.masterColor; if (this.masterColorBtn) this.masterColorBtn.style.backgroundColor = this.masterColor; }
+                } else if (this.currentToolGroup && this.toolConfigs[this.currentToolGroup]) {
                     this.masterColor = this.toolConfigs[this.currentToolGroup].symbolColor;
                     if (this.masterColorInput) { this.masterColorInput.value = this.masterColor; if (this.masterColorBtn) this.masterColorBtn.style.backgroundColor = this.masterColor; }
                 }
@@ -1150,6 +1157,8 @@ class HexWorldEditorView extends ItemView {
             } else {
                 this.currentToolGroup = 'hexcolor';
                 this.drawMode = this.drawMode === 'eraser' ? 'eraser' : 'pen';
+                this.masterColor = this.hexColorColor;
+                if (this.masterColorInput) { this.masterColorInput.value = this.masterColor; if (this.masterColorBtn) this.masterColorBtn.style.backgroundColor = this.masterColor; }
             }
             this.updateToolbarState(toolbar);
             if (needsRender) this.render();
@@ -1731,7 +1740,11 @@ class HexWorldEditorView extends ItemView {
             const region = this.data.borders && this.data.borders.find(r => r.id === this.borderSettings.activeRegionId);
             if (region) { region.color = this.masterColor; this.render(); this.requestSave(); }
         }
-        if (this.currentToolGroup && this.toolConfigs[this.currentToolGroup]) {
+        if (this.currentToolGroup === 'hexcolor') {
+            this.hexColorColor = this.masterColor;
+            const toolbar = this.containerEl.querySelector('.hex-toolbar');
+            if (toolbar) this.updateToolbarState(toolbar);
+        } else if (this.currentToolGroup && this.toolConfigs[this.currentToolGroup]) {
             this.toolConfigs[this.currentToolGroup].symbolColor = this.masterColor;
             const toolbar = this.containerEl.querySelector('.hex-toolbar');
             if (toolbar) this.updateToolbarState(toolbar);
@@ -1983,12 +1996,18 @@ class HexWorldEditorView extends ItemView {
             btn.style.boxShadow = isActive ? '0 0 8px rgba(74, 158, 255, 0.4)' : '';
         });
 
-        // Andere Tool-Group-Buttons (pattern, river, road, text) - nur Active-Status
+        // Andere Tool-Group-Buttons (pattern, river, road, text, hexcolor) - Active-Status
         toolbar.querySelectorAll('[data-tool-group]').forEach(btn => {
             const groupId = btn.dataset.toolGroup;
             if (!['grass', 'tree', 'mountain', 'building'].includes(groupId)) {
                 const isActive = btn.dataset.toolGroup === this.currentToolGroup;
                 btn.classList.toggle('active', isActive);
+                if (groupId === 'hexcolor') {
+                    btn.style.background = '#ffffff';
+                    btn.style.border = isActive ? '3px solid #4A9EFF' : '';
+                    btn.style.boxShadow = isActive ? '0 0 8px rgba(74, 158, 255, 0.4)' : '';
+                    btn.style.color = this.hexColorColor;
+                }
             }
         });
 
@@ -4457,7 +4476,8 @@ class HexWorldEditorView extends ItemView {
                     riverSettings: this.riverSettings,
                     roadSettings: this.roadSettings,
                     masterColor: this.masterColor,
-                    editMode: this.editMode
+                    editMode: this.editMode,
+                    hexColorColor: this.hexColorColor
                 };
 
                 // Erstelle MD-Format mit Frontmatter und JSON-Codeblock
