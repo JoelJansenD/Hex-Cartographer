@@ -1,5 +1,9 @@
 const { Plugin, TFile, Notice, Modal, ItemView, setIcon } = require('obsidian');
 
+// Standard-Farbpaletten (hier einmal anpassen — wird überall verwendet)
+const DEFAULT_PALETTE  = ['#3295D2', '#6CC261', '#DDC88D', '#808080', '#CD6155', '#FFD700', '#000000', '#FFFFFF'];
+const DEFAULT_PALETTE2 = ['#1A5276', '#2ECC71', '#E67E22', '#8E44AD', '#F1948A', '#85C1E9', '#A04000', '#D5DBDB'];
+
 class HexWorldEditorPlugin extends Plugin {
     async onload() {
         this.registerView('hexworld-editor', (leaf) => new HexWorldEditorView(leaf, this));
@@ -188,8 +192,8 @@ class HexWorldEditorPlugin extends Plugin {
             offY: 300,
             // Werkzeug-Einstellungen
             settings: {
-                colorPalette: ['#3295D2', '#6CC261', '#DDC88D', '#808080', '#CD6155', '#FFD700', '#000000', '#FFFFFF'],
-                colorPalette2: ['#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF'],
+                colorPalette: [...DEFAULT_PALETTE],
+                colorPalette2: [...DEFAULT_PALETTE2],
                 activeColorSlot: 1,
                 drawMode: 'pen',
                 currentToolGroup: null,
@@ -304,22 +308,30 @@ class HexWorldEditorView extends ItemView {
         this.startHex = null;
         this.borderSettings = { percent: 100, repeats: 1, activeRegionId: null, pickedHex: null, visible: true };
         this.borderHighlightWidth = 3; // Rahmenstärke für aktive Grenzregion
+        // Wenn true, wird bei Klick auf die Karte der Grenzregionen-Werkzeugmodus aktiviert, um eine neue Grenzregion zu erstellen oder eine bestehende Grenzregion zu erweitern (abhängig von lastHex), und die Karte wird aktualisiert, um die aktive Grenzregion hervorzuheben
         this.borderPickMode = false;
+        // riverSettings speichert alle Einstellungen für das Fluss-Werkzeug, damit sie auch während des Ziehens verfügbar sind (z.B. um die Karte zu aktualisieren) und damit sie beim Wechseln zwischen verschiedenen Werkzeugen erhalten bleiben
         this.riverSettings = { width: 5, activeRiverId: null, editMode: false, insertAfter: null };
+        // roadSettings ähnlich wie riverSettings, aber mit eigenen Eigenschaften (z.B. width) und eigenem activeRoadId, damit
         this.roadSettings = { width: 3, activeRoadId: null, editMode: false, insertAfter: null };
+        // Wenn true, wird bei Klick auf die Karte der Pfad-Werkzeugmodus aktiviert, um einen neuen Pfad zu erstellen oder einen bestehenden Pfad zu erweitern (abhängig von lastWaypointClick)
         this.pathPickMode = false;
         // Wie weit Pfad-Endpunkte ins Hex reichen: 0 = Hex-Rand, 1 = Hex-Zentrum
         this.pathEndInset = 0.1;
+        // Index des aktuell gezogenen Flusses/Weges (null = keiner), um während des Ziehens die Karte zu aktualisieren
         this.riverDragIndex = null;
+        // Ähnlich wie riverDragIndex, aber für Straßen
         this.roadDragIndex = null;
+        // Speichert die zuletzt angeklickte Wabe für die Pfad-Werkezeuge, um bei Klicks auf die Karte zu entscheiden, ob ein neuer Pfad gestartet oder ein bestehender Pfad erweitert wird
         this.lastWaypointClick = null;
+        // Verhindert, dass bei Klicks auf die Karte während des Ziehens von Flüssen/Wegen die Karte neu geladen wird (was zu unerwünschtem Verhalten führen kann)
         this.pendingHistory = false;
 
-        this.masterColor = '#6CC261';
+        this.masterColor = '#000000';
 
-        // Farbpalette mit 8 Slots
-        this.colorPalette = ['#3295D2', '#6CC261', '#DDC88D', '#808080', '#CD6155', '#FFD700', '#000000', '#FFFFFF'];
-        this.colorPalette2 = ['#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF'];
+        // Standard-Farbpalette (kann pro Datei angepasst werden)
+        this.colorPalette = [...DEFAULT_PALETTE];
+        this.colorPalette2 = [...DEFAULT_PALETTE2];
         this.activeColorSlot = 1; // Standardfarbe: Grün
 
         // Werkzeug-Konfigurationen
@@ -968,7 +980,7 @@ class HexWorldEditorView extends ItemView {
                 width: 1px !important;
                 min-width: 1px !important;
                 align-self: stretch !important;
-                background-color: var(--divider-color, #404040) !important;
+                background-color: #b8b8b8 !important;
                 flex-shrink: 0 !important;
                 margin: 0 !important;
                 padding: 0 !important;
@@ -1142,12 +1154,6 @@ class HexWorldEditorView extends ItemView {
 
         // Radiergummi
         this.createDrawModeButton(editContent, 'eraser', 'eraser', 'Radierer');
-
-        // Mülleimer (neben Radierer)
-        const clearBtn = editContent.createEl('button', { cls: 'hex-tool-btn', attr: { title: 'Löschen' } });
-        setIcon(clearBtn, 'trash-2');
-        clearBtn.style.color = 'var(--text-error)';
-        clearBtn.onclick = () => this.handleClearButton();
 
         editContent.createEl('span', { cls: 'hex-toolbar-sep', text: '\u200B' });
 
@@ -1555,7 +1561,7 @@ class HexWorldEditorView extends ItemView {
 
         // Shared Picker/OK-Button (kontextabhängig)
         const pickerBtn = topRow.createEl('button', { cls: 'hex-tool-btn', attr: { title: 'Aufnehmen' } });
-        setIcon(pickerBtn, 'pipette');
+        setIcon(pickerBtn, 'mouse-pointer');
         this.pathPickerBtn = pickerBtn;
         pickerBtn.onclick = () => {
             const settings = this.currentToolGroup === 'river' ? this.riverSettings : this.roadSettings;
@@ -1564,7 +1570,7 @@ class HexWorldEditorView extends ItemView {
                 settings.editMode = false;
                 settings[activeIdKey] = null;
                 settings.insertAfter = null;
-                setIcon(pickerBtn, 'pipette');
+                setIcon(pickerBtn, 'mouse-pointer');
                 pickerBtn.style.background = '';
                 pickerBtn.style.color = '';
                 pickerBtn.setAttribute('title', 'Aufnehmen');
@@ -1717,7 +1723,7 @@ class HexWorldEditorView extends ItemView {
             }
         }
         if (this.pathPickerBtn) {
-            setIcon(this.pathPickerBtn, 'pipette');
+            setIcon(this.pathPickerBtn, 'mouse-pointer');
             this.pathPickerBtn.style.background = '';
             this.pathPickerBtn.style.color = '';
             this.pathPickerBtn.setAttribute('title', 'Aufnehmen');
@@ -1757,9 +1763,10 @@ class HexWorldEditorView extends ItemView {
 
         // Picker-Button
         const pickerBtn = topRow.createEl('button', { cls: 'hex-tool-btn', attr: { title: 'Grenzfarbe aufnehmen' } });
-        setIcon(pickerBtn, 'pipette');
+        setIcon(pickerBtn, 'mouse-pointer');
         this.borderPickerBtn = pickerBtn;
         pickerBtn.onclick = () => {
+            this.exitPathEditMode();
             this.borderPickMode = !this.borderPickMode;
             if (this.borderPickMode) {
                 this.pathPickMode = false;
@@ -1869,7 +1876,7 @@ class HexWorldEditorView extends ItemView {
                 this.pathPickerBtn.style.color = 'var(--text-on-accent)';
                 this.pathPickerBtn.setAttribute('title', 'Abschließen');
             } else if (!this.pathPickMode) {
-                setIcon(this.pathPickerBtn, 'pipette');
+                setIcon(this.pathPickerBtn, 'mouse-pointer');
                 this.pathPickerBtn.style.background = '';
                 this.pathPickerBtn.style.color = '';
                 this.pathPickerBtn.setAttribute('title', 'Aufnehmen');
@@ -1931,102 +1938,6 @@ class HexWorldEditorView extends ItemView {
         });
     }
 
-    handleClearButton() {
-        if (this.drawMode === 'eraser') {
-            this.pushHistory();
-
-            if (this.currentToolGroup === 'river') {
-                this.data.rivers = [];
-                this.riverSettings.activeRiverId = null;
-                this.riverSettings.editMode = false;
-                this.riverSettings.insertAfter = null;
-            } else if (this.currentToolGroup === 'road') {
-                this.data.roads = [];
-                this.roadSettings.activeRoadId = null;
-                this.roadSettings.editMode = false;
-                this.roadSettings.insertAfter = null;
-            } else if (this.currentToolGroup === 'border') {
-                if (this.borderSettings.activeRegionId !== null) {
-                    this.data.borders = this.data.borders.filter(r => r.id !== this.borderSettings.activeRegionId);
-                    this.borderSettings.activeRegionId = null;
-                } else {
-                    this.data.borders = [];
-                }
-            } else if (this.currentToolGroup === 'text') {
-                this.data.texts = [];
-            } else if (this.currentToolGroup === 'pattern' && this.patternData) {
-                // Lösche alle Waben, die dem aktuellen Muster entsprechen
-                Object.keys(this.data.hexes).forEach(key => {
-                    if (this.hexMatchesPattern(this.data.hexes[key], this.patternData)) {
-                        delete this.data.hexes[key];
-                    }
-                });
-            } else if (this.currentToolGroup === 'hexcolor') {
-                // Lösche alle Waben mit der Masterfarbe
-                Object.keys(this.data.hexes).forEach(key => {
-                    const h = this.data.hexes[key];
-                    if (h.color === this.masterColor) {
-                        delete h.color;
-                        if (!h.symbol) delete this.data.hexes[key];
-                    }
-                });
-            } else if (this.currentToolGroup) {
-                // Lösche nur das aktive Symbol (nicht alle Varianten der Gruppe)
-                const config = this.toolConfigs[this.currentToolGroup];
-                if (config) {
-                    const activeSymbol = config.currentVariant;
-                    Object.values(this.data.hexes).forEach(h => {
-                        if (h.symbol === activeSymbol) {
-                            delete h.symbol;
-                            delete h.symbolColor;
-                            // Farbe nur löschen wenn backgroundEnabled aktiv ist
-                            if (config.backgroundEnabled) {
-                                delete h.color;
-                                delete h.backgroundColor;
-                            }
-                        }
-                    });
-                }
-            } else {
-                // Lösche nur die Farbe (nicht das Symbol) bei allen Waben mit der aktiven Farbe
-                const targetColor = this.colorPalette[this.activeColorSlot];
-                Object.keys(this.data.hexes).forEach(key => {
-                    const h = this.data.hexes[key];
-                    // Prüfe beide Farbfelder (color und backgroundColor für Kompatibilität)
-                    const hexColor = h.backgroundColor || h.color;
-                    if (hexColor === targetColor) {
-                        delete h.color;
-                        delete h.backgroundColor;
-                        // Nur komplett löschen, wenn auch kein Symbol vorhanden
-                        if (!h.symbol) {
-                            delete this.data.hexes[key];
-                        }
-                    }
-                });
-            }
-
-            this.render();
-            this.requestSave();
-        } else {
-            if (confirm("Gesamte Karte löschen?")) {
-                this.pushHistory();
-                this.data.hexes = {};
-                this.data.rivers = [];
-                this.data.roads = [];
-                this.data.texts = [];
-                this.data.borders = [];
-                this.borderSettings.activeRegionId = null;
-                this.riverSettings.activeRiverId = null;
-                this.riverSettings.editMode = false;
-                this.riverSettings.insertAfter = null;
-                this.roadSettings.activeRoadId = null;
-                this.roadSettings.editMode = false;
-                this.roadSettings.insertAfter = null;
-                this.render();
-                this.requestSave();
-            }
-        }
-    }
 
     getTextAt(worldX, worldY) {
         if (!this.data.texts) return null;
@@ -2282,7 +2193,7 @@ class HexWorldEditorView extends ItemView {
                                 }
                                 else { this.data.texts = this.data.texts.filter(t => t !== hitText); }
                                 this.render(); this.requestSave();
-                            }, hitText.text, hitText.size, hitText.link, hitText.color, hitText.outline, hitText.bold, hitText.shadow, hitText.shadowDistance, hitText.shadowOpatown, this.colorPalette).open();
+                            }, hitText.text, hitText.size, hitText.link, hitText.color, hitText.outline, hitText.bold, hitText.shadow, hitText.shadowDistance, hitText.shadowOpatown, this.colorPalette, this.colorPalette2).open();
                         } else if (hitText.link) {
                             this.app.workspace.openLinkText(hitText.link, this.file.path, true);
                         }
@@ -2782,7 +2693,7 @@ class HexWorldEditorView extends ItemView {
                                     }
                                     else { this.data.texts = this.data.texts.filter(t => t !== hitText); }
                                     this.render(); this.requestSave();
-                                }, hitText.text, hitText.size, hitText.link, hitText.color, hitText.outline, hitText.bold, hitText.shadow, hitText.shadowDistance, hitText.shadowOpatown, this.colorPalette).open();
+                                }, hitText.text, hitText.size, hitText.link, hitText.color, hitText.outline, hitText.bold, hitText.shadow, hitText.shadowDistance, hitText.shadowOpatown, this.colorPalette, this.colorPalette2).open();
                             } else if (hitText.link) {
                                 this.app.workspace.openLinkText(hitText.link, this.file.path, true);
                             }
@@ -2895,7 +2806,7 @@ class HexWorldEditorView extends ItemView {
                         this.lastUsedTextShadow = sh; this.lastUsedTextShadowDistance = shd; this.lastUsedTextShadowOpatown = sho;
                         this.render(); this.requestSave();
                     }
-                }, '', this.lastUsedTextSize, '', this.lastUsedTextColor, this.lastUsedTextOutline, this.lastUsedTextBold, this.lastUsedTextShadow, this.lastUsedTextShadowDistance, this.lastUsedTextShadowOpatown, this.colorPalette).open();
+                }, '', this.lastUsedTextSize, '', this.lastUsedTextColor, this.lastUsedTextOutline, this.lastUsedTextBold, this.lastUsedTextShadow, this.lastUsedTextShadowDistance, this.lastUsedTextShadowOpatown, this.colorPalette, this.colorPalette2).open();
             }
             return;
         }
@@ -3218,7 +3129,14 @@ class HexWorldEditorView extends ItemView {
             const preData = this.data.hexes[preKey];
             const tg = this.currentToolGroup;
 
-            if (tg && this.toolConfigs[tg] && preData && preData.symbol) {
+            if (tg === 'border') {
+                // Finde die Grenz-Region, zu der dieses Hex gehört
+                const region = this.data.borders.find(r => r.hexes.some(b => b.q === hex.q && b.r === hex.r));
+                this.lastErasedHex = region ? { q: hex.q, r: hex.r, type: 'border', regionId: region.id, timestamp: Date.now() } : null;
+            } else if (tg === 'pattern' && preData) {
+                // Muster-Daten kopieren (Farbe + Symbol + Symbolfarbe)
+                this.lastErasedHex = { q: hex.q, r: hex.r, type: 'pattern', pattern: { color: preData.color, symbol: preData.symbol, symbolColor: preData.symbolColor }, timestamp: Date.now() };
+            } else if (tg && this.toolConfigs[tg] && preData && preData.symbol) {
                 this.lastErasedHex = { q: hex.q, r: hex.r, type: 'symbol', symbol: preData.symbol, timestamp: Date.now() };
             } else if ((tg === 'hexcolor' || tg === null) && preData && preData.color) {
                 this.lastErasedHex = { q: hex.q, r: hex.r, type: 'color', color: preData.color, toolGroup: tg, timestamp: Date.now() };
@@ -3321,6 +3239,10 @@ class HexWorldEditorView extends ItemView {
             this.floodEraseSymbol(hex, last.symbol);
         } else if (last.type === 'color') {
             this.floodEraseColor(hex, last.color);
+        } else if (last.type === 'pattern') {
+            this.floodErasePattern(hex, last.pattern);
+        } else if (last.type === 'border') {
+            this.floodEraseBorderSegment(hex, last.regionId);
         } else if (last.type === 'river' || last.type === 'road') {
             const paths = last.type === 'river' ? this.data.rivers : this.data.roads;
             this.floodEraseEntirePath(paths, last.pathIds);
@@ -3386,6 +3308,64 @@ class HexWorldEditorView extends ItemView {
             if (pathIds.includes(paths[i].id)) {
                 paths.splice(i, 1);
             }
+        }
+    }
+
+    floodErasePattern(startHex, targetPattern) {
+        const visited = new Set();
+        const queue = this.getHexNeighbors(startHex);
+
+        while (queue.length > 0) {
+            const hex = queue.shift();
+            const key = `${hex.q}_${hex.r}`;
+            if (visited.has(key)) continue;
+            visited.add(key);
+
+            const hexData = this.data.hexes[key];
+            if (!hexData) continue;
+            // Prüfe ob die Wabe dem Muster entspricht (Farbe + Symbol + Symbolfarbe)
+            if (!this.hexMatchesPattern(hexData, targetPattern)) continue;
+
+            // Wabe komplett löschen
+            delete this.data.hexes[key];
+
+            const neighbors = this.getHexNeighbors(hex);
+            neighbors.forEach(n => queue.push(n));
+        }
+    }
+
+    floodEraseBorderSegment(startHex, regionId) {
+        const region = this.data.borders.find(r => r.id === regionId);
+        if (!region) return;
+
+        // Finde alle zusammenhängenden Grenz-Waben ab startHex via BFS
+        const regionHexSet = new Set(region.hexes.map(h => `${h.q}_${h.r}`));
+        const toRemove = new Set();
+        const visited = new Set();
+
+        // Starte BFS ab den Nachbarn (startHex wurde schon vom ersten Klick gelöscht)
+        // Aber prüfe auch startHex selbst, falls es noch existiert
+        const queue = [startHex, ...this.getHexNeighbors(startHex)];
+
+        while (queue.length > 0) {
+            const hex = queue.shift();
+            const key = `${hex.q}_${hex.r}`;
+            if (visited.has(key)) continue;
+            visited.add(key);
+
+            if (!regionHexSet.has(key)) continue;
+
+            toRemove.add(key);
+            const neighbors = this.getHexNeighbors(hex);
+            neighbors.forEach(n => queue.push(n));
+        }
+
+        // Entferne die zusammenhängenden Waben aus der Region
+        region.hexes = region.hexes.filter(h => !toRemove.has(`${h.q}_${h.r}`));
+
+        // Leere Region aufräumen
+        if (region.hexes.length === 0) {
+            this.data.borders = this.data.borders.filter(r => r.id !== regionId);
         }
     }
 
@@ -4575,7 +4555,7 @@ class FileSelectorModal extends Modal {
 }
 
 class TextInputModal extends Modal {
-    constructor(app, onSubmit, val = '', size = 16, link = '', color = '#ffffff', outline = true, bold = false, shadow = false, shadowDistance = 5, shadowOpatown = 50, colorPalette = null) {
+    constructor(app, onSubmit, val = '', size = 16, link = '', color = '#ffffff', outline = true, bold = false, shadow = false, shadowDistance = 5, shadowOpatown = 50, colorPalette = null, colorPalette2 = null) {
         super(app);
         this.onSubmit = onSubmit;
         this.val = val;
@@ -4587,7 +4567,8 @@ class TextInputModal extends Modal {
         this.shadow = shadow;
         this.shadowDistance = shadowDistance;
         this.shadowOpatown = shadowOpatown;
-        this.colorPalette = colorPalette || ['#ffffff', '#000000', '#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff'];
+        this.colorPalette = colorPalette;
+        this.colorPalette2 = colorPalette2;
     }
 
     onOpen() {
@@ -4616,20 +4597,24 @@ class TextInputModal extends Modal {
         colorInput.style.height = '40px';
         colorInput.style.cursor = 'pointer';
 
-        // Farbpalette unter dem Color Picker
-        const paletteRow = colorSection.createDiv({ style: 'display: flex; gap: 5px; flex-wrap: wrap; margin-top: 10px;' });
-        paletteRow.createEl('span', { text: 'Palette:', attr: { style: 'width: 100%; font-size: 11px; margin-bottom: 5px;' } });
+        // Farbpalette unter dem Color Picker (2 Zeilen à 8 Farben)
+        const paletteContainer = colorSection.createDiv({ style: 'display: flex; flex-direction: column; gap: 3px; margin-top: 10px;' });
+        paletteContainer.createEl('span', { text: 'Palette:', attr: { style: 'font-size: 11px; margin-bottom: 3px;' } });
 
-        this.colorPalette.forEach(color => {
-            const paletteBtn = paletteRow.createEl('button', {
-                attr: {
-                    style: `width: 30px; height: 30px; background: ${color}; border: 2px solid var(--divider-color); border-radius: 3px; cursor: pointer;`
-                }
+        [this.colorPalette, this.colorPalette2].forEach(palette => {
+            if (!palette) return;
+            const row = paletteContainer.createDiv({ style: 'display: flex; gap: 5px;' });
+            palette.forEach(color => {
+                const paletteBtn = row.createEl('button', {
+                    attr: {
+                        style: `width: 30px; height: 30px; background: ${color}; border: 2px solid var(--divider-color); border-radius: 3px; cursor: pointer;`
+                    }
+                });
+                paletteBtn.onclick = () => {
+                    colorInput.value = color;
+                    this.color = color;
+                };
             });
-            paletteBtn.onclick = () => {
-                colorInput.value = color;
-                this.color = color;
-            };
         });
 
         // Formatierungsoptionen (Checkboxen in Grid)
