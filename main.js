@@ -1232,8 +1232,8 @@ class HexWorldEditorView extends ItemView {
             if (mode === 'eraser' && (this.patternPickMode || this.pathPickMode || this.borderPickMode)) return;
             const needsRender = this.currentToolGroup === 'pattern' || this.borderSettings.pickedHex;
             if (mode !== 'eraser') this.exitPathEditMode();
-            // Erneutes Drücken des aktiven Radierers schaltet ihn aus
-            if (mode === 'eraser' && this.drawMode === 'eraser') {
+            // Erneutes Drücken des aktiven Radierers/Fülleimers schaltet ihn aus
+            if (this.drawMode === mode && (mode === 'eraser' || mode === 'fill')) {
                 this.drawMode = 'pen';
                 this.updateToolbarState(toolbar);
                 return;
