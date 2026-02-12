@@ -189,6 +189,7 @@ class HexWorldEditorPlugin extends Plugin {
             // Werkzeug-Einstellungen
             settings: {
                 colorPalette: ['#3295D2', '#6CC261', '#DDC88D', '#808080', '#CD6155', '#FFD700', '#000000', '#FFFFFF'],
+                colorPalette2: ['#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF'],
                 activeColorSlot: 1,
                 drawMode: 'pen',
                 currentToolGroup: null,
@@ -318,6 +319,7 @@ class HexWorldEditorView extends ItemView {
 
         // Farbpalette mit 8 Slots
         this.colorPalette = ['#3295D2', '#6CC261', '#DDC88D', '#808080', '#CD6155', '#FFD700', '#000000', '#FFFFFF'];
+        this.colorPalette2 = ['#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF'];
         this.activeColorSlot = 1; // Standardfarbe: Grün
 
         // Werkzeug-Konfigurationen
@@ -682,6 +684,9 @@ class HexWorldEditorView extends ItemView {
                 if (newData.settings.colorPalette) {
                     this.colorPalette = newData.settings.colorPalette;
                 }
+                if (newData.settings.colorPalette2) {
+                    this.colorPalette2 = newData.settings.colorPalette2;
+                }
                 if (newData.settings.activeColorSlot !== undefined) {
                     this.activeColorSlot = newData.settings.activeColorSlot;
                 }
@@ -743,7 +748,7 @@ class HexWorldEditorView extends ItemView {
                 }
                 if (newData.settings.masterColor) {
                     this.masterColor = newData.settings.masterColor;
-                    if (this.masterColorInput) this.masterColorInput.value = this.masterColor;
+                    if (this.masterColorInput) { this.masterColorInput.value = this.masterColor; if (this.masterColorBtn) this.masterColorBtn.style.backgroundColor = this.masterColor; }
                 }
             } else {
                 // Keine Settings vorhanden - verwende SVG-basierte Defaults für neue Dateien
@@ -954,6 +959,14 @@ class HexWorldEditorView extends ItemView {
         container.style.flexDirection = 'column';
         container.style.height = '100%';
 
+        // CSS für Color-Input Swatch (Pseudo-Elemente nur via Style-Block möglich)
+        const style = document.createElement('style');
+        style.textContent = `
+            input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+            input[type="color"]::-webkit-color-swatch { border: none; border-radius: 3px; }
+        `;
+        container.appendChild(style);
+
         const toolbar = container.createDiv({ cls: 'hex-toolbar' });
         toolbar.style.padding = '8px';
         toolbar.style.display = 'flex';
@@ -1041,27 +1054,36 @@ class HexWorldEditorView extends ItemView {
         const editContent = toolbar.createDiv({ style: this.editMode ? 'display: contents;' : 'display: none;' });
         this.editContent = editContent;
 
-        // Master-Farbfeld
+        // Master-Farbfeld (sichtbarer Button + versteckter Color-Input)
+        const masterColorBtn = editContent.createEl('button', {
+            attr: { title: 'Werkzeugfarbe', style: 'width: 50px; height: 50px; min-width: 50px; border: 1px solid var(--divider-color); border-radius: 4px; cursor: pointer; box-sizing: border-box; padding: 0;' }
+        });
+        masterColorBtn.style.backgroundColor = this.masterColor;
+        this.masterColorBtn = masterColorBtn;
+
         const masterColorInput = editContent.createEl('input', {
             type: 'color',
             value: this.masterColor,
-            attr: { title: 'Werkzeugfarbe', style: '-webkit-appearance: none; appearance: none; padding: 0; border: 1px solid var(--divider-color); border-radius: 4px; cursor: pointer; box-sizing: border-box; vertical-align: middle; background: none;' }
+            attr: { style: 'position: absolute; width: 0; height: 0; opacity: 0; pointer-events: none;' }
         });
         this.masterColorInput = masterColorInput;
-        this.makeInputInteractive(masterColorInput);
+
+        masterColorBtn.onclick = () => masterColorInput.click();
+        this.makeInputInteractive(masterColorBtn);
         masterColorInput.oninput = (e) => {
             this.masterColor = e.target.value;
+            masterColorBtn.style.backgroundColor = this.masterColor;
             this.updateActivePathColor();
         };
         masterColorInput.addEventListener('change', () => {
             this.requestSave();
         });
-        // Größe an Edit-Button anpassen
-        setTimeout(() => {
-            const h = editModeBtn.offsetHeight;
-            masterColorInput.style.width = `${h}px`;
-            masterColorInput.style.height = `${h}px`;
-        }, 0);
+
+        // Separator + Farbpalette direkt neben Masterfarbe
+        editContent.createSpan({ style: 'width: 1px; background: var(--divider-color); margin: 0 4px; height: 24px;' });
+        this.createColorPalette(editContent);
+
+        editContent.createSpan({ style: 'width: 1px; background: var(--divider-color); margin: 0 4px; height: 24px;' });
 
         // Waben-Farbwerkzeug (Masterfarbe)
         const hexColorBtn = editContent.createEl('button', { cls: 'hex-tool-btn', attr: { title: 'Wabe einfärben (Masterfarbe)' } });
@@ -1123,11 +1145,6 @@ class HexWorldEditorView extends ItemView {
         this.createBorderButton(editContent);
 
         editContent.createSpan({ style: 'flex-grow: 1' });
-
-        editContent.createSpan({ style: 'width: 1px; background: var(--divider-color); margin: 0 4px; height: 24px;' });
-
-        // Farbpalette
-        this.createColorPalette(editContent);
 
         // Undo/Redo
         const undoBtn = editContent.createEl('button', { cls: 'hex-tool-btn', attr: { title: 'Rückgängig (Strg+Z)' } });
@@ -1232,7 +1249,7 @@ class HexWorldEditorView extends ItemView {
             this.currentToolGroup = groupId;
             this.drawMode = this.drawMode === 'eraser' ? 'eraser' : 'pen';
             this.masterColor = config.symbolColor;
-            if (this.masterColorInput) this.masterColorInput.value = this.masterColor;
+            if (this.masterColorInput) { this.masterColorInput.value = this.masterColor; if (this.masterColorBtn) this.masterColorBtn.style.backgroundColor = this.masterColor; }
 
             this.updateToolbarState(toolbar);
 
@@ -1417,11 +1434,18 @@ class HexWorldEditorView extends ItemView {
     }
 
     createColorPalette(toolbar) {
-        const wrapper = toolbar.createDiv({ style: 'display: flex; align-items: center; gap: 3px;' });
+        const outer = toolbar.createDiv({ style: 'display: inline-flex; flex-direction: column; gap: 2px;' });
+        this.paletteOuter = outer;
 
-        this.colorPalette.forEach((color, index) => {
-            // Sichtbarer Button
-            const btn = wrapper.createEl('button', {
+        this._createPaletteRow(outer, this.colorPalette, 'colorPalette');
+        this._createPaletteRow(outer, this.colorPalette2, 'colorPalette2');
+    }
+
+    _createPaletteRow(parent, palette, paletteKey) {
+        const row = parent.createDiv({ style: 'display: flex; align-items: center; gap: 3px;' });
+
+        palette.forEach((color, index) => {
+            const btn = row.createEl('button', {
                 cls: 'hex-color-slot',
                 attr: {
                     title: 'Klick: Masterfarbe setzen | Rechtsklick: Farbe ändern',
@@ -1429,28 +1453,26 @@ class HexWorldEditorView extends ItemView {
                 }
             });
             btn.style.backgroundColor = color;
+            btn.dataset.paletteKey = paletteKey;
+            btn.dataset.paletteIndex = index;
 
-            // Versteckter Color-Input für Rechtsklick/Long-Press
-            const hiddenInput = wrapper.createEl('input', {
+            const hiddenInput = row.createEl('input', {
                 type: 'color',
                 value: color,
                 attr: { style: 'position: absolute; width: 0; height: 0; opacity: 0; pointer-events: none;' }
             });
 
-            // Linksklick: Masterfarbe setzen
             btn.onclick = () => {
-                this.masterColor = this.colorPalette[index];
-                if (this.masterColorInput) this.masterColorInput.value = this.masterColor;
+                this.masterColor = this[paletteKey][index];
+                if (this.masterColorInput) { this.masterColorInput.value = this.masterColor; if (this.masterColorBtn) this.masterColorBtn.style.backgroundColor = this.masterColor; }
                 this.updateActivePathColor();
             };
 
-            // Rechtsklick: Farbwahl öffnen
             btn.oncontextmenu = (e) => {
                 e.preventDefault();
                 hiddenInput.click();
             };
 
-            // Long-Press (Touch): Farbwahl öffnen
             let longPressTimer = null;
             btn.addEventListener('touchstart', (e) => {
                 longPressTimer = setTimeout(() => {
@@ -1466,12 +1488,11 @@ class HexWorldEditorView extends ItemView {
                 if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
             });
 
-            // Farbänderung aus dem Dialog
             hiddenInput.oninput = (e) => {
-                this.colorPalette[index] = e.target.value;
+                this[paletteKey][index] = e.target.value;
                 btn.style.backgroundColor = e.target.value;
                 this.masterColor = e.target.value;
-                if (this.masterColorInput) this.masterColorInput.value = this.masterColor;
+                if (this.masterColorInput) { this.masterColorInput.value = this.masterColor; if (this.masterColorBtn) this.masterColorBtn.style.backgroundColor = this.masterColor; }
                 this.updateActivePathColor();
             };
             hiddenInput.addEventListener('change', () => {
@@ -1618,7 +1639,7 @@ class HexWorldEditorView extends ItemView {
             this.riverSettings.editMode = true;
             this.riverSettings.insertAfter = foundRiver.waypoints.length - 1;
             this.masterColor = foundRiver.color;
-            if (this.masterColorInput) this.masterColorInput.value = this.masterColor;
+            if (this.masterColorInput) { this.masterColorInput.value = this.masterColor; if (this.masterColorBtn) this.masterColorBtn.style.backgroundColor = this.masterColor; }
             if (this.riverWidthInput) this.riverWidthInput.value = foundRiver.width.toString();
             new Notice(`Fluss #${foundRiver.id} ausgewählt`);
         } else if (foundRoad) {
@@ -1629,7 +1650,7 @@ class HexWorldEditorView extends ItemView {
             this.roadSettings.editMode = true;
             this.roadSettings.insertAfter = foundRoad.waypoints.length - 1;
             this.masterColor = foundRoad.color;
-            if (this.masterColorInput) this.masterColorInput.value = this.masterColor;
+            if (this.masterColorInput) { this.masterColorInput.value = this.masterColor; if (this.masterColorBtn) this.masterColorBtn.style.backgroundColor = this.masterColor; }
             if (this.roadWidthInput) this.roadWidthInput.value = foundRoad.width.toString();
             new Notice(`Weg #${foundRoad.id} ausgewählt`);
         } else {
@@ -1796,11 +1817,6 @@ class HexWorldEditorView extends ItemView {
     }
 
     recalcToolbarWidths() {
-        if (this.editModeBtn && this.masterColorInput) {
-            const h = this.editModeBtn.offsetHeight;
-            this.masterColorInput.style.width = `${h}px`;
-            this.masterColorInput.style.height = `${h}px`;
-        }
         if (this.riverBtn && this.roadBtn && this.riverWidthInput && this.roadWidthInput) {
             this.riverWidthInput.style.width = `${this.riverBtn.offsetWidth}px`;
             this.roadWidthInput.style.width = `${this.roadBtn.offsetWidth}px`;
@@ -1888,8 +1904,12 @@ class HexWorldEditorView extends ItemView {
         });
 
         // Farbpalette - Farben aktualisieren
-        toolbar.querySelectorAll('.hex-color-slot').forEach((slot, index) => {
-            slot.style.backgroundColor = this.colorPalette[index];
+        toolbar.querySelectorAll('.hex-color-slot').forEach(slot => {
+            const pk = slot.dataset.paletteKey;
+            const pi = parseInt(slot.dataset.paletteIndex);
+            if (pk && this[pk]) {
+                slot.style.backgroundColor = this[pk][pi];
+            }
         });
     }
 
@@ -2077,7 +2097,7 @@ class HexWorldEditorView extends ItemView {
                     this.borderSettings.percent = foundRegion.percent !== undefined ? foundRegion.percent : 100;
                     this.borderSettings.repeats = foundRegion.repeats !== undefined ? foundRegion.repeats : 1;
                     this.masterColor = foundRegion.color;
-                    if (this.masterColorInput) this.masterColorInput.value = this.masterColor;
+                    if (this.masterColorInput) { this.masterColorInput.value = this.masterColor; if (this.masterColorBtn) this.masterColorBtn.style.backgroundColor = this.masterColor; }
                     if (this.borderPercentInput) {
                         this.borderPercentInput.value = this.borderSettings.percent.toString();
                     }
@@ -2430,7 +2450,7 @@ class HexWorldEditorView extends ItemView {
                                 this.borderSettings.percent = foundRegion.percent !== undefined ? foundRegion.percent : 100;
                                 this.borderSettings.repeats = foundRegion.repeats !== undefined ? foundRegion.repeats : 1;
                                 this.masterColor = foundRegion.color;
-                                if (this.masterColorInput) this.masterColorInput.value = this.masterColor;
+                                if (this.masterColorInput) { this.masterColorInput.value = this.masterColor; if (this.masterColorBtn) this.masterColorBtn.style.backgroundColor = this.masterColor; }
                                 if (this.borderPercentInput) this.borderPercentInput.value = this.borderSettings.percent.toString();
                                 if (this.borderRepeatsInput) this.borderRepeatsInput.value = this.borderSettings.repeats.toString();
                                 new Notice(`Grenze #${foundRegion.id} ausgewählt`);
@@ -2645,7 +2665,7 @@ class HexWorldEditorView extends ItemView {
                             this.borderSettings.percent = foundRegion.percent !== undefined ? foundRegion.percent : 100;
                             this.borderSettings.repeats = foundRegion.repeats !== undefined ? foundRegion.repeats : 1;
                             this.masterColor = foundRegion.color;
-                            if (this.masterColorInput) this.masterColorInput.value = this.masterColor;
+                            if (this.masterColorInput) { this.masterColorInput.value = this.masterColor; if (this.masterColorBtn) this.masterColorBtn.style.backgroundColor = this.masterColor; }
                             if (this.borderPercentInput) this.borderPercentInput.value = this.borderSettings.percent.toString();
                             if (this.borderRepeatsInput) this.borderRepeatsInput.value = this.borderSettings.repeats.toString();
                             new Notice(`Grenze #${foundRegion.id} ausgewählt`);
@@ -4361,6 +4381,7 @@ class HexWorldEditorView extends ItemView {
 
                 this.data.settings = {
                     colorPalette: this.colorPalette,
+                    colorPalette2: this.colorPalette2,
                     activeColorSlot: this.activeColorSlot,
                     drawMode: this.drawMode,
                     currentToolGroup: this.currentToolGroup,
