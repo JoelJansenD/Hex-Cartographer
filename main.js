@@ -1,7 +1,7 @@
 const { Plugin, TFile, Notice, Modal, ItemView, setIcon } = require('obsidian');
 
 // Standard-Farbpaletten (hier einmal anpassen — wird überall verwendet)
-const DEFAULT_PALETTE  = ['#3295D2', '#6CC261', '#DDC88D', '#808080', '#CD6155', '#FFD700', '#000000', '#FFFFFF'];
+const DEFAULT_PALETTE  = ['#3295D2', '#6CC261', '#DDC88D', '#9c9090', '#CD6155', '#FFD700', '#000000', '#FFFFFF'];
 const DEFAULT_PALETTE2 = ['#ff0000', '#ff8000', '#ffff00', '#00ff00', '#00ffff', '#0000ff', '#8000ff', '#ff00ff'];
 
 class HexWorldEditorPlugin extends Plugin {
