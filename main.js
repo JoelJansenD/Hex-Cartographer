@@ -959,11 +959,22 @@ class HexWorldEditorView extends ItemView {
         container.style.flexDirection = 'column';
         container.style.height = '100%';
 
-        // CSS für Color-Input Swatch (Pseudo-Elemente nur via Style-Block möglich)
+        // CSS für Color-Input Swatch und Toolbar-Separatoren (Pseudo-Elemente nur via Style-Block möglich)
         const style = document.createElement('style');
         style.textContent = `
             input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
             input[type="color"]::-webkit-color-swatch { border: none; border-radius: 3px; }
+            .hex-toolbar-sep {
+                width: 1px !important;
+                min-width: 1px !important;
+                align-self: stretch !important;
+                background-color: var(--divider-color, #404040) !important;
+                flex-shrink: 0 !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                border: none !important;
+                display: block !important;
+            }
         `;
         container.appendChild(style);
 
@@ -1079,11 +1090,14 @@ class HexWorldEditorView extends ItemView {
             this.requestSave();
         });
 
-        // Separator + Farbpalette direkt neben Masterfarbe
-        editContent.createSpan({ style: 'width: 1px; background: var(--divider-color); margin: 0 4px; height: 24px;' });
-        this.createColorPalette(editContent);
+        // Separator zwischen Master-Farbe und Werkzeug-Gruppen
+        editContent.createEl('span', { cls: 'hex-toolbar-sep', text: '\u200B' });
 
-        editContent.createSpan({ style: 'width: 1px; background: var(--divider-color); margin: 0 4px; height: 24px;' });
+        // Farbpalette (Borders als Separatoren links/rechts)
+        this.createColorPalette(editContent);
+        
+        // Separator zwischen Master-Farbe und Werkzeug-Gruppen
+        editContent.createEl('span', { cls: 'hex-toolbar-sep', text: '\u200B' });
 
         // Waben-Farbwerkzeug (Masterfarbe)
         const hexColorBtn = editContent.createEl('button', { cls: 'hex-tool-btn', attr: { title: 'Wabe einfärben (Masterfarbe)' } });
@@ -1108,8 +1122,9 @@ class HexWorldEditorView extends ItemView {
         this.createToolGroupButton(editContent, 'mountain');
         this.createToolGroupButton(editContent, 'building');
 
-        editContent.createSpan({ style: 'width: 1px; background: var(--divider-color); margin: 0 4px; height: 24px;' });
+        editContent.createEl('span', { cls: 'hex-toolbar-sep', text: '\u200B' });
 
+        // Füllwerkzeugs 
         this.createDrawModeButton(editContent, 'fill', 'paint-bucket', 'Fülleimer');
 
         // Text-Werkzeug
@@ -1125,6 +1140,7 @@ class HexWorldEditorView extends ItemView {
             if (needsRender) this.render();
         };
 
+        // Radiergummi
         this.createDrawModeButton(editContent, 'eraser', 'eraser', 'Radierer');
 
         // Mülleimer (neben Radierer)
@@ -1133,18 +1149,20 @@ class HexWorldEditorView extends ItemView {
         clearBtn.style.color = 'var(--text-error)';
         clearBtn.onclick = () => this.handleClearButton();
 
-        editContent.createSpan({ style: 'width: 1px; background: var(--divider-color); margin: 0 4px; height: 24px;' });
+        editContent.createEl('span', { cls: 'hex-toolbar-sep', text: '\u200B' });
 
         // Musterwerkzeug
         this.createPatternTool(editContent);
 
-        editContent.createSpan({ style: 'flex-grow: 1' });
+        // Separator zwischen Master-Farbe und Werkzeug-Gruppen
+        editContent.createEl('span', { cls: 'hex-toolbar-sep', text: '\u200B' });
 
         // Fluss/Weg-Werkzeuge
         this.createPathToolbar(editContent);
         this.createBorderButton(editContent);
 
-        editContent.createSpan({ style: 'flex-grow: 1' });
+        // Separator zwischen Pfad-Werkzeugen und Undo/Redo
+        editContent.createEl('span', { cls: 'hex-toolbar-sep', text: '\u200B' });
 
         // Undo/Redo
         const undoBtn = editContent.createEl('button', { cls: 'hex-tool-btn', attr: { title: 'Rückgängig (Strg+Z)' } });
@@ -1434,7 +1452,7 @@ class HexWorldEditorView extends ItemView {
     }
 
     createColorPalette(toolbar) {
-        const outer = toolbar.createDiv({ style: 'display: inline-flex; flex-direction: column; gap: 2px;' });
+        const outer = toolbar.createDiv({ style: 'display: inline-flex; flex-direction: column; gap: 2px; border-left: 1px solid #bbb; border-right: 1px solid #bbb; padding: 0 6px;' });
         this.paletteOuter = outer;
 
         this._createPaletteRow(outer, this.colorPalette, 'colorPalette');
