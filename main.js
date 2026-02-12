@@ -711,10 +711,10 @@ class HexWorldEditorView extends ItemView {
                 if (newData.settings.activeColorSlot !== undefined) {
                     this.activeColorSlot = newData.settings.activeColorSlot;
                 }
-                // Stift-Werkzeug starten
+                // Werkzeug-Zustand wiederherstellen
                 this.drawMode = 'pen';
                 this.editMode = newData.settings.editMode === true;
-                this.currentToolGroup = null;
+                this.currentToolGroup = newData.settings.currentToolGroup || null;
                 if (newData.settings.toolConfigs) {
                     // Werkzeug-Konfigurationen wiederherstellen
                     // WICHTIG: Explizit jeden Key einzeln laden, um sicherzustellen,
@@ -771,6 +771,11 @@ class HexWorldEditorView extends ItemView {
                 }
                 if (newData.settings.masterColor) {
                     this.masterColor = newData.settings.masterColor;
+                    if (this.masterColorInput) { this.masterColorInput.value = this.masterColor; if (this.masterColorBtn) this.masterColorBtn.style.backgroundColor = this.masterColor; }
+                }
+                // Wenn ein Werkzeug aktiv war, dessen symbolColor als masterColor setzen
+                if (this.currentToolGroup && this.toolConfigs[this.currentToolGroup]) {
+                    this.masterColor = this.toolConfigs[this.currentToolGroup].symbolColor;
                     if (this.masterColorInput) { this.masterColorInput.value = this.masterColor; if (this.masterColorBtn) this.masterColorBtn.style.backgroundColor = this.masterColor; }
                 }
             } else {
@@ -835,6 +840,16 @@ class HexWorldEditorView extends ItemView {
                 const toolbar = this.containerEl.querySelector('.hex-toolbar');
                 if (toolbar) {
                     this.updateToolbarState(toolbar);
+                    // Verzögerter Update: Wenn Edit-Modus wiederhergestellt wird, sind die
+                    // Inputs ggf. noch nicht gerendert (display: none → contents Übergang).
+                    // Ein erneuter Update nach dem Rendering-Zyklus stellt sicher, dass
+                    // alle Werte korrekt in den Inputs angezeigt werden.
+                    if (this.editMode) {
+                        setTimeout(() => {
+                            this.updateToolbarState(toolbar);
+                            this.recalcToolbarWidths();
+                        }, 50);
+                    }
                 }
             }
         } catch(e) {
