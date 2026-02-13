@@ -1156,7 +1156,7 @@ class HexWorldEditorView extends ItemView {
                 this.drawMode = 'pen';
             } else {
                 this.currentToolGroup = 'hexcolor';
-                this.drawMode = this.drawMode === 'eraser' ? 'eraser' : 'pen';
+                this.drawMode = 'pen';
                 this.masterColor = this.hexColorColor;
                 if (this.masterColorInput) { this.masterColorInput.value = this.masterColor; if (this.masterColorBtn) this.masterColorBtn.style.backgroundColor = this.masterColor; }
             }
@@ -1309,7 +1309,7 @@ class HexWorldEditorView extends ItemView {
             const needsRender = this.currentToolGroup === 'pattern' || this.borderSettings.pickedHex;
             this.exitPathEditMode();
             this.currentToolGroup = groupId;
-            this.drawMode = this.drawMode === 'eraser' ? 'eraser' : 'pen';
+            this.drawMode = 'pen';
             this.masterColor = config.symbolColor;
             if (this.masterColorInput) { this.masterColorInput.value = this.masterColor; if (this.masterColorBtn) this.masterColorBtn.style.backgroundColor = this.masterColor; }
 
