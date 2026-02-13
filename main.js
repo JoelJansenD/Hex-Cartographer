@@ -320,6 +320,7 @@ class HexWorldEditorView extends ItemView {
         this.roadSettings = { width: 3, activeRoadId: null, editMode: false, insertAfter: null };
         // Wenn true, wird bei Klick auf die Karte der Pfad-Werkzeugmodus aktiviert, um einen neuen Pfad zu erstellen oder einen bestehenden Pfad zu erweitern (abhängig von lastWaypointClick)
         this.pathPickMode = false;
+        this.lastToolGroup = null;
         // Wie weit Pfad-Endpunkte ins Hex reichen: 0 = Hex-Rand, 1 = Hex-Zentrum
         this.pathEndInset = 0.1;
         // Index des aktuell gezogenen Flusses/Weges (null = keiner), um während des Ziehens die Karte zu aktualisieren
@@ -1620,20 +1621,13 @@ class HexWorldEditorView extends ItemView {
         this.pathPickerBtn = pickerBtn;
         pickerBtn.onclick = () => {
             const settings = this.currentToolGroup === 'river' ? this.riverSettings : this.roadSettings;
-            const activeIdKey = this.currentToolGroup === 'river' ? 'activeRiverId' : 'activeRoadId';
             if (settings.editMode) {
-                settings.editMode = false;
-                settings[activeIdKey] = null;
-                settings.insertAfter = null;
-                setIcon(pickerBtn, 'mouse-pointer');
-                pickerBtn.style.background = '';
-                pickerBtn.style.color = '';
-                pickerBtn.setAttribute('title', 'Fluss/Weg aufnehmen\nKlick: Vorhandenen Fluss/Weg auswählen');
-                this.render();
+                this.exitPathEditMode();
                 return;
             }
             this.pathPickMode = !this.pathPickMode;
             if (this.pathPickMode) {
+                this.lastToolGroup = this.currentToolGroup;
                 this.currentToolGroup = null;
                 this.patternPickMode = false;
                 if (this.patternPickerBtn) { this.patternPickerBtn.style.background = ''; }
@@ -1740,8 +1734,14 @@ class HexWorldEditorView extends ItemView {
             if (this.roadWidthInput) this.roadWidthInput.value = foundRoad.width.toString();
             new Notice(`Weg #${foundRoad.id} ausgewählt`);
         } else {
-            new Notice('Kein Fluss oder Weg an dieser Position');
+            this.currentToolGroup = this.lastToolGroup;
+            if (this.currentToolGroup === 'hexcolor') {
+                this.masterColor = this.hexColorColor;
+            } else if (this.currentToolGroup && this.toolConfigs[this.currentToolGroup]) {
+                this.masterColor = this.toolConfigs[this.currentToolGroup].symbolColor;
+            }
         }
+        this.lastToolGroup = null;
         this.pathPickMode = false;
         if (this.pathPickerBtn) {
             this.pathPickerBtn.style.background = '';
@@ -1781,7 +1781,17 @@ class HexWorldEditorView extends ItemView {
         let changed = false;
         for (const settings of [this.riverSettings, this.roadSettings]) {
             if (settings.editMode) {
-                const activeIdKey = settings === this.riverSettings ? 'activeRiverId' : 'activeRoadId';
+                const isRiver = settings === this.riverSettings;
+                const activeIdKey = isRiver ? 'activeRiverId' : 'activeRoadId';
+                const arr = isRiver ? this.data.rivers : this.data.roads;
+                const activeId = settings[activeIdKey];
+                // Pfad mit weniger als 2 Waypoints entfernen
+                if (activeId != null && arr) {
+                    const idx = arr.findIndex(p => p.id === activeId);
+                    if (idx !== -1 && arr[idx].waypoints.length < 2) {
+                        arr.splice(idx, 1);
+                    }
+                }
                 settings.editMode = false;
                 settings[activeIdKey] = null;
                 settings.insertAfter = null;
