@@ -4,6 +4,10 @@ const { Plugin, TFile, Notice, Modal, ItemView, setIcon } = require('obsidian');
 const DEFAULT_PALETTE  = ['#3295D2', '#6CC261', '#DDC88D', '#9c9090', '#CD6155', '#FFD700', '#000000', '#FFFFFF'];
 const DEFAULT_PALETTE2 = ['#ff0000', '#ff8000', '#ffff00', '#00ff00', '#00ffff', '#0000ff', '#8000ff', '#ff00ff'];
 
+// Schriftgröße und Höhe für Toolbar-Eingabefelder (Breiten, Prozent, Wiederholungen)
+const TOOLBAR_INPUT_FONT_SIZE = '13px';
+const TOOLBAR_INPUT_HEIGHT = '24px';
+
 class HexWorldEditorPlugin extends Plugin {
     async onload() {
         this.registerView('hexworld-editor', (leaf) => new HexWorldEditorView(leaf, this));
@@ -1648,12 +1652,14 @@ class HexWorldEditorView extends ItemView {
         const riverWidthInput = bottomRow.createEl('input', {
             type: 'number',
             value: this.riverSettings.width.toString(),
-            attr: { title: 'Flussbreite', min: '1', style: 'height: 20px; font-size: 11px; padding: 2px; box-sizing: border-box;' }
+            attr: { title: 'Flussbreite', min: '1', max: '999', style: `height: ${TOOLBAR_INPUT_HEIGHT}; font-size: ${TOOLBAR_INPUT_FONT_SIZE}; padding: 2px; box-sizing: border-box;` }
         });
         this.makeInputInteractive(riverWidthInput);
         this.riverWidthInput = riverWidthInput;
-        riverWidthInput.onchange = (e) => {
-            this.riverSettings.width = Math.max(1, parseInt(e.target.value) || 5);
+        riverWidthInput.oninput = (e) => {
+            if (e.target.value.length > 3) e.target.value = e.target.value.slice(0, 3);
+            this.riverSettings.width = Math.min(999, Math.max(1, parseInt(e.target.value) || 5));
+            e.target.value = this.riverSettings.width;
             const river = this.data.rivers && this.data.rivers.find(r => r.id === this.riverSettings.activeRiverId);
             if (river) river.width = this.riverSettings.width;
             this.render();
@@ -1662,12 +1668,14 @@ class HexWorldEditorView extends ItemView {
         const roadWidthInput = bottomRow.createEl('input', {
             type: 'number',
             value: this.roadSettings.width.toString(),
-            attr: { title: 'Wegbreite', min: '1', style: 'height: 20px; font-size: 11px; padding: 2px; box-sizing: border-box;' }
+            attr: { title: 'Wegbreite', min: '1', max: '999', style: `height: ${TOOLBAR_INPUT_HEIGHT}; font-size: ${TOOLBAR_INPUT_FONT_SIZE}; padding: 2px; box-sizing: border-box;` }
         });
         this.makeInputInteractive(roadWidthInput);
         this.roadWidthInput = roadWidthInput;
-        roadWidthInput.onchange = (e) => {
-            this.roadSettings.width = Math.max(1, parseInt(e.target.value) || 3);
+        roadWidthInput.oninput = (e) => {
+            if (e.target.value.length > 3) e.target.value = e.target.value.slice(0, 3);
+            this.roadSettings.width = Math.min(999, Math.max(1, parseInt(e.target.value) || 3));
+            e.target.value = this.roadSettings.width;
             const road = this.data.roads && this.data.roads.find(r => r.id === this.roadSettings.activeRoadId);
             if (road) road.width = this.roadSettings.width;
             this.render();
@@ -1886,13 +1894,15 @@ class HexWorldEditorView extends ItemView {
         const percentInput = inputRow.createEl('input', {
             type: 'number',
             value: this.borderSettings.percent.toString(),
-            attr: { title: 'Linienlänge %', min: '0', max: '100', style: 'height: 20px; font-size: 11px; padding: 2px; box-sizing: border-box;' }
+            attr: { title: 'Linienlänge %', min: '0', max: '100', style: `height: ${TOOLBAR_INPUT_HEIGHT}; font-size: ${TOOLBAR_INPUT_FONT_SIZE}; padding: 2px; box-sizing: border-box;` }
         });
         this.makeInputInteractive(percentInput);
         this.borderPercentInput = percentInput;
-        percentInput.onchange = (e) => {
+        percentInput.oninput = (e) => {
+            if (e.target.value.length > 3) e.target.value = e.target.value.slice(0, 3);
             const val = parseInt(e.target.value);
             this.borderSettings.percent = Math.max(0, Math.min(100, isNaN(val) ? 100 : val));
+            e.target.value = this.borderSettings.percent;
             // Aktive Region aktualisieren
             const region = this.data.borders && this.data.borders.find(r => r.id === this.borderSettings.activeRegionId);
             if (region) region.percent = this.borderSettings.percent;
@@ -1902,12 +1912,14 @@ class HexWorldEditorView extends ItemView {
         const repeatsInput = inputRow.createEl('input', {
             type: 'number',
             value: this.borderSettings.repeats.toString(),
-            attr: { title: 'Wiederholungen', min: '1', style: 'height: 20px; font-size: 11px; padding: 2px; box-sizing: border-box;' }
+            attr: { title: 'Wiederholungen', min: '1', max: '999', style: `height: ${TOOLBAR_INPUT_HEIGHT}; font-size: ${TOOLBAR_INPUT_FONT_SIZE}; padding: 2px; box-sizing: border-box;` }
         });
         this.makeInputInteractive(repeatsInput);
         this.borderRepeatsInput = repeatsInput;
-        repeatsInput.onchange = (e) => {
-            this.borderSettings.repeats = Math.max(1, parseInt(e.target.value) || 1);
+        repeatsInput.oninput = (e) => {
+            if (e.target.value.length > 3) e.target.value = e.target.value.slice(0, 3);
+            this.borderSettings.repeats = Math.min(999, Math.max(1, parseInt(e.target.value) || 1));
+            e.target.value = this.borderSettings.repeats;
             // Aktive Region aktualisieren
             const region = this.data.borders && this.data.borders.find(r => r.id === this.borderSettings.activeRegionId);
             if (region) region.repeats = this.borderSettings.repeats;
