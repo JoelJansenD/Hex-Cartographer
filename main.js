@@ -31,8 +31,7 @@ const DEFAULT_OFF_Y = 300;
 const DEFAULT_RIVER_WIDTH = 5;
 const DEFAULT_ROAD_WIDTH = 3;
 const DEFAULT_BORDER_HIGHLIGHT_WIDTH = 3;
-const DEFAULT_BORDER_PERCENT = 100;
-const DEFAULT_BORDER_REPEATS = 1;
+const DEFAULT_BORDER_DASHES = 1;
 const DEFAULT_PATH_DASHES = 1;
 const PATH_END_INSET = 0.1;
 const MAX_HISTORY = 50;
@@ -149,8 +148,7 @@ const TRANSLATIONS = {
         'tooltip.borderPicker': 'Grenzfarbe aufnehmen\nKlick: Vorhandene Grenze zum bearbeiten auswählen',
         'tooltip.borderFinish': 'Abschließen\nKlick: Aktuelle Grenze fertigstellen',
         'tooltip.borderVisibility': 'Grenzen-Sichtbarkeit\nKlick: Grenzen ein-/ausblenden',
-        'input.borderPercent': 'Linienlänge %',
-        'input.borderRepeats': 'Wiederholungen',
+        'input.borderDashes': 'Striche',
 
         // Notices
         'notice.fileCreateError': 'Fehler beim Erstellen der Datei: {error}',
@@ -226,11 +224,11 @@ const TRANSLATIONS = {
         'guide.paths.road': 'Wegpunkte setzen für Wege.',
         'guide.paths.pick': 'Bestehenden Fluss/Weg auswählen und bearbeiten.',
         'guide.paths.width': 'Breite der Flüsse/Wege über die Eingabefelder mit einem Wert anpassen.',
-        'guide.paths.dashes': 'Striche bestimmen, in wie viele Abschnitte jedes Waben-Segment aufgeteilt wird (1 = durchgehend).',
+        'guide.paths.dashes': 'Unterteilt jedes Waben-Segment in abwechselnd Strich und Lücke (1 = durchgehend, 2 = halbe Linie, 3 = zwei Striche usw.).',
         'guide.borders': 'Grenzen',
         'guide.borders.draw': 'Grenzregion zeichnen durch Klicken oder Ziehen auf Waben.',
         'guide.borders.pick': 'Bestehende Grenze zum Bearbeiten auswählen.',
-        'guide.borders.dash': 'Der erste Eingabewert steht für Linienlänge in % und bestimmt, ob eine Wabenkante durchgehend gezeichnet wird. Um eine gestrichelte Linie zu erzeugen, im ersten Wert unter 100% eingeben und den zweiten Wert auf einen Wert größer als 1 setzen, um die Anzahl der Wiederholungen anzugeben.',
+        'guide.borders.dash': 'Unterteilt jede Wabenkante in abwechselnd Strich und Lücke (1 = durchgehend, 2 = halbe Linie, 3 = zwei Striche usw.).',
         'guide.borders.visibility': 'Grenzen auf der Karte ein-/ausblenden.',
         'guide.text': 'Text',
         'guide.text.tool': 'Auf Karte klicken um Textinhalt, Größe, Farbe und Format einzustellen.<br>Erneut auf Text klicken, um ihn zu bearbeiten.<br>Zum Verschieben ziehen.',
@@ -316,8 +314,7 @@ const TRANSLATIONS = {
         'tooltip.borderPicker': 'Pick Border Color\nClick: Select existing border to edit',
         'tooltip.borderFinish': 'Finish\nClick: Complete current border',
         'tooltip.borderVisibility': 'Border Visibility\nClick: Show/hide borders',
-        'input.borderPercent': 'Line length %',
-        'input.borderRepeats': 'Repetitions',
+        'input.borderDashes': 'Dashes',
 
         // Notices
         'notice.fileCreateError': 'Error creating file: {error}',
@@ -393,11 +390,11 @@ const TRANSLATIONS = {
         'guide.paths.road': 'Place waypoints for roads.',
         'guide.paths.pick': 'Select an existing river/road to edit.',
         'guide.paths.width': 'Adjust river/road width via the input fields.',
-        'guide.paths.dashes': 'Dashes determine how many segments each hex-to-hex section is divided into (1 = continuous).',
+        'guide.paths.dashes': 'Divides each hex-to-hex section into alternating dashes and gaps (1 = continuous, 2 = half line, 3 = two dashes, etc.).',
         'guide.borders': 'Borders',
         'guide.borders.draw': 'Draw border region by clicking or dragging on hexes.',
         'guide.borders.pick': 'Select an existing border to edit.',
-        'guide.borders.dash': 'The first input value represents the line length in % and determines whether a hex edge is drawn continuously. To create a dashed line, enter a value below 100% in the first field and set the second value to greater than 1 to specify the number of repetitions.',
+        'guide.borders.dash': 'Divides each hex edge into alternating dashes and gaps (1 = continuous, 2 = half line, 3 = two dashes, etc.).',
         'guide.borders.visibility': 'Show/hide borders on the map.',
         'guide.text': 'Text',
         'guide.text.tool': 'Click on map to set text content, size, color and format.<br>Click text again to edit.<br>Drag to move.',
@@ -700,7 +697,7 @@ class HexWorldEditorView extends ItemView {
         this.draggedText = null;
 
         this.startHex = null;
-        this.borderSettings = { percent: DEFAULT_BORDER_PERCENT, repeats: DEFAULT_BORDER_REPEATS, activeRegionId: null, pickedHex: null, visible: true };
+        this.borderSettings = { dashes: DEFAULT_BORDER_DASHES, activeRegionId: null, pickedHex: null, visible: true };
         this.borderHighlightWidth = DEFAULT_BORDER_HIGHLIGHT_WIDTH;
         this.borderPickMode = false;
         this.riverSettings = { width: DEFAULT_RIVER_WIDTH, activeRiverId: null, editMode: false, insertAfter: null };
@@ -2164,42 +2161,24 @@ class HexWorldEditorView extends ItemView {
 
         const inputRow = wrapper.createDiv({ style: 'display: flex; gap: 2px;' });
 
-        const percentInput = inputRow.createEl('input', {
+        const dashesInput = inputRow.createEl('input', {
             type: 'number',
-            value: this.borderSettings.percent.toString(),
-            attr: { title: t('input.borderPercent'), min: '0', max: '100', style: `height: ${TOOLBAR_INPUT_HEIGHT}; font-size: ${TOOLBAR_INPUT_FONT_SIZE}; padding: 2px; box-sizing: border-box;` }
+            value: (this.borderSettings.dashes || DEFAULT_BORDER_DASHES).toString(),
+            attr: { title: t('input.borderDashes'), min: '1', max: '99', style: `height: ${TOOLBAR_INPUT_HEIGHT}; font-size: ${TOOLBAR_INPUT_FONT_SIZE}; padding: 2px; box-sizing: border-box;` }
         });
-        this.makeInputInteractive(percentInput);
-        this.borderPercentInput = percentInput;
-        percentInput.oninput = (e) => {
-            if (e.target.value.length > 3) e.target.value = e.target.value.slice(0, 3);
-            const val = parseInt(e.target.value);
-            this.borderSettings.percent = Math.max(0, Math.min(100, isNaN(val) ? 100 : val));
-            e.target.value = this.borderSettings.percent;
+        this.makeInputInteractive(dashesInput);
+        this.borderDashesInput = dashesInput;
+        dashesInput.oninput = (e) => {
+            if (e.target.value.length > 2) e.target.value = e.target.value.slice(0, 2);
+            this.borderSettings.dashes = Math.min(99, Math.max(1, parseInt(e.target.value) || DEFAULT_BORDER_DASHES));
+            e.target.value = this.borderSettings.dashes;
             const region = this.data.borders && this.data.borders.find(r => r.id === this.borderSettings.activeRegionId);
-            if (region) region.percent = this.borderSettings.percent;
-            this.render();
-        };
-
-        const repeatsInput = inputRow.createEl('input', {
-            type: 'number',
-            value: this.borderSettings.repeats.toString(),
-            attr: { title: t('input.borderRepeats'), min: '1', max: '999', style: `height: ${TOOLBAR_INPUT_HEIGHT}; font-size: ${TOOLBAR_INPUT_FONT_SIZE}; padding: 2px; box-sizing: border-box;` }
-        });
-        this.makeInputInteractive(repeatsInput);
-        this.borderRepeatsInput = repeatsInput;
-        repeatsInput.oninput = (e) => {
-            if (e.target.value.length > 3) e.target.value = e.target.value.slice(0, 3);
-            this.borderSettings.repeats = Math.min(999, Math.max(1, parseInt(e.target.value) || 1));
-            e.target.value = this.borderSettings.repeats;
-            const region = this.data.borders && this.data.borders.find(r => r.id === this.borderSettings.activeRegionId);
-            if (region) region.repeats = this.borderSettings.repeats;
+            if (region) region.dashes = this.borderSettings.dashes;
             this.render();
         };
 
         setTimeout(() => {
-            percentInput.style.width = `${btn.offsetWidth}px`;
-            repeatsInput.style.width = `${pickerBtn.offsetWidth}px`;
+            dashesInput.style.width = `${btn.offsetWidth}px`;
         }, 0);
     }
 
@@ -2215,9 +2194,8 @@ class HexWorldEditorView extends ItemView {
             this.roadWidthInput.style.width = `${this.roadBtn.offsetWidth}px`;
             if (this.pathDashesInput && this.pathPickerBtn) this.pathDashesInput.style.width = `${this.pathPickerBtn.offsetWidth}px`;
         }
-        if (this.borderBtn && this.borderPickerBtn && this.borderPercentInput && this.borderRepeatsInput) {
-            this.borderPercentInput.style.width = `${this.borderBtn.offsetWidth}px`;
-            this.borderRepeatsInput.style.width = `${this.borderPickerBtn.offsetWidth}px`;
+        if (this.borderBtn && this.borderDashesInput) {
+            this.borderDashesInput.style.width = `${this.borderBtn.offsetWidth}px`;
         }
     }
 
@@ -2262,8 +2240,7 @@ class HexWorldEditorView extends ItemView {
             }
         }
 
-        if (this.borderPercentInput) this.borderPercentInput.value = this.borderSettings.percent.toString();
-        if (this.borderRepeatsInput) this.borderRepeatsInput.value = this.borderSettings.repeats.toString();
+        if (this.borderDashesInput) this.borderDashesInput.value = (this.borderSettings.dashes || DEFAULT_BORDER_DASHES).toString();
 
         toolbar.querySelectorAll('[data-draw-mode]').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.drawMode === this.drawMode);
@@ -2396,16 +2373,10 @@ class HexWorldEditorView extends ItemView {
                 if (foundRegion) {
                     this.borderSettings.activeRegionId = foundRegion.id;
                     this.borderSettings.pickedHex = { q: clickedHex.q, r: clickedHex.r };
-                    this.borderSettings.percent = foundRegion.percent !== undefined ? foundRegion.percent : 100;
-                    this.borderSettings.repeats = foundRegion.repeats !== undefined ? foundRegion.repeats : 1;
+                    this.borderSettings.dashes = foundRegion.dashes || DEFAULT_BORDER_DASHES;
                     this.masterColor = foundRegion.color;
                     if (this.masterColorInput) { this.masterColorInput.value = this.masterColor; if (this.masterColorBtn) this.masterColorBtn.style.backgroundColor = this.masterColor; }
-                    if (this.borderPercentInput) {
-                        this.borderPercentInput.value = this.borderSettings.percent.toString();
-                    }
-                    if (this.borderRepeatsInput) {
-                        this.borderRepeatsInput.value = this.borderSettings.repeats.toString();
-                    }
+                    if (this.borderDashesInput) this.borderDashesInput.value = this.borderSettings.dashes.toString();
                     new Notice(t('notice.borderSelected', { id: foundRegion.id }));
                 } else {
                     new Notice(t('notice.noBorderAtPosition'));
@@ -2723,12 +2694,10 @@ class HexWorldEditorView extends ItemView {
                             if (foundRegion) {
                                 this.borderSettings.activeRegionId = foundRegion.id;
                                 this.borderSettings.pickedHex = { q: clickedHex.q, r: clickedHex.r };
-                                this.borderSettings.percent = foundRegion.percent !== undefined ? foundRegion.percent : 100;
-                                this.borderSettings.repeats = foundRegion.repeats !== undefined ? foundRegion.repeats : 1;
+                                this.borderSettings.dashes = foundRegion.dashes || DEFAULT_BORDER_DASHES;
                                 this.masterColor = foundRegion.color;
                                 if (this.masterColorInput) { this.masterColorInput.value = this.masterColor; if (this.masterColorBtn) this.masterColorBtn.style.backgroundColor = this.masterColor; }
-                                if (this.borderPercentInput) this.borderPercentInput.value = this.borderSettings.percent.toString();
-                                if (this.borderRepeatsInput) this.borderRepeatsInput.value = this.borderSettings.repeats.toString();
+                                if (this.borderDashesInput) this.borderDashesInput.value = this.borderSettings.dashes.toString();
                                 new Notice(t('notice.borderSelected', { id: foundRegion.id }));
                             } else {
                                 new Notice(t('notice.noBorderAtPosition'));
@@ -2917,12 +2886,10 @@ class HexWorldEditorView extends ItemView {
                         if (foundRegion) {
                             this.borderSettings.activeRegionId = foundRegion.id;
                             this.borderSettings.pickedHex = { q: clickedHex.q, r: clickedHex.r };
-                            this.borderSettings.percent = foundRegion.percent !== undefined ? foundRegion.percent : 100;
-                            this.borderSettings.repeats = foundRegion.repeats !== undefined ? foundRegion.repeats : 1;
+                            this.borderSettings.dashes = foundRegion.dashes || DEFAULT_BORDER_DASHES;
                             this.masterColor = foundRegion.color;
                             if (this.masterColorInput) { this.masterColorInput.value = this.masterColor; if (this.masterColorBtn) this.masterColorBtn.style.backgroundColor = this.masterColor; }
-                            if (this.borderPercentInput) this.borderPercentInput.value = this.borderSettings.percent.toString();
-                            if (this.borderRepeatsInput) this.borderRepeatsInput.value = this.borderSettings.repeats.toString();
+                            if (this.borderDashesInput) this.borderDashesInput.value = this.borderSettings.dashes.toString();
                             new Notice(t('notice.borderSelected', { id: foundRegion.id }));
                         } else {
                             new Notice(t('notice.noBorderAtPosition'));
@@ -3156,7 +3123,7 @@ class HexWorldEditorView extends ItemView {
         let region = this.data.borders.find(r => r.id === this.borderSettings.activeRegionId);
         if (!region) {
             const maxId = this.data.borders.reduce((max, r) => Math.max(max, r.id || 0), 0);
-            region = { id: maxId + 1, color: this.masterColor, percent: this.borderSettings.percent, repeats: this.borderSettings.repeats, hexes: [] };
+            region = { id: maxId + 1, color: this.masterColor, dashes: this.borderSettings.dashes || DEFAULT_BORDER_DASHES, hexes: [] };
             this.data.borders.push(region);
             this.borderSettings.activeRegionId = region.id;
         }
@@ -4133,8 +4100,13 @@ class HexWorldEditorView extends ItemView {
             const regionSet = new Set(region.hexes.map(b => `${b.q}_${b.r}`));
             this.ctx.strokeStyle = region.color || '#FF0000';
 
-            const percent = region.percent !== undefined ? region.percent : 100;
-            const repeats = region.repeats !== undefined ? region.repeats : 1;
+            const dashes = region.dashes || 1;
+            if (dashes > 1) {
+                const edgeLen = s * factor;
+                const unitLen = edgeLen / dashes;
+                this.ctx.setLineDash([unitLen, unitLen]);
+                this.ctx.lineDashOffset = (dashes % 2 === 0) ? unitLen / 2 : 0;
+            }
 
             region.hexes.forEach(b => {
                 const pos = this.hexToPixel(b);
@@ -4155,31 +4127,15 @@ class HexWorldEditorView extends ItemView {
                     if (!regionSet.has(neighborKey)) {
                         const p1 = corners[i];
                         const p2 = corners[(i + 1) % 6];
-
-                        if (percent >= 100 && repeats <= 1) {
-                            this.ctx.beginPath();
-                            this.ctx.moveTo(p1.x, p1.y);
-                            this.ctx.lineTo(p2.x, p2.y);
-                            this.ctx.stroke();
-                        } else {
-                            const dx = p2.x - p1.x;
-                            const dy = p2.y - p1.y;
-                            const segLen = 1.0 / repeats;
-                            const drawFrac = (percent / 100) * segLen;
-
-                            for (let r = 0; r < repeats; r++) {
-                                const startFrac = r * segLen;
-                                const endFrac = startFrac + drawFrac;
-
-                                this.ctx.beginPath();
-                                this.ctx.moveTo(p1.x + dx * startFrac, p1.y + dy * startFrac);
-                                this.ctx.lineTo(p1.x + dx * endFrac, p1.y + dy * endFrac);
-                                this.ctx.stroke();
-                            }
-                        }
+                        this.ctx.beginPath();
+                        this.ctx.moveTo(p1.x, p1.y);
+                        this.ctx.lineTo(p2.x, p2.y);
+                        this.ctx.stroke();
                     }
                 }
             });
+
+            if (dashes > 1) { this.ctx.setLineDash([]); this.ctx.lineDashOffset = 0; }
         });
 
         const ph = this.borderSettings.pickedHex;
@@ -4505,7 +4461,8 @@ class HexWorldEditorView extends ItemView {
 
             if (dashCount > 1) {
                 const unitLen = fullDist / dashCount;
-                this.ctx.setLineDash([unitLen * 0.5, unitLen * 0.5]);
+                this.ctx.setLineDash([unitLen, unitLen]);
+                this.ctx.lineDashOffset = (dashCount % 2 === 0) ? unitLen / 2 : 0;
             }
 
             this.ctx.beginPath();
@@ -4529,7 +4486,7 @@ class HexWorldEditorView extends ItemView {
             }
             this.ctx.stroke();
 
-            if (dashCount > 1) this.ctx.setLineDash([]);
+            if (dashCount > 1) { this.ctx.setLineDash([]); this.ctx.lineDashOffset = 0; }
         });
     }
 
