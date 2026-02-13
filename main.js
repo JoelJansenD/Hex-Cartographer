@@ -1085,7 +1085,7 @@ class HexWorldEditorView extends ItemView {
 
     createToolbar(toolbar) {
         // Edit-Modus-Button (immer sichtbar)
-        const editModeBtn = toolbar.createEl('button', { cls: 'hex-tool-btn', attr: { title: 'Edit-Modus' } });
+        const editModeBtn = toolbar.createEl('button', { cls: 'hex-tool-btn', attr: { title: 'Edit-Modus\nKlick: Werkzeuge ein-/ausblenden' } });
         setIcon(editModeBtn, 'wrench');
         this.editModeBtn = editModeBtn;
         editModeBtn.onclick = () => {
@@ -1113,7 +1113,7 @@ class HexWorldEditorView extends ItemView {
 
         // Master-Farbfeld (sichtbarer Button + versteckter Color-Input)
         const masterColorBtn = editContent.createEl('button', {
-            attr: { title: 'Werkzeugfarbe', style: 'width: 50px; height: 50px; min-width: 50px; border: 1px solid var(--divider-color); border-radius: 4px; cursor: pointer; box-sizing: border-box; padding: 0;' }
+            attr: { title: 'Werkzeugfarbe\nKlick: Farbwähler öffnen', style: 'width: 50px; height: 50px; min-width: 50px; border: 1px solid var(--divider-color); border-radius: 4px; cursor: pointer; box-sizing: border-box; padding: 0;' }
         });
         masterColorBtn.style.backgroundColor = this.masterColor;
         this.masterColorBtn = masterColorBtn;
@@ -1146,7 +1146,7 @@ class HexWorldEditorView extends ItemView {
         editContent.createEl('span', { cls: 'hex-toolbar-sep', text: '\u200B' });
 
         // Waben-Farbwerkzeug (Masterfarbe)
-        const hexColorBtn = editContent.createEl('button', { cls: 'hex-tool-btn', attr: { title: 'Wabe einfärben (Masterfarbe)' } });
+        const hexColorBtn = editContent.createEl('button', { cls: 'hex-tool-btn', attr: { title: 'Waben-Farbwerkzeug\nKlick: Waben einfärben' } });
         hexColorBtn.dataset.toolGroup = 'hexcolor';
         setIcon(hexColorBtn, 'hexagon');
         hexColorBtn.onclick = () => {
@@ -1173,10 +1173,10 @@ class HexWorldEditorView extends ItemView {
         editContent.createEl('span', { cls: 'hex-toolbar-sep', text: '\u200B' });
 
         // Füllwerkzeugs 
-        this.createDrawModeButton(editContent, 'fill', 'paint-bucket', 'Fülleimer');
+        this.createDrawModeButton(editContent, 'fill', 'paint-bucket', 'Fülleimer\nKlick: Zusammenhängende Fläche füllen\nErneut klicken: Fülleimer ausschalten');
 
         // Text-Werkzeug
-        const textBtn = editContent.createEl('button', { cls: 'hex-tool-btn', attr: { title: 'Text' } });
+        const textBtn = editContent.createEl('button', { cls: 'hex-tool-btn', attr: { title: 'Text-Werkzeug\nKlick auf Karte: Neuen Text erstellen\nKlick auf Text: Text bearbeiten/verschieben' } });
         textBtn.dataset.toolGroup = 'text';
         setIcon(textBtn, 'type');
         textBtn.onclick = () => {
@@ -1189,7 +1189,7 @@ class HexWorldEditorView extends ItemView {
         };
 
         // Radiergummi
-        this.createDrawModeButton(editContent, 'eraser', 'eraser', 'Radierer');
+        this.createDrawModeButton(editContent, 'eraser', 'eraser', 'Radierer\nKlick: Wabeninhalt löschen\nDoppelklick: Zusammenhängendes löschen');
 
         editContent.createEl('span', { cls: 'hex-toolbar-sep', text: '\u200B' });
 
@@ -1207,16 +1207,16 @@ class HexWorldEditorView extends ItemView {
         editContent.createEl('span', { cls: 'hex-toolbar-sep', text: '\u200B' });
 
         // Undo/Redo
-        const undoBtn = editContent.createEl('button', { cls: 'hex-tool-btn', attr: { title: 'Rückgängig (Strg+Z)' } });
+        const undoBtn = editContent.createEl('button', { cls: 'hex-tool-btn', attr: { title: 'Rückgängig\nStrg+Z: Letzte Aktion rückgängig machen' } });
         setIcon(undoBtn, 'undo-2');
         undoBtn.onclick = () => this.undo();
 
-        const redoBtn = editContent.createEl('button', { cls: 'hex-tool-btn', attr: { title: 'Wiederholen (Strg+Y)' } });
+        const redoBtn = editContent.createEl('button', { cls: 'hex-tool-btn', attr: { title: 'Wiederholen\nStrg+Y: Rückgängig gemachte Aktion wiederholen' } });
         setIcon(redoBtn, 'redo-2');
         redoBtn.onclick = () => this.redo();
 
         // Ganze Karte zeigen Button (immer sichtbar, außerhalb editContent)
-        const fitBtn = toolbar.createEl('button', { cls: 'hex-tool-btn', attr: { title: 'Ganze Karte zeigen' } });
+        const fitBtn = toolbar.createEl('button', { cls: 'hex-tool-btn', attr: { title: 'Karte einpassen\nKlick: Fenster mit gesamter Karte ausfüllen' } });
         setIcon(fitBtn, 'maximize-2');
         fitBtn.onclick = () => this.fitMapToView();
 
@@ -1271,7 +1271,7 @@ class HexWorldEditorView extends ItemView {
         const btn = btnWrapper.createEl('button', {
             cls: 'hex-tool-btn',
             attr: {
-                title: `${config.name}\nKlick: Werkzeug aktivieren\nRechtsklick: Variante wählen`,
+                title: `${config.name}\nKlick: Zeichnen\nRechtsklick: Variante wählen`,
                 style: `position: relative; background: ${config.backgroundEnabled ? config.backgroundColor : '#ffffff'};`
             }
         });
@@ -1334,7 +1334,7 @@ class HexWorldEditorView extends ItemView {
         // Muster-Button
         const patternBtn = wrapper.createEl('button', {
             cls: 'hex-tool-btn',
-            attr: { title: 'Muster' }
+            attr: { title: 'Muster-Werkzeug\nKlick: Mit aufgenommenem Muster zeichnen\nDoppelklick Radierer: Zusammenhängendes Muster löschen' }
         });
         patternBtn.dataset.toolGroup = 'pattern';
         setIcon(patternBtn, 'copy');
@@ -1354,7 +1354,7 @@ class HexWorldEditorView extends ItemView {
         // Picker-Button
         const pickerBtn = wrapper.createEl('button', {
             cls: 'hex-tool-btn',
-            attr: { title: 'Muster aufnehmen', style: 'width: 24px; padding: 2px;' }
+            attr: { title: 'Muster aufnehmen\nKlick: Wabe als Muster übernehmen', style: 'width: 24px; padding: 2px;' }
         });
         setIcon(pickerBtn, 'pipette');
 
@@ -1514,7 +1514,7 @@ class HexWorldEditorView extends ItemView {
             const btn = row.createEl('button', {
                 cls: 'hex-color-slot',
                 attr: {
-                    title: 'Klick: Masterfarbe setzen | Rechtsklick: Farbe ändern',
+                    title: 'Farbpalette\nKlick: Farbe als Werkzeugfarbe übernehmen\nRechtsklick: Palettenfarbe ändern',
                     style: 'width: 24px; height: 24px; min-width: 24px; border: none; border-radius: 3px; cursor: pointer; padding: 0;'
                 }
             });
@@ -1584,7 +1584,7 @@ class HexWorldEditorView extends ItemView {
         // Obere Zeile: Fluss-Btn + Weg-Btn + Farbfeld + Picker/OK
         const topRow = wrapper.createDiv({ style: 'display: flex; gap: 2px; align-items: center;' });
 
-        const riverBtn = topRow.createEl('button', { cls: 'hex-tool-btn', attr: { title: 'Fluss' } });
+        const riverBtn = topRow.createEl('button', { cls: 'hex-tool-btn', attr: { title: 'Fluss-Werkzeug\nKlick: Wegpunkte setzen/verschieben\nKlick Radierer: Teilstück löschen\nDoppelklick Radierer: Ganzen Fluss löschen' } });
         this.riverBtn = riverBtn;
         riverBtn.dataset.toolGroup = 'river';
         setIcon(riverBtn, 'waves');
@@ -1597,7 +1597,7 @@ class HexWorldEditorView extends ItemView {
             if (needsRender) this.render();
         };
 
-        const roadBtn = topRow.createEl('button', { cls: 'hex-tool-btn', attr: { title: 'Weg' } });
+        const roadBtn = topRow.createEl('button', { cls: 'hex-tool-btn', attr: { title: 'Weg-Werkzeug\nKlick: Wegpunkte setzen/verschieben\nKlick Radierer: Teilstück löschen\nDoppelklick Radierer: Ganzen Weg löschen' } });
         this.roadBtn = roadBtn;
         roadBtn.dataset.toolGroup = 'road';
         setIcon(roadBtn, 'route');
@@ -1611,7 +1611,7 @@ class HexWorldEditorView extends ItemView {
         };
 
         // Shared Picker/OK-Button (kontextabhängig)
-        const pickerBtn = topRow.createEl('button', { cls: 'hex-tool-btn', attr: { title: 'Aufnehmen' } });
+        const pickerBtn = topRow.createEl('button', { cls: 'hex-tool-btn', attr: { title: 'Fluss/Weg bearbeiten\nKlick: Vorhandenen Fluss/Weg zum bearbeiten auswählen' } });
         setIcon(pickerBtn, 'mouse-pointer');
         this.pathPickerBtn = pickerBtn;
         pickerBtn.onclick = () => {
@@ -1624,7 +1624,7 @@ class HexWorldEditorView extends ItemView {
                 setIcon(pickerBtn, 'mouse-pointer');
                 pickerBtn.style.background = '';
                 pickerBtn.style.color = '';
-                pickerBtn.setAttribute('title', 'Aufnehmen');
+                pickerBtn.setAttribute('title', 'Fluss/Weg aufnehmen\nKlick: Vorhandenen Fluss/Weg auswählen');
                 this.render();
                 return;
             }
@@ -1784,7 +1784,7 @@ class HexWorldEditorView extends ItemView {
             setIcon(this.pathPickerBtn, 'mouse-pointer');
             this.pathPickerBtn.style.background = '';
             this.pathPickerBtn.style.color = '';
-            this.pathPickerBtn.setAttribute('title', 'Aufnehmen');
+            this.pathPickerBtn.setAttribute('title', 'Fluss/Weg aufnehmen\nKlick: Vorhandenen Fluss/Weg auswählen');
         }
         this.pathPickMode = false;
         // Muster-Picker deaktivieren
@@ -1816,7 +1816,7 @@ class HexWorldEditorView extends ItemView {
         // Obere Zeile: Button + Farbfeld + Picker + Auge
         const topRow = wrapper.createDiv({ style: 'display: flex; gap: 2px; align-items: center;' });
 
-        const btn = topRow.createEl('button', { cls: 'hex-tool-btn', attr: { title: 'Grenze' } });
+        const btn = topRow.createEl('button', { cls: 'hex-tool-btn', attr: { title: 'Grenz-Werkzeug\nKlick: Grenzwaben zeichnen\nDoppelklick Radierer: Zusammenhängende Grenze löschen' } });
         this.borderBtn = btn;
         btn.dataset.toolGroup = 'border';
         setIcon(btn, 'shield');
@@ -1838,7 +1838,7 @@ class HexWorldEditorView extends ItemView {
         };
 
         // Picker/OK-Button (kontextabhängig wie beim Pfad-Werkzeug)
-        const pickerBtn = topRow.createEl('button', { cls: 'hex-tool-btn', attr: { title: 'Grenzfarbe aufnehmen' } });
+        const pickerBtn = topRow.createEl('button', { cls: 'hex-tool-btn', attr: { title: 'Grenze bearbeiten\nKlick: Vorhandene Grenze zum bearbeiten auswählen' } });
         setIcon(pickerBtn, 'mouse-pointer');
         this.borderPickerBtn = pickerBtn;
         pickerBtn.onclick = () => {
@@ -1868,7 +1868,7 @@ class HexWorldEditorView extends ItemView {
         };
 
         // Sichtbarkeit-Button
-        const visBtn = topRow.createEl('button', { cls: 'hex-tool-btn', attr: { title: 'Grenzen ein-/ausblenden' } });
+        const visBtn = topRow.createEl('button', { cls: 'hex-tool-btn', attr: { title: 'Grenzen-Sichtbarkeit\nKlick: Grenzen ein-/ausblenden' } });
         setIcon(visBtn, this.borderSettings.visible ? 'eye' : 'eye-off');
         visBtn.style.opacity = this.borderSettings.visible ? '1' : '0.4';
         visBtn.onclick = () => {
@@ -1962,12 +1962,12 @@ class HexWorldEditorView extends ItemView {
                 setIcon(this.pathPickerBtn, 'check');
                 this.pathPickerBtn.style.background = 'var(--interactive-accent)';
                 this.pathPickerBtn.style.color = 'var(--text-on-accent)';
-                this.pathPickerBtn.setAttribute('title', 'Abschließen');
+                this.pathPickerBtn.setAttribute('title', 'Abschließen\nKlick: Aktuellen Fluss/Weg fertigstellen');
             } else if (!this.pathPickMode) {
                 setIcon(this.pathPickerBtn, 'mouse-pointer');
                 this.pathPickerBtn.style.background = '';
                 this.pathPickerBtn.style.color = '';
-                this.pathPickerBtn.setAttribute('title', 'Aufnehmen');
+                this.pathPickerBtn.setAttribute('title', 'Fluss/Weg aufnehmen\nKlick: Vorhandenen Fluss/Weg auswählen');
             }
         }
 
@@ -1977,12 +1977,12 @@ class HexWorldEditorView extends ItemView {
                 setIcon(this.borderPickerBtn, 'check');
                 this.borderPickerBtn.style.background = 'var(--interactive-accent)';
                 this.borderPickerBtn.style.color = 'var(--text-on-accent)';
-                this.borderPickerBtn.setAttribute('title', 'Abschließen');
+                this.borderPickerBtn.setAttribute('title', 'Abschließen\nKlick: Aktuelle Grenze fertigstellen');
             } else if (!this.borderPickMode) {
                 setIcon(this.borderPickerBtn, 'mouse-pointer');
                 this.borderPickerBtn.style.background = '';
                 this.borderPickerBtn.style.color = '';
-                this.borderPickerBtn.setAttribute('title', 'Grenzfarbe aufnehmen');
+                this.borderPickerBtn.setAttribute('title', 'Grenzfarbe aufnehmen\nKlick: Vorhandene Grenze zum bearbeiten auswählen');
             }
         }
 
@@ -2010,7 +2010,7 @@ class HexWorldEditorView extends ItemView {
             // Aktualisiere Tooltip mit aktueller Variante
             const currentVariant = config.variants.find(v => v.id === config.currentVariant);
             if (currentVariant) {
-                btn.setAttribute('title', `${currentVariant.label}\nKlick: Werkzeug aktivieren\nRechtsklick: Variante wählen`);
+                btn.setAttribute('title', `${currentVariant.label}\nKlick: Zeichnen\nRechtsklick: Variante wählen`);
             }
 
             // Aktualisiere Button-Hintergrund (weiß wenn Hintergrund nicht aktiv)
