@@ -227,6 +227,7 @@ const TRANSLATIONS = {
         'guide.borders': 'Grenzen',
         'guide.borders.draw': 'Grenzregion zeichnen durch Klicken oder Ziehen auf Waben.',
         'guide.borders.pick': 'Bestehende Grenze zum Bearbeiten auswählen.',
+        'guide.borders.dash': 'Der erste Eingabewert steht für Linienlänge in % und bestimmt, ob eine Wabenkante durchgehend gezeichnet wird. Um eine gestrichelte Linie zu erzeugen, im ersten Wert unter 100% eingeben und den zweiten Wert auf einen Wert größer als 1 setzen, um die Anzahl der Wiederholungen anzugeben.',
         'guide.borders.visibility': 'Grenzen auf der Karte ein-/ausblenden.',
         'guide.text': 'Text',
         'guide.text.tool': 'Auf Karte klicken um Textinhalt, Größe, Farbe und Format einzustellen.<br>Erneut auf Text klicken, um ihn zu bearbeiten.<br>Zum Verschieben ziehen.',
@@ -391,6 +392,7 @@ const TRANSLATIONS = {
         'guide.borders': 'Borders',
         'guide.borders.draw': 'Draw border region by clicking or dragging on hexes.',
         'guide.borders.pick': 'Select an existing border to edit.',
+        'guide.borders.dash': 'The first input value represents the line length in % and determines whether a hex edge is drawn continuously. To create a dashed line, enter a value below 100% in the first field and set the second value to greater than 1 to specify the number of repetitions.',
         'guide.borders.visibility': 'Show/hide borders on the map.',
         'guide.text': 'Text',
         'guide.text.tool': 'Click on map to set text content, size, color and format.<br>Click text again to edit.<br>Drag to move.',
@@ -1689,9 +1691,14 @@ class HexWorldEditorView extends ItemView {
                     setIcon(btn, variant.icon);
                 }
 
+                this.currentToolGroup = groupId;
+                this.drawMode = 'pen';
+                this.masterColor = config.symbolColor;
+                if (this.masterColorInput) { this.masterColorInput.value = this.masterColor; if (this.masterColorBtn) this.masterColorBtn.style.backgroundColor = this.masterColor; }
+
                 menu.remove();
                 this.updateToolbarState(this.containerEl.querySelector('.hex-toolbar'));
-                this.requestSave(); // Speichere Variantenwahl
+                this.requestSave();
             };
         });
 
@@ -4917,6 +4924,7 @@ class HexWorldEditorSettingTab extends PluginSettingTab {
             ['borders', [
                 ['shield', 'guide.borders.draw'],
                 ['mouse-pointer', 'guide.borders.pick'],
+                ['text-cursor-input', 'guide.borders.dash'],
                 ['eye', 'guide.borders.visibility'],
             ]],
             ['text', [
@@ -4960,7 +4968,7 @@ class HexWorldEditorSettingTab extends PluginSettingTab {
             .hex-guide-summary { cursor: pointer; font-weight: 600; padding: 6px 0; }
             .hex-guide-content { padding: 4px 0 8px 12px; }
             .hex-guide-row { display: flex; align-items: flex-start; gap: 8px; padding: 3px 0; }
-            .hex-guide-icon { display: flex; align-items: center; justify-content: center; width: 20px; flex-shrink: 0; }
+            .hex-guide-icon { display: flex; align-items: center; justify-content: center; width: 20px; flex-shrink: 0; margin-top: 2px; }
             .hex-guide-icon svg { width: 16px; height: 16px; }
             .hex-guide-input-icon { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 16px; border: 1px solid var(--text-muted); border-radius: 3px; font-size: 10px; line-height: 1; color: var(--text-muted); }
         `;
