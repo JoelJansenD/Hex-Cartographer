@@ -79,11 +79,13 @@ const SVG_SYMBOL_CONFIG = {
     'oasis':       { size: 0.30,  align: 'center', marginX: 0, marginY: 0 }
 };
 
-// === Plugin-Einstellungen ===
-const DEFAULT_PLUGIN_SETTINGS = { language: 'de' };
-
 // === Übersetzungen ===
-let currentLanguage = 'de';
+// Sprache aus Obsidian-Einstellungen auslesen, Fallback auf Englisch
+function getObsidianLanguage() {
+    const lang = window.localStorage.getItem('language');
+    return (lang && TRANSLATIONS[lang]) ? lang : 'en';
+}
+let currentLanguage = 'en';
 
 const TRANSLATIONS = {
     de: {
@@ -199,12 +201,133 @@ const TRANSLATIONS = {
         'modal.confirmDeleteText': 'Text wirklich löschen?',
 
         // Einstellungen
-        'settings.language': 'Sprache / Language',
-        'settings.languageDesc': 'Sprache der Benutzeroberfläche',
+        'settings.donateText': 'Spendiere mir einen Kaffee. Ich freue mich darüber, Euch den Hexworld Editor kostenlos zur Verfügung zu stellen. Allerdings bedurfte die Entwicklung lange Zeit. Wenn mir etwas neues einfällt, wird es für Euch Updates geben. Ihr würdet mir eine große Freude bereiten, wenn ihr mir für diese Arbeit eine kleine Spende hinterlasst.',
+        'settings.donateButton': 'Kleine Spende',
 
         // Menü-Einträge
         'menu.createNew': 'Neue Hex World erstellen',
         'menu.openInEditor': 'Im Hex World Editor öffnen',
+    },
+
+    en: {
+        // Tool groups
+        'tool.extras': 'Extras',
+        'tool.vegetation': 'Vegetation',
+        'tool.mountain': 'Mountain',
+        'tool.building': 'Building',
+
+        // Variants — Extras
+        'variant.question': 'Question Mark',
+        'variant.exclamation': 'Exclamation Mark',
+        'variant.cross': 'Cross',
+        // Variants — Vegetation
+        'variant.grass': 'Grass',
+        'variant.swamp': 'Swamp',
+        'variant.bush': 'Bush',
+        'variant.tree': 'Deciduous Tree',
+        'variant.pine': 'Conifer',
+        'variant.palm': 'Palm Tree',
+        // Variants — Mountains
+        'variant.hill': 'Hill',
+        'variant.mountain': 'Mountain',
+        // Variants — Buildings
+        'variant.tent': 'Tent',
+        'variant.house': 'House',
+        'variant.village': 'Village',
+        'variant.town': 'Town',
+        'variant.castle': 'Castle',
+        'variant.monastery': 'Monastery',
+        'variant.harbor': 'Harbor',
+        'variant.tower': 'Tower',
+        'variant.ruin': 'Ruin',
+        'variant.cave': 'Cave',
+        'variant.oasis': 'Oasis',
+
+        // Tooltips — Main tools
+        'tooltip.editMode': 'Edit Mode\nClick: Show/hide tools',
+        'tooltip.colorPicker': 'Tool Color\nClick: Open color picker',
+        'tooltip.hexColor': 'Hex Color Tool\nClick: Color hexes',
+        'tooltip.fill': 'Fill Bucket\nClick: Fill connected area\nClick again: Turn off fill',
+        'tooltip.text': 'Text Tool\nClick on map: Create new text\nClick on text: Edit/move text',
+        'tooltip.eraser': 'Eraser\nClick: Delete hex content\nDouble-click: Delete connected area',
+        'tooltip.undo': 'Undo\nCtrl+Z: Undo last action',
+        'tooltip.redo': 'Redo\nCtrl+Y: Redo undone action',
+        'tooltip.fit': 'Fit Map\nClick: Fit entire map to window',
+        'tooltip.palette': 'Color Palette\nClick: Use color as tool color\nRight-click: Change palette color',
+        'tooltip.toolGroup': '{name}\nClick: Draw\nRight-click: Choose variant',
+        'tooltip.toolGroupVariant': '{label}\nClick: Draw\nRight-click: Choose variant',
+
+        // Tooltips — Pattern tool
+        'tooltip.pattern': 'Pattern Tool\nClick: Draw with picked pattern\nDouble-click Eraser: Delete connected pattern',
+        'tooltip.patternPicker': 'Pick Pattern\nClick: Pick hex as pattern',
+
+        // Tooltips — River/Road
+        'tooltip.river': 'River Tool\nClick: Place/move waypoints\nClick Eraser: Delete segment\nDouble-click Eraser: Delete entire river',
+        'tooltip.road': 'Road Tool\nClick: Place/move waypoints\nClick Eraser: Delete segment\nDouble-click Eraser: Delete entire road',
+        'tooltip.pathPicker': 'Pick River/Road\nClick: Select existing river/road',
+        'tooltip.pathFinish': 'Finish\nClick: Complete current river/road',
+        'tooltip.roadFinish': 'Finish road',
+        'tooltip.riverFinish': 'Finish river',
+        'input.riverWidth': 'River width',
+        'input.roadWidth': 'Road width',
+
+        // Tooltips — Borders
+        'tooltip.border': 'Border Tool\nClick: Draw border hexes\nDouble-click Eraser: Delete connected border',
+        'tooltip.borderPicker': 'Pick Border Color\nClick: Select existing border to edit',
+        'tooltip.borderFinish': 'Finish\nClick: Complete current border',
+        'tooltip.borderVisibility': 'Border Visibility\nClick: Show/hide borders',
+        'input.borderPercent': 'Line length %',
+        'input.borderRepeats': 'Repetitions',
+
+        // Notices
+        'notice.fileCreateError': 'Error creating file: {error}',
+        'notice.nothingToUndo': 'Nothing to undo',
+        'notice.nothingToRedo': 'Nothing to redo',
+        'notice.noHexesToShow': 'No hexes or texts to display',
+        'notice.noPattern': 'No pattern selected. Use the picker button to pick a pattern.',
+        'notice.clickToPickPattern': 'Click on a hex to pick the pattern',
+        'notice.patternPicked': 'Pattern picked!',
+        'notice.noHexAtPosition': 'No hex at this position',
+        'notice.riverSelected': 'River #{id} selected',
+        'notice.roadSelected': 'Road #{id} selected',
+        'notice.noRiverOrRoad': 'No river or road at this position',
+        'notice.borderSelected': 'Border #{id} selected',
+        'notice.noBorderAtPosition': 'No border at this position',
+
+        // Modal — File selector
+        'modal.selectFile': 'Select MD File',
+        'modal.searchFile': 'Search file name...',
+        'modal.noFilesFound': 'No files found',
+        'modal.removeLink': 'Remove link',
+        'modal.cancel': 'Cancel',
+
+        // Modal — Text formatting
+        'modal.formatText': 'Format Text',
+        'modal.displayText': 'Display text:',
+        'modal.textPlaceholder': 'Enter text...',
+        'modal.textSize': 'Text size:',
+        'modal.textColor': 'Text color:',
+        'modal.palette': 'Palette:',
+        'modal.formatting': 'Formatting:',
+        'modal.outline': 'Outline',
+        'modal.bold': 'Bold',
+        'modal.shadowSettings': 'Shadow Settings:',
+        'modal.shadowEnable': 'Enable shadow',
+        'modal.shadowDistance': 'Distance (px):',
+        'modal.shadowOpacity': 'Opacity (%):',
+        'modal.linkToFile': 'Link to MD file:',
+        'modal.noLinkSelected': 'No link selected',
+        'modal.selectFileBtn': 'Choose file...',
+        'modal.deleteText': 'Delete text',
+        'modal.confirmDeleteText': 'Really delete this text?',
+
+        // Settings
+        'settings.donateText': 'Buy me a coffee. I am happy to provide this editor to you for free. However, the development took a long time. When I come up with something new, there will be updates. It would make me very happy if you leave a small donation for this work.',
+        'settings.donateButton': 'Buy me a coffee',
+
+        // Menu entries
+        'menu.createNew': 'Create new Hex World',
+        'menu.openInEditor': 'Open in Hex World Editor',
     }
 };
 
@@ -222,9 +345,8 @@ function t(key, params) {
 
 class HexWorldEditorPlugin extends Plugin {
     async onload() {
-        // Plugin-Einstellungen laden (Sprache etc.)
-        this.settings = Object.assign({}, DEFAULT_PLUGIN_SETTINGS, await this.loadData());
-        currentLanguage = this.settings.language;
+        // Sprache aus Obsidian-Einstellungen übernehmen
+        currentLanguage = getObsidianLanguage();
         this.addSettingTab(new HexWorldEditorSettingTab(this.app, this));
 
         this.registerView('hexworld-editor', (leaf) => new HexWorldEditorView(leaf, this));
@@ -505,18 +627,6 @@ class HexWorldEditorPlugin extends Plugin {
         this.register(() => clearInterval(intervalId));
     }
 
-    async saveSettings() {
-        await this.saveData(this.settings);
-    }
-
-    refreshAllViews() {
-        this.app.workspace.getLeavesOfType('hexworld-editor').forEach(leaf => {
-            if (leaf.view && leaf.view.rebuildToolbar) {
-                leaf.view.initToolConfigs();
-                leaf.view.rebuildToolbar();
-            }
-        });
-    }
 }
 
 class HexWorldEditorView extends ItemView {
@@ -5090,19 +5200,15 @@ class HexWorldEditorSettingTab extends PluginSettingTab {
         containerEl.createEl('h2', { text: 'Hexworld Editor' });
 
         new Setting(containerEl)
-            .setName(t('settings.language'))
-            .setDesc(t('settings.languageDesc'))
-            .addDropdown(dropdown => {
-                dropdown
-                    .addOption('de', 'Deutsch')
-                    .setValue(this.plugin.settings.language)
-                    .onChange(async (value) => {
-                        this.plugin.settings.language = value;
-                        currentLanguage = value;
-                        await this.plugin.saveSettings();
-                        this.plugin.refreshAllViews();
+            .setDesc(t('settings.donateText'))
+            .addButton(btn => {
+                btn.setButtonText(t('settings.donateButton'))
+                    .setCta()
+                    .onClick(() => {
+                        window.open('https://ko-fi.com/christophwerner', '_blank');
                     });
             });
+
     }
 }
 
