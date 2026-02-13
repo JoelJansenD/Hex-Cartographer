@@ -1,4 +1,4 @@
-const { Plugin, TFile, Notice, Modal, ItemView, setIcon } = require('obsidian');
+const { Plugin, PluginSettingTab, Setting, TFile, Notice, Modal, ItemView, setIcon } = require('obsidian');
 
 // Standard-Farbpaletten (hier einmal anpassen — wird überall verwendet)
 const DEFAULT_PALETTE  = ['#3295D2', '#6CC261', '#DDC88D', '#9c9090', '#CD6155', '#FFD700', '#000000', '#FFFFFF'];
@@ -8,8 +8,225 @@ const DEFAULT_PALETTE2 = ['#ff0000', '#ff8000', '#ffff00', '#00ff00', '#00ffff',
 const TOOLBAR_INPUT_FONT_SIZE = '13px';
 const TOOLBAR_INPUT_HEIGHT = '24px';
 
+// === Farben (Standardwerte) ===
+const DEFAULT_MASTER_COLOR = '#000000';
+const DEFAULT_HEX_COLOR = '#6CC261';
+const DEFAULT_RIVER_COLOR = '#3295D2';
+const DEFAULT_ROAD_COLOR = '#f5deb3';
+const DEFAULT_BORDER_COLOR = '#FF0000';
+const DEFAULT_TEXT_COLOR = '#ffffff';
+const DEFAULT_EXTRAS_SYMBOL_COLOR = '#228B22';
+const DEFAULT_EXTRAS_BG_COLOR = '#6CC261';
+const DEFAULT_VEGETATION_SYMBOL_COLOR = '#228B22';
+const DEFAULT_VEGETATION_BG_COLOR = '#6CC261';
+const DEFAULT_MOUNTAIN_SYMBOL_COLOR = '#5D4037';
+const DEFAULT_MOUNTAIN_BG_COLOR = '#808080';
+const DEFAULT_BUILDING_SYMBOL_COLOR = '#CD6155';
+const DEFAULT_BUILDING_BG_COLOR = '#DDC88D';
+
+// === Größen & Abstände ===
+const DEFAULT_GRID_SIZE = 30;
+const DEFAULT_OFF_X = 400;
+const DEFAULT_OFF_Y = 300;
+const DEFAULT_RIVER_WIDTH = 5;
+const DEFAULT_ROAD_WIDTH = 3;
+const DEFAULT_BORDER_HIGHLIGHT_WIDTH = 3;
+const DEFAULT_BORDER_PERCENT = 100;
+const DEFAULT_BORDER_REPEATS = 1;
+const PATH_END_INSET = 0.1;
+const MAX_HISTORY = 50;
+const MAX_ZOOM = 2;
+const VIEWPORT_PADDING = 0.9;
+
+// === Text-Defaults ===
+const DEFAULT_TEXT_SIZE = 16;
+const DEFAULT_SHADOW_DISTANCE = 5;
+const DEFAULT_SHADOW_OPACITY = 50;
+
+// === UI-Styling ===
+const ACTIVE_BOX_SHADOW = '0 0 8px rgba(74, 158, 255, 0.4)';
+
+// === Symbol-Konfiguration (Größe/Position pro Symbol) ===
+// size: Größenmultiplikator (0.30 = 30% der Hex-Größe)
+// align: Position in der Wabe ('center', 'top', 'bottom', etc.)
+// marginX/marginY: Verschiebung in Pixel
+const SVG_SYMBOL_CONFIG = {
+    // Extras
+    'question':    { size: 0.5,   align: 'center', marginX: 0, marginY: 0 },
+    'exclamation': { size: 0.5,   align: 'center', marginX: 0, marginY: 0 },
+    'cross':       { size: 0.5,   align: 'center', marginX: 0, marginY: 0 },
+    // Vegetation
+    'grass':       { size: 0.30,  align: 'center', marginX: 0, marginY: 0 },
+    'swamp':       { size: 0.30,  align: 'center', marginX: 0, marginY: 0 },
+    'bush':        { size: 0.35,  align: 'center', marginX: 0, marginY: 0 },
+    'tree':        { size: 0.35,  align: 'center', marginX: 0, marginY: -6 },
+    'pine':        { size: 0.45,  align: 'center', marginX: 0, marginY: 0 },
+    'palm':        { size: 0.425, align: 'center', marginX: 0, marginY: 0 },
+    // Berge
+    'hill':        { size: 0.50,  align: 'center', marginX: 0, marginY: 0 },
+    'mountain':    { size: 0.60,  align: 'center', marginX: 0, marginY: 0 },
+    // Gebäude
+    'tent':        { size: 0.35,  align: 'center', marginX: 0, marginY: 0 },
+    'house':       { size: 0.325, align: 'center', marginX: 0, marginY: -2 },
+    'village':     { size: 0.55,  align: 'center', marginX: 0, marginY: 0 },
+    'town':        { size: 0.70,  align: 'center', marginX: 0, marginY: -3 },
+    'castle':      { size: 0.30,  align: 'center', marginX: 0, marginY: 0 },
+    'harbor':      { size: 0.30,  align: 'center', marginX: 0, marginY: 0 },
+    'monastery':   { size: 0.30,  align: 'center', marginX: 0, marginY: 0 },
+    'tower':       { size: 0.30,  align: 'center', marginX: 0, marginY: 0 },
+    'ruin':        { size: 0.30,  align: 'center', marginX: 0, marginY: 0 },
+    'cave':        { size: 0.30,  align: 'center', marginX: 0, marginY: 0 },
+    'oasis':       { size: 0.30,  align: 'center', marginX: 0, marginY: 0 }
+};
+
+// === Plugin-Einstellungen ===
+const DEFAULT_PLUGIN_SETTINGS = { language: 'de' };
+
+// === Übersetzungen ===
+let currentLanguage = 'de';
+
+const TRANSLATIONS = {
+    de: {
+        // Tool-Gruppen
+        'tool.extras': 'Extras',
+        'tool.vegetation': 'Vegetation',
+        'tool.mountain': 'Berg',
+        'tool.building': 'Gebäude',
+
+        // Varianten — Extras
+        'variant.question': 'Fragezeichen',
+        'variant.exclamation': 'Ausrufezeichen',
+        'variant.cross': 'Kreuz',
+        // Varianten — Vegetation
+        'variant.grass': 'Gras',
+        'variant.swamp': 'Sumpf',
+        'variant.bush': 'Strauch',
+        'variant.tree': 'Laubbaum',
+        'variant.pine': 'Nadelbaum',
+        'variant.palm': 'Palme',
+        // Varianten — Berge
+        'variant.hill': 'Hügel',
+        'variant.mountain': 'Berg',
+        // Varianten — Gebäude
+        'variant.tent': 'Zelt',
+        'variant.house': 'Haus',
+        'variant.village': 'Dorf',
+        'variant.town': 'Stadt',
+        'variant.castle': 'Burg',
+        'variant.monastery': 'Kloster',
+        'variant.harbor': 'Hafen',
+        'variant.tower': 'Turm',
+        'variant.ruin': 'Ruine',
+        'variant.cave': 'Höhle',
+        'variant.oasis': 'Oase',
+
+        // Tooltips — Hauptwerkzeuge
+        'tooltip.editMode': 'Edit-Modus\nKlick: Werkzeuge ein-/ausblenden',
+        'tooltip.colorPicker': 'Werkzeugfarbe\nKlick: Farbwähler öffnen',
+        'tooltip.hexColor': 'Waben-Farbwerkzeug\nKlick: Waben einfärben',
+        'tooltip.fill': 'Fülleimer\nKlick: Zusammenhängende Fläche füllen\nErneut klicken: Fülleimer ausschalten',
+        'tooltip.text': 'Text-Werkzeug\nKlick auf Karte: Neuen Text erstellen\nKlick auf Text: Text bearbeiten/verschieben',
+        'tooltip.eraser': 'Radierer\nKlick: Wabeninhalt löschen\nDoppelklick: Zusammenhängendes löschen',
+        'tooltip.undo': 'Rückgängig\nStrg+Z: Letzte Aktion rückgängig machen',
+        'tooltip.redo': 'Wiederholen\nStrg+Y: Rückgängig gemachte Aktion wiederholen',
+        'tooltip.fit': 'Karte einpassen\nKlick: Fenster mit gesamter Karte ausfüllen',
+        'tooltip.palette': 'Farbpalette\nKlick: Farbe als Werkzeugfarbe übernehmen\nRechtsklick: Palettenfarbe ändern',
+        'tooltip.toolGroup': '{name}\nKlick: Zeichnen\nRechtsklick: Variante wählen',
+        'tooltip.toolGroupVariant': '{label}\nKlick: Zeichnen\nRechtsklick: Variante wählen',
+
+        // Tooltips — Musterwerkzeug
+        'tooltip.pattern': 'Muster-Werkzeug\nKlick: Mit aufgenommenem Muster zeichnen\nDoppelklick Radierer: Zusammenhängendes Muster löschen',
+        'tooltip.patternPicker': 'Muster aufnehmen\nKlick: Wabe als Muster übernehmen',
+
+        // Tooltips — Fluss/Weg
+        'tooltip.river': 'Fluss-Werkzeug\nKlick: Wegpunkte setzen/verschieben\nKlick Radierer: Teilstück löschen\nDoppelklick Radierer: Ganzen Fluss löschen',
+        'tooltip.road': 'Weg-Werkzeug\nKlick: Wegpunkte setzen/verschieben\nKlick Radierer: Teilstück löschen\nDoppelklick Radierer: Ganzen Weg löschen',
+        'tooltip.pathPicker': 'Fluss/Weg aufnehmen\nKlick: Vorhandenen Fluss/Weg auswählen',
+        'tooltip.pathFinish': 'Abschließen\nKlick: Aktuellen Fluss/Weg fertigstellen',
+        'tooltip.roadFinish': 'Weg abschließen',
+        'tooltip.riverFinish': 'Fluss abschließen',
+        'input.riverWidth': 'Flussbreite',
+        'input.roadWidth': 'Wegbreite',
+
+        // Tooltips — Grenzen
+        'tooltip.border': 'Grenz-Werkzeug\nKlick: Grenzwaben zeichnen\nDoppelklick Radierer: Zusammenhängende Grenze löschen',
+        'tooltip.borderPicker': 'Grenzfarbe aufnehmen\nKlick: Vorhandene Grenze zum bearbeiten auswählen',
+        'tooltip.borderFinish': 'Abschließen\nKlick: Aktuelle Grenze fertigstellen',
+        'tooltip.borderVisibility': 'Grenzen-Sichtbarkeit\nKlick: Grenzen ein-/ausblenden',
+        'input.borderPercent': 'Linienlänge %',
+        'input.borderRepeats': 'Wiederholungen',
+
+        // Notices
+        'notice.fileCreateError': 'Fehler beim Erstellen der Datei: {error}',
+        'notice.nothingToUndo': 'Nichts zum Rückgängigmachen',
+        'notice.nothingToRedo': 'Nichts zum Wiederholen',
+        'notice.noHexesToShow': 'Keine Waben oder Texte zum Anzeigen',
+        'notice.noPattern': 'Kein Muster ausgewählt. Nutze den Picker-Button, um ein Muster aufzunehmen.',
+        'notice.clickToPickPattern': 'Klicke auf eine Wabe, um das Muster aufzunehmen',
+        'notice.patternPicked': 'Muster aufgenommen!',
+        'notice.noHexAtPosition': 'Keine Wabe an dieser Position',
+        'notice.riverSelected': 'Fluss #{id} ausgewählt',
+        'notice.roadSelected': 'Weg #{id} ausgewählt',
+        'notice.noRiverOrRoad': 'Kein Fluss oder Weg an dieser Position',
+        'notice.borderSelected': 'Grenze #{id} ausgewählt',
+        'notice.noBorderAtPosition': 'Keine Grenze an dieser Position',
+
+        // Modal — Dateiauswahl
+        'modal.selectFile': 'MD Datei auswählen',
+        'modal.searchFile': 'Dateiname suchen...',
+        'modal.noFilesFound': 'Keine Dateien gefunden',
+        'modal.removeLink': 'Link entfernen',
+        'modal.cancel': 'Abbrechen',
+
+        // Modal — Textformatierung
+        'modal.formatText': 'Text formatieren',
+        'modal.displayText': 'Anzeigetext:',
+        'modal.textPlaceholder': 'Text eingeben...',
+        'modal.textSize': 'Textgröße:',
+        'modal.textColor': 'Textfarbe:',
+        'modal.palette': 'Palette:',
+        'modal.formatting': 'Formatierung:',
+        'modal.outline': 'Outline',
+        'modal.bold': 'Fett',
+        'modal.shadowSettings': 'Schatten-Einstellungen:',
+        'modal.shadowEnable': 'Schatten aktivieren',
+        'modal.shadowDistance': 'Abstand (px):',
+        'modal.shadowOpacity': 'Transparenz (%):',
+        'modal.linkToFile': 'Link zu MD-Datei:',
+        'modal.noLinkSelected': 'Kein Link ausgewählt',
+        'modal.selectFileBtn': 'Datei wählen...',
+        'modal.deleteText': 'Text löschen',
+        'modal.confirmDeleteText': 'Text wirklich löschen?',
+
+        // Einstellungen
+        'settings.language': 'Sprache / Language',
+        'settings.languageDesc': 'Sprache der Benutzeroberfläche',
+
+        // Menü-Einträge
+        'menu.createNew': 'Neue Hex World erstellen',
+        'menu.openInEditor': 'Im Hex World Editor öffnen',
+    }
+};
+
+function t(key, params) {
+    let str = TRANSLATIONS[currentLanguage]?.[key]
+           ?? TRANSLATIONS['de'][key]
+           ?? key;
+    if (params) {
+        for (const [k, v] of Object.entries(params)) {
+            str = str.replace(`{${k}}`, v);
+        }
+    }
+    return str;
+}
+
 class HexWorldEditorPlugin extends Plugin {
     async onload() {
+        // Plugin-Einstellungen laden (Sprache etc.)
+        this.settings = Object.assign({}, DEFAULT_PLUGIN_SETTINGS, await this.loadData());
+        currentLanguage = this.settings.language;
+        this.addSettingTab(new HexWorldEditorSettingTab(this.app, this));
+
         this.registerView('hexworld-editor', (leaf) => new HexWorldEditorView(leaf, this));
 
         // Registriere .hexworld.md Extension
@@ -96,7 +313,7 @@ class HexWorldEditorPlugin extends Plugin {
             this.app.workspace.on('file-menu', (menu, file) => {
                 menu.addItem((item) => {
                     item
-                        .setTitle('Neue Hex World erstellen')
+                        .setTitle(t('menu.createNew'))
                         .setIcon('map')
                         .setSection('create')
                         .onClick(async () => {
@@ -224,7 +441,7 @@ class HexWorldEditorPlugin extends Plugin {
                 state: { file: file.path }
             });
         } catch (err) {
-            new Notice("Fehler beim Erstellen der Datei: " + err);
+            new Notice(t('notice.fileCreateError', { error: err }));
         }
     }
 
@@ -287,6 +504,19 @@ class HexWorldEditorPlugin extends Plugin {
         const intervalId = setInterval(hideExtension, 2000);
         this.register(() => clearInterval(intervalId));
     }
+
+    async saveSettings() {
+        await this.saveData(this.settings);
+    }
+
+    refreshAllViews() {
+        this.app.workspace.getLeavesOfType('hexworld-editor').forEach(leaf => {
+            if (leaf.view && leaf.view.rebuildToolbar) {
+                leaf.view.initToolConfigs();
+                leaf.view.rebuildToolbar();
+            }
+        });
+    }
 }
 
 class HexWorldEditorView extends ItemView {
@@ -294,11 +524,11 @@ class HexWorldEditorView extends ItemView {
         super(leaf);
         this.plugin = plugin;
         this.file = null;
-        this.data = { hexes: {}, rivers: [], roads: [], texts: [], borders: [], gridSize: 30, zoom: 1, offX: 400, offY: 300 };
+        this.data = { hexes: {}, rivers: [], roads: [], texts: [], borders: [], gridSize: DEFAULT_GRID_SIZE, zoom: 1, offX: DEFAULT_OFF_X, offY: DEFAULT_OFF_Y };
 
         this.history = [];
         this.redoStack = [];
-        this.maxHistory = 50;
+        this.maxHistory = MAX_HISTORY;
 
         this.saveTimeout = null;
         this.isMouseDown = false;
@@ -310,19 +540,19 @@ class HexWorldEditorView extends ItemView {
         this.draggedText = null;
 
         this.startHex = null;
-        this.borderSettings = { percent: 100, repeats: 1, activeRegionId: null, pickedHex: null, visible: true };
-        this.borderHighlightWidth = 3; // Rahmenstärke für aktive Grenzregion
+        this.borderSettings = { percent: DEFAULT_BORDER_PERCENT, repeats: DEFAULT_BORDER_REPEATS, activeRegionId: null, pickedHex: null, visible: true };
+        this.borderHighlightWidth = DEFAULT_BORDER_HIGHLIGHT_WIDTH;
         // Wenn true, wird bei Klick auf die Karte der Grenzregionen-Werkzeugmodus aktiviert, um eine neue Grenzregion zu erstellen oder eine bestehende Grenzregion zu erweitern (abhängig von lastHex), und die Karte wird aktualisiert, um die aktive Grenzregion hervorzuheben
         this.borderPickMode = false;
         // riverSettings speichert alle Einstellungen für das Fluss-Werkzeug, damit sie auch während des Ziehens verfügbar sind (z.B. um die Karte zu aktualisieren) und damit sie beim Wechseln zwischen verschiedenen Werkzeugen erhalten bleiben
-        this.riverSettings = { width: 5, activeRiverId: null, editMode: false, insertAfter: null };
+        this.riverSettings = { width: DEFAULT_RIVER_WIDTH, activeRiverId: null, editMode: false, insertAfter: null };
         // roadSettings ähnlich wie riverSettings, aber mit eigenen Eigenschaften (z.B. width) und eigenem activeRoadId, damit
-        this.roadSettings = { width: 3, activeRoadId: null, editMode: false, insertAfter: null };
+        this.roadSettings = { width: DEFAULT_ROAD_WIDTH, activeRoadId: null, editMode: false, insertAfter: null };
         // Wenn true, wird bei Klick auf die Karte der Pfad-Werkzeugmodus aktiviert, um einen neuen Pfad zu erstellen oder einen bestehenden Pfad zu erweitern (abhängig von lastWaypointClick)
         this.pathPickMode = false;
         this.lastToolGroup = null;
         // Wie weit Pfad-Endpunkte ins Hex reichen: 0 = Hex-Rand, 1 = Hex-Zentrum
-        this.pathEndInset = 0.1;
+        this.pathEndInset = PATH_END_INSET;
         // Index des aktuell gezogenen Flusses/Weges (null = keiner), um während des Ziehens die Karte zu aktualisieren
         this.riverDragIndex = null;
         // Ähnlich wie riverDragIndex, aber für Straßen
@@ -332,8 +562,8 @@ class HexWorldEditorView extends ItemView {
         // Verhindert, dass bei Klicks auf die Karte während des Ziehens von Flüssen/Wegen die Karte neu geladen wird (was zu unerwünschtem Verhalten führen kann)
         this.pendingHistory = false;
 
-        this.masterColor = '#000000';
-        this.hexColorColor = '#6CC261'; // Zuletzt verwendete Wabenfarbe
+        this.masterColor = DEFAULT_MASTER_COLOR;
+        this.hexColorColor = DEFAULT_HEX_COLOR;
 
         // Standard-Farbpalette (kann pro Datei angepasst werden)
         this.colorPalette = [...DEFAULT_PALETTE];
@@ -341,66 +571,7 @@ class HexWorldEditorView extends ItemView {
         this.activeColorSlot = 1; // Standardfarbe: Grün
 
         // Werkzeug-Konfigurationen
-        this.toolConfigs = {
-            grass: {
-                name: 'Extras',
-                variants: [
-                    { id: 'question', label: 'Fragezeichen', icon: 'help-circle' },
-                    { id: 'exclamation', label: 'Ausrufezeichen', icon: 'alert-circle' },
-                    { id: 'cross', label: 'Kreuz', icon: 'x' }
-                ],
-                currentVariant: 'question',
-                symbolColor: '#228B22',
-                backgroundColor: '#6CC261',
-                backgroundEnabled: false
-            },
-            tree: {
-                name: 'Vegetation',
-                variants: [
-                    { id: 'grass', label: 'Gras', icon: 'sprout' },
-                    { id: 'swamp', label: 'Sumpf', icon: 'waves' },
-                    { id: 'bush', label: 'Strauch', icon: 'leaf' },
-                    { id: 'tree', label: 'Laubbaum', icon: 'trees' },
-                    { id: 'pine', label: 'Nadelbaum', icon: 'triangle' },
-                    { id: 'palm', label: 'Palme', icon: 'palmtree' }
-                ],
-                currentVariant: 'tree',
-                symbolColor: '#228B22',
-                backgroundColor: '#6CC261',
-                backgroundEnabled: false
-            },
-            mountain: {
-                name: 'Berg',
-                variants: [
-                    { id: 'hill', label: 'Hügel', icon: 'chevron-up' },
-                    { id: 'mountain', label: 'Berg', icon: 'mountain' }
-                ],
-                currentVariant: 'mountain',
-                symbolColor: '#5D4037',
-                backgroundColor: '#808080',
-                backgroundEnabled: false
-            },
-            building: {
-                name: 'Gebäude',
-                variants: [
-                    { id: 'tent', label: 'Zelt', icon: 'tent' },
-                    { id: 'house', label: 'Haus', icon: 'home' },
-                    { id: 'village', label: 'Dorf', icon: 'school' },
-                    { id: 'town', label: 'Stadt', icon: 'castle' },
-                    { id: 'castle', label: 'Burg', icon: 'shield' },
-                    { id: 'monastery', label: 'Kloster', icon: 'church' },
-                    { id: 'harbor', label: 'Hafen', icon: 'ship' },
-                    { id: 'tower', label: 'Turm', icon: 'tower' },
-                    { id: 'ruin', label: 'Ruine', icon: 'archive' },
-                    { id: 'cave', label: 'Höhle', icon: 'circle' },
-                    { id: 'oasis', label: 'Oase', icon: 'droplet' }
-                ],
-                currentVariant: 'house',
-                symbolColor: '#CD6155',
-                backgroundColor: '#DDC88D',
-                backgroundEnabled: false
-            }
-        };
+        this.initToolConfigs();
 
         // Zeichenmodi
         this.editMode = false; // Edit-Modus: true = Werkzeuge sichtbar, false = nur Navigation
@@ -417,52 +588,91 @@ class HexWorldEditorView extends ItemView {
         this.svgSymbolsLoaded = false;
         this.svgLoadPromise = this.loadSVGSymbols();
 
-        // SVG-Symbol Konfigurations-Tabelle
-        // Hier können Sie für jedes Symbol individuell Größe und Position anpassen
-        // size: Größenmultiplikator (0.30 = 30% der Hex-Größe)
-        // align: Position in der Wabe ('center', 'top', 'bottom', 'left', 'right', 'top-left', 'top-right', 'bottom-left', 'bottom-right')
-        // marginX: Horizontale Verschiebung in % der Hex-Breite (-100 bis +100)
-        // marginY: Vertikale Verschiebung in % der Hex-Höhe (-100 bis +100)
-        this.svgSymbolConfig = {
-            // Extras
-            'question': { size: 0.5, align: 'center', marginX: 0, marginY: 0 },
-            'exclamation': { size: 0.5, align: 'center', marginX: 0, marginY: 0 },
-            'cross': { size: 0.5, align: 'center', marginX: 0, marginY: 0 },
-
-            // Vegetation
-            'grass': { size: 0.30, align: 'center', marginX: 0, marginY: 0 },
-            'swamp': { size: 0.30, align: 'center', marginX: 0, marginY: 0 },
-            'bush': { size: 0.35, align: 'center', marginX: 0, marginY: 0 },
-            'tree': { size: 0.35, align: 'center', marginX: 0, marginY: -6 },
-            'pine': { size: 0.45, align: 'center', marginX: 0, marginY: 0 },
-            'palm': { size: 0.425, align: 'center', marginX: 0, marginY: 0 },
-
-            // Berge
-            'hill': { size: 0.50, align: 'center', marginX: 0, marginY: 0 },
-            'mountain': { size: 0.60, align: 'center', marginX: 0, marginY: 0 },
-
-            // Gebäude
-            'tent': { size: 0.35, align: 'center', marginX: 0, marginY: 0 },
-            'house': { size: 0.325, align: 'center', marginX: 0, marginY: -2 },
-            'village': { size: 0.55, align: 'center', marginX: 0, marginY: 0 },
-            'town': { size: 0.70, align: 'center', marginX: 0, marginY: -3 },
-            'castle': { size: 0.30, align: 'center', marginX: 0, marginY: 0 },
-            'harbor': { size: 0.30, align: 'center', marginX: 0, marginY: 0 },
-            'monastery': { size: 0.30, align: 'center', marginX: 0, marginY: 0 },
-            'tower': { size: 0.30, align: 'center', marginX: 0, marginY: 0 },
-            'ruin': { size: 0.30, align: 'center', marginX: 0, marginY: 0 },
-            'cave': { size: 0.30, align: 'center', marginX: 0, marginY: 0 },
-            'oasis': { size: 0.30, align: 'center', marginX: 0, marginY: 0 }
-        };
+        this.svgSymbolConfig = SVG_SYMBOL_CONFIG;
 
         // Text-Einstellungen
-        this.lastUsedTextSize = 16;
-        this.lastUsedTextColor = '#ffffff';
+        this.lastUsedTextSize = DEFAULT_TEXT_SIZE;
+        this.lastUsedTextColor = DEFAULT_TEXT_COLOR;
         this.lastUsedTextOutline = true;
         this.lastUsedTextBold = false;
         this.lastUsedTextShadow = false;
-        this.lastUsedTextShadowDistance = 5;
-        this.lastUsedTextShadowOpatown = 50;
+        this.lastUsedTextShadowDistance = DEFAULT_SHADOW_DISTANCE;
+        this.lastUsedTextShadowOpatown = DEFAULT_SHADOW_OPACITY;
+    }
+
+    initToolConfigs() {
+        const ex = this.toolConfigs || {};
+        this.toolConfigs = {
+            grass: {
+                name: t('tool.extras'),
+                variants: [
+                    { id: 'question', label: t('variant.question'), icon: 'help-circle' },
+                    { id: 'exclamation', label: t('variant.exclamation'), icon: 'alert-circle' },
+                    { id: 'cross', label: t('variant.cross'), icon: 'x' }
+                ],
+                currentVariant: ex.grass?.currentVariant || 'question',
+                symbolColor: ex.grass?.symbolColor || DEFAULT_EXTRAS_SYMBOL_COLOR,
+                backgroundColor: ex.grass?.backgroundColor || DEFAULT_EXTRAS_BG_COLOR,
+                backgroundEnabled: ex.grass?.backgroundEnabled || false
+            },
+            tree: {
+                name: t('tool.vegetation'),
+                variants: [
+                    { id: 'grass', label: t('variant.grass'), icon: 'sprout' },
+                    { id: 'swamp', label: t('variant.swamp'), icon: 'waves' },
+                    { id: 'bush', label: t('variant.bush'), icon: 'leaf' },
+                    { id: 'tree', label: t('variant.tree'), icon: 'trees' },
+                    { id: 'pine', label: t('variant.pine'), icon: 'triangle' },
+                    { id: 'palm', label: t('variant.palm'), icon: 'palmtree' }
+                ],
+                currentVariant: ex.tree?.currentVariant || 'tree',
+                symbolColor: ex.tree?.symbolColor || DEFAULT_VEGETATION_SYMBOL_COLOR,
+                backgroundColor: ex.tree?.backgroundColor || DEFAULT_VEGETATION_BG_COLOR,
+                backgroundEnabled: ex.tree?.backgroundEnabled || false
+            },
+            mountain: {
+                name: t('tool.mountain'),
+                variants: [
+                    { id: 'hill', label: t('variant.hill'), icon: 'chevron-up' },
+                    { id: 'mountain', label: t('variant.mountain'), icon: 'mountain' }
+                ],
+                currentVariant: ex.mountain?.currentVariant || 'mountain',
+                symbolColor: ex.mountain?.symbolColor || DEFAULT_MOUNTAIN_SYMBOL_COLOR,
+                backgroundColor: ex.mountain?.backgroundColor || DEFAULT_MOUNTAIN_BG_COLOR,
+                backgroundEnabled: ex.mountain?.backgroundEnabled || false
+            },
+            building: {
+                name: t('tool.building'),
+                variants: [
+                    { id: 'tent', label: t('variant.tent'), icon: 'tent' },
+                    { id: 'house', label: t('variant.house'), icon: 'home' },
+                    { id: 'village', label: t('variant.village'), icon: 'school' },
+                    { id: 'town', label: t('variant.town'), icon: 'castle' },
+                    { id: 'castle', label: t('variant.castle'), icon: 'shield' },
+                    { id: 'monastery', label: t('variant.monastery'), icon: 'church' },
+                    { id: 'harbor', label: t('variant.harbor'), icon: 'ship' },
+                    { id: 'tower', label: t('variant.tower'), icon: 'tower' },
+                    { id: 'ruin', label: t('variant.ruin'), icon: 'archive' },
+                    { id: 'cave', label: t('variant.cave'), icon: 'circle' },
+                    { id: 'oasis', label: t('variant.oasis'), icon: 'droplet' }
+                ],
+                currentVariant: ex.building?.currentVariant || 'house',
+                symbolColor: ex.building?.symbolColor || DEFAULT_BUILDING_SYMBOL_COLOR,
+                backgroundColor: ex.building?.backgroundColor || DEFAULT_BUILDING_BG_COLOR,
+                backgroundEnabled: ex.building?.backgroundEnabled || false
+            }
+        };
+    }
+
+    rebuildToolbar() {
+        const toolbar = this.containerEl.querySelector('.hex-toolbar');
+        if (!toolbar) return;
+        toolbar.empty();
+        this.createToolbar(toolbar);
+        this.updateToolbarState(toolbar);
+        if (this.editMode) {
+            this.recalcToolbarWidths();
+        }
     }
 
     getViewType() { return 'hexworld-editor'; }
@@ -480,7 +690,7 @@ class HexWorldEditorView extends ItemView {
     onPaneMenu(menu, source) {
         if (source === 'more-options') {
             menu.addItem((item) => {
-                item.setTitle('Im Hex World Editor öffnen')
+                item.setTitle(t('menu.openInEditor'))
                     .setIcon('map')
                     .onClick(async () => {
                         // Bereits im Editor geöffnet, nichts zu tun
@@ -801,7 +1011,7 @@ class HexWorldEditorView extends ItemView {
             if (!newData.borders) newData.borders = [];
             // Migration: altes Flat-Array [{q,r}] → neues Regionen-Format [{id, color, hexes}]
             if (newData.borders.length > 0 && newData.borders[0].q !== undefined) {
-                newData.borders = [{ id: 1, color: '#FF0000', hexes: newData.borders }];
+                newData.borders = [{ id: 1, color: DEFAULT_BORDER_COLOR, hexes: newData.borders }];
             }
 
             // Stelle sicher, dass rivers-Array existiert
@@ -815,7 +1025,7 @@ class HexWorldEditorView extends ItemView {
                     }
                     waypoints.push({ q: seg.to.q, r: seg.to.r });
                 });
-                newData.rivers = waypoints.length > 0 ? [{ id: 1, color: '#3295D2', width: 5, waypoints }] : [];
+                newData.rivers = waypoints.length > 0 ? [{ id: 1, color: DEFAULT_RIVER_COLOR, width: DEFAULT_RIVER_WIDTH, waypoints }] : [];
             }
 
             // Stelle sicher, dass roads-Array existiert
@@ -829,7 +1039,7 @@ class HexWorldEditorView extends ItemView {
                     }
                     waypoints.push({ q: seg.to.q, r: seg.to.r });
                 });
-                newData.roads = waypoints.length > 0 ? [{ id: 1, color: '#f5deb3', width: 3, waypoints }] : [];
+                newData.roads = waypoints.length > 0 ? [{ id: 1, color: DEFAULT_ROAD_COLOR, width: DEFAULT_ROAD_WIDTH, waypoints }] : [];
             }
 
             if (JSON.stringify(this.data) !== JSON.stringify(newData)) {
@@ -914,7 +1124,7 @@ class HexWorldEditorView extends ItemView {
             this.render();
             this.requestSave();
         } else {
-            new Notice("Nichts zum Rückgängigmachen");
+            new Notice(t('notice.nothingToUndo'));
         }
     }
 
@@ -940,7 +1150,7 @@ class HexWorldEditorView extends ItemView {
             this.render();
             this.requestSave();
         } else {
-            new Notice("Nichts zum Wiederholen");
+            new Notice(t('notice.nothingToRedo'));
         }
     }
 
@@ -949,7 +1159,7 @@ class HexWorldEditorView extends ItemView {
         const texts = this.data.texts || [];
 
         if (hexes.length === 0 && texts.length === 0) {
-            new Notice("Keine Waben oder Texte zum Anzeigen");
+            new Notice(t('notice.noHexesToShow'));
             return;
         }
 
@@ -989,9 +1199,9 @@ class HexWorldEditorView extends ItemView {
         // Berechne erforderlichen Zoom mit etwas Padding (90% der Canvas-Größe)
         const canvasWidth = this.canvas.width;
         const canvasHeight = this.canvas.height;
-        const zoomX = (canvasWidth * 0.9) / width;
-        const zoomY = (canvasHeight * 0.9) / height;
-        const newZoom = Math.min(zoomX, zoomY, 2); // Maximal 2x Zoom
+        const zoomX = (canvasWidth * VIEWPORT_PADDING) / width;
+        const zoomY = (canvasHeight * VIEWPORT_PADDING) / height;
+        const newZoom = Math.min(zoomX, zoomY, MAX_ZOOM);
 
         // Setze Zoom und zentriere die Karte
         this.data.zoom = newZoom;
@@ -1090,7 +1300,7 @@ class HexWorldEditorView extends ItemView {
 
     createToolbar(toolbar) {
         // Edit-Modus-Button (immer sichtbar)
-        const editModeBtn = toolbar.createEl('button', { cls: 'hex-tool-btn', attr: { title: 'Edit-Modus\nKlick: Werkzeuge ein-/ausblenden' } });
+        const editModeBtn = toolbar.createEl('button', { cls: 'hex-tool-btn', attr: { title: t('tooltip.editMode') } });
         setIcon(editModeBtn, 'wrench');
         this.editModeBtn = editModeBtn;
         editModeBtn.onclick = () => {
@@ -1118,7 +1328,7 @@ class HexWorldEditorView extends ItemView {
 
         // Master-Farbfeld (sichtbarer Button + versteckter Color-Input)
         const masterColorBtn = editContent.createEl('button', {
-            attr: { title: 'Werkzeugfarbe\nKlick: Farbwähler öffnen', style: 'width: 50px; height: 50px; min-width: 50px; border: 1px solid var(--divider-color); border-radius: 4px; cursor: pointer; box-sizing: border-box; padding: 0;' }
+            attr: { title: t('tooltip.colorPicker'), style: 'width: 50px; height: 50px; min-width: 50px; border: 1px solid var(--divider-color); border-radius: 4px; cursor: pointer; box-sizing: border-box; padding: 0;' }
         });
         masterColorBtn.style.backgroundColor = this.masterColor;
         this.masterColorBtn = masterColorBtn;
@@ -1151,7 +1361,7 @@ class HexWorldEditorView extends ItemView {
         editContent.createEl('span', { cls: 'hex-toolbar-sep', text: '\u200B' });
 
         // Waben-Farbwerkzeug (Masterfarbe)
-        const hexColorBtn = editContent.createEl('button', { cls: 'hex-tool-btn', attr: { title: 'Waben-Farbwerkzeug\nKlick: Waben einfärben' } });
+        const hexColorBtn = editContent.createEl('button', { cls: 'hex-tool-btn', attr: { title: t('tooltip.hexColor') } });
         hexColorBtn.dataset.toolGroup = 'hexcolor';
         setIcon(hexColorBtn, 'hexagon');
         hexColorBtn.onclick = () => {
@@ -1178,10 +1388,10 @@ class HexWorldEditorView extends ItemView {
         editContent.createEl('span', { cls: 'hex-toolbar-sep', text: '\u200B' });
 
         // Füllwerkzeugs 
-        this.createDrawModeButton(editContent, 'fill', 'paint-bucket', 'Fülleimer\nKlick: Zusammenhängende Fläche füllen\nErneut klicken: Fülleimer ausschalten');
+        this.createDrawModeButton(editContent, 'fill', 'paint-bucket', t('tooltip.fill'));
 
         // Text-Werkzeug
-        const textBtn = editContent.createEl('button', { cls: 'hex-tool-btn', attr: { title: 'Text-Werkzeug\nKlick auf Karte: Neuen Text erstellen\nKlick auf Text: Text bearbeiten/verschieben' } });
+        const textBtn = editContent.createEl('button', { cls: 'hex-tool-btn', attr: { title: t('tooltip.text') } });
         textBtn.dataset.toolGroup = 'text';
         setIcon(textBtn, 'type');
         textBtn.onclick = () => {
@@ -1194,7 +1404,7 @@ class HexWorldEditorView extends ItemView {
         };
 
         // Radiergummi
-        this.createDrawModeButton(editContent, 'eraser', 'eraser', 'Radierer\nKlick: Wabeninhalt löschen\nDoppelklick: Zusammenhängendes löschen');
+        this.createDrawModeButton(editContent, 'eraser', 'eraser', t('tooltip.eraser'));
 
         editContent.createEl('span', { cls: 'hex-toolbar-sep', text: '\u200B' });
 
@@ -1212,16 +1422,16 @@ class HexWorldEditorView extends ItemView {
         editContent.createEl('span', { cls: 'hex-toolbar-sep', text: '\u200B' });
 
         // Undo/Redo
-        const undoBtn = editContent.createEl('button', { cls: 'hex-tool-btn', attr: { title: 'Rückgängig\nStrg+Z: Letzte Aktion rückgängig machen' } });
+        const undoBtn = editContent.createEl('button', { cls: 'hex-tool-btn', attr: { title: t('tooltip.undo') } });
         setIcon(undoBtn, 'undo-2');
         undoBtn.onclick = () => this.undo();
 
-        const redoBtn = editContent.createEl('button', { cls: 'hex-tool-btn', attr: { title: 'Wiederholen\nStrg+Y: Rückgängig gemachte Aktion wiederholen' } });
+        const redoBtn = editContent.createEl('button', { cls: 'hex-tool-btn', attr: { title: t('tooltip.redo') } });
         setIcon(redoBtn, 'redo-2');
         redoBtn.onclick = () => this.redo();
 
         // Ganze Karte zeigen Button (immer sichtbar, außerhalb editContent)
-        const fitBtn = toolbar.createEl('button', { cls: 'hex-tool-btn', attr: { title: 'Karte einpassen\nKlick: Fenster mit gesamter Karte ausfüllen' } });
+        const fitBtn = toolbar.createEl('button', { cls: 'hex-tool-btn', attr: { title: t('tooltip.fit') } });
         setIcon(fitBtn, 'maximize-2');
         fitBtn.onclick = () => this.fitMapToView();
 
@@ -1276,7 +1486,7 @@ class HexWorldEditorView extends ItemView {
         const btn = btnWrapper.createEl('button', {
             cls: 'hex-tool-btn',
             attr: {
-                title: `${config.name}\nKlick: Zeichnen\nRechtsklick: Variante wählen`,
+                title: t('tooltip.toolGroup', { name: config.name }),
                 style: `position: relative; background: ${config.backgroundEnabled ? config.backgroundColor : '#ffffff'};`
             }
         });
@@ -1339,14 +1549,14 @@ class HexWorldEditorView extends ItemView {
         // Muster-Button
         const patternBtn = wrapper.createEl('button', {
             cls: 'hex-tool-btn',
-            attr: { title: 'Muster-Werkzeug\nKlick: Mit aufgenommenem Muster zeichnen\nDoppelklick Radierer: Zusammenhängendes Muster löschen' }
+            attr: { title: t('tooltip.pattern') }
         });
         patternBtn.dataset.toolGroup = 'pattern';
         setIcon(patternBtn, 'copy');
 
         patternBtn.onclick = () => {
             if (!this.patternData) {
-                new Notice('Kein Muster ausgewählt. Nutze den Picker-Button, um ein Muster aufzunehmen.');
+                new Notice(t('notice.noPattern'));
                 return;
             }
             this.exitPathEditMode();
@@ -1359,7 +1569,7 @@ class HexWorldEditorView extends ItemView {
         // Picker-Button
         const pickerBtn = wrapper.createEl('button', {
             cls: 'hex-tool-btn',
-            attr: { title: 'Muster aufnehmen\nKlick: Wabe als Muster übernehmen', style: 'width: 24px; padding: 2px;' }
+            attr: { title: t('tooltip.patternPicker'), style: 'width: 24px; padding: 2px;' }
         });
         setIcon(pickerBtn, 'pipette');
 
@@ -1370,7 +1580,7 @@ class HexWorldEditorView extends ItemView {
             pickerBtn.style.background = this.patternPickMode ? 'var(--interactive-accent)' : '';
             if (this.patternPickMode) {
                 this.currentToolGroup = null;
-                new Notice('Klicke auf eine Wabe, um das Muster aufzunehmen');
+                new Notice(t('notice.clickToPickPattern'));
             }
             this.updateToolbarState(toolbar);
         };
@@ -1519,7 +1729,7 @@ class HexWorldEditorView extends ItemView {
             const btn = row.createEl('button', {
                 cls: 'hex-color-slot',
                 attr: {
-                    title: 'Farbpalette\nKlick: Farbe als Werkzeugfarbe übernehmen\nRechtsklick: Palettenfarbe ändern',
+                    title: t('tooltip.palette'),
                     style: 'width: 24px; height: 24px; min-width: 24px; border: none; border-radius: 3px; cursor: pointer; padding: 0;'
                 }
             });
@@ -1589,7 +1799,7 @@ class HexWorldEditorView extends ItemView {
         // Obere Zeile: Fluss-Btn + Weg-Btn + Farbfeld + Picker/OK
         const topRow = wrapper.createDiv({ style: 'display: flex; gap: 2px; align-items: center;' });
 
-        const riverBtn = topRow.createEl('button', { cls: 'hex-tool-btn', attr: { title: 'Fluss-Werkzeug\nKlick: Wegpunkte setzen/verschieben\nKlick Radierer: Teilstück löschen\nDoppelklick Radierer: Ganzen Fluss löschen' } });
+        const riverBtn = topRow.createEl('button', { cls: 'hex-tool-btn', attr: { title: t('tooltip.river') } });
         this.riverBtn = riverBtn;
         riverBtn.dataset.toolGroup = 'river';
         setIcon(riverBtn, 'waves');
@@ -1602,7 +1812,7 @@ class HexWorldEditorView extends ItemView {
             if (needsRender) this.render();
         };
 
-        const roadBtn = topRow.createEl('button', { cls: 'hex-tool-btn', attr: { title: 'Weg-Werkzeug\nKlick: Wegpunkte setzen/verschieben\nKlick Radierer: Teilstück löschen\nDoppelklick Radierer: Ganzen Weg löschen' } });
+        const roadBtn = topRow.createEl('button', { cls: 'hex-tool-btn', attr: { title: t('tooltip.road') } });
         this.roadBtn = roadBtn;
         roadBtn.dataset.toolGroup = 'road';
         setIcon(roadBtn, 'route');
@@ -1616,7 +1826,7 @@ class HexWorldEditorView extends ItemView {
         };
 
         // Shared Picker/OK-Button (kontextabhängig)
-        const pickerBtn = topRow.createEl('button', { cls: 'hex-tool-btn', attr: { title: 'Fluss/Weg bearbeiten\nKlick: Vorhandenen Fluss/Weg zum bearbeiten auswählen' } });
+        const pickerBtn = topRow.createEl('button', { cls: 'hex-tool-btn', attr: { title: t('tooltip.pathPicker') } });
         setIcon(pickerBtn, 'mouse-pointer');
         this.pathPickerBtn = pickerBtn;
         pickerBtn.onclick = () => {
@@ -1646,13 +1856,13 @@ class HexWorldEditorView extends ItemView {
         const riverWidthInput = bottomRow.createEl('input', {
             type: 'number',
             value: this.riverSettings.width.toString(),
-            attr: { title: 'Flussbreite', min: '1', max: '999', style: `height: ${TOOLBAR_INPUT_HEIGHT}; font-size: ${TOOLBAR_INPUT_FONT_SIZE}; padding: 2px; box-sizing: border-box;` }
+            attr: { title: t('input.riverWidth'), min: '1', max: '999', style: `height: ${TOOLBAR_INPUT_HEIGHT}; font-size: ${TOOLBAR_INPUT_FONT_SIZE}; padding: 2px; box-sizing: border-box;` }
         });
         this.makeInputInteractive(riverWidthInput);
         this.riverWidthInput = riverWidthInput;
         riverWidthInput.oninput = (e) => {
             if (e.target.value.length > 3) e.target.value = e.target.value.slice(0, 3);
-            this.riverSettings.width = Math.min(999, Math.max(1, parseInt(e.target.value) || 5));
+            this.riverSettings.width = Math.min(999, Math.max(1, parseInt(e.target.value) || DEFAULT_RIVER_WIDTH));
             e.target.value = this.riverSettings.width;
             const river = this.data.rivers && this.data.rivers.find(r => r.id === this.riverSettings.activeRiverId);
             if (river) river.width = this.riverSettings.width;
@@ -1662,13 +1872,13 @@ class HexWorldEditorView extends ItemView {
         const roadWidthInput = bottomRow.createEl('input', {
             type: 'number',
             value: this.roadSettings.width.toString(),
-            attr: { title: 'Wegbreite', min: '1', max: '999', style: `height: ${TOOLBAR_INPUT_HEIGHT}; font-size: ${TOOLBAR_INPUT_FONT_SIZE}; padding: 2px; box-sizing: border-box;` }
+            attr: { title: t('input.roadWidth'), min: '1', max: '999', style: `height: ${TOOLBAR_INPUT_HEIGHT}; font-size: ${TOOLBAR_INPUT_FONT_SIZE}; padding: 2px; box-sizing: border-box;` }
         });
         this.makeInputInteractive(roadWidthInput);
         this.roadWidthInput = roadWidthInput;
         roadWidthInput.oninput = (e) => {
             if (e.target.value.length > 3) e.target.value = e.target.value.slice(0, 3);
-            this.roadSettings.width = Math.min(999, Math.max(1, parseInt(e.target.value) || 3));
+            this.roadSettings.width = Math.min(999, Math.max(1, parseInt(e.target.value) || DEFAULT_ROAD_WIDTH));
             e.target.value = this.roadSettings.width;
             const road = this.data.roads && this.data.roads.find(r => r.id === this.roadSettings.activeRoadId);
             if (road) road.width = this.roadSettings.width;
@@ -1721,7 +1931,7 @@ class HexWorldEditorView extends ItemView {
             this.masterColor = foundRiver.color;
             if (this.masterColorInput) { this.masterColorInput.value = this.masterColor; if (this.masterColorBtn) this.masterColorBtn.style.backgroundColor = this.masterColor; }
             if (this.riverWidthInput) this.riverWidthInput.value = foundRiver.width.toString();
-            new Notice(`Fluss #${foundRiver.id} ausgewählt`);
+            new Notice(t('notice.riverSelected', { id: foundRiver.id }));
         } else if (foundRoad) {
             this.exitPathEditMode();
             this.currentToolGroup = 'road';
@@ -1732,7 +1942,7 @@ class HexWorldEditorView extends ItemView {
             this.masterColor = foundRoad.color;
             if (this.masterColorInput) { this.masterColorInput.value = this.masterColor; if (this.masterColorBtn) this.masterColorBtn.style.backgroundColor = this.masterColor; }
             if (this.roadWidthInput) this.roadWidthInput.value = foundRoad.width.toString();
-            new Notice(`Weg #${foundRoad.id} ausgewählt`);
+            new Notice(t('notice.roadSelected', { id: foundRoad.id }));
         } else {
             this.currentToolGroup = this.lastToolGroup;
             if (this.currentToolGroup === 'hexcolor') {
@@ -1802,7 +2012,7 @@ class HexWorldEditorView extends ItemView {
             setIcon(this.pathPickerBtn, 'mouse-pointer');
             this.pathPickerBtn.style.background = '';
             this.pathPickerBtn.style.color = '';
-            this.pathPickerBtn.setAttribute('title', 'Fluss/Weg aufnehmen\nKlick: Vorhandenen Fluss/Weg auswählen');
+            this.pathPickerBtn.setAttribute('title', t('tooltip.pathPicker'));
         }
         this.pathPickMode = false;
         // Muster-Picker deaktivieren
@@ -1834,7 +2044,7 @@ class HexWorldEditorView extends ItemView {
         // Obere Zeile: Button + Farbfeld + Picker + Auge
         const topRow = wrapper.createDiv({ style: 'display: flex; gap: 2px; align-items: center;' });
 
-        const btn = topRow.createEl('button', { cls: 'hex-tool-btn', attr: { title: 'Grenz-Werkzeug\nKlick: Grenzwaben zeichnen\nDoppelklick Radierer: Zusammenhängende Grenze löschen' } });
+        const btn = topRow.createEl('button', { cls: 'hex-tool-btn', attr: { title: t('tooltip.border') } });
         this.borderBtn = btn;
         btn.dataset.toolGroup = 'border';
         setIcon(btn, 'shield');
@@ -1856,7 +2066,7 @@ class HexWorldEditorView extends ItemView {
         };
 
         // Picker/OK-Button (kontextabhängig wie beim Pfad-Werkzeug)
-        const pickerBtn = topRow.createEl('button', { cls: 'hex-tool-btn', attr: { title: 'Grenze bearbeiten\nKlick: Vorhandene Grenze zum bearbeiten auswählen' } });
+        const pickerBtn = topRow.createEl('button', { cls: 'hex-tool-btn', attr: { title: t('tooltip.borderPicker') } });
         setIcon(pickerBtn, 'mouse-pointer');
         this.borderPickerBtn = pickerBtn;
         pickerBtn.onclick = () => {
@@ -1882,7 +2092,7 @@ class HexWorldEditorView extends ItemView {
         };
 
         // Sichtbarkeit-Button
-        const visBtn = topRow.createEl('button', { cls: 'hex-tool-btn', attr: { title: 'Grenzen-Sichtbarkeit\nKlick: Grenzen ein-/ausblenden' } });
+        const visBtn = topRow.createEl('button', { cls: 'hex-tool-btn', attr: { title: t('tooltip.borderVisibility') } });
         setIcon(visBtn, this.borderSettings.visible ? 'eye' : 'eye-off');
         visBtn.style.opacity = this.borderSettings.visible ? '1' : '0.4';
         visBtn.onclick = () => {
@@ -1900,7 +2110,7 @@ class HexWorldEditorView extends ItemView {
         const percentInput = inputRow.createEl('input', {
             type: 'number',
             value: this.borderSettings.percent.toString(),
-            attr: { title: 'Linienlänge %', min: '0', max: '100', style: `height: ${TOOLBAR_INPUT_HEIGHT}; font-size: ${TOOLBAR_INPUT_FONT_SIZE}; padding: 2px; box-sizing: border-box;` }
+            attr: { title: t('input.borderPercent'), min: '0', max: '100', style: `height: ${TOOLBAR_INPUT_HEIGHT}; font-size: ${TOOLBAR_INPUT_FONT_SIZE}; padding: 2px; box-sizing: border-box;` }
         });
         this.makeInputInteractive(percentInput);
         this.borderPercentInput = percentInput;
@@ -1918,7 +2128,7 @@ class HexWorldEditorView extends ItemView {
         const repeatsInput = inputRow.createEl('input', {
             type: 'number',
             value: this.borderSettings.repeats.toString(),
-            attr: { title: 'Wiederholungen', min: '1', max: '999', style: `height: ${TOOLBAR_INPUT_HEIGHT}; font-size: ${TOOLBAR_INPUT_FONT_SIZE}; padding: 2px; box-sizing: border-box;` }
+            attr: { title: t('input.borderRepeats'), min: '1', max: '999', style: `height: ${TOOLBAR_INPUT_HEIGHT}; font-size: ${TOOLBAR_INPUT_FONT_SIZE}; padding: 2px; box-sizing: border-box;` }
         });
         this.makeInputInteractive(repeatsInput);
         this.borderRepeatsInput = repeatsInput;
@@ -1980,12 +2190,12 @@ class HexWorldEditorView extends ItemView {
                 setIcon(this.pathPickerBtn, 'check');
                 this.pathPickerBtn.style.background = 'var(--interactive-accent)';
                 this.pathPickerBtn.style.color = 'var(--text-on-accent)';
-                this.pathPickerBtn.setAttribute('title', 'Abschließen\nKlick: Aktuellen Fluss/Weg fertigstellen');
+                this.pathPickerBtn.setAttribute('title', t('tooltip.pathFinish'));
             } else if (!this.pathPickMode) {
                 setIcon(this.pathPickerBtn, 'mouse-pointer');
                 this.pathPickerBtn.style.background = '';
                 this.pathPickerBtn.style.color = '';
-                this.pathPickerBtn.setAttribute('title', 'Fluss/Weg aufnehmen\nKlick: Vorhandenen Fluss/Weg auswählen');
+                this.pathPickerBtn.setAttribute('title', t('tooltip.pathPicker'));
             }
         }
 
@@ -1995,12 +2205,12 @@ class HexWorldEditorView extends ItemView {
                 setIcon(this.borderPickerBtn, 'check');
                 this.borderPickerBtn.style.background = 'var(--interactive-accent)';
                 this.borderPickerBtn.style.color = 'var(--text-on-accent)';
-                this.borderPickerBtn.setAttribute('title', 'Abschließen\nKlick: Aktuelle Grenze fertigstellen');
+                this.borderPickerBtn.setAttribute('title', t('tooltip.borderFinish'));
             } else if (!this.borderPickMode) {
                 setIcon(this.borderPickerBtn, 'mouse-pointer');
                 this.borderPickerBtn.style.background = '';
                 this.borderPickerBtn.style.color = '';
-                this.borderPickerBtn.setAttribute('title', 'Grenzfarbe aufnehmen\nKlick: Vorhandene Grenze zum bearbeiten auswählen');
+                this.borderPickerBtn.setAttribute('title', t('tooltip.borderPicker'));
             }
         }
 
@@ -2028,7 +2238,7 @@ class HexWorldEditorView extends ItemView {
             // Aktualisiere Tooltip mit aktueller Variante
             const currentVariant = config.variants.find(v => v.id === config.currentVariant);
             if (currentVariant) {
-                btn.setAttribute('title', `${currentVariant.label}\nKlick: Zeichnen\nRechtsklick: Variante wählen`);
+                btn.setAttribute('title', t('tooltip.toolGroupVariant', { label: currentVariant.label }));
             }
 
             // Aktualisiere Button-Hintergrund (weiß wenn Hintergrund nicht aktiv)
@@ -2037,7 +2247,7 @@ class HexWorldEditorView extends ItemView {
 
             // Dicker Rahmen wenn aktiv (blaue Farbe)
             btn.style.border = isActive ? '3px solid #4A9EFF' : '';
-            btn.style.boxShadow = isActive ? '0 0 8px rgba(74, 158, 255, 0.4)' : '';
+            btn.style.boxShadow = isActive ? ACTIVE_BOX_SHADOW : '';
         });
 
         // Andere Tool-Group-Buttons (pattern, river, road, text, hexcolor) - Active-Status
@@ -2049,7 +2259,7 @@ class HexWorldEditorView extends ItemView {
                 if (groupId === 'hexcolor') {
                     btn.style.background = '#ffffff';
                     btn.style.border = isActive ? '3px solid #4A9EFF' : '';
-                    btn.style.boxShadow = isActive ? '0 0 8px rgba(74, 158, 255, 0.4)' : '';
+                    btn.style.boxShadow = isActive ? ACTIVE_BOX_SHADOW : '';
                     btn.style.color = this.hexColorColor;
                 }
             }
@@ -2113,14 +2323,14 @@ class HexWorldEditorView extends ItemView {
                 if (hexData) {
                     this.patternData = JSON.parse(JSON.stringify(hexData));
                     this.patternSourceHex = { q: this.startHex.q, r: this.startHex.r };
-                    new Notice('Muster aufgenommen!');
+                    new Notice(t('notice.patternPicked'));
                     // Aktiviere Musterwerkzeug automatisch, damit Rahmen sofort erscheint
                     this.currentToolGroup = 'pattern';
                     this.drawMode = 'pen';
                 } else {
                     this.patternData = null;
                     this.patternSourceHex = null;
-                    new Notice('Keine Wabe an dieser Position');
+                    new Notice(t('notice.noHexAtPosition'));
                 }
                 this.patternPickMode = false;
                 if (this.patternPickerBtn) {
@@ -2160,9 +2370,9 @@ class HexWorldEditorView extends ItemView {
                     if (this.borderRepeatsInput) {
                         this.borderRepeatsInput.value = this.borderSettings.repeats.toString();
                     }
-                    new Notice(`Grenze #${foundRegion.id} ausgewählt`);
+                    new Notice(t('notice.borderSelected', { id: foundRegion.id }));
                 } else {
-                    new Notice('Keine Grenze an dieser Position');
+                    new Notice(t('notice.noBorderAtPosition'));
                 }
                 this.borderPickMode = false;
                 if (this.borderPickerBtn) {
@@ -2466,13 +2676,13 @@ class HexWorldEditorView extends ItemView {
                             if (hexData) {
                                 this.patternData = JSON.parse(JSON.stringify(hexData));
                                 this.patternSourceHex = { q: this.startHex.q, r: this.startHex.r };
-                                new Notice('Muster aufgenommen!');
+                                new Notice(t('notice.patternPicked'));
                                 this.currentToolGroup = 'pattern';
                                 this.drawMode = 'pen';
                             } else {
                                 this.patternData = null;
                                 this.patternSourceHex = null;
-                                new Notice('Keine Wabe an dieser Position');
+                                new Notice(t('notice.noHexAtPosition'));
                             }
                             this.patternPickMode = false;
                             if (this.patternPickerBtn) {
@@ -2509,9 +2719,9 @@ class HexWorldEditorView extends ItemView {
                                 if (this.masterColorInput) { this.masterColorInput.value = this.masterColor; if (this.masterColorBtn) this.masterColorBtn.style.backgroundColor = this.masterColor; }
                                 if (this.borderPercentInput) this.borderPercentInput.value = this.borderSettings.percent.toString();
                                 if (this.borderRepeatsInput) this.borderRepeatsInput.value = this.borderSettings.repeats.toString();
-                                new Notice(`Grenze #${foundRegion.id} ausgewählt`);
+                                new Notice(t('notice.borderSelected', { id: foundRegion.id }));
                             } else {
-                                new Notice('Keine Grenze an dieser Position');
+                                new Notice(t('notice.noBorderAtPosition'));
                             }
                             this.borderPickMode = false;
                             if (this.borderPickerBtn) { this.borderPickerBtn.style.background = ''; this.borderPickerBtn.style.color = ''; }
@@ -2680,13 +2890,13 @@ class HexWorldEditorView extends ItemView {
                         if (hexData) {
                             this.patternData = JSON.parse(JSON.stringify(hexData));
                             this.patternSourceHex = { q: this.startHex.q, r: this.startHex.r };
-                            new Notice('Muster aufgenommen!');
+                            new Notice(t('notice.patternPicked'));
                             this.currentToolGroup = 'pattern';
                             this.drawMode = 'pen';
                         } else {
                             this.patternData = null;
                             this.patternSourceHex = null;
-                            new Notice('Keine Wabe an dieser Position');
+                            new Notice(t('notice.noHexAtPosition'));
                         }
                         this.patternPickMode = false;
                         if (this.patternPickerBtn) {
@@ -2724,9 +2934,9 @@ class HexWorldEditorView extends ItemView {
                             if (this.masterColorInput) { this.masterColorInput.value = this.masterColor; if (this.masterColorBtn) this.masterColorBtn.style.backgroundColor = this.masterColor; }
                             if (this.borderPercentInput) this.borderPercentInput.value = this.borderSettings.percent.toString();
                             if (this.borderRepeatsInput) this.borderRepeatsInput.value = this.borderSettings.repeats.toString();
-                            new Notice(`Grenze #${foundRegion.id} ausgewählt`);
+                            new Notice(t('notice.borderSelected', { id: foundRegion.id }));
                         } else {
-                            new Notice('Keine Grenze an dieser Position');
+                            new Notice(t('notice.noBorderAtPosition'));
                         }
                         this.borderPickMode = false;
                         if (this.borderPickerBtn) { this.borderPickerBtn.style.background = ''; this.borderPickerBtn.style.color = ''; }
@@ -3026,7 +3236,7 @@ class HexWorldEditorView extends ItemView {
                 setIcon(this.pathPickerBtn, 'check');
                 this.pathPickerBtn.style.background = 'var(--interactive-accent)';
                 this.pathPickerBtn.style.color = 'var(--text-on-accent)';
-                this.pathPickerBtn.setAttribute('title', 'Weg abschließen');
+                this.pathPickerBtn.setAttribute('title', t('tooltip.roadFinish'));
             }
         }
 
@@ -3158,7 +3368,7 @@ class HexWorldEditorView extends ItemView {
                 setIcon(this.pathPickerBtn, 'check');
                 this.pathPickerBtn.style.background = 'var(--interactive-accent)';
                 this.pathPickerBtn.style.color = 'var(--text-on-accent)';
-                this.pathPickerBtn.setAttribute('title', 'Fluss abschließen');
+                this.pathPickerBtn.setAttribute('title', t('tooltip.riverFinish'));
             }
         }
 
@@ -4626,9 +4836,9 @@ class FileSelectorModal extends Modal {
 
     onOpen() {
         const { contentEl } = this;
-        contentEl.createEl('h2', { text: 'MD Datei auswählen' });
+        contentEl.createEl('h2', { text: t('modal.selectFile') });
 
-        const filter = contentEl.createEl('input', { value: this.currentLink, placeholder: 'Dateiname suchen...' });
+        const filter = contentEl.createEl('input', { value: this.currentLink, placeholder: t('modal.searchFile') });
         filter.style.width = '100%';
         filter.style.marginBottom = '10px';
 
@@ -4644,7 +4854,7 @@ class FileSelectorModal extends Modal {
             );
 
             if (files.length === 0) {
-                listContainer.createDiv({ text: 'Keine Dateien gefunden', style: 'padding: 10px; color: var(--text-muted); text-align: center;' });
+                listContainer.createDiv({ text: t('modal.noFilesFound'), style: 'padding: 10px; color: var(--text-muted); text-align: center;' });
                 return;
             }
 
@@ -4668,7 +4878,7 @@ class FileSelectorModal extends Modal {
 
         const btnRow = contentEl.createDiv({ style: 'display: flex; gap: 10px; margin-top: 15px;' });
 
-        const clearBtn = btnRow.createEl('button', { text: 'Link entfernen', style: 'flex: 1;' });
+        const clearBtn = btnRow.createEl('button', { text: t('modal.removeLink'), style: 'flex: 1;' });
         clearBtn.onclick = () => {
             this.onSelect('');
             setTimeout(() => {
@@ -4679,7 +4889,7 @@ class FileSelectorModal extends Modal {
             }, 50);
         };
 
-        const cancelBtn = btnRow.createEl('button', { text: 'Abbrechen', cls: 'mod-cta', style: 'flex: 1;' });
+        const cancelBtn = btnRow.createEl('button', { text: t('modal.cancel'), cls: 'mod-cta', style: 'flex: 1;' });
         cancelBtn.onclick = () => this.close();
 
         filter.focus();
@@ -4687,7 +4897,7 @@ class FileSelectorModal extends Modal {
 }
 
 class TextInputModal extends Modal {
-    constructor(app, onSubmit, val = '', size = 16, link = '', color = '#ffffff', outline = true, bold = false, shadow = false, shadowDistance = 5, shadowOpatown = 50, colorPalette = null, colorPalette2 = null) {
+    constructor(app, onSubmit, val = '', size = DEFAULT_TEXT_SIZE, link = '', color = DEFAULT_TEXT_COLOR, outline = true, bold = false, shadow = false, shadowDistance = DEFAULT_SHADOW_DISTANCE, shadowOpatown = DEFAULT_SHADOW_OPACITY, colorPalette = null, colorPalette2 = null) {
         super(app);
         this.onSubmit = onSubmit;
         this.val = val;
@@ -4705,17 +4915,17 @@ class TextInputModal extends Modal {
 
     onOpen() {
         const { contentEl } = this;
-        contentEl.createEl('h2', { text: 'Text formatieren' });
+        contentEl.createEl('h2', { text: t('modal.formatText') });
 
         // Anzeigetext
-        contentEl.createEl('label', { text: 'Anzeigetext:', style: 'display: block; margin-bottom: 5px; font-weight: 500;' });
-        const mainInput = contentEl.createEl('input', { value: this.val, placeholder: 'Text eingeben...' });
+        contentEl.createEl('label', { text: t('modal.displayText'), style: 'display: block; margin-bottom: 5px; font-weight: 500;' });
+        const mainInput = contentEl.createEl('input', { value: this.val, placeholder: t('modal.textPlaceholder') });
         mainInput.style.width = '100%';
         mainInput.style.marginBottom = '20px';
         mainInput.style.padding = '8px';
 
         // Textgröße
-        contentEl.createEl('label', { text: 'Textgröße:', style: 'display: block; margin-bottom: 5px; font-weight: 500;' });
+        contentEl.createEl('label', { text: t('modal.textSize'), style: 'display: block; margin-bottom: 5px; font-weight: 500;' });
         const sInput = contentEl.createEl('input', { type: 'number', value: this.size });
         sInput.style.width = '100%';
         sInput.style.marginBottom = '20px';
@@ -4723,7 +4933,7 @@ class TextInputModal extends Modal {
 
         // Farbe
         const colorSection = contentEl.createDiv({ style: 'margin-bottom: 20px;' });
-        colorSection.createEl('label', { text: 'Textfarbe:', style: 'display: block; margin-bottom: 5px; font-weight: 500;' });
+        colorSection.createEl('label', { text: t('modal.textColor'), style: 'display: block; margin-bottom: 5px; font-weight: 500;' });
         const colorInput = colorSection.createEl('input', { type: 'color', value: this.color });
         colorInput.style.width = '100%';
         colorInput.style.height = '40px';
@@ -4731,7 +4941,7 @@ class TextInputModal extends Modal {
 
         // Farbpalette unter dem Color Picker (2 Zeilen à 8 Farben)
         const paletteContainer = colorSection.createDiv({ style: 'display: flex; flex-direction: column; gap: 3px; margin-top: 10px;' });
-        paletteContainer.createEl('span', { text: 'Palette:', attr: { style: 'font-size: 11px; margin-bottom: 3px;' } });
+        paletteContainer.createEl('span', { text: t('modal.palette'), attr: { style: 'font-size: 11px; margin-bottom: 3px;' } });
 
         [this.colorPalette, this.colorPalette2].forEach(palette => {
             if (!palette) return;
@@ -4751,7 +4961,7 @@ class TextInputModal extends Modal {
 
         // Formatierungsoptionen (Checkboxen in Grid)
         const formatSection = contentEl.createDiv({ style: 'margin-bottom: 20px;' });
-        formatSection.createEl('label', { text: 'Formatierung:', style: 'display: block; margin-bottom: 8px; font-weight: 500;' });
+        formatSection.createEl('label', { text: t('modal.formatting'), style: 'display: block; margin-bottom: 8px; font-weight: 500;' });
 
         const checkboxGrid = formatSection.createDiv({ style: 'display: grid; grid-template-columns: 1fr 1fr; gap: 12px;' });
 
@@ -4760,30 +4970,30 @@ class TextInputModal extends Modal {
         outlineInput.checked = this.outline;
         outlineInput.style.cursor = 'pointer';
         outlineInput.style.marginLeft = '4px';
-        outlineLabel.appendText('Outline');
+        outlineLabel.appendText(t('modal.outline'));
 
         const boldLabel = checkboxGrid.createEl('label', { style: 'display: flex; gap: 8px; align-items: center; cursor: pointer;' });
         const boldInput = boldLabel.createEl('input', { type: 'checkbox' });
         boldInput.checked = this.bold;
         boldInput.style.cursor = 'pointer';
         boldInput.style.marginLeft = '4px';
-        boldLabel.appendText('Fett');
+        boldLabel.appendText(t('modal.bold'));
 
         // Schatten-Einstellungen
         const shadowSection = contentEl.createDiv({ style: 'margin-bottom: 20px; padding: 15px; background: var(--background-secondary); border-radius: 5px;' });
-        shadowSection.createEl('label', { text: 'Schatten-Einstellungen:', style: 'display: block; margin-bottom: 10px; font-weight: 500;' });
+        shadowSection.createEl('label', { text: t('modal.shadowSettings'), style: 'display: block; margin-bottom: 10px; font-weight: 500;' });
 
         const shadowLabel = shadowSection.createEl('label', { style: 'display: flex; gap: 8px; align-items: center; cursor: pointer; margin-bottom: 12px;' });
         const shadowInput = shadowLabel.createEl('input', { type: 'checkbox' });
         shadowInput.checked = this.shadow;
         shadowInput.style.cursor = 'pointer';
         shadowInput.style.marginLeft = '4px';
-        shadowLabel.appendText('Schatten aktivieren');
+        shadowLabel.appendText(t('modal.shadowEnable'));
 
         const shadowParams = shadowSection.createDiv({ style: 'display: grid; grid-template-columns: 1fr 1fr; gap: 12px;' });
 
         const distanceDiv = shadowParams.createDiv();
-        distanceDiv.createEl('label', { text: 'Abstand (px):', style: 'display: block; margin-bottom: 5px; font-size: 12px;' });
+        distanceDiv.createEl('label', { text: t('modal.shadowDistance'), style: 'display: block; margin-bottom: 5px; font-size: 12px;' });
         const shadowDistanceInput = distanceDiv.createEl('input', {
             type: 'number',
             value: this.shadowDistance.toString()
@@ -4792,7 +5002,7 @@ class TextInputModal extends Modal {
         shadowDistanceInput.style.padding = '6px';
 
         const opatownDiv = shadowParams.createDiv();
-        opatownDiv.createEl('label', { text: 'Transparenz (%):', style: 'display: block; margin-bottom: 5px; font-size: 12px;' });
+        opatownDiv.createEl('label', { text: t('modal.shadowOpacity'), style: 'display: block; margin-bottom: 5px; font-size: 12px;' });
         const shadowOpatownInput = opatownDiv.createEl('input', {
             type: 'number',
             value: this.shadowOpatown.toString()
@@ -4804,12 +5014,12 @@ class TextInputModal extends Modal {
 
         // Link-Sektion
         const linkSection = contentEl.createDiv({ style: 'margin-bottom: 20px;' });
-        linkSection.createEl('label', { text: 'Link zu MD-Datei:', style: 'display: block; margin-bottom: 5px; font-weight: 500;' });
+        linkSection.createEl('label', { text: t('modal.linkToFile'), style: 'display: block; margin-bottom: 5px; font-weight: 500;' });
 
         const linkDisplayRow = linkSection.createDiv({ style: 'display: flex; gap: 8px; align-items: stretch;' });
         const linkDisplay = linkDisplayRow.createEl('input', {
             value: this.link,
-            placeholder: 'Kein Link ausgewählt',
+            placeholder: t('modal.noLinkSelected'),
             attr: { readonly: 'true' }
         });
         linkDisplay.style.flex = '1';
@@ -4817,7 +5027,7 @@ class TextInputModal extends Modal {
         linkDisplay.style.cursor = 'default';
         linkDisplay.style.padding = '8px';
 
-        const selectLinkBtn = linkDisplayRow.createEl('button', { text: 'Datei wählen...' });
+        const selectLinkBtn = linkDisplayRow.createEl('button', { text: t('modal.selectFileBtn') });
         selectLinkBtn.style.padding = '8px 16px';
         selectLinkBtn.style.whiteSpace = 'nowrap';
         selectLinkBtn.onclick = () => {
@@ -4849,15 +5059,15 @@ class TextInputModal extends Modal {
                 outlineInput.checked,
                 boldInput.checked,
                 shadowEnabled,
-                parseInt(shadowDistanceInput.value) || 5,
+                parseInt(shadowDistanceInput.value) || DEFAULT_SHADOW_DISTANCE,
                 clampedOpatown
             );
             this.close();
         };
 
-        const deleteBtn = btnRow.createEl('button', { text: 'Text löschen', style: 'flex: 1; color: var(--text-error);' });
+        const deleteBtn = btnRow.createEl('button', { text: t('modal.deleteText'), style: 'flex: 1; color: var(--text-error);' });
         deleteBtn.onclick = () => {
-            if (confirm('Text wirklich löschen?')) {
+            if (confirm(t('modal.confirmDeleteText'))) {
                 this.onSubmit('', 0, '', '', false, false, false, 0, 0);
                 this.close();
             }
@@ -4867,5 +5077,33 @@ class TextInputModal extends Modal {
     }
 }
 
+
+class HexWorldEditorSettingTab extends PluginSettingTab {
+    constructor(app, plugin) {
+        super(app, plugin);
+        this.plugin = plugin;
+    }
+
+    display() {
+        const { containerEl } = this;
+        containerEl.empty();
+        containerEl.createEl('h2', { text: 'Hexworld Editor' });
+
+        new Setting(containerEl)
+            .setName(t('settings.language'))
+            .setDesc(t('settings.languageDesc'))
+            .addDropdown(dropdown => {
+                dropdown
+                    .addOption('de', 'Deutsch')
+                    .setValue(this.plugin.settings.language)
+                    .onChange(async (value) => {
+                        this.plugin.settings.language = value;
+                        currentLanguage = value;
+                        await this.plugin.saveSettings();
+                        this.plugin.refreshAllViews();
+                    });
+            });
+    }
+}
 
 module.exports = HexWorldEditorPlugin;
