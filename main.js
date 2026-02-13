@@ -33,6 +33,7 @@ const DEFAULT_ROAD_WIDTH = 3;
 const DEFAULT_BORDER_HIGHLIGHT_WIDTH = 3;
 const DEFAULT_BORDER_PERCENT = 100;
 const DEFAULT_BORDER_REPEATS = 1;
+const DEFAULT_PATH_DASHES = 1;
 const PATH_END_INSET = 0.1;
 const MAX_HISTORY = 50;
 const MAX_ZOOM = 2;
@@ -141,6 +142,7 @@ const TRANSLATIONS = {
         'tooltip.riverFinish': 'Fluss abschließen',
         'input.riverWidth': 'Flussbreite',
         'input.roadWidth': 'Wegbreite',
+        'input.pathDashes': 'Striche',
 
         // Tooltips — Grenzen
         'tooltip.border': 'Grenz-Werkzeug\nKlick: Grenzwaben zeichnen\nDoppelklick Radierer: Zusammenhängende Grenze löschen',
@@ -224,6 +226,7 @@ const TRANSLATIONS = {
         'guide.paths.road': 'Wegpunkte setzen für Wege.',
         'guide.paths.pick': 'Bestehenden Fluss/Weg auswählen und bearbeiten.',
         'guide.paths.width': 'Breite der Flüsse/Wege über die Eingabefelder mit einem Wert anpassen.',
+        'guide.paths.dashes': 'Striche bestimmen, in wie viele Abschnitte jedes Waben-Segment aufgeteilt wird (1 = durchgehend).',
         'guide.borders': 'Grenzen',
         'guide.borders.draw': 'Grenzregion zeichnen durch Klicken oder Ziehen auf Waben.',
         'guide.borders.pick': 'Bestehende Grenze zum Bearbeiten auswählen.',
@@ -306,6 +309,7 @@ const TRANSLATIONS = {
         'tooltip.riverFinish': 'Finish river',
         'input.riverWidth': 'River width',
         'input.roadWidth': 'Road width',
+        'input.pathDashes': 'Dashes',
 
         // Tooltips — Borders
         'tooltip.border': 'Border Tool\nClick: Draw border hexes\nDouble-click Eraser: Delete connected border',
@@ -389,6 +393,7 @@ const TRANSLATIONS = {
         'guide.paths.road': 'Place waypoints for roads.',
         'guide.paths.pick': 'Select an existing river/road to edit.',
         'guide.paths.width': 'Adjust river/road width via the input fields.',
+        'guide.paths.dashes': 'Dashes determine how many segments each hex-to-hex section is divided into (1 = continuous).',
         'guide.borders': 'Borders',
         'guide.borders.draw': 'Draw border region by clicking or dragging on hexes.',
         'guide.borders.pick': 'Select an existing border to edit.',
@@ -700,6 +705,7 @@ class HexWorldEditorView extends ItemView {
         this.borderPickMode = false;
         this.riverSettings = { width: DEFAULT_RIVER_WIDTH, activeRiverId: null, editMode: false, insertAfter: null };
         this.roadSettings = { width: DEFAULT_ROAD_WIDTH, activeRoadId: null, editMode: false, insertAfter: null };
+        this.pathDashes = DEFAULT_PATH_DASHES;
         this.pathPickMode = false;
         this.lastToolGroup = null;
         // Wie weit Pfad-Endpunkte ins Hex reichen: 0 = Hex-Rand, 1 = Hex-Zentrum
@@ -1927,9 +1933,28 @@ class HexWorldEditorView extends ItemView {
             this.render();
         };
 
+        const dashesInput = bottomRow.createEl('input', {
+            type: 'number',
+            value: (this.pathDashes || DEFAULT_PATH_DASHES).toString(),
+            attr: { title: t('input.pathDashes'), min: '1', max: '99', style: `height: ${TOOLBAR_INPUT_HEIGHT}; font-size: ${TOOLBAR_INPUT_FONT_SIZE}; padding: 2px; box-sizing: border-box;` }
+        });
+        this.makeInputInteractive(dashesInput);
+        this.pathDashesInput = dashesInput;
+        dashesInput.oninput = (e) => {
+            if (e.target.value.length > 2) e.target.value = e.target.value.slice(0, 2);
+            this.pathDashes = Math.min(99, Math.max(1, parseInt(e.target.value) || DEFAULT_PATH_DASHES));
+            e.target.value = this.pathDashes;
+            const river = this.data.rivers && this.data.rivers.find(r => r.id === this.riverSettings.activeRiverId);
+            if (river) river.dashes = this.pathDashes;
+            const road = this.data.roads && this.data.roads.find(r => r.id === this.roadSettings.activeRoadId);
+            if (road) road.dashes = this.pathDashes;
+            this.render();
+        };
+
         setTimeout(() => {
             riverWidthInput.style.width = `${riverBtn.offsetWidth}px`;
             roadWidthInput.style.width = `${roadBtn.offsetWidth}px`;
+            dashesInput.style.width = `${pickerBtn.offsetWidth}px`;
         }, 0);
     }
 
@@ -1969,6 +1994,8 @@ class HexWorldEditorView extends ItemView {
             this.masterColor = foundRiver.color;
             if (this.masterColorInput) { this.masterColorInput.value = this.masterColor; if (this.masterColorBtn) this.masterColorBtn.style.backgroundColor = this.masterColor; }
             if (this.riverWidthInput) this.riverWidthInput.value = foundRiver.width.toString();
+            this.pathDashes = foundRiver.dashes || DEFAULT_PATH_DASHES;
+            if (this.pathDashesInput) this.pathDashesInput.value = this.pathDashes.toString();
             new Notice(t('notice.riverSelected', { id: foundRiver.id }));
         } else if (foundRoad) {
             this.exitPathEditMode();
@@ -1980,6 +2007,8 @@ class HexWorldEditorView extends ItemView {
             this.masterColor = foundRoad.color;
             if (this.masterColorInput) { this.masterColorInput.value = this.masterColor; if (this.masterColorBtn) this.masterColorBtn.style.backgroundColor = this.masterColor; }
             if (this.roadWidthInput) this.roadWidthInput.value = foundRoad.width.toString();
+            this.pathDashes = foundRoad.dashes || DEFAULT_PATH_DASHES;
+            if (this.pathDashesInput) this.pathDashesInput.value = this.pathDashes.toString();
             new Notice(t('notice.roadSelected', { id: foundRoad.id }));
         } else {
             this.currentToolGroup = this.lastToolGroup;
@@ -2184,6 +2213,7 @@ class HexWorldEditorView extends ItemView {
         if (this.riverBtn && this.roadBtn && this.riverWidthInput && this.roadWidthInput) {
             this.riverWidthInput.style.width = `${this.riverBtn.offsetWidth}px`;
             this.roadWidthInput.style.width = `${this.roadBtn.offsetWidth}px`;
+            if (this.pathDashesInput && this.pathPickerBtn) this.pathDashesInput.style.width = `${this.pathPickerBtn.offsetWidth}px`;
         }
         if (this.borderBtn && this.borderPickerBtn && this.borderPercentInput && this.borderRepeatsInput) {
             this.borderPercentInput.style.width = `${this.borderBtn.offsetWidth}px`;
@@ -3167,9 +3197,10 @@ class HexWorldEditorView extends ItemView {
         if (!this.data.roads) this.data.roads = [];
 
         let road = this.data.roads.find(r => r.id === this.roadSettings.activeRoadId);
+        if (road) road.dashes = this.pathDashes || DEFAULT_PATH_DASHES;
         if (!road) {
             const maxId = this.data.roads.reduce((max, r) => Math.max(max, r.id || 0), 0);
-            road = { id: maxId + 1, color: this.masterColor, width: this.roadSettings.width, waypoints: [] };
+            road = { id: maxId + 1, color: this.masterColor, width: this.roadSettings.width, dashes: this.pathDashes || DEFAULT_PATH_DASHES, waypoints: [] };
             this.data.roads.push(road);
             this.roadSettings.activeRoadId = road.id;
             this.roadSettings.editMode = true;
@@ -3290,9 +3321,10 @@ class HexWorldEditorView extends ItemView {
         if (!this.data.rivers) this.data.rivers = [];
 
         let river = this.data.rivers.find(r => r.id === this.riverSettings.activeRiverId);
+        if (river) river.dashes = this.pathDashes || DEFAULT_PATH_DASHES;
         if (!river) {
             const maxId = this.data.rivers.reduce((max, r) => Math.max(max, r.id || 0), 0);
-            river = { id: maxId + 1, color: this.masterColor, width: this.riverSettings.width, waypoints: [] };
+            river = { id: maxId + 1, color: this.masterColor, width: this.riverSettings.width, dashes: this.pathDashes || DEFAULT_PATH_DASHES, waypoints: [] };
             this.data.rivers.push(river);
             this.riverSettings.activeRiverId = river.id;
             this.riverSettings.editMode = true;
@@ -4442,63 +4474,62 @@ class HexWorldEditorView extends ItemView {
             const endKey = `${chain[chain.length - 1].q}_${chain[chain.length - 1].r}`;
             const trimStart = segCount[startKey] === 1;
             const trimEnd = segCount[endKey] === 1;
-            this.drawWavyLines(segments, path.color, path.width, trimStart, trimEnd);
+            this.drawWavyLines(segments, path.color, path.width, trimStart, trimEnd, path.dashes || 1);
         });
     }
 
-    drawWavyLines(lines, color, defaultWidth, trimStart, trimEnd) {
+    drawWavyLines(lines, color, defaultWidth, trimStart, trimEnd, dashCount) {
         if (!lines || lines.length === 0) return;
         this.ctx.strokeStyle = color;
         this.ctx.lineCap = "round";
         this.ctx.lineJoin = "round";
+        this.ctx.lineWidth = defaultWidth;
 
-        lines.forEach((l, idx) => {
-            let p1 = this.hexToPixel(l.from), p2 = this.hexToPixel(l.to);
-            this.ctx.lineWidth = l.width || defaultWidth;
-
+        const computedLines = lines.map((l, idx) => {
+            const fullP1 = this.hexToPixel(l.from), fullP2 = this.hexToPixel(l.to);
+            let p1 = { x: fullP1.x, y: fullP1.y }, p2 = { x: fullP2.x, y: fullP2.y };
             const inset = (1 - this.pathEndInset) * 0.5;
-            if (trimStart && idx === 0) {
-                p1 = { x: p1.x + (p2.x - p1.x) * inset, y: p1.y + (p2.y - p1.y) * inset };
-            }
-            if (trimEnd && idx === lines.length - 1) {
-                p2 = { x: p2.x + (p1.x - p2.x) * inset, y: p2.y + (p1.y - p2.y) * inset };
-            }
+            if (trimStart && idx === 0) p1 = { x: p1.x + (p2.x - p1.x) * inset, y: p1.y + (p2.y - p1.y) * inset };
+            if (trimEnd && idx === lines.length - 1) p2 = { x: p2.x + (p1.x - p2.x) * inset, y: p2.y + (p1.y - p2.y) * inset };
+            const fdx = fullP2.x - fullP1.x, fdy = fullP2.y - fullP1.y;
+            const fullDist = Math.sqrt(fdx * fdx + fdy * fdy);
+            return { p1, p2, from: l.from, to: l.to, fullDist };
+        });
 
-            const dx = p2.x - p1.x;
-            const dy = p2.y - p1.y;
-            const dist = Math.sqrt(dx*dx + dy*dy);
+        computedLines.forEach((cl) => {
+            const { p1, p2, from, to, fullDist } = cl;
+            const dx = p2.x - p1.x, dy = p2.y - p1.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            const curveSegs = Math.max(3, Math.floor(dist / 8));
+            const nx = -dy / dist, ny = dx / dist;
 
-            const segments = Math.max(3, Math.floor(dist / 8));
-            const nx = -dy / dist;
-            const ny = dx / dist;
+            if (dashCount > 1) {
+                const unitLen = fullDist / dashCount;
+                this.ctx.setLineDash([unitLen * 0.5, unitLen * 0.5]);
+            }
 
             this.ctx.beginPath();
             this.ctx.moveTo(p1.x, p1.y);
 
-            for (let i = 1; i <= segments; i++) {
-                const t = i / segments;
-                const px = p1.x + dx * t;
-                const py = p1.y + dy * t;
-
-                const seedHash = Math.abs(l.from.q * 7 + l.from.r * 13 + l.to.q * 11 + l.to.r * 17 + i * 3);
+            for (let i = 1; i <= curveSegs; i++) {
+                const t = i / curveSegs;
+                const px = p1.x + dx * t, py = p1.y + dy * t;
+                const seedHash = Math.abs(from.q * 7 + from.r * 13 + to.q * 11 + to.r * 17 + i * 3);
                 const seed = seedHash % 10;
                 const direction = (i % 2 === 0 ? 1 : -1);
                 const amplitude = (this.data.gridSize * 0.15) * ((seed - 5) / 5) * direction;
 
-                if (i === segments) {
+                if (i === curveSegs) {
                     this.ctx.lineTo(p2.x, p2.y);
                 } else {
-                    const cpx = px + nx * amplitude;
-                    const cpy = py + ny * amplitude;
-                    const nextT = (i + 0.5) / segments;
-                    const nextX = p1.x + dx * nextT;
-                    const nextY = p1.y + dy * nextT;
-
-                    this.ctx.quadraticCurveTo(cpx, cpy, nextX, nextY);
+                    const cpx = px + nx * amplitude, cpy = py + ny * amplitude;
+                    const nextT = (i + 0.5) / curveSegs;
+                    this.ctx.quadraticCurveTo(cpx, cpy, p1.x + dx * nextT, p1.y + dy * nextT);
                 }
             }
-
             this.ctx.stroke();
+
+            if (dashCount > 1) this.ctx.setLineDash([]);
         });
     }
 
@@ -4920,6 +4951,7 @@ class HexWorldEditorSettingTab extends PluginSettingTab {
                 ['route', 'guide.paths.road'],
                 ['mouse-pointer', 'guide.paths.pick'],
                 ['text-cursor-input', 'guide.paths.width'],
+                ['text-cursor-input', 'guide.paths.dashes'],
             ]],
             ['borders', [
                 ['shield', 'guide.borders.draw'],
