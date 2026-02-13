@@ -1862,14 +1862,10 @@ class HexWorldEditorView extends ItemView {
         pickerBtn.onclick = () => {
             // Wenn aktive Grenzregion → OK-Logik
             if (this.borderSettings.activeRegionId !== null) {
-                if (this.drawMode === 'eraser') {
-                    // Radierer ausschalten, Grenze bleibt aktiv
-                    this.drawMode = 'pen';
-                } else {
-                    // Grenze abschließen, neue kann begonnen werden
-                    this.borderSettings.activeRegionId = null;
-                    this.borderSettings.pickedHex = null;
-                }
+                // Grenze abschließen, neue kann begonnen werden
+                this.borderSettings.activeRegionId = null;
+                this.borderSettings.pickedHex = null;
+                if (this.drawMode === 'eraser') this.drawMode = 'pen';
                 this.updateToolbarState(toolbar);
                 this.render();
                 return;
