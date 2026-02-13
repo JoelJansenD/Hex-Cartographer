@@ -1,10 +1,10 @@
 const { Plugin, PluginSettingTab, Setting, TFile, Notice, Modal, ItemView, setIcon } = require('obsidian');
 
-// Standard-Farbpaletten (hier einmal anpassen — wird überall verwendet)
+// === Farbpaletten ===
 const DEFAULT_PALETTE  = ['#3295D2', '#6CC261', '#DDC88D', '#9c9090', '#CD6155', '#FFD700', '#000000', '#FFFFFF'];
 const DEFAULT_PALETTE2 = ['#ff0000', '#ff8000', '#ffff00', '#00ff00', '#00ffff', '#0000ff', '#8000ff', '#ff00ff'];
 
-// Schriftgröße und Höhe für Toolbar-Eingabefelder (Breiten, Prozent, Wiederholungen)
+// === Toolbar Schriftgröße & Höhe ===
 const TOOLBAR_INPUT_FONT_SIZE = '13px';
 const TOOLBAR_INPUT_HEIGHT = '24px';
 
@@ -47,25 +47,18 @@ const DEFAULT_SHADOW_OPACITY = 50;
 const ACTIVE_BOX_SHADOW = '0 0 8px rgba(74, 158, 255, 0.4)';
 
 // === Symbol-Konfiguration (Größe/Position pro Symbol) ===
-// size: Größenmultiplikator (0.30 = 30% der Hex-Größe)
-// align: Position in der Wabe ('center', 'top', 'bottom', etc.)
-// marginX/marginY: Verschiebung in Pixel
 const SVG_SYMBOL_CONFIG = {
-    // Extras
     'question':    { size: 0.5,   align: 'center', marginX: 0, marginY: 0 },
     'exclamation': { size: 0.5,   align: 'center', marginX: 0, marginY: 0 },
     'cross':       { size: 0.5,   align: 'center', marginX: 0, marginY: 0 },
-    // Vegetation
     'grass':       { size: 0.30,  align: 'center', marginX: 0, marginY: 0 },
     'swamp':       { size: 0.30,  align: 'center', marginX: 0, marginY: 0 },
     'bush':        { size: 0.35,  align: 'center', marginX: 0, marginY: 0 },
     'tree':        { size: 0.35,  align: 'center', marginX: 0, marginY: -6 },
     'pine':        { size: 0.45,  align: 'center', marginX: 0, marginY: 0 },
     'palm':        { size: 0.425, align: 'center', marginX: 0, marginY: 0 },
-    // Berge
     'hill':        { size: 0.50,  align: 'center', marginX: 0, marginY: 0 },
     'mountain':    { size: 0.60,  align: 'center', marginX: 0, marginY: 0 },
-    // Gebäude
     'tent':        { size: 0.35,  align: 'center', marginX: 0, marginY: 0 },
     'house':       { size: 0.325, align: 'center', marginX: 0, marginY: -2 },
     'village':     { size: 0.55,  align: 'center', marginX: 0, marginY: 0 },
@@ -80,7 +73,6 @@ const SVG_SYMBOL_CONFIG = {
 };
 
 // === Übersetzungen ===
-// Sprache aus Obsidian-Einstellungen auslesen, Fallback auf Englisch
 function getObsidianLanguage() {
     const lang = window.localStorage.getItem('language');
     return (lang && TRANSLATIONS[lang]) ? lang : 'en';
@@ -331,9 +323,10 @@ const TRANSLATIONS = {
     }
 };
 
+// Übersetzungsfunktion mit Fallback auf Englisch und Platzhalterersetzung
 function t(key, params) {
     let str = TRANSLATIONS[currentLanguage]?.[key]
-           ?? TRANSLATIONS['de'][key]
+           ?? TRANSLATIONS['en'][key]
            ?? key;
     if (params) {
         for (const [k, v] of Object.entries(params)) {
@@ -343,22 +336,19 @@ function t(key, params) {
     return str;
 }
 
+// === Hauptklasse des Plugins ===
 class HexWorldEditorPlugin extends Plugin {
     async onload() {
-        // Sprache aus Obsidian-Einstellungen übernehmen
         currentLanguage = getObsidianLanguage();
         this.addSettingTab(new HexWorldEditorSettingTab(this.app, this));
 
         this.registerView('hexworld-editor', (leaf) => new HexWorldEditorView(leaf, this));
 
-        // Registriere .hexworld.md Extension
         this.registerExtensions(['hexworld.md'], 'hexworld-editor');
 
         // KRITISCH: Stelle sicher, dass .hexworld.md Dateien mit dem Editor geöffnet werden
-        // Methode 1: Direktes Monkey-Patching der openFile Methode
         const originalOpenFile = this.app.workspace.openLinkText.bind(this.app.workspace);
         this.app.workspace.openLinkText = async (linktext, sourcePath, newLeaf, openViewState) => {
-            // Prüfe ob es eine .hexworld.md Datei ist
             if (linktext.endsWith('.hexworld.md') || linktext.includes('.hexworld.md')) {
                 const file = this.app.metadataCache.getFirstLinkpathDest(linktext, sourcePath);
                 if (file && file instanceof TFile) {
@@ -367,7 +357,6 @@ class HexWorldEditorPlugin extends Plugin {
                         ...openViewState,
                         state: { ...openViewState?.state, file: file.path }
                     });
-                    // Erzwinge View-Typ nach dem Öffnen
                     if (leaf.view.getViewType() !== 'hexworld-editor') {
                         await leaf.setViewState({
                             type: 'hexworld-editor',
@@ -380,19 +369,16 @@ class HexWorldEditorPlugin extends Plugin {
             return originalOpenFile(linktext, sourcePath, newLeaf, openViewState);
         };
 
-        // Methode 2: file-open Event als Fallback
         this.registerEvent(
             this.app.workspace.on('file-open', async (file) => {
                 if (!file || !file.path) return;
 
                 if (file.path.endsWith('.hexworld.md')) {
-                    // Kleines Timeout, damit die View geladen ist
                     await new Promise(resolve => setTimeout(resolve, 10));
 
                     const leaf = this.app.workspace.activeLeaf;
                     if (!leaf) return;
 
-                    // Wenn es die Markdown-Ansicht ist, wechsle zum Hex World Editor
                     if (leaf.view.getViewType() === 'markdown') {
                         await leaf.setViewState({
                             type: 'hexworld-editor',
@@ -403,25 +389,18 @@ class HexWorldEditorPlugin extends Plugin {
             })
         );
 
-        // Verstecke ".hexworld" im File Explorer (wie Excalidraw)
-        // Verzögere leicht, damit beim ersten Start alles geladen ist
         setTimeout(() => {
             this.hideHexworldExtensionInExplorer();
         }, 500);
 
-        // Fange Umbenennungen ab und stelle sicher, dass .hexworld.md erhalten bleibt
         this.registerEvent(this.app.vault.on('rename', async (file, oldPath) => {
             if (oldPath.endsWith('.hexworld.md') && !file.path.endsWith('.hexworld.md')) {
-                // User hat .hexworld entfernt - füge es wieder hinzu
                 const newName = file.name.replace(/\.md$/, '') + '.hexworld.md';
                 const newPath = file.parent ? `${file.parent.path}/${newName}` : newName;
 
-                // new Notice('Hex World Dateien müssen die .hexworld.md Endung behalten');
 
-                // Benenne zurück
                 await this.app.fileManager.renameFile(file, newPath);
             } else if (file.path.endsWith('.hexworld.md')) {
-                // Normale Umbenennung - aktualisiere die Anzeige
                 this.hideHexworldExtensionInExplorer();
             }
         }));
@@ -430,7 +409,6 @@ class HexWorldEditorPlugin extends Plugin {
             await this.createNewHexWorld();
         });
 
-        // Rechtsklick-Menü für Ordner
         this.registerEvent(
             this.app.workspace.on('file-menu', (menu, file) => {
                 menu.addItem((item) => {
@@ -473,10 +451,8 @@ class HexWorldEditorPlugin extends Plugin {
                 const view = leaf.view;
                 if (view instanceof HexWorldEditorView && view.file && view.file.path === oldPath) {
                     view.file = file;
-                    // Tab-Header aktualisieren, um den neuen Namen anzuzeigen
                     leaf.updateHeader();
 
-                    // Zusätzlich: Direkte DOM-Aktualisierung für sofortige Anzeige
                     setTimeout(() => {
                         const activeLeaf = this.app.workspace.activeLeaf;
                         if (activeLeaf === leaf) {
@@ -490,7 +466,6 @@ class HexWorldEditorPlugin extends Plugin {
             });
         }));
 
-        // Wenn User auf bereits geöffnete Datei klickt, reload
         this.registerEvent(this.app.workspace.on('file-open', (file) => {
             if (!file || file.extension !== 'hexworld') return;
 
@@ -498,7 +473,6 @@ class HexWorldEditorPlugin extends Plugin {
             leaves.forEach((leaf) => {
                 const view = leaf.view;
                 if (view instanceof HexWorldEditorView && view.file && view.file.path === file.path) {
-                    // Datei ist bereits geöffnet, lade sie neu
                     view.reloadFile();
                 }
             });
@@ -508,14 +482,11 @@ class HexWorldEditorPlugin extends Plugin {
     async createNewHexWorld(targetFile = null) {
         const fileName = `HexWorld_${Date.now()}.hexworld.md`;
 
-        // Bestimme den Zielordner
         let folderPath = '';
         if (targetFile) {
-            // Wenn targetFile ein Ordner ist, verwende seinen Pfad
             if (targetFile.children) {
                 folderPath = targetFile.path;
             }
-            // Wenn targetFile eine Datei ist, verwende den Eltern-Ordner
             else if (targetFile.parent) {
                 folderPath = targetFile.parent.path;
             }
@@ -533,23 +504,18 @@ class HexWorldEditorPlugin extends Plugin {
             zoom: 1,
             offX: 400,
             offY: 300,
-            // Werkzeug-Einstellungen
             settings: {
                 colorPalette: [...DEFAULT_PALETTE],
                 colorPalette2: [...DEFAULT_PALETTE2],
                 activeColorSlot: 1,
                 drawMode: 'pen',
                 currentToolGroup: null,
-                // toolConfigs absichtlich NICHT gesetzt - wird beim ersten Laden automatisch
-                // mit den ersten verfügbaren SVG-Symbolen initialisiert
                 patternData: null,
                 patternSourceHex: null
             }
         };
 
         try {
-            // Erstelle MD-Format mit Frontmatter und JSON-Codeblock
-            // Durch .hexworld.md Endung wird die Datei automatisch von Obsidian Sync synchronisiert
             const now = new Date().toISOString().split('T')[0];
             const frontmatter = `---\ntype: hexworld\ncreated: ${now}\n---\n\n`;
             const jsonData = JSON.stringify(initialData, null, 2);
@@ -568,30 +534,23 @@ class HexWorldEditorPlugin extends Plugin {
     }
 
     hideHexworldExtensionInExplorer() {
-        // Verstecke ".hexworld" im Dateinamen im File Explorer
-        // Dies läuft periodisch, um neue Dateien zu erfassen
         const hideExtension = () => {
             const fileElements = document.querySelectorAll('.nav-file-title[data-path$=".hexworld.md"]');
             fileElements.forEach(el => {
                 const titleEl = el.querySelector('.nav-file-title-content');
                 if (titleEl && titleEl.textContent.includes('.hexworld')) {
-                    // Entferne ".hexworld" aus dem angezeigten Namen
                     titleEl.textContent = titleEl.textContent.replace('.hexworld', '');
                 }
 
-                // Füge CSS-Klasse hinzu, damit Badge korrekt positioniert wird
                 if (!el.classList.contains('hexworld-file')) {
                     el.classList.add('hexworld-file');
                 }
             });
         };
 
-        // Initiale Ausführung mit Verzögerung
         hideExtension();
 
-        // Beobachte DOM-Änderungen im File Explorer
         const observer = new MutationObserver((mutations) => {
-            // Nur ausführen, wenn relevante Änderungen
             let shouldUpdate = false;
             mutations.forEach(mutation => {
                 if (mutation.type === 'childList' || mutation.type === 'characterData') {
@@ -611,24 +570,22 @@ class HexWorldEditorPlugin extends Plugin {
                 characterData: true
             });
 
-            // Cleanup beim Plugin-Unload
             this.register(() => observer.disconnect());
         }
 
-        // Zusätzlich: Verstecke beim Workspace-Layout-Change
         this.registerEvent(
             this.app.workspace.on('layout-change', () => {
                 setTimeout(hideExtension, 100);
             })
         );
 
-        // Wiederhole periodisch für robuste Darstellung
         const intervalId = setInterval(hideExtension, 2000);
         this.register(() => clearInterval(intervalId));
     }
 
 }
 
+// === View-Klasse für den Hex World Editor ===
 class HexWorldEditorView extends ItemView {
     constructor(leaf, plugin) {
         super(leaf);
@@ -652,55 +609,41 @@ class HexWorldEditorView extends ItemView {
         this.startHex = null;
         this.borderSettings = { percent: DEFAULT_BORDER_PERCENT, repeats: DEFAULT_BORDER_REPEATS, activeRegionId: null, pickedHex: null, visible: true };
         this.borderHighlightWidth = DEFAULT_BORDER_HIGHLIGHT_WIDTH;
-        // Wenn true, wird bei Klick auf die Karte der Grenzregionen-Werkzeugmodus aktiviert, um eine neue Grenzregion zu erstellen oder eine bestehende Grenzregion zu erweitern (abhängig von lastHex), und die Karte wird aktualisiert, um die aktive Grenzregion hervorzuheben
         this.borderPickMode = false;
-        // riverSettings speichert alle Einstellungen für das Fluss-Werkzeug, damit sie auch während des Ziehens verfügbar sind (z.B. um die Karte zu aktualisieren) und damit sie beim Wechseln zwischen verschiedenen Werkzeugen erhalten bleiben
         this.riverSettings = { width: DEFAULT_RIVER_WIDTH, activeRiverId: null, editMode: false, insertAfter: null };
-        // roadSettings ähnlich wie riverSettings, aber mit eigenen Eigenschaften (z.B. width) und eigenem activeRoadId, damit
         this.roadSettings = { width: DEFAULT_ROAD_WIDTH, activeRoadId: null, editMode: false, insertAfter: null };
-        // Wenn true, wird bei Klick auf die Karte der Pfad-Werkzeugmodus aktiviert, um einen neuen Pfad zu erstellen oder einen bestehenden Pfad zu erweitern (abhängig von lastWaypointClick)
         this.pathPickMode = false;
         this.lastToolGroup = null;
         // Wie weit Pfad-Endpunkte ins Hex reichen: 0 = Hex-Rand, 1 = Hex-Zentrum
         this.pathEndInset = PATH_END_INSET;
-        // Index des aktuell gezogenen Flusses/Weges (null = keiner), um während des Ziehens die Karte zu aktualisieren
         this.riverDragIndex = null;
-        // Ähnlich wie riverDragIndex, aber für Straßen
         this.roadDragIndex = null;
-        // Speichert die zuletzt angeklickte Wabe für die Pfad-Werkezeuge, um bei Klicks auf die Karte zu entscheiden, ob ein neuer Pfad gestartet oder ein bestehender Pfad erweitert wird
         this.lastWaypointClick = null;
-        // Verhindert, dass bei Klicks auf die Karte während des Ziehens von Flüssen/Wegen die Karte neu geladen wird (was zu unerwünschtem Verhalten führen kann)
         this.pendingHistory = false;
 
         this.masterColor = DEFAULT_MASTER_COLOR;
         this.hexColorColor = DEFAULT_HEX_COLOR;
 
-        // Standard-Farbpalette (kann pro Datei angepasst werden)
         this.colorPalette = [...DEFAULT_PALETTE];
         this.colorPalette2 = [...DEFAULT_PALETTE2];
         this.activeColorSlot = 1; // Standardfarbe: Grün
 
-        // Werkzeug-Konfigurationen
         this.initToolConfigs();
 
-        // Zeichenmodi
         this.editMode = false; // Edit-Modus: true = Werkzeuge sichtbar, false = nur Navigation
         this.drawMode = 'pen'; // pen, fill, eraser
         this.currentToolGroup = null; // grass, tree, mountain, building, oder null für Farbpalette
 
-        // Musterwerkzeug
         this.patternData = null;
         this.patternPickMode = false;
         this.patternSourceHex = null; // Speichert q/r der Musterwabe
 
-        // SVG-Symbol Cache
         this.svgSymbols = {};
         this.svgSymbolsLoaded = false;
         this.svgLoadPromise = this.loadSVGSymbols();
 
         this.svgSymbolConfig = SVG_SYMBOL_CONFIG;
 
-        // Text-Einstellungen
         this.lastUsedTextSize = DEFAULT_TEXT_SIZE;
         this.lastUsedTextColor = DEFAULT_TEXT_COLOR;
         this.lastUsedTextOutline = true;
@@ -788,22 +731,18 @@ class HexWorldEditorView extends ItemView {
     getViewType() { return 'hexworld-editor'; }
     getDisplayText() {
         if (!this.file) return 'Hex World Editor';
-        // Entferne ".hexworld" aus dem Tab-Namen (wie im File Explorer)
         return this.file.basename.replace('.hexworld', '');
     }
     getState() { return { file: this.file ? this.file.path : null }; }
 
-    // Wichtig: Icon für den Tab anzeigen
     getIcon() { return 'map'; }
 
-    // Zeigt "HEXWORLD" statt ".hexworld.md" im File Explorer (wie EXCALIDRAW)
     onPaneMenu(menu, source) {
         if (source === 'more-options') {
             menu.addItem((item) => {
                 item.setTitle(t('menu.openInEditor'))
                     .setIcon('map')
                     .onClick(async () => {
-                        // Bereits im Editor geöffnet, nichts zu tun
                     });
             });
         }
@@ -811,12 +750,10 @@ class HexWorldEditorView extends ItemView {
     }
 
     async loadSVGSymbols() {
-        // 1. Eingebettete SVG-Daten laden (für Auslieferung ohne symbols/-Ordner)
         for (const [key, data] of Object.entries(SVG_SYMBOL_DATA)) {
             this.svgSymbols[key] = { pathData: data.pathData, viewBoxWidth: data.viewBoxWidth };
         }
 
-        // 2. Entwicklungsmodus: SVGs aus symbols/-Ordner laden (überschreibt eingebettete Daten)
         const symbolsDir = '.obsidian/plugins/hexworld-editor/symbols';
         try {
             const listing = await this.app.vault.adapter.list(symbolsDir);
@@ -847,22 +784,17 @@ class HexWorldEditorView extends ItemView {
                 }
             }
         } catch (e) {
-            // Kein symbols/-Ordner vorhanden — eingebettete Daten werden verwendet
         }
 
         this.svgSymbolsLoaded = true;
     }
 
     updateToolConfigsWithAvailableSVGs() {
-        // Für jede Tool-Gruppe: Finde die erste Variante, die ein SVG hat
         ['grass', 'tree', 'mountain', 'building'].forEach(groupId => {
             const config = this.toolConfigs[groupId];
             if (config && config.variants) {
-                // Suche die erste Variante mit verfügbarem SVG
                 const firstAvailableSVG = config.variants.find(v => this.svgSymbols[v.id]);
                 if (firstAvailableSVG) {
-                    // Setze nur, wenn noch der ursprüngliche Standardwert aktiv ist
-                    // (wird später beim Laden einer Datei durch gespeicherte Werte überschrieben)
                     config.currentVariant = firstAvailableSVG.id;
                     console.log(`✓ Set default variant for ${groupId}: ${firstAvailableSVG.id}`);
                 }
@@ -871,7 +803,6 @@ class HexWorldEditorView extends ItemView {
     }
 
     updateToolGroupButtonIcons() {
-        // Aktualisiere die Button-Icons basierend auf den aktuellen Varianten
         if (!this.containerEl) return;
 
         const toolbar = this.containerEl.querySelector('.hex-toolbar');
@@ -890,17 +821,14 @@ class HexWorldEditorView extends ItemView {
             const currentVariant = config.variants.find(v => v.id === config.currentVariant);
             if (!currentVariant) return;
 
-            // Prüfe ob ein eigenes SVG vorhanden ist
             if (this.svgSymbols[currentVariant.id]) {
                 const symbolInfo = this.svgSymbols[currentVariant.id];
-                // Erstelle inline SVG im Button
                 btn.innerHTML = `<svg viewBox="0 0 ${symbolInfo.viewBoxWidth} ${symbolInfo.viewBoxWidth}"
                                       width="16" height="16" style="vertical-align: middle;">
                     <path d="${symbolInfo.pathData}" fill="currentColor"/>
                 </svg>`;
                 console.log(`✓ Updated button icon for ${groupId} to ${currentVariant.id}`);
             } else {
-                // Fallback auf Obsidian Icon
                 btn.innerHTML = '';
                 setIcon(btn, currentVariant.icon);
             }
@@ -943,17 +871,14 @@ class HexWorldEditorView extends ItemView {
         if (!this.file || this.isReloading) return;
         this.isReloading = true;
         try {
-            // Warte auf SVG-Symbole, falls sie noch nicht geladen sind
             if (this.svgLoadPromise && !this.svgSymbolsLoaded) {
                 await this.svgLoadPromise;
             }
 
             const content = await this.app.vault.read(this.file);
 
-            // Extrahiere JSON aus MD-Format oder verwende direktes JSON
             let jsonContent = content;
 
-            // Prüfe auf MD-Format mit JSON-Codeblock
             if (content.includes('```json')) {
                 const jsonMatch = content.match(/```json\s*([\s\S]*?)\s*```/);
                 if (jsonMatch) {
@@ -969,7 +894,6 @@ class HexWorldEditorView extends ItemView {
                 newData.gridSize = 30;
             }
 
-            // Migration von altem Format (Array) zu neuem Format (Objekt mit Keys)
             if (Array.isArray(newData.hexes)) {
                 const migratedHexes = {};
                 newData.hexes.forEach(h => {
@@ -993,7 +917,6 @@ class HexWorldEditorView extends ItemView {
                 });
             }
 
-            // Stelle Werkzeug-Einstellungen wieder her
             if (newData.settings) {
                 if (newData.settings.colorPalette) {
                     this.colorPalette = newData.settings.colorPalette;
@@ -1004,19 +927,15 @@ class HexWorldEditorView extends ItemView {
                 if (newData.settings.activeColorSlot !== undefined) {
                     this.activeColorSlot = newData.settings.activeColorSlot;
                 }
-                // Werkzeug-Zustand wiederherstellen
                 this.drawMode = 'pen';
                 this.editMode = newData.settings.editMode === true;
                 this.currentToolGroup = newData.settings.currentToolGroup || null;
                 if (newData.settings.toolConfigs) {
-                    // Werkzeug-Konfigurationen wiederherstellen
                     // WICHTIG: Explizit jeden Key einzeln laden, um sicherzustellen,
-                    // dass keine Referenzen überschrieben werden
                     ['grass', 'tree', 'mountain', 'building'].forEach(key => {
                         if (newData.settings.toolConfigs[key] && this.toolConfigs[key]) {
                             const saved = newData.settings.toolConfigs[key];
 
-                            // Nur aktualisieren, wenn der gespeicherte Wert vorhanden ist
                             if (saved.currentVariant !== undefined) {
                                 this.toolConfigs[key].currentVariant = saved.currentVariant;
                             }
@@ -1031,12 +950,9 @@ class HexWorldEditorView extends ItemView {
                             }
                         }
                     });
-                    // Aktualisiere die Button-Icons nach dem Wiederherstellen der gespeicherten Varianten
                     this.updateToolGroupButtonIcons();
                 } else {
-                    // Keine toolConfigs gespeichert - verwende SVG-basierte Defaults für neue Dateien
                     this.updateToolConfigsWithAvailableSVGs();
-                    // Aktualisiere die Button-Icons in der Toolbar
                     this.updateToolGroupButtonIcons();
                 }
                 if (newData.settings.patternData) {
@@ -1069,7 +985,6 @@ class HexWorldEditorView extends ItemView {
                     this.masterColor = newData.settings.masterColor;
                     if (this.masterColorInput) { this.masterColorInput.value = this.masterColor; if (this.masterColorBtn) this.masterColorBtn.style.backgroundColor = this.masterColor; }
                 }
-                // Wenn ein Werkzeug aktiv war, dessen Farbe als masterColor setzen
                 if (this.currentToolGroup === 'hexcolor') {
                     this.masterColor = this.hexColorColor;
                     if (this.masterColorInput) { this.masterColorInput.value = this.masterColor; if (this.masterColorBtn) this.masterColorBtn.style.backgroundColor = this.masterColor; }
@@ -1078,20 +993,16 @@ class HexWorldEditorView extends ItemView {
                     if (this.masterColorInput) { this.masterColorInput.value = this.masterColor; if (this.masterColorBtn) this.masterColorBtn.style.backgroundColor = this.masterColor; }
                 }
             } else {
-                // Keine Settings vorhanden - verwende SVG-basierte Defaults für neue Dateien
                 this.updateToolConfigsWithAvailableSVGs();
-                // Aktualisiere die Button-Icons in der Toolbar
                 this.updateToolGroupButtonIcons();
             }
 
-            // Stelle sicher, dass borders-Array existiert (Kompatibilität mit alten Dateien)
             if (!newData.borders) newData.borders = [];
             // Migration: altes Flat-Array [{q,r}] → neues Regionen-Format [{id, color, hexes}]
             if (newData.borders.length > 0 && newData.borders[0].q !== undefined) {
                 newData.borders = [{ id: 1, color: DEFAULT_BORDER_COLOR, hexes: newData.borders }];
             }
 
-            // Stelle sicher, dass rivers-Array existiert
             if (!newData.rivers) newData.rivers = [];
             // Migration: altes Segment-Format [{from, to, width}] → neues Waypoint-Format
             if (newData.rivers.length > 0 && newData.rivers[0].from !== undefined) {
@@ -1105,7 +1016,6 @@ class HexWorldEditorView extends ItemView {
                 newData.rivers = waypoints.length > 0 ? [{ id: 1, color: DEFAULT_RIVER_COLOR, width: DEFAULT_RIVER_WIDTH, waypoints }] : [];
             }
 
-            // Stelle sicher, dass roads-Array existiert
             if (!newData.roads) newData.roads = [];
             // Migration: altes Segment-Format [{from, to, width}] → neues Waypoint-Format
             if (newData.roads.length > 0 && newData.roads[0].from !== undefined) {
@@ -1122,10 +1032,7 @@ class HexWorldEditorView extends ItemView {
             if (JSON.stringify(this.data) !== JSON.stringify(newData)) {
                 this.data = Object.assign({}, newData);
 
-                // Automatisch "Ganze Karte zeigen" beim ersten Laden ausführen
-                // Ignoriere gespeicherte zoom/offX/offY, da verschiedene Geräte verschiedene Bildschirmgrößen haben
                 if (this.canvas && Object.keys(this.data.hexes).length > 0) {
-                    // Warte kurz, damit Canvas richtig initialisiert ist
                     setTimeout(() => {
                         this.fitMapToView();
                     }, 100);
@@ -1134,15 +1041,10 @@ class HexWorldEditorView extends ItemView {
                 }
             }
 
-            // Aktualisiere Toolbar nach dem Laden
             if (this.containerEl) {
                 const toolbar = this.containerEl.querySelector('.hex-toolbar');
                 if (toolbar) {
                     this.updateToolbarState(toolbar);
-                    // Verzögerter Update: Wenn Edit-Modus wiederhergestellt wird, sind die
-                    // Inputs ggf. noch nicht gerendert (display: none → contents Übergang).
-                    // Ein erneuter Update nach dem Rendering-Zyklus stellt sicher, dass
-                    // alle Werte korrekt in den Inputs angezeigt werden.
                     if (this.editMode) {
                         setTimeout(() => {
                             this.updateToolbarState(toolbar);
@@ -1240,7 +1142,6 @@ class HexWorldEditorView extends ItemView {
             return;
         }
 
-        // Berechne die Bounds aller Waben
         let minX = Infinity, maxX = -Infinity;
         let minY = Infinity, maxY = -Infinity;
 
@@ -1248,14 +1149,12 @@ class HexWorldEditorView extends ItemView {
             const pos = this.hexToPixel(hex);
             const s = this.data.gridSize;
 
-            // Berücksichtige die Größe der Hexagone
             minX = Math.min(minX, pos.x - s);
             maxX = Math.max(maxX, pos.x + s);
             minY = Math.min(minY, pos.y - s);
             maxY = Math.max(maxY, pos.y + s);
         });
 
-        // Berücksichtige auch Texte
         texts.forEach(t => {
             const textSize = t.size || 16;
             const estimatedWidth = t.text.length * textSize * 0.6; // Geschätzte Textbreite
@@ -1267,26 +1166,22 @@ class HexWorldEditorView extends ItemView {
             maxY = Math.max(maxY, t.y + estimatedHeight / 2);
         });
 
-        // Berechne Zentrum und Größe
         const centerX = (minX + maxX) / 2;
         const centerY = (minY + maxY) / 2;
         const width = maxX - minX;
         const height = maxY - minY;
 
-        // Berechne erforderlichen Zoom mit etwas Padding (90% der Canvas-Größe)
         const canvasWidth = this.canvas.width;
         const canvasHeight = this.canvas.height;
         const zoomX = (canvasWidth * VIEWPORT_PADDING) / width;
         const zoomY = (canvasHeight * VIEWPORT_PADDING) / height;
         const newZoom = Math.min(zoomX, zoomY, MAX_ZOOM);
 
-        // Setze Zoom und zentriere die Karte
         this.data.zoom = newZoom;
         this.data.offX = canvasWidth / 2 - centerX * newZoom;
         this.data.offY = canvasHeight / 2 - centerY * newZoom;
 
         this.render();
-        // Speichere Zoom/Pan NICHT mehr, da verschiedene Geräte verschiedene Bildschirmgrößen haben
     }
 
     async onOpen() {
@@ -1296,7 +1191,6 @@ class HexWorldEditorView extends ItemView {
         container.style.flexDirection = 'column';
         container.style.height = '100%';
 
-        // CSS für Color-Input Swatch und Toolbar-Separatoren (Pseudo-Elemente nur via Style-Block möglich)
         const style = document.createElement('style');
         style.textContent = `
             input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
@@ -1327,17 +1221,14 @@ class HexWorldEditorView extends ItemView {
         toolbar.style.overflowY = 'auto';
         toolbar.style.maxHeight = '120px';
 
-        // Verhindere, dass Mausrad-Scrollen im Toolbar den Canvas zoomt
         toolbar.addEventListener('wheel', (e) => {
             e.stopPropagation();
         }, { passive: true });
 
         this.createToolbar(toolbar);
 
-        // Toolbar initial aktualisieren, um Farben korrekt anzuzeigen
         this.updateToolbarState(toolbar);
 
-        // Canvas-Container mit relativem Positioning
         const canvasContainer = container.createDiv();
         canvasContainer.style.position = 'relative';
         canvasContainer.style.flexGrow = '1';
@@ -1354,7 +1245,6 @@ class HexWorldEditorView extends ItemView {
         this.canvas.style.outline = 'none';
         this.ctx = this.canvas.getContext('2d');
 
-        // SVG-Layer über dem Canvas für Vektorsymbole
         this.svgLayer = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
         this.svgLayer.style.position = 'absolute';
         this.svgLayer.style.top = '0';
@@ -1364,7 +1254,6 @@ class HexWorldEditorView extends ItemView {
         this.svgLayer.style.pointerEvents = 'none'; // Lässt Maus-Events durch
         canvasContainer.appendChild(this.svgLayer);
 
-        // Text-Layer über dem SVG-Layer für Texte
         this.textCanvas = canvasContainer.createEl('canvas', { cls: 'hex-text-canvas' });
         this.textCtx = this.textCanvas.getContext('2d');
 
@@ -1376,7 +1265,6 @@ class HexWorldEditorView extends ItemView {
     }
 
     createToolbar(toolbar) {
-        // Edit-Modus-Button (immer sichtbar)
         const editModeBtn = toolbar.createEl('button', { cls: 'hex-tool-btn', attr: { title: t('tooltip.editMode') } });
         setIcon(editModeBtn, 'wrench');
         this.editModeBtn = editModeBtn;
@@ -1399,11 +1287,9 @@ class HexWorldEditorView extends ItemView {
             this.requestSave();
         };
 
-        // Container für alle Edit-Werkzeuge (wird ein-/ausgeblendet)
         const editContent = toolbar.createDiv({ style: this.editMode ? 'display: contents;' : 'display: none;' });
         this.editContent = editContent;
 
-        // Master-Farbfeld (sichtbarer Button + versteckter Color-Input)
         const masterColorBtn = editContent.createEl('button', {
             attr: { title: t('tooltip.colorPicker'), style: 'width: 50px; height: 50px; min-width: 50px; border: 1px solid var(--divider-color); border-radius: 4px; cursor: pointer; box-sizing: border-box; padding: 0;' }
         });
@@ -1428,16 +1314,12 @@ class HexWorldEditorView extends ItemView {
             this.requestSave();
         });
 
-        // Separator zwischen Master-Farbe und Werkzeug-Gruppen
         editContent.createEl('span', { cls: 'hex-toolbar-sep', text: '\u200B' });
 
-        // Farbpalette (Borders als Separatoren links/rechts)
         this.createColorPalette(editContent);
         
-        // Separator zwischen Master-Farbe und Werkzeug-Gruppen
         editContent.createEl('span', { cls: 'hex-toolbar-sep', text: '\u200B' });
 
-        // Waben-Farbwerkzeug (Masterfarbe)
         const hexColorBtn = editContent.createEl('button', { cls: 'hex-tool-btn', attr: { title: t('tooltip.hexColor') } });
         hexColorBtn.dataset.toolGroup = 'hexcolor';
         setIcon(hexColorBtn, 'hexagon');
@@ -1456,7 +1338,6 @@ class HexWorldEditorView extends ItemView {
             if (needsRender) this.render();
         };
 
-        // Werkzeug-Gruppen mit Varianten
         this.createToolGroupButton(editContent, 'grass');
         this.createToolGroupButton(editContent, 'tree');
         this.createToolGroupButton(editContent, 'mountain');
@@ -1464,10 +1345,8 @@ class HexWorldEditorView extends ItemView {
 
         editContent.createEl('span', { cls: 'hex-toolbar-sep', text: '\u200B' });
 
-        // Füllwerkzeugs 
         this.createDrawModeButton(editContent, 'fill', 'paint-bucket', t('tooltip.fill'));
 
-        // Text-Werkzeug
         const textBtn = editContent.createEl('button', { cls: 'hex-tool-btn', attr: { title: t('tooltip.text') } });
         textBtn.dataset.toolGroup = 'text';
         setIcon(textBtn, 'type');
@@ -1480,25 +1359,19 @@ class HexWorldEditorView extends ItemView {
             if (needsRender) this.render();
         };
 
-        // Radiergummi
         this.createDrawModeButton(editContent, 'eraser', 'eraser', t('tooltip.eraser'));
 
         editContent.createEl('span', { cls: 'hex-toolbar-sep', text: '\u200B' });
 
-        // Musterwerkzeug
         this.createPatternTool(editContent);
 
-        // Separator zwischen Master-Farbe und Werkzeug-Gruppen
         editContent.createEl('span', { cls: 'hex-toolbar-sep', text: '\u200B' });
 
-        // Fluss/Weg-Werkzeuge
         this.createPathToolbar(editContent);
         this.createBorderButton(editContent);
 
-        // Separator zwischen Pfad-Werkzeugen und Undo/Redo
         editContent.createEl('span', { cls: 'hex-toolbar-sep', text: '\u200B' });
 
-        // Undo/Redo
         const undoBtn = editContent.createEl('button', { cls: 'hex-tool-btn', attr: { title: t('tooltip.undo') } });
         setIcon(undoBtn, 'undo-2');
         undoBtn.onclick = () => this.undo();
@@ -1507,7 +1380,6 @@ class HexWorldEditorView extends ItemView {
         setIcon(redoBtn, 'redo-2');
         redoBtn.onclick = () => this.redo();
 
-        // Ganze Karte zeigen Button (immer sichtbar, außerhalb editContent)
         const fitBtn = toolbar.createEl('button', { cls: 'hex-tool-btn', attr: { title: t('tooltip.fit') } });
         setIcon(fitBtn, 'maximize-2');
         fitBtn.onclick = () => this.fitMapToView();
@@ -1520,11 +1392,9 @@ class HexWorldEditorView extends ItemView {
         btn.dataset.drawMode = mode;
         setIcon(btn, icon);
         btn.onclick = () => {
-            // Radierer blockieren, wenn ein Aufnehmen-Modus aktiv ist
             if (mode === 'eraser' && (this.patternPickMode || this.pathPickMode || this.borderPickMode)) return;
             const needsRender = this.currentToolGroup === 'pattern' || this.borderSettings.pickedHex;
             if (mode !== 'eraser') this.exitPathEditMode();
-            // Erneutes Drücken des aktiven Radierers/Fülleimers schaltet ihn aus
             if (this.drawMode === mode && (mode === 'eraser' || mode === 'fill')) {
                 this.drawMode = 'pen';
                 this.updateToolbarState(toolbar);
@@ -1532,12 +1402,10 @@ class HexWorldEditorView extends ItemView {
             }
             this.drawMode = mode;
 
-            // Fülleimer ohne aktives Werkzeug → Wabenwerkzeug aktivieren
             if (mode === 'fill' && (!this.currentToolGroup || this.currentToolGroup === 'text' || this.currentToolGroup === 'river' || this.currentToolGroup === 'road' || this.currentToolGroup === 'border')) {
                 this.exitPathEditMode();
                 this.currentToolGroup = 'hexcolor';
             }
-            // Andere Zeichenmodi deaktivieren Textmodus
             else if (this.currentToolGroup === 'text') {
                 this.currentToolGroup = null;
             }
@@ -1558,7 +1426,6 @@ class HexWorldEditorView extends ItemView {
         });
         wrapper.dataset.toolGroupWrapper = groupId;
 
-        // Symbol-Button mit Dropdown
         const btnWrapper = wrapper.createDiv({ style: 'position: relative; display: inline-block;' });
         const btn = btnWrapper.createEl('button', {
             cls: 'hex-tool-btn',
@@ -1571,25 +1438,20 @@ class HexWorldEditorView extends ItemView {
 
         const currentVariant = config.variants.find(v => v.id === config.currentVariant);
 
-        // Prüfe ob ein eigenes SVG vorhanden ist
         if (this.svgSymbols[currentVariant.id]) {
             const symbolInfo = this.svgSymbols[currentVariant.id];
-            // Erstelle inline SVG im Button
             btn.innerHTML = `<svg viewBox="0 0 ${symbolInfo.viewBoxWidth} ${symbolInfo.viewBoxWidth}"
                                   width="16" height="16" style="vertical-align: middle;">
                 <path d="${symbolInfo.pathData}" fill="currentColor"/>
             </svg>`;
         } else {
-            // Fallback auf Obsidian Icon
             setIcon(btn, currentVariant.icon);
         }
 
-        // Färbe Icon mit Symbolfarbe ein
         if (config.symbolColor) {
             btn.style.color = config.symbolColor;
         }
 
-        // Dropdown-Icon
         btnWrapper.createEl('span', {
             text: '▼',
             attr: {
@@ -1612,7 +1474,6 @@ class HexWorldEditorView extends ItemView {
             }
         };
 
-        // Rechtsklick für Varianten
         btn.oncontextmenu = (e) => {
             e.preventDefault();
             this.showVariantMenu(groupId, wrapper);
@@ -1623,7 +1484,6 @@ class HexWorldEditorView extends ItemView {
     createPatternTool(toolbar) {
         const wrapper = toolbar.createDiv({ style: 'display: flex; align-items: center; gap: 4px;' });
 
-        // Muster-Button
         const patternBtn = wrapper.createEl('button', {
             cls: 'hex-tool-btn',
             attr: { title: t('tooltip.pattern') }
@@ -1643,7 +1503,6 @@ class HexWorldEditorView extends ItemView {
             this.render(); // Sofort rendern, um Muster-Wabe anzuzeigen
         };
 
-        // Picker-Button
         const pickerBtn = wrapper.createEl('button', {
             cls: 'hex-tool-btn',
             attr: { title: t('tooltip.patternPicker'), style: 'width: 24px; padding: 2px;' }
@@ -1662,7 +1521,6 @@ class HexWorldEditorView extends ItemView {
             this.updateToolbarState(toolbar);
         };
 
-        // Speichere Referenz für spätere Updates
         this.patternPickerBtn = pickerBtn;
     }
 
@@ -1670,7 +1528,6 @@ class HexWorldEditorView extends ItemView {
         const config = this.toolConfigs[groupId];
         const btn = wrapper.querySelector('.hex-tool-btn');
 
-        // Entferne altes Menu falls vorhanden
         const oldMenu = document.querySelector('.hex-variant-menu');
         if (oldMenu) oldMenu.remove();
 
@@ -1712,16 +1569,13 @@ class HexWorldEditorView extends ItemView {
             item.onclick = () => {
                 config.currentVariant = variant.id;
 
-                // Prüfe ob ein eigenes SVG vorhanden ist
                 if (this.svgSymbols[variant.id]) {
                     const symbolInfo = this.svgSymbols[variant.id];
-                    // Erstelle inline SVG im Button
                     btn.innerHTML = `<svg viewBox="0 0 ${symbolInfo.viewBoxWidth} ${symbolInfo.viewBoxWidth}"
                                           width="16" height="16" style="vertical-align: middle;">
                         <path d="${symbolInfo.pathData}" fill="currentColor"/>
                     </svg>`;
                 } else {
-                    // Fallback auf Obsidian Icon
                     setIcon(btn, variant.icon);
                 }
 
@@ -1731,7 +1585,6 @@ class HexWorldEditorView extends ItemView {
             };
         });
 
-        // Schließe Menu bei Klick außerhalb
         setTimeout(() => {
             const closeMenu = (e) => {
                 if (!menu.contains(e.target)) {
@@ -1750,14 +1603,12 @@ class HexWorldEditorView extends ItemView {
         const modal = new Modal(this.app);
         modal.contentEl.createEl('h3', { text: `${config.name} - Hintergrundfarbe` });
 
-        // Hintergrundfarbe
         const bgSection = modal.contentEl.createDiv({ style: 'margin: 15px 0;' });
 
         const bgRow = bgSection.createDiv({ style: 'display: flex; gap: 10px; align-items: center; margin-bottom: 10px;' });
         bgRow.createEl('label', { text: 'Farbe:' });
         const bgPicker = bgRow.createEl('input', { type: 'color', value: config.backgroundColor || '#ffffff' });
 
-        // Palette für Hintergrundfarbe
         const bgPaletteRow = bgSection.createDiv({ style: 'display: flex; gap: 5px; flex-wrap: wrap;' });
         bgPaletteRow.createEl('span', { text: 'Palette:', attr: { style: 'width: 100%; font-size: 11px; margin-bottom: 5px;' } });
         this.colorPalette.forEach(color => {
@@ -1771,7 +1622,6 @@ class HexWorldEditorView extends ItemView {
             };
         });
 
-        // Buttons
         const btnRow = modal.contentEl.createDiv({ style: 'display: flex; gap: 10px; margin-top: 20px;' });
 
         const okBtn = btnRow.createEl('button', { text: 'OK', cls: 'mod-cta' });
@@ -1821,7 +1671,6 @@ class HexWorldEditorView extends ItemView {
             });
 
             btn.onclick = () => {
-                // Von Muster/Aufnehmen-Werkzeugen zum Waben-Werkzeug wechseln
                 if (this.currentToolGroup === 'pattern' || this.patternPickMode || this.pathPickMode || this.borderPickMode) {
                     this.exitPathEditMode();
                     this.currentToolGroup = 'hexcolor';
@@ -1873,7 +1722,6 @@ class HexWorldEditorView extends ItemView {
             style: 'display: inline-flex; flex-direction: column; gap: 2px;'
         });
 
-        // Obere Zeile: Fluss-Btn + Weg-Btn + Farbfeld + Picker/OK
         const topRow = wrapper.createDiv({ style: 'display: flex; gap: 2px; align-items: center;' });
 
         const riverBtn = topRow.createEl('button', { cls: 'hex-tool-btn', attr: { title: t('tooltip.river') } });
@@ -1902,7 +1750,6 @@ class HexWorldEditorView extends ItemView {
             if (needsRender) this.render();
         };
 
-        // Shared Picker/OK-Button (kontextabhängig)
         const pickerBtn = topRow.createEl('button', { cls: 'hex-tool-btn', attr: { title: t('tooltip.pathPicker') } });
         setIcon(pickerBtn, 'mouse-pointer');
         this.pathPickerBtn = pickerBtn;
@@ -1927,7 +1774,6 @@ class HexWorldEditorView extends ItemView {
             this.updateToolbarState(toolbar);
         };
 
-        // Untere Zeile: Flussbreite + Wegbreite (je unter ihrem Button)
         const bottomRow = wrapper.createDiv({ style: 'display: flex; gap: 2px;' });
 
         const riverWidthInput = bottomRow.createEl('input', {
@@ -1962,7 +1808,6 @@ class HexWorldEditorView extends ItemView {
             this.render();
         };
 
-        // Breiten der Inputs an ihre jeweiligen Buttons anpassen
         setTimeout(() => {
             riverWidthInput.style.width = `${riverBtn.offsetWidth}px`;
             roadWidthInput.style.width = `${roadBtn.offsetWidth}px`;
@@ -1976,13 +1821,11 @@ class HexWorldEditorView extends ItemView {
                          this.lastWaypointClick.idx === clickedIdx &&
                          (now - this.lastWaypointClick.time) < 400;
         if (isDouble) {
-            // Doppelklick: Verbinden — vorherigen aktiven Punkt mit diesem verbinden
             const wp = path.waypoints[clickedIdx];
             path.waypoints.push({ q: wp.q, r: wp.r });
             settings.insertAfter = path.waypoints.length - 1;
             this.lastWaypointClick = null;
         } else {
-            // Einzelklick: Aktiven Punkt wechseln
             this.lastWaypointClick = {
                 pathId: path.id,
                 idx: clickedIdx,
@@ -1995,7 +1838,6 @@ class HexWorldEditorView extends ItemView {
     }
 
     pickPathAtHex(hex) {
-        // Beide Typen prüfen, automatisch richtiges Werkzeug aktivieren
         const foundRiver = this.findRiverAtHex(hex);
         const foundRoad = this.findRoadAtHex(hex);
         if (foundRiver) {
@@ -2072,7 +1914,6 @@ class HexWorldEditorView extends ItemView {
                 const activeIdKey = isRiver ? 'activeRiverId' : 'activeRoadId';
                 const arr = isRiver ? this.data.rivers : this.data.roads;
                 const activeId = settings[activeIdKey];
-                // Pfad mit weniger als 2 Waypoints entfernen
                 if (activeId != null && arr) {
                     const idx = arr.findIndex(p => p.id === activeId);
                     if (idx !== -1 && arr[idx].waypoints.length < 2) {
@@ -2092,18 +1933,15 @@ class HexWorldEditorView extends ItemView {
             this.pathPickerBtn.setAttribute('title', t('tooltip.pathPicker'));
         }
         this.pathPickMode = false;
-        // Muster-Picker deaktivieren
         this.patternPickMode = false;
         if (this.patternPickerBtn) {
             this.patternPickerBtn.style.background = '';
         }
-        // Grenz-Picker deaktivieren
         this.borderPickMode = false;
         if (this.borderPickerBtn) {
             this.borderPickerBtn.style.background = '';
             this.borderPickerBtn.style.color = '';
         }
-        // Auch aktive Grenzregion abschließen + Radierer ausschalten
         if (this.borderSettings.activeRegionId !== null) {
             this.borderSettings.activeRegionId = null;
             this.borderSettings.pickedHex = null;
@@ -2118,7 +1956,6 @@ class HexWorldEditorView extends ItemView {
             style: 'display: inline-flex; flex-direction: column; gap: 2px;'
         });
 
-        // Obere Zeile: Button + Farbfeld + Picker + Auge
         const topRow = wrapper.createDiv({ style: 'display: flex; gap: 2px; align-items: center;' });
 
         const btn = topRow.createEl('button', { cls: 'hex-tool-btn', attr: { title: t('tooltip.border') } });
@@ -2142,14 +1979,11 @@ class HexWorldEditorView extends ItemView {
             }
         };
 
-        // Picker/OK-Button (kontextabhängig wie beim Pfad-Werkzeug)
         const pickerBtn = topRow.createEl('button', { cls: 'hex-tool-btn', attr: { title: t('tooltip.borderPicker') } });
         setIcon(pickerBtn, 'mouse-pointer');
         this.borderPickerBtn = pickerBtn;
         pickerBtn.onclick = () => {
-            // Wenn aktive Grenzregion → OK-Logik
             if (this.borderSettings.activeRegionId !== null) {
-                // Grenze abschließen, neue kann begonnen werden
                 this.borderSettings.activeRegionId = null;
                 this.borderSettings.pickedHex = null;
                 if (this.drawMode === 'eraser') this.drawMode = 'pen';
@@ -2159,7 +1993,6 @@ class HexWorldEditorView extends ItemView {
             }
             const wasActive = this.borderPickMode;
             this.exitPathEditMode();
-            // Sonst: Picker-Modus toggeln
             this.borderPickMode = !wasActive;
             this.currentToolGroup = this.borderPickMode ? null : 'border';
             this.drawMode = 'pen';
@@ -2168,7 +2001,6 @@ class HexWorldEditorView extends ItemView {
             this.updateToolbarState(toolbar);
         };
 
-        // Sichtbarkeit-Button
         const visBtn = topRow.createEl('button', { cls: 'hex-tool-btn', attr: { title: t('tooltip.borderVisibility') } });
         setIcon(visBtn, this.borderSettings.visible ? 'eye' : 'eye-off');
         visBtn.style.opacity = this.borderSettings.visible ? '1' : '0.4';
@@ -2181,7 +2013,6 @@ class HexWorldEditorView extends ItemView {
         };
         this.borderVisBtn = visBtn;
 
-        // Untere Zeile: Eingabefelder
         const inputRow = wrapper.createDiv({ style: 'display: flex; gap: 2px;' });
 
         const percentInput = inputRow.createEl('input', {
@@ -2196,7 +2027,6 @@ class HexWorldEditorView extends ItemView {
             const val = parseInt(e.target.value);
             this.borderSettings.percent = Math.max(0, Math.min(100, isNaN(val) ? 100 : val));
             e.target.value = this.borderSettings.percent;
-            // Aktive Region aktualisieren
             const region = this.data.borders && this.data.borders.find(r => r.id === this.borderSettings.activeRegionId);
             if (region) region.percent = this.borderSettings.percent;
             this.render();
@@ -2213,13 +2043,11 @@ class HexWorldEditorView extends ItemView {
             if (e.target.value.length > 3) e.target.value = e.target.value.slice(0, 3);
             this.borderSettings.repeats = Math.min(999, Math.max(1, parseInt(e.target.value) || 1));
             e.target.value = this.borderSettings.repeats;
-            // Aktive Region aktualisieren
             const region = this.data.borders && this.data.borders.find(r => r.id === this.borderSettings.activeRegionId);
             if (region) region.repeats = this.borderSettings.repeats;
             this.render();
         };
 
-        // Breiten der Inputs an ihre jeweiligen Buttons anpassen
         setTimeout(() => {
             percentInput.style.width = `${btn.offsetWidth}px`;
             repeatsInput.style.width = `${pickerBtn.offsetWidth}px`;
@@ -2227,8 +2055,6 @@ class HexWorldEditorView extends ItemView {
     }
 
     makeInputInteractive(input) {
-        // Verhindere, dass Events aus Input-Feldern zum containerEl bubblen
-        // und dort von Canvas-Handlern oder Obsidian abgefangen werden
         input.addEventListener('mousedown', (e) => e.stopPropagation());
         input.addEventListener('keydown', (e) => e.stopPropagation());
         input.addEventListener('pointerdown', (e) => e.stopPropagation());
@@ -2246,21 +2072,17 @@ class HexWorldEditorView extends ItemView {
     }
 
     updateToolbarState(toolbar) {
-        // Edit-Modus synchronisieren
         if (this.editModeBtn) this.editModeBtn.classList.toggle('active', this.editMode);
         if (this.editContent) this.editContent.style.display = this.editMode ? 'contents' : 'none';
 
-        // Grenzen-Sichtbarkeit synchronisieren
         if (this.borderVisBtn) {
             setIcon(this.borderVisBtn, this.borderSettings.visible ? 'eye' : 'eye-off');
             this.borderVisBtn.style.opacity = this.borderSettings.visible ? '1' : '0.4';
         }
 
-        // Pfad-Inputs synchronisieren (Breiten)
         if (this.riverWidthInput) this.riverWidthInput.value = this.riverSettings.width.toString();
         if (this.roadWidthInput) this.roadWidthInput.value = this.roadSettings.width.toString();
 
-        // Pfad-Edit-Modus synchronisieren (shared Picker/OK)
         const activePathSettings = this.currentToolGroup === 'river' ? this.riverSettings : this.roadSettings;
         if (this.pathPickerBtn) {
             if (activePathSettings.editMode) {
@@ -2276,7 +2098,6 @@ class HexWorldEditorView extends ItemView {
             }
         }
 
-        // Grenzen-Picker/OK synchronisieren (analog zu Pfad-Werkzeug)
         if (this.borderPickerBtn) {
             if (this.borderSettings.activeRegionId !== null) {
                 setIcon(this.borderPickerBtn, 'check');
@@ -2291,17 +2112,13 @@ class HexWorldEditorView extends ItemView {
             }
         }
 
-        // Grenzen-Inputs synchronisieren
         if (this.borderPercentInput) this.borderPercentInput.value = this.borderSettings.percent.toString();
         if (this.borderRepeatsInput) this.borderRepeatsInput.value = this.borderSettings.repeats.toString();
 
-        // Zeichenmodus-Buttons
         toolbar.querySelectorAll('[data-draw-mode]').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.drawMode === this.drawMode);
         });
 
-        // Werkzeug-Gruppen - aktualisiere auch Hintergrundfarben
-        // Nur Werkzeug-Buttons mit gültigen toolConfigs aktualisieren
         ['grass', 'tree', 'mountain', 'building'].forEach(groupId => {
             const config = this.toolConfigs[groupId];
             const wrapper = toolbar.querySelector(`[data-tool-group-wrapper="${groupId}"]`);
@@ -2312,22 +2129,18 @@ class HexWorldEditorView extends ItemView {
             const isActive = this.currentToolGroup === groupId;
             btn.classList.toggle('active', isActive);
 
-            // Aktualisiere Tooltip mit aktueller Variante
             const currentVariant = config.variants.find(v => v.id === config.currentVariant);
             if (currentVariant) {
                 btn.setAttribute('title', t('tooltip.toolGroupVariant', { label: currentVariant.label }));
             }
 
-            // Aktualisiere Button-Hintergrund (weiß wenn Hintergrund nicht aktiv)
             btn.style.background = config.backgroundEnabled ? config.backgroundColor : '#ffffff';
             btn.style.color = config.symbolColor;
 
-            // Dicker Rahmen wenn aktiv (blaue Farbe)
             btn.style.border = isActive ? '3px solid #4A9EFF' : '';
             btn.style.boxShadow = isActive ? ACTIVE_BOX_SHADOW : '';
         });
 
-        // Andere Tool-Group-Buttons (pattern, river, road, text, hexcolor) - Active-Status
         toolbar.querySelectorAll('[data-tool-group]').forEach(btn => {
             const groupId = btn.dataset.toolGroup;
             if (!['grass', 'tree', 'mountain', 'building'].includes(groupId)) {
@@ -2342,7 +2155,6 @@ class HexWorldEditorView extends ItemView {
             }
         });
 
-        // Farbpalette - Farben aktualisieren
         toolbar.querySelectorAll('.hex-color-slot').forEach(slot => {
             const pk = slot.dataset.paletteKey;
             const pi = parseInt(slot.dataset.paletteIndex);
@@ -2393,7 +2205,6 @@ class HexWorldEditorView extends ItemView {
             this.startHex = this.pixelToHex(world.x, world.y);
             this.lastHex = this.startHex;
 
-            // Muster aufnehmen
             if (this.patternPickMode) {
                 const key = `${this.startHex.q}_${this.startHex.r}`;
                 const hexData = this.data.hexes[key];
@@ -2401,7 +2212,6 @@ class HexWorldEditorView extends ItemView {
                     this.patternData = JSON.parse(JSON.stringify(hexData));
                     this.patternSourceHex = { q: this.startHex.q, r: this.startHex.r };
                     new Notice(t('notice.patternPicked'));
-                    // Aktiviere Musterwerkzeug automatisch, damit Rahmen sofort erscheint
                     this.currentToolGroup = 'pattern';
                     this.drawMode = 'pen';
                 } else {
@@ -2422,7 +2232,6 @@ class HexWorldEditorView extends ItemView {
                 return;
             }
 
-            // Grenzfarbe aufnehmen
             if (this.borderPickMode) {
                 const clickedHex = this.startHex;
                 let foundRegion = null;
@@ -2466,7 +2275,6 @@ class HexWorldEditorView extends ItemView {
                 return;
             }
 
-            // Fluss/Weg aufnehmen (Picker - automatische Erkennung)
             if (this.pathPickMode) {
                 this.pickPathAtHex(this.startHex);
                 return;
@@ -2481,12 +2289,10 @@ class HexWorldEditorView extends ItemView {
             }
         });
 
-        // Doppelklick: Areal-Löschung im Radierer-Modus
         this.canvas.addEventListener('dblclick', (e) => {
             if (!this.editMode || this.drawMode !== 'eraser') return;
             const world = this.getWorldCoords(e);
             const hex = this.pixelToHex(world.x, world.y);
-            // History-Eintrag vom 2. Klick entfernen, damit ein Undo alles rückgängig macht
             if (this.history.length > 0) this.history.pop();
             this.handleEraserFlood(hex);
             this.render();
@@ -2504,7 +2310,6 @@ class HexWorldEditorView extends ItemView {
                 this.draggedText.y = world.y;
                 this.render();
             } else if (this.isMouseDown) {
-                // Waypoint-Drag im Weg-Edit-Modus
                 if (this.roadDragIndex !== null && this.roadSettings.editMode) {
                     const road = this.data.roads && this.data.roads.find(r => r.id === this.roadSettings.activeRoadId);
                     if (road) {
@@ -2520,7 +2325,6 @@ class HexWorldEditorView extends ItemView {
                             this.render();
                         }
                     }
-                // Waypoint-Drag im Fluss-Edit-Modus
                 } else if (this.riverDragIndex !== null && this.riverSettings.editMode) {
                     const river = this.data.rivers && this.data.rivers.find(r => r.id === this.riverSettings.activeRiverId);
                     if (river) {
@@ -2555,7 +2359,6 @@ class HexWorldEditorView extends ItemView {
         const stop = (e) => {
             const world = this.getWorldCoords(e);
             if (this.isMouseDown && this.mouseDownPos) {
-                // Waypoint-Drag beenden oder Klick (Weg)
                 if (this.roadDragIndex !== null && this.roadSettings.editMode) {
                     const dist = Math.sqrt((world.x - this.mouseDownPos.x)**2 + (world.y - this.mouseDownPos.y)**2);
                     if (dist < 5) {
@@ -2575,7 +2378,6 @@ class HexWorldEditorView extends ItemView {
                     return;
                 }
 
-                // Waypoint-Drag beenden oder Klick (Fluss)
                 if (this.riverDragIndex !== null && this.riverSettings.editMode) {
                     const dist = Math.sqrt((world.x - this.mouseDownPos.x)**2 + (world.y - this.mouseDownPos.y)**2);
                     if (dist < 5) {
@@ -2630,30 +2432,24 @@ class HexWorldEditorView extends ItemView {
         this.canvas.addEventListener('wheel', (e) => {
             e.preventDefault();
 
-            // Zoom-Faktor berechnen
             const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
             const oldZoom = this.data.zoom;
             const newZoom = oldZoom * zoomFactor;
 
-            // Mausposition relativ zum Canvas
             const rect = this.canvas.getBoundingClientRect();
             const mouseX = e.clientX - rect.left;
             const mouseY = e.clientY - rect.top;
 
-            // Welt-Koordinaten unter dem Mauszeiger (vor dem Zoom)
             const worldX = (mouseX - this.data.offX) / oldZoom;
             const worldY = (mouseY - this.data.offY) / oldZoom;
 
-            // Neue Offset-Position berechnen, sodass der Punkt unter dem Mauszeiger stabil bleibt
             this.data.offX = mouseX - worldX * newZoom;
             this.data.offY = mouseY - worldY * newZoom;
             this.data.zoom = newZoom;
 
             this.render();
-            // Zoom/Pan nicht speichern - wird beim Öffnen automatisch neu berechnet
         }, { passive: false });
 
-        // Touch-Event-Handler für mobile Geräte
         this.touchState = {
             touches: [],
             initialDistance: 0,
@@ -2672,7 +2468,6 @@ class HexWorldEditorView extends ItemView {
             this.canvas.focus();
             this.touchState.touches = Array.from(e.touches);
 
-            // Wenn bereits ein Timeout läuft, abbrechen (zweiter Finger erkannt)
             if (this.touchState.touchStartTimeout) {
                 clearTimeout(this.touchState.touchStartTimeout);
                 this.touchState.touchStartTimeout = null;
@@ -2680,16 +2475,13 @@ class HexWorldEditorView extends ItemView {
             }
 
             if (e.touches.length === 2) {
-                // Zwei-Finger-Geste: Pan/Zoom aktivieren
                 e.preventDefault();
                 this.touchState.isTwoFingerGesture = true;
                 this.touchState.hasMovedSinceStart = false;
 
-                // Falls durch Ein-Finger bereits etwas gestartet wurde, rückgängig machen
                 if (this.isMouseDown && !this.touchState.hasMovedSinceStart) {
                     this.isMouseDown = false;
                     this.draggedText = null;
-                    // History nur rückgängig machen, wenn noch nichts gezeichnet wurde
                     if (this.history.length > 0 && !this.touchState.hasMovedSinceStart) {
                         this.history.pop(); // Entferne den History-Eintrag vom Touch-Start
                     }
@@ -2698,24 +2490,20 @@ class HexWorldEditorView extends ItemView {
                 const touch1 = e.touches[0];
                 const touch2 = e.touches[1];
 
-                // Initiale Distanz für Zoom berechnen
                 const dx = touch2.clientX - touch1.clientX;
                 const dy = touch2.clientY - touch1.clientY;
                 this.touchState.initialDistance = Math.sqrt(dx * dx + dy * dy);
                 this.touchState.initialZoom = this.data.zoom;
 
-                // Initiale Position für Pan speichern
                 this.touchState.initialPanX = this.data.offX;
                 this.touchState.initialPanY = this.data.offY;
                 this.touchState.centerX = (touch1.clientX + touch2.clientX) / 2;
                 this.touchState.centerY = (touch1.clientY + touch2.clientY) / 2;
 
-                // Speichere die Canvas-Position relativ zum Mittelpunkt
                 const rect = this.canvas.getBoundingClientRect();
                 this.touchState.pivotX = this.touchState.centerX - rect.left;
                 this.touchState.pivotY = this.touchState.centerY - rect.top;
             } else if (e.touches.length === 1) {
-                // Ein-Finger-Geste: Warte kurz, ob ein zweiter Finger kommt
                 this.touchState.isTwoFingerGesture = false;
                 this.touchState.hasMovedSinceStart = false;
 
@@ -2728,16 +2516,13 @@ class HexWorldEditorView extends ItemView {
                     cancelable: true
                 });
 
-                // Speichere die Touch-Informationen
                 this.touchState.pendingTouchStart = {
                     touch: touch,
                     mouseEvent: mouseEvent,
                     timestamp: Date.now()
                 };
 
-                // Warte 150ms, ob ein zweiter Finger kommt
                 this.touchState.touchStartTimeout = setTimeout(() => {
-                    // Nur ausführen, wenn immer noch ein Finger und kein zweiter hinzugekommen ist
                     if (this.touchState.pendingTouchStart && !this.touchState.isTwoFingerGesture) {
                         const world = this.getWorldCoords(this.touchState.pendingTouchStart.mouseEvent);
                         this.pendingHistory = true;
@@ -2746,7 +2531,6 @@ class HexWorldEditorView extends ItemView {
                         this.startHex = this.pixelToHex(world.x, world.y);
                         this.lastHex = this.startHex;
 
-                        // Muster aufnehmen
                         if (this.patternPickMode) {
                             const key = `${this.startHex.q}_${this.startHex.r}`;
                             const hexData = this.data.hexes[key];
@@ -2775,7 +2559,6 @@ class HexWorldEditorView extends ItemView {
                             return;
                         }
 
-                        // Grenzfarbe aufnehmen (Touch delayed)
                         if (this.borderPickMode) {
                             const clickedHex = this.startHex;
                             let foundRegion = null;
@@ -2811,7 +2594,6 @@ class HexWorldEditorView extends ItemView {
                             return;
                         }
 
-                        // Fluss/Weg aufnehmen (Touch delayed - automatische Erkennung)
                         if (this.pathPickMode) {
                             this.pickPathAtHex(this.startHex);
                             this.touchState.pendingTouchStart = null;
@@ -2834,45 +2616,35 @@ class HexWorldEditorView extends ItemView {
 
         this.canvas.addEventListener('touchmove', (e) => {
             if (e.touches.length === 2 && this.touchState.isTwoFingerGesture) {
-                // Zwei-Finger-Geste: Pan und Zoom
                 e.preventDefault();
 
                 const touch1 = e.touches[0];
                 const touch2 = e.touches[1];
 
-                // Zoom berechnen
                 const dx = touch2.clientX - touch1.clientX;
                 const dy = touch2.clientY - touch1.clientY;
                 const currentDistance = Math.sqrt(dx * dx + dy * dy);
                 const zoomFactor = currentDistance / this.touchState.initialDistance;
                 const newZoom = this.touchState.initialZoom * zoomFactor;
 
-                // Berechne Zoom-Mittelpunkt (Pivot-Point)
-                // Der Punkt unter den Fingern soll an derselben Stelle bleiben
                 const pivotWorldX = (this.touchState.pivotX - this.touchState.initialPanX) / this.touchState.initialZoom;
                 const pivotWorldY = (this.touchState.pivotY - this.touchState.initialPanY) / this.touchState.initialZoom;
 
-                // Neue Offset-Position berechnen, sodass der Pivot-Punkt stabil bleibt
                 const newOffX = this.touchState.pivotX - pivotWorldX * newZoom;
                 const newOffY = this.touchState.pivotY - pivotWorldY * newZoom;
 
-                // Pan berechnen (Mittelpunkt der beiden Finger)
                 const currentCenterX = (touch1.clientX + touch2.clientX) / 2;
                 const currentCenterY = (touch1.clientY + touch2.clientY) / 2;
                 const deltaX = currentCenterX - this.touchState.centerX;
                 const deltaY = currentCenterY - this.touchState.centerY;
 
-                // Kombiniere Zoom-Offset mit Pan-Bewegung
                 this.data.zoom = newZoom;
                 this.data.offX = newOffX + deltaX;
                 this.data.offY = newOffY + deltaY;
 
                 this.render();
             } else if (e.touches.length === 1 && !this.touchState.isTwoFingerGesture) {
-                // Ein-Finger-Geste: kontinuierliches Zeichnen/Löschen
-                // Nur wenn das Timeout abgelaufen ist (isMouseDown === true)
                 if (!this.isMouseDown && this.touchState.pendingTouchStart) {
-                    // Noch im Wartemodus - nicht zeichnen
                     return;
                 }
 
@@ -2894,7 +2666,6 @@ class HexWorldEditorView extends ItemView {
                     this.draggedText.y = world.y;
                     this.render();
                 } else if (this.isMouseDown) {
-                    // Waypoint-Drag im Weg-Edit-Modus (Touch)
                     if (this.roadDragIndex !== null && this.roadSettings.editMode) {
                         const road = this.data.roads && this.data.roads.find(r => r.id === this.roadSettings.activeRoadId);
                         if (road) {
@@ -2910,7 +2681,6 @@ class HexWorldEditorView extends ItemView {
                                 this.render();
                             }
                         }
-                    // Waypoint-Drag im Fluss-Edit-Modus (Touch)
                     } else if (this.riverDragIndex !== null && this.riverSettings.editMode) {
                         const river = this.data.rivers && this.data.rivers.find(r => r.id === this.riverSettings.activeRiverId);
                         if (river) {
@@ -2935,24 +2705,18 @@ class HexWorldEditorView extends ItemView {
         }, { passive: false });
 
         this.canvas.addEventListener('touchend', (e) => {
-            // Timeout abbrechen, falls noch vorhanden
             if (this.touchState.touchStartTimeout) {
                 clearTimeout(this.touchState.touchStartTimeout);
                 this.touchState.touchStartTimeout = null;
             }
 
             if (this.touchState.isTwoFingerGesture && e.touches.length < 2) {
-                // Zwei-Finger-Geste beendet
                 e.preventDefault();
                 this.touchState.isTwoFingerGesture = false;
-                // Zoom/Pan nicht speichern - wird beim Öffnen automatisch neu berechnet
             } else if (e.touches.length === 0 && !this.touchState.isTwoFingerGesture) {
-                // Ein-Finger-Geste beendet
                 e.preventDefault();
 
-                // Falls das Timeout noch nicht abgelaufen war und kein Zeichnen stattfand
                 if (this.touchState.pendingTouchStart && !this.isMouseDown) {
-                    // Schneller Tap ohne Bewegung - führe die Aktion sofort aus
                     const world = this.getWorldCoords(this.touchState.pendingTouchStart.mouseEvent);
                     this.pendingHistory = true;
                     this.isMouseDown = true;
@@ -2960,7 +2724,6 @@ class HexWorldEditorView extends ItemView {
                     this.startHex = this.pixelToHex(world.x, world.y);
                     this.lastHex = this.startHex;
 
-                    // Muster aufnehmen
                     if (this.patternPickMode) {
                         const key = `${this.startHex.q}_${this.startHex.r}`;
                         const hexData = this.data.hexes[key];
@@ -2990,7 +2753,6 @@ class HexWorldEditorView extends ItemView {
                         return;
                     }
 
-                    // Grenzfarbe aufnehmen (Touch)
                     if (this.borderPickMode) {
                         const clickedHex = this.startHex;
                         let foundRegion = null;
@@ -3027,7 +2789,6 @@ class HexWorldEditorView extends ItemView {
                         return;
                     }
 
-                    // Fluss/Weg aufnehmen (Touch - automatische Erkennung)
                     if (this.pathPickMode) {
                         this.pickPathAtHex(this.startHex);
                         this.touchState.pendingTouchStart = null;
@@ -3055,7 +2816,6 @@ class HexWorldEditorView extends ItemView {
                 const world = this.getWorldCoords(mouseEvent);
 
                 if (this.isMouseDown && this.mouseDownPos) {
-                    // Waypoint-Drag beenden oder Klick (Touch - Weg)
                     if (this.roadDragIndex !== null && this.roadSettings.editMode) {
                         const dist = Math.sqrt((world.x - this.mouseDownPos.x)**2 + (world.y - this.mouseDownPos.y)**2);
                         if (dist < 5) {
@@ -3075,7 +2835,6 @@ class HexWorldEditorView extends ItemView {
                         return;
                     }
 
-                    // Waypoint-Drag beenden oder Klick (Touch - Fluss)
                     if (this.riverDragIndex !== null && this.riverSettings.editMode) {
                         const dist = Math.sqrt((world.x - this.mouseDownPos.x)**2 + (world.y - this.mouseDownPos.y)**2);
                         if (dist < 5) {
@@ -3116,7 +2875,6 @@ class HexWorldEditorView extends ItemView {
                 }
                 if (this.isMouseDown || this.draggedText) this.requestSave();
 
-                // Touch Doppel-Tap: Areal-Löschung im Radierer-Modus
                 if (this.editMode && this.drawMode === 'eraser' && e.changedTouches.length > 0) {
                     const tapTouch = e.changedTouches[0];
                     const tapEvent = new MouseEvent('mouseup', { clientX: tapTouch.clientX, clientY: tapTouch.clientY, bubbles: true, cancelable: true });
@@ -3129,7 +2887,6 @@ class HexWorldEditorView extends ItemView {
                         this.touchState.lastTapHex &&
                         this.touchState.lastTapHex.q === tapHex.q &&
                         this.touchState.lastTapHex.r === tapHex.r) {
-                        // History-Eintrag vom 2. Tap entfernen, damit ein Undo alles rückgängig macht
                         if (this.history.length > 0) this.history.pop();
                         this.handleEraserFlood(tapHex);
                         this.render();
@@ -3156,10 +2913,8 @@ class HexWorldEditorView extends ItemView {
         }, { passive: false });
 
         this.canvas.addEventListener('touchcancel', (e) => {
-            // Touch wurde unterbrochen (z.B. durch System-Geste)
             e.preventDefault();
 
-            // Timeout abbrechen
             if (this.touchState.touchStartTimeout) {
                 clearTimeout(this.touchState.touchStartTimeout);
                 this.touchState.touchStartTimeout = null;
@@ -3209,7 +2964,6 @@ class HexWorldEditorView extends ItemView {
         const world = this.getWorldCoords(e);
         const hex = this.pixelToHex(world.x, world.y);
 
-        // Text-Modus: Funktioniert im 'none'-Modus (kein Zeichenmodus aktiv)
         if (this.currentToolGroup === 'text' && this.drawMode === 'none' && isInitial) {
             const existingText = this.getTextAt(world.x, world.y);
             if (!existingText) {
@@ -3225,7 +2979,6 @@ class HexWorldEditorView extends ItemView {
             return;
         }
 
-        // Edit-Modus aus oder 'none'-Modus ohne Text: Navigation only
         if (!this.editMode || this.drawMode === 'none') {
             return;
         }
@@ -3250,7 +3003,6 @@ class HexWorldEditorView extends ItemView {
     addBorderHex(hex) {
         if (!this.data.borders) this.data.borders = [];
 
-        // Aktive Region finden oder neue erstellen
         let region = this.data.borders.find(r => r.id === this.borderSettings.activeRegionId);
         if (!region) {
             const maxId = this.data.borders.reduce((max, r) => Math.max(max, r.id || 0), 0);
@@ -3259,13 +3011,11 @@ class HexWorldEditorView extends ItemView {
             this.borderSettings.activeRegionId = region.id;
         }
 
-        // Hex aus allen anderen Regionen entfernen (überschreiben)
         this.data.borders.forEach(r => {
             if (r.id !== region.id) {
                 r.hexes = r.hexes.filter(b => !(b.q === hex.q && b.r === hex.r));
             }
         });
-        // Leere Regionen aufräumen
         this.data.borders = this.data.borders.filter(r => r.hexes.length > 0 || r.id === region.id);
 
         const exists = region.hexes.some(b => b.q === hex.q && b.r === hex.r);
@@ -3273,7 +3023,6 @@ class HexWorldEditorView extends ItemView {
             region.hexes.push({ q: hex.q, r: hex.r });
         }
 
-        // Toolbar aktualisieren, damit Picker → OK wechselt
         const toolbar = this.containerEl.querySelector('.hex-toolbar');
         if (toolbar) this.updateToolbarState(toolbar);
     }
@@ -3282,9 +3031,7 @@ class HexWorldEditorView extends ItemView {
         if (!this.data.roads) return null;
         for (const road of this.data.roads) {
             if (!road.waypoints || road.waypoints.length === 0) continue;
-            // Direkt auf Waypoint?
             if (road.waypoints.some(w => w.q === hex.q && w.r === hex.r)) return road;
-            // Auf Segment zwischen Waypoints?
             for (let i = 0; i < road.waypoints.length - 1; i++) {
                 const segs = this.calculateHexPath(road.waypoints[i], road.waypoints[i + 1], road.width);
                 for (const seg of segs) {
@@ -3299,7 +3046,6 @@ class HexWorldEditorView extends ItemView {
     addRoadWaypoint(hex) {
         if (!this.data.roads) this.data.roads = [];
 
-        // Aktiven Weg finden oder neuen erstellen
         let road = this.data.roads.find(r => r.id === this.roadSettings.activeRoadId);
         if (!road) {
             const maxId = this.data.roads.reduce((max, r) => Math.max(max, r.id || 0), 0);
@@ -3308,7 +3054,6 @@ class HexWorldEditorView extends ItemView {
             this.roadSettings.activeRoadId = road.id;
             this.roadSettings.editMode = true;
             this.roadSettings.insertAfter = null;
-            // Picker-Button auf OK umschalten
             if (this.pathPickerBtn) {
                 setIcon(this.pathPickerBtn, 'check');
                 this.pathPickerBtn.style.background = 'var(--interactive-accent)';
@@ -3317,7 +3062,6 @@ class HexWorldEditorView extends ItemView {
             }
         }
 
-        // Im Edit-Modus: Klick auf bestehenden Waypoint → Drag starten (Klick → Modal bei mouseup)
         if (this.roadSettings.editMode) {
             const existingIdx = road.waypoints.findIndex(w => w.q === hex.q && w.r === hex.r);
             if (existingIdx !== -1) {
@@ -3327,7 +3071,6 @@ class HexWorldEditorView extends ItemView {
                 return;
             }
 
-            // Klick auf Segment zwischen zwei Waypoints → neuen Waypoint einfügen
             for (let i = 0; i < road.waypoints.length - 1; i++) {
                 const to = road.waypoints[i + 1];
                 if (to.break) continue;
@@ -3345,16 +3088,13 @@ class HexWorldEditorView extends ItemView {
             }
         }
 
-        // Neuen Waypoint einfügen
         const insertIdx = this.roadSettings.insertAfter;
         if (insertIdx !== null && insertIdx < road.waypoints.length - 1) {
-            // Aktiver Punkt ist in der Mitte → Abzweigung erstellen
             const bp = road.waypoints[insertIdx];
             road.waypoints.push({ q: bp.q, r: bp.r, break: true });
             road.waypoints.push({ q: hex.q, r: hex.r });
             this.roadSettings.insertAfter = road.waypoints.length - 1;
         } else {
-            // Aktiver Punkt ist der letzte (oder keiner) → normal anhängen
             road.waypoints.push({ q: hex.q, r: hex.r });
             this.roadSettings.insertAfter = road.waypoints.length - 1;
         }
@@ -3378,7 +3118,6 @@ class HexWorldEditorView extends ItemView {
 
     erasePathElement(paths, hex) {
         if (!paths) return;
-        // Klick auf Waypoint → Waypoint entfernen
         const onWaypoint = paths.some(p =>
             p.waypoints && p.waypoints.some(w => w.q === hex.q && w.r === hex.r)
         );
@@ -3387,7 +3126,6 @@ class HexWorldEditorView extends ItemView {
                 p.waypoints = p.waypoints.filter(w => !(w.q === hex.q && w.r === hex.r));
             });
         } else {
-            // Klick auf Segment zwischen zwei Waypoints → Verbindung trennen (break setzen)
             for (const path of paths) {
                 if (!path.waypoints || path.waypoints.length < 2) continue;
                 for (let i = 0; i < path.waypoints.length - 1; i++) {
@@ -3406,7 +3144,6 @@ class HexWorldEditorView extends ItemView {
                 }
             }
         }
-        // Wegpunkte ohne Verbindung automatisch entfernen
         paths.forEach(path => {
             let changed = true;
             while (changed) {
@@ -3424,7 +3161,6 @@ class HexWorldEditorView extends ItemView {
                 delete path.waypoints[0].break;
             }
         });
-        // Pfade mit weniger als 2 Waypoints entfernen
         for (let i = paths.length - 1; i >= 0; i--) {
             if (paths[i].waypoints.length < 2) paths.splice(i, 1);
         }
@@ -3475,16 +3211,13 @@ class HexWorldEditorView extends ItemView {
             }
         }
 
-        // Neuen Waypoint einfügen
         const insertIdx = this.riverSettings.insertAfter;
         if (insertIdx !== null && insertIdx < river.waypoints.length - 1) {
-            // Aktiver Punkt ist in der Mitte → Abzweigung erstellen
             const bp = river.waypoints[insertIdx];
             river.waypoints.push({ q: bp.q, r: bp.r, break: true });
             river.waypoints.push({ q: hex.q, r: hex.r });
             this.riverSettings.insertAfter = river.waypoints.length - 1;
         } else {
-            // Aktiver Punkt ist der letzte (oder keiner) → normal anhängen
             river.waypoints.push({ q: hex.q, r: hex.r });
             this.riverSettings.insertAfter = river.waypoints.length - 1;
         }
@@ -3499,45 +3232,34 @@ class HexWorldEditorView extends ItemView {
             this.data.hexes[key] = h;
         }
 
-        // Muster anwenden
         if (this.currentToolGroup === 'pattern' && this.patternData) {
-            // Farbe: backgroundColor hat Vorrang (für Kompatibilität mit alten Mustern)
             h.color = this.patternData.backgroundColor || this.patternData.color;
             h.symbol = this.patternData.symbol;
             h.symbolColor = this.patternData.symbolColor;
-            // backgroundColor nicht mehr setzen - alle Farben einheitlich in color
             return;
         }
 
-        // Waben-Farbwerkzeug (Masterfarbe) - NUR Farbe ändern, Symbole bleiben erhalten
         if (this.currentToolGroup === 'hexcolor') {
             h.color = this.masterColor;
             return;
         }
 
-        // Werkzeug-Gruppen
         if (this.currentToolGroup && this.toolConfigs[this.currentToolGroup]) {
             const config = this.toolConfigs[this.currentToolGroup];
             h.symbol = config.currentVariant;
             h.symbolColor = this.masterColor;
             config.symbolColor = this.masterColor;
 
-            // Hintergrundfarbe nur setzen, wenn der Toggle aktiv ist
             if (config.backgroundEnabled) {
                 h.color = config.backgroundColor;
             }
-            // Wenn Toggle nicht aktiv ist, Hintergrundfarbe nicht ändern
         }
-        // Farbpalette - NUR Farbe ändern, Symbole bleiben erhalten
         else if (this.currentToolGroup === null) {
             h.color = this.colorPalette[this.activeColorSlot];
-            // Symbole NICHT löschen
         }
     }
 
     handleEraser(hex, x, y) {
-        // Speichere Hex-Daten VOR dem Löschen für Doppelklick-Areal-Löschung
-        // Nicht überschreiben wenn bereits aktuelle Daten für dieses Hex vorliegen (2. Klick des Doppelklicks)
         const hasRecentData = this.lastErasedHex &&
             this.lastErasedHex.q === hex.q && this.lastErasedHex.r === hex.r &&
             Date.now() - this.lastErasedHex.timestamp < 1000;
@@ -3548,11 +3270,9 @@ class HexWorldEditorView extends ItemView {
             const tg = this.currentToolGroup;
 
             if (tg === 'border') {
-                // Finde die Grenz-Region, zu der dieses Hex gehört
                 const region = this.data.borders.find(r => r.hexes.some(b => b.q === hex.q && b.r === hex.r));
                 this.lastErasedHex = region ? { q: hex.q, r: hex.r, type: 'border', regionId: region.id, timestamp: Date.now() } : null;
             } else if (tg === 'pattern' && preData) {
-                // Muster-Daten kopieren (Farbe + Symbol + Symbolfarbe)
                 this.lastErasedHex = { q: hex.q, r: hex.r, type: 'pattern', pattern: { color: preData.color, symbol: preData.symbol, symbolColor: preData.symbolColor }, timestamp: Date.now() };
             } else if (tg && this.toolConfigs[tg] && preData && preData.symbol) {
                 this.lastErasedHex = { q: hex.q, r: hex.r, type: 'symbol', symbol: preData.symbol, timestamp: Date.now() };
@@ -3588,11 +3308,9 @@ class HexWorldEditorView extends ItemView {
             const hit = this.getTextAt(x, y);
             if (hit) this.data.texts = this.data.texts.filter(t => t !== hit);
         } else if (this.currentToolGroup === 'border') {
-            // Hex aus allen Regionen entfernen
             this.data.borders.forEach(r => {
                 r.hexes = r.hexes.filter(b => !(b.q === hex.q && b.r === hex.r));
             });
-            // Leere Regionen aufräumen
             this.data.borders = this.data.borders.filter(r => r.hexes.length > 0);
         } else if (this.currentToolGroup === 'river') {
             this.erasePathElement(this.data.rivers, hex);
@@ -3606,7 +3324,6 @@ class HexWorldEditorView extends ItemView {
                 if (!h.symbol) delete this.data.hexes[key];
             }
         } else if (this.currentToolGroup === 'pattern') {
-            // Radierer im Muster-Modus: Lösche die gesamte Wabe (alle Arten von Mustern)
             const key = `${hex.q}_${hex.r}`;
             delete this.data.hexes[key];
         } else {
@@ -3615,32 +3332,26 @@ class HexWorldEditorView extends ItemView {
 
             if (h) {
                 if (this.currentToolGroup && this.toolConfigs[this.currentToolGroup]) {
-                    // Lösche ALLE Symbole (nicht nur das aktive)
                     const config = this.toolConfigs[this.currentToolGroup];
                     if (h.symbol) {
                         delete h.symbol;
                         delete h.symbolColor;
-                        // Farbe nur löschen, wenn backgroundEnabled aktiv ist
                         if (config.backgroundEnabled) {
                             delete h.color;
                         }
-                        // Wenn die Hex jetzt leer ist, lösche sie komplett
                         if (!h.symbol && !h.color) {
                             delete this.data.hexes[key];
                         }
                     }
                 } else if (this.currentToolGroup === null) {
-                    // Lösche alle Hintergrundfarben (color und backgroundColor)
                     if (h.color || h.backgroundColor) {
                         delete h.color;
                         delete h.backgroundColor;
-                        // Wenn keine Symbole mehr vorhanden, lösche die Hex komplett
                         if (!h.symbol) {
                             delete this.data.hexes[key];
                         }
                     }
                 }
-                // Kein else-Block mehr - leere Hexes werden NICHT gelöscht, wenn ein Werkzeug aktiv ist
             }
         }
     }
@@ -3648,9 +3359,7 @@ class HexWorldEditorView extends ItemView {
     handleEraserFlood(hex) {
         const last = this.lastErasedHex;
         if (!last) return;
-        // Zeitfenster: max 1 Sekunde seit letztem Einzel-Radieren
         if (Date.now() - last.timestamp > 1000) return;
-        // Gleiche Koordinate wie der letzte Einzel-Radier-Klick
         if (last.q !== hex.q || last.r !== hex.r) return;
 
         if (last.type === 'symbol') {
@@ -3681,10 +3390,8 @@ class HexWorldEditorView extends ItemView {
             const hexData = this.data.hexes[key];
             if (!hexData || hexData.symbol !== targetSymbol) continue;
 
-            // Symbol löschen
             delete hexData.symbol;
             delete hexData.symbolColor;
-            // Wabe komplett löschen wenn leer
             if (!hexData.color) {
                 delete this.data.hexes[key];
             }
@@ -3708,9 +3415,7 @@ class HexWorldEditorView extends ItemView {
             const currentColor = hexData ? hexData.color : null;
             if (currentColor !== targetColor) continue;
 
-            // Farbe löschen
             delete hexData.color;
-            // Wabe komplett löschen wenn kein Symbol
             if (!hexData.symbol) {
                 delete this.data.hexes[key];
             }
@@ -3741,10 +3446,8 @@ class HexWorldEditorView extends ItemView {
 
             const hexData = this.data.hexes[key];
             if (!hexData) continue;
-            // Prüfe ob die Wabe dem Muster entspricht (Farbe + Symbol + Symbolfarbe)
             if (!this.hexMatchesPattern(hexData, targetPattern)) continue;
 
-            // Wabe komplett löschen
             delete this.data.hexes[key];
 
             const neighbors = this.getHexNeighbors(hex);
@@ -3756,13 +3459,10 @@ class HexWorldEditorView extends ItemView {
         const region = this.data.borders.find(r => r.id === regionId);
         if (!region) return;
 
-        // Finde alle zusammenhängenden Grenz-Waben ab startHex via BFS
         const regionHexSet = new Set(region.hexes.map(h => `${h.q}_${h.r}`));
         const toRemove = new Set();
         const visited = new Set();
 
-        // Starte BFS ab den Nachbarn (startHex wurde schon vom ersten Klick gelöscht)
-        // Aber prüfe auch startHex selbst, falls es noch existiert
         const queue = [startHex, ...this.getHexNeighbors(startHex)];
 
         while (queue.length > 0) {
@@ -3778,18 +3478,14 @@ class HexWorldEditorView extends ItemView {
             neighbors.forEach(n => queue.push(n));
         }
 
-        // Entferne die zusammenhängenden Waben aus der Region
         region.hexes = region.hexes.filter(h => !toRemove.has(`${h.q}_${h.r}`));
 
-        // Leere Region aufräumen
         if (region.hexes.length === 0) {
             this.data.borders = this.data.borders.filter(r => r.id !== regionId);
         }
     }
 
     hexMatchesPattern(hex, pattern) {
-        // Prüft ob eine Wabe dem Muster entspricht
-        // Farbe: backgroundColor hat Vorrang (für Kompatibilität mit alten Mustern)
         const hexColor = hex.backgroundColor || hex.color;
         const patternColor = pattern.backgroundColor || pattern.color;
         return hexColor === patternColor &&
@@ -3801,34 +3497,28 @@ class HexWorldEditorView extends ItemView {
         const key = `${startHex.q}_${startHex.r}`;
         const startData = this.data.hexes[key];
 
-        // Wenn die Wabe leer ist, prüfe ob sie von einem Rahmen umgeben ist
         if (!startData) {
             if (!this.isEnclosedByFrame(startHex)) {
                 return; // Nicht füllen, wenn kein Rahmen vorhanden
             }
-            // Wenn umrahmt, fülle mit aktueller Farbe/Werkzeug
             this.floodFillEmpty(startHex);
             return;
         }
 
-        // Füllen mit Muster
         if (this.currentToolGroup === 'pattern' && this.patternData) {
             const targetColor = startData.color;
             const targetSymbol = startData.symbol;
             this.floodFillPattern(startHex, targetColor, targetSymbol);
         }
-        // Füllen mit Masterfarbe (Wabenwerkzeug)
         else if (this.currentToolGroup === 'hexcolor') {
             const targetColor = startData.color;
             this.floodFillColor(startHex, targetColor, this.masterColor);
         }
-        // Füllen mit Farbe
         else if (this.currentToolGroup === null) {
             const targetColor = startData.color;
             const newColor = this.colorPalette[this.activeColorSlot];
             this.floodFillColor(startHex, targetColor, newColor);
         }
-        // Füllen mit Symbol
         else if (this.toolConfigs[this.currentToolGroup]) {
             const config = this.toolConfigs[this.currentToolGroup];
             const targetSymbol = startData ? startData.symbol : null;
@@ -3853,17 +3543,14 @@ class HexWorldEditorView extends ItemView {
             const hexData = this.data.hexes[key];
             const currentColor = hexData ? hexData.color : null;
 
-            // Nur weitermachen, wenn die Farbe übereinstimmt
             if (currentColor !== targetColor) continue;
 
-            // Setze neue Farbe
             if (hexData) {
                 hexData.color = newColor;
             } else {
                 this.data.hexes[key] = { q: hex.q, r: hex.r, color: newColor };
             }
 
-            // Füge nur Nachbarn hinzu, nachdem bestätigt wurde, dass diese Hex gefüllt wurde
             const neighbors = this.getHexNeighbors(hex);
             neighbors.forEach(n => queue.push(n));
         }
@@ -3889,15 +3576,12 @@ class HexWorldEditorView extends ItemView {
             const currentSymbol = hexData ? hexData.symbol : null;
             const currentColor = hexData ? hexData.color : null;
 
-            // Symbol hat Vorrang: wenn Startwabe ein Symbol hatte, nur nach Symbol matchen
             if (targetSymbol) {
                 if (currentSymbol !== targetSymbol) continue;
             } else {
-                // Kein Symbol auf Startwabe: nach Farbe matchen (nur Waben ohne Symbol)
                 if (currentSymbol || currentColor !== targetColor) continue;
             }
 
-            // Setze neues Symbol
             if (!hexData) {
                 this.data.hexes[key] = {
                     q: hex.q,
@@ -3916,7 +3600,6 @@ class HexWorldEditorView extends ItemView {
                 }
             }
 
-            // Füge Nachbarn hinzu
             const neighbors = this.getHexNeighbors(hex);
             neighbors.forEach(n => queue.push(n));
         }
@@ -3937,10 +3620,8 @@ class HexWorldEditorView extends ItemView {
             const currentColor = hexData ? hexData.color : null;
             const currentSymbol = hexData ? hexData.symbol : null;
 
-            // Prüfe ob Wabe zur Zielgruppe gehört (Farbe UND Symbol müssen übereinstimmen)
             if (currentColor !== targetColor || currentSymbol !== targetSymbol) continue;
 
-            // Wende Muster an
             if (!hexData) {
                 this.data.hexes[key] = {
                     q: hex.q,
@@ -3955,7 +3636,6 @@ class HexWorldEditorView extends ItemView {
                 hexData.symbolColor = this.patternData.symbolColor;
             }
 
-            // Füge Nachbarn hinzu
             const neighbors = this.getHexNeighbors(hex);
             neighbors.forEach(n => queue.push(n));
         }
@@ -3970,7 +3650,6 @@ class HexWorldEditorView extends ItemView {
     }
 
     isEnclosedByFrame(startHex) {
-        // Prüfe ob der leere Bereich von Hexen umgeben ist (Floodfill mit Grenze)
         const visited = new Set();
         const queue = [startHex];
         const maxDistance = 50; // Maximale Distanz zum Prüfen (verhindert endlose Suche)
@@ -3982,7 +3661,6 @@ class HexWorldEditorView extends ItemView {
 
             if (visited.has(key)) continue;
 
-            // Wenn zu weit entfernt, ist es wahrscheinlich nicht umrahmt
             const distance = Math.abs(hex.q - startHex.q) + Math.abs(hex.r - startHex.r);
             if (distance > maxDistance) {
                 return false; // Zu weit = nicht umrahmt
@@ -3992,23 +3670,19 @@ class HexWorldEditorView extends ItemView {
 
             const hexData = this.data.hexes[key];
 
-            // Wenn eine Hex mit Daten gefunden wird, ist das eine Grenze
             if (hexData) {
                 foundBoundary = true;
                 continue; // Nicht weiter in diese Richtung
             }
 
-            // Füge leere Nachbarn hinzu
             const neighbors = this.getHexNeighbors(hex);
             neighbors.forEach(n => queue.push(n));
         }
 
-        // Wenn wir eine Grenze gefunden haben und nicht zu weit gekommen sind, ist es umrahmt
         return foundBoundary && visited.size < (maxDistance * maxDistance);
     }
 
     floodFillEmpty(startHex) {
-        // Fülle leeren Bereich nur innerhalb des Rahmens
         const visited = new Set();
         const queue = [startHex];
         const maxDistance = 50;
@@ -4026,10 +3700,8 @@ class HexWorldEditorView extends ItemView {
 
             const hexData = this.data.hexes[key];
 
-            // Stoppe an gefüllten Hexen (Rahmen)
             if (hexData) continue;
 
-            // Erstelle neue Hex mit aktuellem Werkzeug/Farbe
             if (this.currentToolGroup === 'pattern' && this.patternData) {
                 this.data.hexes[key] = {
                     q: hex.q,
@@ -4040,21 +3712,18 @@ class HexWorldEditorView extends ItemView {
                     backgroundColor: this.patternData.backgroundColor
                 };
             } else if (this.currentToolGroup === 'hexcolor') {
-                // Masterfarbe
                 this.data.hexes[key] = {
                     q: hex.q,
                     r: hex.r,
                     color: this.masterColor
                 };
             } else if (this.currentToolGroup === null) {
-                // Farbpalette
                 this.data.hexes[key] = {
                     q: hex.q,
                     r: hex.r,
                     color: this.colorPalette[this.activeColorSlot]
                 };
             } else if (this.toolConfigs[this.currentToolGroup]) {
-                // Werkzeug-Gruppe
                 const config = this.toolConfigs[this.currentToolGroup];
                 this.data.hexes[key] = {
                     q: hex.q,
@@ -4067,7 +3736,6 @@ class HexWorldEditorView extends ItemView {
                 }
             }
 
-            // Füge Nachbarn hinzu
             const neighbors = this.getHexNeighbors(hex);
             neighbors.forEach(n => queue.push(n));
         }
@@ -4080,13 +3748,11 @@ class HexWorldEditorView extends ItemView {
         this.ctx.translate(this.data.offX, this.data.offY);
         this.ctx.scale(this.data.zoom, this.data.zoom);
 
-        // Zeichne Waben (Farbe)
         Object.values(this.data.hexes).forEach(h => {
             this.drawHexBase(h);
         });
 
         // Zeichenreihenfolge (unten → oben):
-        // 1. Wabenfarbe (oben), 2. Flüsse, 3. Gras, 4. Wege, 5. Bäume, 6. Berg, 7. Gebäude, 8. Grenzen, 9. Texte
 
         const drawSymbolLayer = (symbols) => {
             Object.values(this.data.hexes).forEach(h => {
@@ -4101,34 +3767,25 @@ class HexWorldEditorView extends ItemView {
             });
         };
 
-        // Flüsse
         this.drawRivers();
 
-        // Extras
         drawSymbolLayer(['question', 'exclamation', 'cross']);
 
-        // Wege
         this.drawRoads();
 
-        // Vegetation
         drawSymbolLayer(['swamp','grass', 'bush', 'tree', 'pine', 'palm']);
 
-        // Berg
         drawSymbolLayer(['hill', 'mountain']);
 
-        // Gebäude
         drawSymbolLayer(['tent', 'house', 'village', 'town', 'castle', 'harbor', 'monastery', 'tower', 'ruin', 'cave', 'oasis']);
 
-        // Grenzen
         this.drawBorders();
 
-        // SVG-Layer leeren (Symbole werden jetzt auf Canvas gezeichnet)
         if (this.svgLayer) {
             while (this.svgLayer.firstChild) this.svgLayer.removeChild(this.svgLayer.firstChild);
         }
 
 
-        // Roter Rahmen um Musterwabe (nur wenn Musterwerkzeug aktiv)
         if (this.currentToolGroup === 'pattern' && this.patternSourceHex) {
             const pos = this.hexToPixel(this.patternSourceHex);
             const s = this.data.gridSize;
@@ -4146,22 +3803,18 @@ class HexWorldEditorView extends ItemView {
 
         this.ctx.restore();
 
-        // Texte auf separatem Layer zeichnen (über SVG-Symbolen)
         this.renderTexts();
     }
 
     renderTexts() {
         if (!this.textCtx || !this.textCanvas) return;
 
-        // Leere den Text-Canvas
         this.textCtx.clearRect(0, 0, this.textCanvas.width, this.textCanvas.height);
 
-        // Wende dieselbe Transformation wie im Haupt-Canvas an
         this.textCtx.save();
         this.textCtx.translate(this.data.offX, this.data.offY);
         this.textCtx.scale(this.data.zoom, this.data.zoom);
 
-        // Zeichne alle Texte
         if (this.data.texts) this.data.texts.forEach(t => {
             const weight = t.bold ? "bold " : "";
             this.textCtx.font = `${weight}${t.size || 16}px Verdana`;
@@ -4188,30 +3841,23 @@ class HexWorldEditorView extends ItemView {
     renderSVGSymbols(symbols) {
         if (!this.svgLayer) return;
 
-        // Leere den SVG-Layer
         while (this.svgLayer.firstChild) {
             this.svgLayer.removeChild(this.svgLayer.firstChild);
         }
 
-        // Erstelle SVG-Elemente für jedes Symbol
         symbols.forEach(({ symbol, pos, color }) => {
             if (this.svgSymbols[symbol]) {
-                // Hole Symbol-Konfiguration aus der Tabelle
                 const config = this.svgSymbolConfig[symbol] || { size: 0.30, align: 'center', marginX: 0, marginY: 0 };
 
-                // Transformiere Koordinaten von Canvas zu Bildschirm
                 const screenX = pos.x * this.data.zoom + this.data.offX;
                 const screenY = pos.y * this.data.zoom + this.data.offY;
 
-                // Berechne Größe mit konfigurierbarem Multiplikator
                 const baseSize = this.data.gridSize * 2.0; // Basis-Größe
                 const size = baseSize * config.size * this.data.zoom;
 
-                // Berechne Hex-Dimensionen für Alignment
                 const hexWidth = this.data.gridSize * Math.sqrt(3) * this.data.zoom;
                 const hexHeight = this.data.gridSize * 2 * this.data.zoom;
 
-                // Berechne Alignment-Offsets basierend auf align-Wert
                 let offsetX = 0;
                 let offsetY = 0;
 
@@ -4231,27 +3877,22 @@ class HexWorldEditorView extends ItemView {
                             offsetX = hexWidth / 4;
                             break;
                         case 'center':
-                            // center ist default (0, 0)
                             break;
                     }
                 });
 
-                // Addiere prozentuale Margins aus Konfiguration
                 offsetX += (config.marginX / 100) * hexWidth;
                 offsetY += (config.marginY / 100) * hexHeight;
 
-                // Hole Path-Daten und ViewBox aus geladenem SVG
                 const svgData = this.svgSymbols[symbol];
                 const viewBoxSize = svgData.viewBoxWidth;
 
-                // Erstelle Gruppe mit Transformation inkl. Alignment
                 const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
                 const scale = size / viewBoxSize;
                 const finalX = screenX - size/2 + offsetX;
                 const finalY = screenY - size/2 + offsetY;
                 g.setAttribute('transform', `translate(${finalX}, ${finalY}) scale(${scale})`);
 
-                // Erstelle Path-Element mit geladenen Path-Daten
                 const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
                 path.setAttribute('d', svgData.pathData);
                 path.setAttribute('fill', color || '#228B22');
@@ -4272,7 +3913,6 @@ class HexWorldEditorView extends ItemView {
         const viewBoxSize = svgData.viewBoxWidth;
         const scale = size / viewBoxSize;
 
-        // Alignment-Offsets
         const hexWidth = this.data.gridSize * Math.sqrt(3);
         const hexHeight = this.data.gridSize * 2;
         let offsetX = 0, offsetY = 0;
@@ -4304,13 +3944,11 @@ class HexWorldEditorView extends ItemView {
         }
         this.ctx.closePath();
 
-        // Wabenfarbe (kann Hintergrund von Symbol oder normale Farbe sein)
         if (h.color) {
             this.ctx.fillStyle = h.color;
             this.ctx.fill();
         }
 
-        // Rahmen
         this.ctx.strokeStyle = 'rgba(128,128,128,0.3)';
         this.ctx.lineWidth = 1;
         this.ctx.stroke();
@@ -4337,7 +3975,6 @@ class HexWorldEditorView extends ItemView {
         this.ctx.lineWidth = lineWidth;
         this.ctx.lineCap = 'round';
 
-        // Jede Region einzeln zeichnen (mit eigenen Strich-Einstellungen)
         this.data.borders.forEach(region => {
             if (!region.hexes || region.hexes.length === 0) return;
 
@@ -4393,7 +4030,6 @@ class HexWorldEditorView extends ItemView {
             });
         });
 
-        // Angeklickte Grenz-Wabe hervorheben
         const ph = this.borderSettings.pickedHex;
         if (ph && this.currentToolGroup === 'border') {
             const activeRegion = this.data.borders.find(r => r.id === this.borderSettings.activeRegionId);
@@ -4431,12 +4067,8 @@ class HexWorldEditorView extends ItemView {
         this.ctx.lineCap = "round";
         const s = size / 2;
 
-        // Alle SVG-Symbole werden über den SVG-Layer als Vektoren gerendert
-        // Diese Funktion wird nur noch für Fallback-Rendering verwendet
 
-        // Vegetation
         if (type === 'grass') {
-            // Drei vertikale Striche
             for (let i = 0; i < 3; i++) {
                 const x = (i - 1) * s * 0.3;
                 this.ctx.moveTo(x, s * 0.3);
@@ -4444,7 +4076,6 @@ class HexWorldEditorView extends ItemView {
             }
             this.ctx.stroke();
         } else if (type === 'swamp') {
-            // Horizontale Wellenlinien
             for (let i = 0; i < 3; i++) {
                 const y = (i - 1) * s * 0.25;
                 this.ctx.moveTo(-s * 0.5, y);
@@ -4454,11 +4085,9 @@ class HexWorldEditorView extends ItemView {
             this.ctx.stroke();
         }
         else if (type === 'bush') {
-            // Kleiner runder Busch
             this.ctx.arc(0, 0, s * 0.3, 0, Math.PI * 2);
             this.ctx.stroke();
         } else if (type === 'tree') {
-            // Laubbaum - Fallback falls SVG nicht geladen wurde
             this.ctx.beginPath();
             this.ctx.arc(0, -s * 0.2, s * 0.3, 0, Math.PI * 2);
             this.ctx.stroke();
@@ -4467,7 +4096,6 @@ class HexWorldEditorView extends ItemView {
             this.ctx.lineTo(0, s * 0.5);
             this.ctx.stroke();
         } else if (type === 'pine') {
-            // Nadelbaum (mehrere übereinander liegende Dreiecke)
             this.ctx.moveTo(-s * 0.3, 0);
             this.ctx.lineTo(0, -s * 0.5);
             this.ctx.lineTo(s * 0.3, 0);
@@ -4480,11 +4108,9 @@ class HexWorldEditorView extends ItemView {
             this.ctx.lineTo(0, s * 0.5);
             this.ctx.stroke();
         } else if (type === 'palm') {
-            // Palme (Stamm + Wedel)
             this.ctx.moveTo(0, -s * 0.5);
             this.ctx.lineTo(0, s * 0.4);
             this.ctx.stroke();
-            // Wedel
             for (let i = 0; i < 4; i++) {
                 const angle = (i * Math.PI / 2) - Math.PI / 4;
                 this.ctx.beginPath();
@@ -4493,15 +4119,12 @@ class HexWorldEditorView extends ItemView {
                 this.ctx.stroke();
             }
         }
-        // Berge
         else if (type === 'hill') {
-            // Einzelner Hügel (gerundete Erhebung)
             this.ctx.moveTo(-s * 0.6, s * 0.3);
             this.ctx.quadraticCurveTo(-s * 0.3, -s * 0.4, 0, -s * 0.3);
             this.ctx.quadraticCurveTo(s * 0.3, -s * 0.4, s * 0.6, s * 0.3);
             this.ctx.stroke();
         } else if (type === 'mountain') {
-            // Berg mit zwei Gipfeln
             this.ctx.beginPath();
             this.ctx.moveTo(-s * 0.8, s * 0.5);
             this.ctx.lineTo(0, -s * 0.6);
@@ -4511,23 +4134,19 @@ class HexWorldEditorView extends ItemView {
             this.ctx.lineTo(s * 0.7, s * 0.5);
             this.ctx.stroke();
         }
-        // Gebäude
         else if (type === 'tent') {
-            // Zelt (Dreieck)
             this.ctx.moveTo(-s * 0.4, s * 0.3);
             this.ctx.lineTo(0, -s * 0.4);
             this.ctx.lineTo(s * 0.4, s * 0.3);
             this.ctx.closePath();
             this.ctx.stroke();
         } else if (type === 'house') {
-            // Haus
             this.ctx.rect(-s*0.3, -s*0.1, s*0.6, s*0.5);
             this.ctx.moveTo(-s*0.4, -s*0.1);
             this.ctx.lineTo(0, -s*0.5);
             this.ctx.lineTo(s*0.4, -s*0.1);
             this.ctx.stroke();
         } else if (type === 'village') {
-            // Dorf (3 Häuser)
             for(let i=0; i<3; i++) {
                 const ox = (i-1)*s*0.4, oy = (i%2)*s*0.2;
                 this.ctx.moveTo(ox-s*0.2, oy+s*0.3);
@@ -4538,7 +4157,6 @@ class HexWorldEditorView extends ItemView {
                 this.ctx.stroke();
             }
         } else if (type === 'town') {
-            // Stadt mit Brunnen (Häuser um Kreis)
             this.ctx.arc(0, 0, s * 0.15, 0, Math.PI * 2);
             this.ctx.stroke();
             for (let i = 0; i < 4; i++) {
@@ -4550,7 +4168,6 @@ class HexWorldEditorView extends ItemView {
                 this.ctx.stroke();
             }
         } else if (type === 'castle') {
-            // Burg mit Türmen
             this.ctx.moveTo(-s*0.6, s*0.5);
             this.ctx.lineTo(-s*0.6, -s*0.3);
             this.ctx.lineTo(-s*0.4, -s*0.3);
@@ -4566,11 +4183,9 @@ class HexWorldEditorView extends ItemView {
             this.ctx.closePath();
             this.ctx.stroke();
         } else if (type === 'harbor') {
-            // Hafen (Rechteck mit Wellen)
             this.ctx.rect(-s*0.5, -s*0.3, s*1.0, s*0.6);
             this.ctx.stroke();
         } else if (type === 'monastery') {
-            // Kloster (Haus mit Kreuz)
             this.ctx.rect(-s*0.4, -s*0.2, s*0.8, s*0.6);
             this.ctx.stroke();
             this.ctx.beginPath();
@@ -4580,10 +4195,8 @@ class HexWorldEditorView extends ItemView {
             this.ctx.lineTo(s*0.15, -s*0.5);
             this.ctx.stroke();
         } else if (type === 'tower') {
-            // Turm (schlankes Rechteck)
             this.ctx.rect(-s*0.2, -s*0.6, s*0.4, s*1.0);
             this.ctx.stroke();
-            // Zinnen
             for (let i = 0; i < 3; i++) {
                 const x = -s*0.2 + i * s*0.2;
                 this.ctx.beginPath();
@@ -4591,7 +4204,6 @@ class HexWorldEditorView extends ItemView {
                 this.ctx.stroke();
             }
         } else if (type === 'ruin') {
-            // Ruine (unvollständiges Gebäude)
             this.ctx.moveTo(-s*0.4, s*0.3);
             this.ctx.lineTo(-s*0.4, -s*0.1);
             this.ctx.lineTo(-s*0.2, -s*0.3);
@@ -4601,17 +4213,14 @@ class HexWorldEditorView extends ItemView {
             this.ctx.lineTo(s*0.3, -s*0.2);
             this.ctx.stroke();
         } else if (type === 'cave') {
-            // Höhle (Halbkreis-Eingang)
             this.ctx.arc(0, s*0.2, s*0.35, Math.PI, 0, true);
             this.ctx.lineTo(s*0.35, s*0.4);
             this.ctx.lineTo(-s*0.35, s*0.4);
             this.ctx.closePath();
             this.ctx.stroke();
         } else if (type === 'oasis') {
-            // Oase (Teich + Palme)
             this.ctx.ellipse(0, s*0.2, s*0.4, s*0.25, 0, 0, Math.PI * 2);
             this.ctx.stroke();
-            // Mini-Palme
             this.ctx.beginPath();
             this.ctx.moveTo(s*0.3, 0);
             this.ctx.lineTo(s*0.3, -s*0.3);
@@ -4661,7 +4270,6 @@ class HexWorldEditorView extends ItemView {
                 this.drawPathChains(road);
             }
 
-            // Nur Start, Ende, Kreuzungen und aktiven Punkt markieren (Edit-Modus)
             if (this.roadSettings.editMode && road.id === this.roadSettings.activeRoadId) {
                 const activeIdx = this.roadSettings.insertAfter;
                 const activeWp = activeIdx !== null ? road.waypoints[activeIdx] : null;
@@ -4679,7 +4287,6 @@ class HexWorldEditorView extends ItemView {
 
     drawPathChains(path) {
         const wps = path.waypoints;
-        // Ketten aufteilen (break-Flag trennt)
         const chains = [];
         let currentChain = [];
         for (let i = 0; i < wps.length; i++) {
@@ -4689,14 +4296,12 @@ class HexWorldEditorView extends ItemView {
                 if (currentChain.length === 0) currentChain.push(wps[i]);
                 else currentChain.push(wps[i]);
             }
-            // Kette abschließen wenn nächster Punkt break hat oder Ende
             if (i === wps.length - 1 || (wps[i + 1] && wps[i + 1].break)) {
                 if (currentChain.length >= 2) chains.push(currentChain);
                 if (wps[i + 1] && wps[i + 1].break) currentChain = [];
             }
         }
 
-        // Zähle Segmente pro Koordinate (1 = Sackgasse, 2+ = verbunden/Kreuzung)
         const segCount = {};
         chains.forEach(chain => {
             for (let i = 0; i < chain.length - 1; i++) {
@@ -4707,7 +4312,6 @@ class HexWorldEditorView extends ItemView {
             }
         });
 
-        // Jede Kette zeichnen
         chains.forEach(chain => {
             const segments = [];
             for (let i = 0; i < chain.length - 1; i++) {
@@ -4732,7 +4336,6 @@ class HexWorldEditorView extends ItemView {
             let p1 = this.hexToPixel(l.from), p2 = this.hexToPixel(l.to);
             this.ctx.lineWidth = l.width || defaultWidth;
 
-            // Endpunkte verkürzen (nur erstes/letztes Segment)
             const inset = (1 - this.pathEndInset) * 0.5;
             if (trimStart && idx === 0) {
                 p1 = { x: p1.x + (p2.x - p1.x) * inset, y: p1.y + (p2.y - p1.y) * inset };
@@ -4783,7 +4386,6 @@ class HexWorldEditorView extends ItemView {
         if (this.file && await this.app.vault.adapter.exists(this.file.path)) {
             this.isSaving = true;
             try {
-                // Speichere Werkzeug-Einstellungen
                 const toolConfigsToSave = {};
                 Object.keys(this.toolConfigs).forEach(key => {
                     toolConfigsToSave[key] = {
@@ -4811,12 +4413,9 @@ class HexWorldEditorView extends ItemView {
                     hexColorColor: this.hexColorColor
                 };
 
-                // Erstelle MD-Format mit Frontmatter und JSON-Codeblock
-                // Durch .hexworld.md Endung wird die Datei automatisch von Obsidian Sync synchronisiert
                 const now = new Date().toISOString().split('T')[0];
                 const frontmatter = `---\ntype: hexworld\ncreated: ${now}\n---\n\n`;
                 const jsonData = JSON.stringify(this.data, null, 2);
-                // Entferne .hexworld.md für den Titel, behalte nur den Namen
                 const title = this.file.basename.replace('.hexworld', '');
                 const content = `${frontmatter}# ${title}\n\n\`\`\`json\n${jsonData}\n\`\`\`\n`;
 
@@ -4840,7 +4439,6 @@ class HexWorldEditorView extends ItemView {
         this.canvas.width = this.canvas.clientWidth;
         this.canvas.height = this.canvas.clientHeight;
 
-        // Resize auch den Text-Canvas
         if (this.textCanvas) {
             this.textCanvas.width = this.textCanvas.clientWidth;
             this.textCanvas.height = this.textCanvas.clientHeight;
@@ -4867,21 +4465,17 @@ class HexWorldEditorView extends ItemView {
 
     pixelToHex(x, y) {
         const s = this.data.gridSize;
-        // Konvertiere Pixel zu Axial-Koordinaten (fractional)
         const q = (Math.sqrt(3)/3 * x - 1/3 * y) / s;
         const r = (2/3 * y) / s;
 
-        // Konvertiere zu kubischen Koordinaten für korrektes Runden
         const cubeX = q;
         const cubeZ = r;
         const cubeY = -cubeX - cubeZ;
 
-        // Runde kubische Koordinaten
         let rx = Math.round(cubeX);
         let ry = Math.round(cubeY);
         let rz = Math.round(cubeZ);
 
-        // Korrektur: Stelle sicher, dass x + y + z = 0 bleibt
         const xDiff = Math.abs(rx - cubeX);
         const yDiff = Math.abs(ry - cubeY);
         const zDiff = Math.abs(rz - cubeZ);
@@ -4894,7 +4488,6 @@ class HexWorldEditorView extends ItemView {
             rz = -rx - ry;
         }
 
-        // Konvertiere zurück zu Axial-Koordinaten
         return { q: rx, r: rz };
     }
 
@@ -4994,21 +4587,18 @@ class TextInputModal extends Modal {
         const { contentEl } = this;
         contentEl.createEl('h2', { text: t('modal.formatText') });
 
-        // Anzeigetext
         contentEl.createEl('label', { text: t('modal.displayText'), style: 'display: block; margin-bottom: 5px; font-weight: 500;' });
         const mainInput = contentEl.createEl('input', { value: this.val, placeholder: t('modal.textPlaceholder') });
         mainInput.style.width = '100%';
         mainInput.style.marginBottom = '20px';
         mainInput.style.padding = '8px';
 
-        // Textgröße
         contentEl.createEl('label', { text: t('modal.textSize'), style: 'display: block; margin-bottom: 5px; font-weight: 500;' });
         const sInput = contentEl.createEl('input', { type: 'number', value: this.size });
         sInput.style.width = '100%';
         sInput.style.marginBottom = '20px';
         sInput.style.padding = '8px';
 
-        // Farbe
         const colorSection = contentEl.createDiv({ style: 'margin-bottom: 20px;' });
         colorSection.createEl('label', { text: t('modal.textColor'), style: 'display: block; margin-bottom: 5px; font-weight: 500;' });
         const colorInput = colorSection.createEl('input', { type: 'color', value: this.color });
@@ -5016,7 +4606,6 @@ class TextInputModal extends Modal {
         colorInput.style.height = '40px';
         colorInput.style.cursor = 'pointer';
 
-        // Farbpalette unter dem Color Picker (2 Zeilen à 8 Farben)
         const paletteContainer = colorSection.createDiv({ style: 'display: flex; flex-direction: column; gap: 3px; margin-top: 10px;' });
         paletteContainer.createEl('span', { text: t('modal.palette'), attr: { style: 'font-size: 11px; margin-bottom: 3px;' } });
 
@@ -5036,7 +4625,6 @@ class TextInputModal extends Modal {
             });
         });
 
-        // Formatierungsoptionen (Checkboxen in Grid)
         const formatSection = contentEl.createDiv({ style: 'margin-bottom: 20px;' });
         formatSection.createEl('label', { text: t('modal.formatting'), style: 'display: block; margin-bottom: 8px; font-weight: 500;' });
 
@@ -5056,7 +4644,6 @@ class TextInputModal extends Modal {
         boldInput.style.marginLeft = '4px';
         boldLabel.appendText(t('modal.bold'));
 
-        // Schatten-Einstellungen
         const shadowSection = contentEl.createDiv({ style: 'margin-bottom: 20px; padding: 15px; background: var(--background-secondary); border-radius: 5px;' });
         shadowSection.createEl('label', { text: t('modal.shadowSettings'), style: 'display: block; margin-bottom: 10px; font-weight: 500;' });
 
@@ -5089,7 +4676,6 @@ class TextInputModal extends Modal {
         shadowOpatownInput.min = '0';
         shadowOpatownInput.max = '100';
 
-        // Link-Sektion
         const linkSection = contentEl.createDiv({ style: 'margin-bottom: 20px;' });
         linkSection.createEl('label', { text: t('modal.linkToFile'), style: 'display: block; margin-bottom: 5px; font-weight: 500;' });
 
@@ -5120,7 +4706,6 @@ class TextInputModal extends Modal {
             selector.open();
         };
 
-        // Button-Reihe
         const btnRow = contentEl.createDiv({ style: 'display: flex; gap: 10px; margin-top: 25px; padding-top: 15px; border-top: 1px solid var(--background-modifier-border);' });
         const okBtn = btnRow.createEl('button', { text: 'OK', cls: 'mod-cta', style: 'flex: 1;' });
         okBtn.onclick = () => {
@@ -5180,7 +4765,6 @@ class HexWorldEditorSettingTab extends PluginSettingTab {
 }
 
 // === Eingebettete SVG-Symboldaten (pathData + viewBoxWidth) ===
-// Werden beim Ausliefern verwendet. Im Entwicklungsmodus werden SVGs aus dem symbols/-Ordner bevorzugt.
 const SVG_SYMBOL_DATA = {
     'question': { pathData: 'M284.61,594.99c154.07,6.75,288.53-106.54,308.17-259.13C618.48,136.05,442.5-30.93,244.2,4.87,88.94,32.89-17.75,178.81,2.46,335.87c18.38,142.85,138.08,252.81,282.15,259.13ZM282.26,549.3c-125.38-5.68-231.54-112.52-236.57-237.93-2.82-70.28,19.56-134.87,67.68-186.02,79.68-84.72,203.29-104.53,305.89-48.71,110.31,60.01,161.29,198.01,112.35,315.24-30.33,72.67-87.63,124.6-162.82,148.24-26.96,8.48-58.32,10.47-86.54,9.19ZM270.47,145.37c40.74-6.14,98.92-7.44,133.69,17.83,27.45,19.96,28.05,50.6,13,78.96l17.28,9.72.18.77c-31.76,64.12-104.43,94.76-170.02,112.33l-33.77-56.86c20.08-4.97,40.15-10.85,59.15-19.06,21.57-9.33,59.12-29.76,56.09-57.81-2.85-26.41-43.85-22.03-62.04-19.02-23.63,3.92-47.11,12.11-69.33,20.77l-27.2-66.03c27.02-9.32,54.6-17.33,82.97-21.6ZM288.26,457.23l-85.55,4.36c5.43-24.24,11.73-48.32,19.89-71.78l87.89-4.37-22.23,71.78Z', viewBoxWidth: 595.28 },
     'exclamation': { pathData: 'M284.43.3c240.79-10.45,394.24,256.82,262.3,460.1-113.56,174.96-369.25,180.79-490.72,11.14C-81.64,279.3,49.63,10.49,284.43.3ZM285.64,45.73c-129.65,5.45-235.28,111.92-240.05,241.77-1.58,42.97,5.95,80.12,24.31,118.66,59.74,125.39,209.35,180.06,335.86,119.62,125.23-59.82,179.82-209.62,119.47-336.29-44.01-92.38-137.03-148.07-239.59-143.76ZM357.53,134.07c-17.56,2.25-35.02,5.43-52.3,9.11-22.44,68.16-42.58,137.1-61.2,206.43l81.37-9.07c22.72-71.14,49.17-141,77.11-210.18-15,.21-30.09,1.81-44.98,3.72ZM233.22,383c-7.95,23.39-14.9,47.18-20.04,71.38l84.69-4.53,22.37-71.17-87.02,4.32Z', viewBoxWidth: 595.28 },
