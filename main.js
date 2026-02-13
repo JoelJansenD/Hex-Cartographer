@@ -194,7 +194,50 @@ const TRANSLATIONS = {
 
         // Einstellungen
         'settings.donateText': 'Spendiere mir einen Kaffee. Ich freue mich darüber, Euch den Hexworld Editor kostenlos zur Verfügung zu stellen. Allerdings bedurfte die Entwicklung lange Zeit. Wenn mir etwas neues einfällt, wird es für Euch Updates geben. Ihr würdet mir eine große Freude bereiten, wenn ihr mir für diese Arbeit eine kleine Spende hinterlasst.',
-        'settings.donateButton': 'Kleine Spende',
+        'settings.donateButton': 'Spende einen Kaffee',
+
+        // Anleitung
+        'guide.title': 'Kurzanleitung',
+        'guide.basics': 'Grundlagen',
+        'guide.basics.create': 'Rechtsklick auf einen Ordner in der Dateiübersicht → „Neue Hex World erstellen."',
+        'guide.basics.editMode': 'Bearbeitungsmodus ein-/ausschalten.',
+        'guide.navigation': 'Navigation',
+        'guide.navigation.zoom': 'Mausrad = Zoom.',
+        'guide.navigation.pan': 'Mittlere Maustaste oder Shift+Ziehen = Karte verschieben.',
+        'guide.navigation.fit': 'Ganze Karte zeigen.',
+        'guide.hexcolor': 'Wabenfarbe',
+        'guide.hexcolor.paint': 'Farbe wählen und auf Waben klicken zum Einfärben.',
+        'guide.hexcolor.palette': 'Rechtsklick auf Palettenplatz = Farbe speichern.',
+        'guide.symbols': 'Symbole',
+        'guide.symbols.groups': 'Werkzeuggruppe wählen (Extras, Vegetation, Berg, Gebäude).',
+        'guide.symbols.variant': 'Rechtsklick = Auswahl der Symbolvariante.',
+        'guide.symbols.colors': 'Die aktuelle Master-Farbe bestimmt die Symbolfarbe.',
+        'guide.drawing': 'Zeichenmodi',
+        'guide.drawing.pen': 'Zum Zeichnen klicken oder ziehen.',
+        'guide.drawing.fill': 'Fläche mit aktiver Farbe oder Symbol füllen.',
+        'guide.drawing.eraser': 'Feld, Symbol oder Weg-/Fluss-Abschnitt durch Klicken löschen (Doppelklick = zusammenhängende Elemente löschen).',
+        'guide.pattern': 'Musterwerkzeug',
+        'guide.pattern.stamp': 'Muster auf Waben setzen. Ziehen um mit Muster zu zeichnen.',
+        'guide.pattern.pick': 'Vorhandenes Muster aufnehmen, um damit zu zeichnen.',
+        'guide.paths': 'Flüsse & Wege',
+        'guide.paths.river': 'Wegpunkte setzen für Flüsse.',
+        'guide.paths.road': 'Wegpunkte setzen für Wege.',
+        'guide.paths.pick': 'Bestehenden Fluss/Weg auswählen und bearbeiten.',
+        'guide.paths.width': 'Breite der Flüsse/Wege über die Eingabefelder mit einem Wert anpassen.',
+        'guide.borders': 'Grenzen',
+        'guide.borders.draw': 'Grenzregion zeichnen durch Klicken oder Ziehen auf Waben.',
+        'guide.borders.pick': 'Bestehende Grenze zum Bearbeiten auswählen.',
+        'guide.borders.visibility': 'Grenzen auf der Karte ein-/ausblenden.',
+        'guide.text': 'Text',
+        'guide.text.tool': 'Auf Karte klicken um Textinhalt, Größe, Farbe und Format einzustellen.<br>Erneut auf Text klicken, um ihn zu bearbeiten.<br>Zum Verschieben ziehen.',
+        'guide.undoredo': 'Rückgängig / Wiederholen',
+        'guide.undoredo.undo': 'Strg+Z = Rückgängig',
+        'guide.undoredo.redo': 'Strg+Y = Wiederholen',
+        'guide.touch': 'Infos für Benutzer mit Touch Screen',
+        'guide.touch.tap': 'Tippen = Setzen, Platzieren, Auswählen.<br>Mit einem Finger streichen = Zeichnen.',
+        'guide.touch.longpress': 'Langes Halten auf Werkzeug-Buttons = z.B. Symbolvariante wählen oder Palettenfarbe ändern.',
+        'guide.touch.zoom': 'Zwei-Finger-Pinch = Zoom.',
+        'guide.touch.pan': 'Zwei-Finger-Ziehen = Karte verschieben.',
 
         // Menü-Einträge
         'menu.createNew': 'Neue Hex World erstellen',
@@ -314,8 +357,51 @@ const TRANSLATIONS = {
         'modal.confirmDeleteText': 'Really delete this text?',
 
         // Settings
-        'settings.donateText': 'Buy me a coffee. I am happy to provide this editor to you for free. However, the development took a long time. When I come up with something new, there will be updates. It would make me very happy if you leave a small donation for this work.',
+        'settings.donateText': 'Buy me a coffee. I am happy to provide the Hexworld Editor to you for free. However, the development took a long time. When I come up with something new, there will be updates. It would make me very happy if you leave a small donation for this work.',
         'settings.donateButton': 'Buy me a coffee',
+
+        // Guide
+        'guide.title': 'Quick Guide',
+        'guide.basics': 'Basics',
+        'guide.basics.create': 'Right-click a folder in the file explorer → "Create new Hex World."',
+        'guide.basics.editMode': 'Toggle edit mode on/off.',
+        'guide.navigation': 'Navigation',
+        'guide.navigation.zoom': 'Mouse wheel = Zoom.',
+        'guide.navigation.pan': 'Middle mouse button or Shift+Drag = Pan map.',
+        'guide.navigation.fit': 'Fit entire map to view.',
+        'guide.hexcolor': 'Hex Color',
+        'guide.hexcolor.paint': 'Choose a color and click hexes to paint them.',
+        'guide.hexcolor.palette': 'Right-click a palette slot = Save color.',
+        'guide.symbols': 'Symbols',
+        'guide.symbols.groups': 'Choose a tool group (Extras, Vegetation, Mountain, Building).',
+        'guide.symbols.variant': 'Right-click = Select symbol variant.',
+        'guide.symbols.colors': 'The current master color determines the symbol color.',
+        'guide.drawing': 'Drawing Modes',
+        'guide.drawing.pen': 'Click or drag to draw.',
+        'guide.drawing.fill': 'Fill area with active color or symbol.',
+        'guide.drawing.eraser': 'Delete hex or symbol (double-click = delete connected color area or symbols).',
+        'guide.pattern': 'Pattern Tool',
+        'guide.pattern.stamp': 'Place pattern on hexes. Drag to draw with pattern.',
+        'guide.pattern.pick': 'Pick up an existing pattern to draw with.',
+        'guide.paths': 'Rivers & Roads',
+        'guide.paths.river': 'Place waypoints for rivers.',
+        'guide.paths.road': 'Place waypoints for roads.',
+        'guide.paths.pick': 'Select an existing river/road to edit.',
+        'guide.paths.width': 'Adjust river/road width via the input fields.',
+        'guide.borders': 'Borders',
+        'guide.borders.draw': 'Draw border region by clicking or dragging on hexes.',
+        'guide.borders.pick': 'Select an existing border to edit.',
+        'guide.borders.visibility': 'Show/hide borders on the map.',
+        'guide.text': 'Text',
+        'guide.text.tool': 'Click on map to set text content, size, color and format.<br>Click text again to edit.<br>Drag to move.',
+        'guide.undoredo': 'Undo / Redo',
+        'guide.undoredo.undo': 'Ctrl+Z = Undo',
+        'guide.undoredo.redo': 'Ctrl+Y = Redo',
+        'guide.touch': 'Touch Screen Users',
+        'guide.touch.tap': 'Tap = Left click (draw, place, select).',
+        'guide.touch.longpress': 'Long press on tool buttons = Right click (e.g. choose symbol variant or change palette color).',
+        'guide.touch.zoom': 'Two-finger pinch = Zoom.',
+        'guide.touch.pan': 'Two-finger drag = Pan map.',
 
         // Menu entries
         'menu.createNew': 'Create new Hex World',
@@ -927,9 +1013,18 @@ class HexWorldEditorView extends ItemView {
                 if (newData.settings.activeColorSlot !== undefined) {
                     this.activeColorSlot = newData.settings.activeColorSlot;
                 }
-                this.drawMode = 'pen';
                 this.editMode = newData.settings.editMode === true;
-                this.currentToolGroup = newData.settings.currentToolGroup || null;
+                const savedToolGroup = newData.settings.currentToolGroup || null;
+                const savedDrawMode = newData.settings.drawMode || 'pen';
+                if (this.editMode) {
+                    this.currentToolGroup = savedToolGroup;
+                    this.drawMode = savedDrawMode;
+                } else {
+                    this.currentToolGroup = null;
+                    this.drawMode = 'pen';
+                    this._savedToolGroup = savedToolGroup;
+                    this._savedDrawMode = savedDrawMode;
+                }
                 if (newData.settings.toolConfigs) {
                     // WICHTIG: Explizit jeden Key einzeln laden, um sicherzustellen,
                     ['grass', 'tree', 'mountain', 'building'].forEach(key => {
@@ -1272,10 +1367,20 @@ class HexWorldEditorView extends ItemView {
             this.editMode = !this.editMode;
             if (!this.editMode) {
                 this.exitPathEditMode();
+                this._savedToolGroup = this.currentToolGroup;
+                this._savedDrawMode = this.drawMode;
                 this.drawMode = 'pen';
                 this.currentToolGroup = null;
                 this.borderPickMode = false;
                 this.pathPickMode = false;
+            } else {
+                this.currentToolGroup = this._savedToolGroup !== undefined ? this._savedToolGroup : 'hexcolor';
+                this.drawMode = this._savedDrawMode || 'pen';
+                if (this.currentToolGroup === 'hexcolor') {
+                    this.masterColor = this.hexColorColor;
+                } else if (this.currentToolGroup && this.toolConfigs[this.currentToolGroup]) {
+                    this.masterColor = this.toolConfigs[this.currentToolGroup].symbolColor;
+                }
             }
             this.editContent.style.display = this.editMode ? 'contents' : 'none';
             editModeBtn.classList.toggle('active', this.editMode);
@@ -1336,6 +1441,7 @@ class HexWorldEditorView extends ItemView {
             }
             this.updateToolbarState(toolbar);
             if (needsRender) this.render();
+            this.requestSave();
         };
 
         this.createToolGroupButton(editContent, 'grass');
@@ -1357,6 +1463,7 @@ class HexWorldEditorView extends ItemView {
             this.drawMode = 'none';
             this.updateToolbarState(toolbar);
             if (needsRender) this.render();
+            this.requestSave();
         };
 
         this.createDrawModeButton(editContent, 'eraser', 'eraser', t('tooltip.eraser'));
@@ -1415,6 +1522,7 @@ class HexWorldEditorView extends ItemView {
             if (needsRender && this.currentToolGroup !== 'pattern') {
                 this.render();
             }
+            this.requestSave();
         };
     }
 
@@ -1472,6 +1580,7 @@ class HexWorldEditorView extends ItemView {
             if (needsRender) {
                 this.render();
             }
+            this.requestSave();
         };
 
         btn.oncontextmenu = (e) => {
@@ -1501,6 +1610,7 @@ class HexWorldEditorView extends ItemView {
             this.drawMode = 'pen'; // Automatisch in Zeichenmodus wechseln
             this.updateToolbarState(toolbar);
             this.render(); // Sofort rendern, um Muster-Wabe anzuzeigen
+            this.requestSave();
         };
 
         const pickerBtn = wrapper.createEl('button', {
@@ -1735,6 +1845,7 @@ class HexWorldEditorView extends ItemView {
             this.drawMode = 'pen';
             this.updateToolbarState(toolbar);
             if (needsRender) this.render();
+            this.requestSave();
         };
 
         const roadBtn = topRow.createEl('button', { cls: 'hex-tool-btn', attr: { title: t('tooltip.road') } });
@@ -1748,6 +1859,7 @@ class HexWorldEditorView extends ItemView {
             this.drawMode = 'pen';
             this.updateToolbarState(toolbar);
             if (needsRender) this.render();
+            this.requestSave();
         };
 
         const pickerBtn = topRow.createEl('button', { cls: 'hex-tool-btn', attr: { title: t('tooltip.pathPicker') } });
@@ -1977,6 +2089,7 @@ class HexWorldEditorView extends ItemView {
             if (wasPatternActive || wasHidden) {
                 this.render();
             }
+            this.requestSave();
         };
 
         const pickerBtn = topRow.createEl('button', { cls: 'hex-tool-btn', attr: { title: t('tooltip.borderPicker') } });
@@ -4400,8 +4513,8 @@ class HexWorldEditorView extends ItemView {
                     colorPalette: this.colorPalette,
                     colorPalette2: this.colorPalette2,
                     activeColorSlot: this.activeColorSlot,
-                    drawMode: this.drawMode,
-                    currentToolGroup: this.currentToolGroup,
+                    drawMode: !this.editMode && this._savedDrawMode ? this._savedDrawMode : this.drawMode,
+                    currentToolGroup: !this.editMode && this._savedToolGroup !== undefined ? this._savedToolGroup : this.currentToolGroup,
                     toolConfigs: toolConfigsToSave,
                     patternData: this.patternData,
                     patternSourceHex: this.patternSourceHex,
@@ -4761,6 +4874,96 @@ class HexWorldEditorSettingTab extends PluginSettingTab {
                     });
             });
 
+        this.buildGuide(containerEl);
+    }
+
+    buildGuide(containerEl) {
+        containerEl.createEl('h3', { text: t('guide.title') });
+
+        const guide = [
+            ['basics', [
+                [null, 'guide.basics.create'],
+                ['wrench', 'guide.basics.editMode'],
+            ]],
+            ['navigation', [
+                [null, 'guide.navigation.zoom'],
+                [null, 'guide.navigation.pan'],
+                ['maximize-2', 'guide.navigation.fit'],
+            ]],
+            ['hexcolor', [
+                ['hexagon', 'guide.hexcolor.paint'],
+                [null, 'guide.hexcolor.palette'],
+            ]],
+            ['symbols', [
+                ['pine', 'guide.symbols.groups'],
+                [null, 'guide.symbols.variant'],
+                [null, 'guide.symbols.colors'],
+            ]],
+            ['drawing', [
+                ['pencil', 'guide.drawing.pen'],
+                ['paint-bucket', 'guide.drawing.fill'],
+                ['eraser', 'guide.drawing.eraser'],
+            ]],
+            ['pattern', [
+                ['copy', 'guide.pattern.stamp'],
+                ['pipette', 'guide.pattern.pick'],
+            ]],
+            ['paths', [
+                ['waves', 'guide.paths.river'],
+                ['route', 'guide.paths.road'],
+                ['mouse-pointer', 'guide.paths.pick'],
+                ['text-cursor-input', 'guide.paths.width'],
+            ]],
+            ['borders', [
+                ['shield', 'guide.borders.draw'],
+                ['mouse-pointer', 'guide.borders.pick'],
+                ['eye', 'guide.borders.visibility'],
+            ]],
+            ['text', [
+                ['type', 'guide.text.tool'],
+            ]],
+            ['undoredo', [
+                ['undo-2', 'guide.undoredo.undo'],
+                ['redo-2', 'guide.undoredo.redo'],
+            ]],
+            ['touch', [
+                ['pointer', 'guide.touch.tap'],
+                ['timer', 'guide.touch.longpress'],
+                ['zoom-in', 'guide.touch.zoom'],
+                ['move', 'guide.touch.pan'],
+            ]],
+        ];
+
+        for (const [key, items] of guide) {
+            const details = containerEl.createEl('details');
+            details.createEl('summary', { text: t(`guide.${key}`), cls: 'hex-guide-summary' });
+            const content = details.createEl('div', { cls: 'hex-guide-content' });
+            for (const [icon, textKey] of items) {
+                const row = content.createEl('div', { cls: 'hex-guide-row' });
+                const iconEl = row.createEl('span', { cls: 'hex-guide-icon' });
+                if (icon && icon.startsWith('input:')) {
+                    iconEl.createEl('span', { text: icon.slice(6), cls: 'hex-guide-input-icon' });
+                } else if (icon && SVG_SYMBOL_DATA[icon]) {
+                    const data = SVG_SYMBOL_DATA[icon];
+                    const svgEl = iconEl.createSvg('svg', { attr: { viewBox: `0 0 ${data.viewBoxWidth} ${data.viewBoxWidth}`, width: '16', height: '16' } });
+                    svgEl.createSvg('path', { attr: { d: data.pathData, fill: 'currentColor' } });
+                } else if (icon) {
+                    setIcon(iconEl, icon);
+                }
+                const textEl = row.createEl('span');
+                textEl.innerHTML = t(textKey);
+            }
+        }
+
+        const style = containerEl.createEl('style');
+        style.textContent = `
+            .hex-guide-summary { cursor: pointer; font-weight: 600; padding: 6px 0; }
+            .hex-guide-content { padding: 4px 0 8px 12px; }
+            .hex-guide-row { display: flex; align-items: flex-start; gap: 8px; padding: 3px 0; }
+            .hex-guide-icon { display: flex; align-items: center; justify-content: center; width: 20px; flex-shrink: 0; }
+            .hex-guide-icon svg { width: 16px; height: 16px; }
+            .hex-guide-input-icon { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 16px; border: 1px solid var(--text-muted); border-radius: 3px; font-size: 10px; line-height: 1; color: var(--text-muted); }
+        `;
     }
 }
 
