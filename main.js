@@ -915,28 +915,7 @@ class HexWorldEditorView extends ItemView {
                     });
             });
 
-            if (this.isTouchDevice) {
-                menu.addItem((item) => {
-                    item.setTitle(t('menu.shareMap'))
-                        .setIcon('share')
-                        .onClick(async () => {
-                            const tmpCanvas = this.renderFullMap();
-                            if (!tmpCanvas) { new Notice(t('notice.noContentToPrint')); return; }
-                            tmpCanvas.toBlob(async (blob) => {
-                                const file = new File([blob], (this.file ? this.file.basename.replace('.hexworld', '') : 'hexworld-map') + '.png', { type: 'image/png' });
-                                if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-                                    await navigator.share({ files: [file] });
-                                } else {
-                                    const link = document.createElement('a');
-                                    link.href = URL.createObjectURL(blob);
-                                    link.download = file.name;
-                                    link.click();
-                                    URL.revokeObjectURL(link.href);
-                                }
-                            }, 'image/png');
-                        });
-                });
-            } else {
+            if (!this.isTouchDevice) {
                 menu.addItem((item) => {
                     item.setTitle(t('menu.printMap'))
                         .setIcon('printer')
@@ -968,18 +947,20 @@ class HexWorldEditorView extends ItemView {
                     .onClick(() => {
                         const mapSize = this.getMapWorldSize();
                         if (!mapSize) { new Notice(t('notice.noContentToPrint')); return; }
-                        new ExportMapModal(this.app, mapSize, (format, width, quality) => {
+                        new ExportMapModal(this.app, mapSize, async (format, width, quality) => {
                             const tmpCanvas = this.renderFullMap({ targetWidth: width });
                             if (!tmpCanvas) { new Notice(t('notice.noContentToPrint')); return; }
                             const mimeType = format === 'jpeg' ? 'image/jpeg' : 'image/png';
                             const ext = format === 'jpeg' ? '.jpg' : '.png';
-                            tmpCanvas.toBlob((blob) => {
-                                const link = document.createElement('a');
-                                link.href = URL.createObjectURL(blob);
-                                link.download = (this.file ? this.file.basename.replace('.hexworld', '') : 'hexworld-map') + ext;
-                                link.click();
-                                URL.revokeObjectURL(link.href);
-                            }, mimeType, format === 'jpeg' ? quality / 100 : undefined);
+                            const baseName = this.file ? this.file.basename.replace('.hexworld', '') : 'hexworld-map';
+                            const blob = await new Promise(resolve => tmpCanvas.toBlob(resolve, mimeType, format === 'jpeg' ? quality / 100 : undefined));
+                            const link = document.createElement('a');
+                            link.href = URL.createObjectURL(blob);
+                            link.download = baseName + ext;
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                            setTimeout(() => URL.revokeObjectURL(link.href), 5000);
                         }).open();
                     });
             });
