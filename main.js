@@ -1288,8 +1288,19 @@ class HexWorldEditorView extends ItemView {
     fitMapToView() {
         const hexes = Object.values(this.data.hexes);
         const texts = this.data.texts || [];
+        const borders = this.data.borders || [];
 
-        if (hexes.length === 0 && texts.length === 0) {
+        const borderOnlyHexes = [];
+        const hexKeySet = new Set(Object.keys(this.data.hexes));
+        for (const region of borders) {
+            for (const bh of region.hexes) {
+                if (!hexKeySet.has(`${bh.q}_${bh.r}`)) {
+                    borderOnlyHexes.push(bh);
+                }
+            }
+        }
+
+        if (hexes.length === 0 && texts.length === 0 && borderOnlyHexes.length === 0) {
             new Notice(t('notice.noHexesToShow'));
             return;
         }
@@ -1297,15 +1308,17 @@ class HexWorldEditorView extends ItemView {
         let minX = Infinity, maxX = -Infinity;
         let minY = Infinity, maxY = -Infinity;
 
-        hexes.forEach(hex => {
+        const expandBounds = (hex) => {
             const pos = this.hexToPixel(hex);
             const s = this.data.gridSize;
-
             minX = Math.min(minX, pos.x - s);
             maxX = Math.max(maxX, pos.x + s);
             minY = Math.min(minY, pos.y - s);
             maxY = Math.max(maxY, pos.y + s);
-        });
+        };
+
+        hexes.forEach(expandBounds);
+        borderOnlyHexes.forEach(expandBounds);
 
         texts.forEach(t => {
             const textSize = t.size || 16;
