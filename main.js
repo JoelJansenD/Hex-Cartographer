@@ -216,6 +216,7 @@ const TRANSLATIONS = {
         'guide.drawing.pen': 'Zum Zeichnen klicken oder ziehen.',
         'guide.drawing.fill': 'Fläche mit aktiver Farbe oder Symbol füllen.',
         'guide.drawing.eraser': 'Feld, Symbol oder Weg-/Fluss-Abschnitt durch Klicken löschen (Doppelklick = zusammenhängende Elemente löschen).',
+        'guide.drawing.rightclick': 'Rechte Maustaste = Radierer (halten + ziehen = mehrere Elemente löschen, Doppelklick = zusammenhängendes löschen).',
         'guide.pattern': 'Musterwerkzeug',
         'guide.pattern.stamp': 'Muster auf Waben setzen. Ziehen um mit Muster zu zeichnen.',
         'guide.pattern.pick': 'Vorhandenes Muster aufnehmen, um damit zu zeichnen.',
@@ -235,6 +236,9 @@ const TRANSLATIONS = {
         'guide.undoredo': 'Rückgängig / Wiederholen',
         'guide.undoredo.undo': 'Strg+Z = Rückgängig',
         'guide.undoredo.redo': 'Strg+Y = Wiederholen',
+        'guide.print': 'Drucken / Teilen',
+        'guide.print.pc': 'Drei-Punkte-Menü → „Karte drucken" öffnet den Druckdialog.',
+        'guide.print.mobile': 'Drei-Punkte-Menü → „Karte teilen" öffnet das native Teilen-Menü.',
         'guide.touch': 'Infos für Benutzer mit Touch Screen',
         'guide.touch.tap': 'Tippen = Setzen, Platzieren, Auswählen.<br>Mit einem Finger streichen = Zeichnen.',
         'guide.touch.longpress': 'Langes Halten auf Werkzeug-Buttons = z.B. Symbolvariante wählen oder Palettenfarbe ändern.',
@@ -252,6 +256,9 @@ const TRANSLATIONS = {
         // Menü-Einträge
         'menu.createNew': 'Neue Hex World erstellen',
         'menu.openInEditor': 'Im Hex World Editor öffnen',
+        'menu.printMap': 'Karte drucken',
+        'menu.shareMap': 'Karte teilen',
+        'notice.noContentToPrint': 'Keine Karteninhalte zum Drucken vorhanden',
     },
 
     en: {
@@ -390,6 +397,7 @@ const TRANSLATIONS = {
         'guide.drawing.pen': 'Click or drag to draw.',
         'guide.drawing.fill': 'Fill area with active color or symbol.',
         'guide.drawing.eraser': 'Delete hex or symbol (double-click = delete connected color area or symbols).',
+        'guide.drawing.rightclick': 'Right-click = Eraser (hold + drag = delete multiple, double-click = delete connected area).',
         'guide.pattern': 'Pattern Tool',
         'guide.pattern.stamp': 'Place pattern on hexes. Drag to draw with pattern.',
         'guide.pattern.pick': 'Pick up an existing pattern to draw with.',
@@ -409,6 +417,9 @@ const TRANSLATIONS = {
         'guide.undoredo': 'Undo / Redo',
         'guide.undoredo.undo': 'Ctrl+Z = Undo',
         'guide.undoredo.redo': 'Ctrl+Y = Redo',
+        'guide.print': 'Print / Share',
+        'guide.print.pc': 'Three-dot menu → "Print map" opens the print dialog.',
+        'guide.print.mobile': 'Three-dot menu → "Share map" opens the native share menu.',
         'guide.touch': 'Touch Screen Users',
         'guide.touch.tap': 'Tap = Left click (draw, place, select).',
         'guide.touch.longpress': 'Long press on tool buttons = Right click (e.g. choose symbol variant or change palette color).',
@@ -426,6 +437,9 @@ const TRANSLATIONS = {
         // Menu entries
         'menu.createNew': 'Create new Hex World',
         'menu.openInEditor': 'Open in Hex World Editor',
+        'menu.printMap': 'Print map',
+        'menu.shareMap': 'Share map',
+        'notice.noContentToPrint': 'No map content to print',
     }
 };
 
@@ -888,6 +902,53 @@ class HexWorldEditorView extends ItemView {
                     .onClick(async () => {
                     });
             });
+
+            if (this.isTouchDevice) {
+                menu.addItem((item) => {
+                    item.setTitle(t('menu.shareMap'))
+                        .setIcon('share')
+                        .onClick(async () => {
+                            const tmpCanvas = this.renderFullMap();
+                            if (!tmpCanvas) { new Notice(t('notice.noContentToPrint')); return; }
+                            tmpCanvas.toBlob(async (blob) => {
+                                const file = new File([blob], (this.file ? this.file.basename : 'hexworld-map') + '.png', { type: 'image/png' });
+                                if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+                                    await navigator.share({ files: [file] });
+                                } else {
+                                    const link = document.createElement('a');
+                                    link.href = URL.createObjectURL(blob);
+                                    link.download = file.name;
+                                    link.click();
+                                    URL.revokeObjectURL(link.href);
+                                }
+                            }, 'image/png');
+                        });
+                });
+            } else {
+                menu.addItem((item) => {
+                    item.setTitle(t('menu.printMap'))
+                        .setIcon('printer')
+                        .onClick(() => {
+                            const tmpCanvas = this.renderFullMap();
+                            if (!tmpCanvas) { new Notice(t('notice.noContentToPrint')); return; }
+                            const dataUrl = tmpCanvas.toDataURL('image/png');
+                            const iframe = document.createElement('iframe');
+                            iframe.style.position = 'fixed';
+                            iframe.style.left = '-9999px';
+                            iframe.style.width = '0';
+                            iframe.style.height = '0';
+                            document.body.appendChild(iframe);
+                            const doc = iframe.contentDocument || iframe.contentWindow.document;
+                            doc.open();
+                            doc.write(`<html><head><title>${this.file ? this.file.basename : 'Hex World Map'}</title><style>@media print { @page { margin: 10mm; } body { margin: 0; } img { max-width: 100%; max-height: 100%; } } body { margin: 0; }</style></head><body><img src="${dataUrl}" /></body></html>`);
+                            doc.close();
+                            iframe.contentWindow.onafterprint = () => { document.body.removeChild(iframe); };
+                            setTimeout(() => {
+                                iframe.contentWindow.print();
+                            }, 200);
+                        });
+                });
+            }
         }
         super.onPaneMenu(menu, source);
     }
@@ -4196,6 +4257,132 @@ class HexWorldEditorView extends ItemView {
         this.textCtx.restore();
     }
 
+    renderFullMap() {
+        const hexes = Object.values(this.data.hexes);
+        const texts = this.data.texts || [];
+        const borders = this.data.borders || [];
+
+        const borderOnlyHexes = [];
+        const hexKeySet = new Set(Object.keys(this.data.hexes));
+        for (const region of borders) {
+            for (const bh of region.hexes) {
+                if (!hexKeySet.has(`${bh.q}_${bh.r}`)) borderOnlyHexes.push(bh);
+            }
+        }
+
+        if (hexes.length === 0 && texts.length === 0 && borderOnlyHexes.length === 0) return null;
+
+        let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+        const expandBounds = (hex) => {
+            const pos = this.hexToPixel(hex);
+            const s = this.data.gridSize;
+            minX = Math.min(minX, pos.x - s);
+            maxX = Math.max(maxX, pos.x + s);
+            minY = Math.min(minY, pos.y - s);
+            maxY = Math.max(maxY, pos.y + s);
+        };
+        hexes.forEach(expandBounds);
+        borderOnlyHexes.forEach(expandBounds);
+        texts.forEach(tx => {
+            const textSize = tx.size || 16;
+            const w = tx.text.length * textSize * 0.6;
+            minX = Math.min(minX, tx.x - w / 2);
+            maxX = Math.max(maxX, tx.x + w / 2);
+            minY = Math.min(minY, tx.y - textSize);
+            maxY = Math.max(maxY, tx.y + textSize / 2);
+        });
+
+        const padding = this.data.gridSize;
+        minX -= padding; minY -= padding;
+        maxX += padding; maxY += padding;
+
+        const w = maxX - minX;
+        const h = maxY - minY;
+        const scale = 2;
+
+        const tmpCanvas = document.createElement('canvas');
+        tmpCanvas.width = Math.ceil(w * scale);
+        tmpCanvas.height = Math.ceil(h * scale);
+        const tmpCtx = tmpCanvas.getContext('2d');
+        tmpCtx.fillStyle = '#ffffff';
+        tmpCtx.fillRect(0, 0, tmpCanvas.width, tmpCanvas.height);
+
+        const origCtx = this.ctx;
+        const origCanvas = this.canvas;
+        const origTextCtx = this.textCtx;
+        const origTextCanvas = this.textCanvas;
+        const origZoom = this.data.zoom;
+        const origOffX = this.data.offX;
+        const origOffY = this.data.offY;
+
+        this.ctx = tmpCtx;
+        this.canvas = tmpCanvas;
+        this.data.zoom = scale;
+        this.data.offX = -minX * scale;
+        this.data.offY = -minY * scale;
+
+        tmpCtx.save();
+        tmpCtx.translate(this.data.offX, this.data.offY);
+        tmpCtx.scale(this.data.zoom, this.data.zoom);
+
+        Object.values(this.data.hexes).forEach(hex => this.drawHexBase(hex));
+
+        const drawSymbolLayer = (symbols) => {
+            Object.values(this.data.hexes).forEach(hex => {
+                if (hex.symbol && symbols.includes(hex.symbol)) {
+                    const pos = this.hexToPixel(hex);
+                    if (this.svgSymbols[hex.symbol]) {
+                        this.drawSVGOnCanvas(hex.symbol, pos, hex.symbolColor);
+                    } else {
+                        this.drawCustomSymbol(hex.symbol, pos.x, pos.y, this.data.gridSize, hex.symbolColor);
+                    }
+                }
+            });
+        };
+
+        drawSymbolLayer(['swamp','grass', 'bush', 'tree', 'pine', 'palm']);
+        drawSymbolLayer(['hill', 'mountain']);
+        this.drawRivers();
+        this.drawRoads();
+        drawSymbolLayer(['question', 'exclamation', 'cross']);
+        drawSymbolLayer(['tent', 'house', 'village', 'town', 'castle', 'harbor', 'monastery', 'tower', 'ruin', 'cave', 'oasis']);
+        this.drawBorders();
+
+        tmpCtx.restore();
+
+        // Texte direkt auf das Print-Canvas rendern
+        if (this.data.texts) this.data.texts.forEach(tx => {
+            tmpCtx.save();
+            tmpCtx.translate(this.data.offX, this.data.offY);
+            tmpCtx.scale(this.data.zoom, this.data.zoom);
+            const weight = tx.bold ? "bold " : "";
+            tmpCtx.font = `${weight}${tx.size || 16}px Verdana`;
+            tmpCtx.textAlign = "center";
+            if (tx.shadow) {
+                const distance = tx.shadowDistance || 5;
+                const opatown = (tx.shadowOpatown || 50) / 100;
+                tmpCtx.fillStyle = `rgba(0, 0, 0, ${opatown})`;
+                tmpCtx.fillText(tx.text, tx.x + distance, tx.y + distance);
+            }
+            tmpCtx.strokeStyle = "black";
+            tmpCtx.lineWidth = 2;
+            if (tx.outline !== false) tmpCtx.strokeText(tx.text, tx.x, tx.y);
+            tmpCtx.fillStyle = tx.color || "white";
+            tmpCtx.fillText(tx.text, tx.x, tx.y);
+            tmpCtx.restore();
+        });
+
+        this.ctx = origCtx;
+        this.canvas = origCanvas;
+        this.textCtx = origTextCtx;
+        this.textCanvas = origTextCanvas;
+        this.data.zoom = origZoom;
+        this.data.offX = origOffX;
+        this.data.offY = origOffY;
+
+        return tmpCanvas;
+    }
+
     renderSVGSymbols(symbols) {
         if (!this.svgLayer) return;
 
@@ -5303,6 +5490,7 @@ class HexWorldEditorSettingTab extends PluginSettingTab {
                 ['pencil', 'guide.drawing.pen'],
                 ['paint-bucket', 'guide.drawing.fill'],
                 ['eraser', 'guide.drawing.eraser'],
+                ['mouse-pointer-2', 'guide.drawing.rightclick'],
             ]],
             ['pattern', [
                 ['copy', 'guide.pattern.stamp'],
@@ -5327,6 +5515,10 @@ class HexWorldEditorSettingTab extends PluginSettingTab {
             ['undoredo', [
                 ['undo-2', 'guide.undoredo.undo'],
                 ['redo-2', 'guide.undoredo.redo'],
+            ]],
+            ['print', [
+                ['printer', 'guide.print.pc'],
+                ['share', 'guide.print.mobile'],
             ]],
             ['touch', [
                 ['pointer', 'guide.touch.tap'],
