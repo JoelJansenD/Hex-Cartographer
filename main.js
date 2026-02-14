@@ -239,6 +239,7 @@ const TRANSLATIONS = {
         'guide.print': 'Drucken / Teilen',
         'guide.print.pc': 'Drei-Punkte-Menü → „Karte drucken" öffnet den Druckdialog.',
         'guide.print.mobile': 'Drei-Punkte-Menü → „Karte teilen" öffnet das native Teilen-Menü.',
+        'guide.print.export': 'Drei-Punkte-Menü → „Karte exportieren" speichert die Karte als JPEG oder PNG.',
         'guide.touch': 'Infos für Benutzer mit Touch Screen',
         'guide.touch.tap': 'Tippen = Setzen, Platzieren, Auswählen.<br>Mit einem Finger streichen = Zeichnen.',
         'guide.touch.longpress': 'Langes Halten auf Werkzeug-Buttons = z.B. Symbolvariante wählen oder Palettenfarbe ändern.',
@@ -258,7 +259,12 @@ const TRANSLATIONS = {
         'menu.openInEditor': 'Im Hex World Editor öffnen',
         'menu.printMap': 'Karte drucken',
         'menu.shareMap': 'Karte teilen',
+        'menu.exportMap': 'Karte exportieren',
         'notice.noContentToPrint': 'Keine Karteninhalte zum Drucken vorhanden',
+        'modal.exportTitle': 'Karte exportieren',
+        'modal.exportFormat': 'Format',
+        'modal.exportQuality': 'Qualität',
+        'modal.exportExport': 'Exportieren',
     },
 
     en: {
@@ -420,6 +426,7 @@ const TRANSLATIONS = {
         'guide.print': 'Print / Share',
         'guide.print.pc': 'Three-dot menu → "Print map" opens the print dialog.',
         'guide.print.mobile': 'Three-dot menu → "Share map" opens the native share menu.',
+        'guide.print.export': 'Three-dot menu → "Export map" saves the map as JPEG or PNG.',
         'guide.touch': 'Touch Screen Users',
         'guide.touch.tap': 'Tap = Left click (draw, place, select).',
         'guide.touch.longpress': 'Long press on tool buttons = Right click (e.g. choose symbol variant or change palette color).',
@@ -439,7 +446,12 @@ const TRANSLATIONS = {
         'menu.openInEditor': 'Open in Hex World Editor',
         'menu.printMap': 'Print map',
         'menu.shareMap': 'Share map',
+        'menu.exportMap': 'Export map',
         'notice.noContentToPrint': 'No map content to print',
+        'modal.exportTitle': 'Export map',
+        'modal.exportFormat': 'Format',
+        'modal.exportQuality': 'Quality',
+        'modal.exportExport': 'Export',
     }
 };
 
@@ -911,7 +923,7 @@ class HexWorldEditorView extends ItemView {
                             const tmpCanvas = this.renderFullMap();
                             if (!tmpCanvas) { new Notice(t('notice.noContentToPrint')); return; }
                             tmpCanvas.toBlob(async (blob) => {
-                                const file = new File([blob], (this.file ? this.file.basename : 'hexworld-map') + '.png', { type: 'image/png' });
+                                const file = new File([blob], (this.file ? this.file.basename.replace('.hexworld', '') : 'hexworld-map') + '.png', { type: 'image/png' });
                                 if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
                                     await navigator.share({ files: [file] });
                                 } else {
@@ -940,7 +952,7 @@ class HexWorldEditorView extends ItemView {
                             document.body.appendChild(iframe);
                             const doc = iframe.contentDocument || iframe.contentWindow.document;
                             doc.open();
-                            doc.write(`<html><head><title>${this.file ? this.file.basename : 'Hex World Map'}</title><style>@media print { @page { margin: 10mm; } body { margin: 0; } img { max-width: 100%; max-height: 100%; } } body { margin: 0; }</style></head><body><img src="${dataUrl}" /></body></html>`);
+                            doc.write(`<html><head><title>${this.file ? this.file.basename.replace('.hexworld', '') : 'Hex World Map'}</title><style>@media print { @page { margin: 10mm; } body { margin: 0; } img { max-width: 100%; max-height: 100%; } } body { margin: 0; }</style></head><body><img src="${dataUrl}" /></body></html>`);
                             doc.close();
                             iframe.contentWindow.onafterprint = () => { document.body.removeChild(iframe); };
                             setTimeout(() => {
@@ -949,6 +961,28 @@ class HexWorldEditorView extends ItemView {
                         });
                 });
             }
+
+            menu.addItem((item) => {
+                item.setTitle(t('menu.exportMap'))
+                    .setIcon('download')
+                    .onClick(() => {
+                        const mapSize = this.getMapWorldSize();
+                        if (!mapSize) { new Notice(t('notice.noContentToPrint')); return; }
+                        new ExportMapModal(this.app, mapSize, (format, width, quality) => {
+                            const tmpCanvas = this.renderFullMap({ targetWidth: width });
+                            if (!tmpCanvas) { new Notice(t('notice.noContentToPrint')); return; }
+                            const mimeType = format === 'jpeg' ? 'image/jpeg' : 'image/png';
+                            const ext = format === 'jpeg' ? '.jpg' : '.png';
+                            tmpCanvas.toBlob((blob) => {
+                                const link = document.createElement('a');
+                                link.href = URL.createObjectURL(blob);
+                                link.download = (this.file ? this.file.basename.replace('.hexworld', '') : 'hexworld-map') + ext;
+                                link.click();
+                                URL.revokeObjectURL(link.href);
+                            }, mimeType, format === 'jpeg' ? quality / 100 : undefined);
+                        }).open();
+                    });
+            });
         }
         super.onPaneMenu(menu, source);
     }
@@ -4257,11 +4291,10 @@ class HexWorldEditorView extends ItemView {
         this.textCtx.restore();
     }
 
-    renderFullMap() {
+    getMapWorldSize() {
         const hexes = Object.values(this.data.hexes);
         const texts = this.data.texts || [];
         const borders = this.data.borders || [];
-
         const borderOnlyHexes = [];
         const hexKeySet = new Set(Object.keys(this.data.hexes));
         for (const region of borders) {
@@ -4269,27 +4302,55 @@ class HexWorldEditorView extends ItemView {
                 if (!hexKeySet.has(`${bh.q}_${bh.r}`)) borderOnlyHexes.push(bh);
             }
         }
-
         if (hexes.length === 0 && texts.length === 0 && borderOnlyHexes.length === 0) return null;
-
         let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
         const expandBounds = (hex) => {
             const pos = this.hexToPixel(hex);
             const s = this.data.gridSize;
-            minX = Math.min(minX, pos.x - s);
-            maxX = Math.max(maxX, pos.x + s);
-            minY = Math.min(minY, pos.y - s);
-            maxY = Math.max(maxY, pos.y + s);
+            minX = Math.min(minX, pos.x - s); maxX = Math.max(maxX, pos.x + s);
+            minY = Math.min(minY, pos.y - s); maxY = Math.max(maxY, pos.y + s);
         };
         hexes.forEach(expandBounds);
         borderOnlyHexes.forEach(expandBounds);
         texts.forEach(tx => {
             const textSize = tx.size || 16;
             const w = tx.text.length * textSize * 0.6;
-            minX = Math.min(minX, tx.x - w / 2);
-            maxX = Math.max(maxX, tx.x + w / 2);
-            minY = Math.min(minY, tx.y - textSize);
-            maxY = Math.max(maxY, tx.y + textSize / 2);
+            minX = Math.min(minX, tx.x - w / 2); maxX = Math.max(maxX, tx.x + w / 2);
+            minY = Math.min(minY, tx.y - textSize); maxY = Math.max(maxY, tx.y + textSize / 2);
+        });
+        const padding = this.data.gridSize;
+        return { w: (maxX - minX) + padding * 2, h: (maxY - minY) + padding * 2 };
+    }
+
+    renderFullMap({ targetWidth, scale: fixedScale } = {}) {
+        const size = this.getMapWorldSize();
+        if (!size) return null;
+        const scale = targetWidth ? targetWidth / size.w : (fixedScale || 2);
+
+        const hexes = Object.values(this.data.hexes);
+        const texts = this.data.texts || [];
+        const borders = this.data.borders || [];
+        const borderOnlyHexes = [];
+        const hexKeySet = new Set(Object.keys(this.data.hexes));
+        for (const region of borders) {
+            for (const bh of region.hexes) {
+                if (!hexKeySet.has(`${bh.q}_${bh.r}`)) borderOnlyHexes.push(bh);
+            }
+        }
+        let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+        const expandBounds = (hex) => {
+            const pos = this.hexToPixel(hex);
+            const s = this.data.gridSize;
+            minX = Math.min(minX, pos.x - s); maxX = Math.max(maxX, pos.x + s);
+            minY = Math.min(minY, pos.y - s); maxY = Math.max(maxY, pos.y + s);
+        };
+        hexes.forEach(expandBounds);
+        borderOnlyHexes.forEach(expandBounds);
+        texts.forEach(tx => {
+            const textSize = tx.size || 16;
+            const w = tx.text.length * textSize * 0.6;
+            minX = Math.min(minX, tx.x - w / 2); maxX = Math.max(maxX, tx.x + w / 2);
+            minY = Math.min(minY, tx.y - textSize); maxY = Math.max(maxY, tx.y + textSize / 2);
         });
 
         const padding = this.data.gridSize;
@@ -4298,7 +4359,6 @@ class HexWorldEditorView extends ItemView {
 
         const w = maxX - minX;
         const h = maxY - minY;
-        const scale = 2;
 
         const tmpCanvas = document.createElement('canvas');
         tmpCanvas.width = Math.ceil(w * scale);
@@ -5440,6 +5500,89 @@ class ColorPickerModal extends Modal {
     }
 }
 
+class ExportMapModal extends Modal {
+    constructor(app, mapSize, onExport) {
+        super(app);
+        this.onExport = onExport;
+        this.aspect = mapSize.w / mapSize.h;
+        this.format = 'png';
+        this.quality = 85;
+        this.imgWidth = 1024;
+        this.imgHeight = Math.round(1024 / this.aspect);
+        this._updating = false;
+    }
+
+    onOpen() {
+        const { contentEl } = this;
+        contentEl.empty();
+        contentEl.createEl('h2', { text: t('modal.exportTitle') });
+
+        // Format
+        const formatRow = contentEl.createDiv({ attr: { style: 'display: flex; align-items: center; gap: 8px; margin-bottom: 12px;' } });
+        formatRow.createEl('span', { text: t('modal.exportFormat') + ':' });
+        const pngBtn = formatRow.createEl('button', { text: 'PNG' });
+        const jpegBtn = formatRow.createEl('button', { text: 'JPEG' });
+
+        const btnStyle = (btn, active) => {
+            btn.style.padding = '4px 12px';
+            btn.style.borderRadius = '4px';
+            btn.style.cursor = 'pointer';
+            btn.style.border = '1px solid var(--divider-color)';
+            btn.style.background = active ? 'var(--interactive-accent)' : 'var(--background-secondary)';
+            btn.style.color = active ? 'var(--text-on-accent)' : 'var(--text-normal)';
+        };
+
+        // Bildgröße
+        const sizeRow = contentEl.createDiv({ attr: { style: 'display: flex; align-items: center; gap: 8px; margin-bottom: 12px;' } });
+        sizeRow.createEl('span', { text: 'px:' });
+        const widthInput = sizeRow.createEl('input', { attr: { type: 'number', min: '64', max: '8192', step: '1', value: this.imgWidth, style: 'width: 80px;' } });
+        sizeRow.createEl('span', { text: '\u00D7' });
+        const heightInput = sizeRow.createEl('input', { attr: { type: 'number', min: '64', max: '8192', step: '1', value: this.imgHeight, style: 'width: 80px;' } });
+
+        widthInput.oninput = () => {
+            if (this._updating) return;
+            this._updating = true;
+            this.imgWidth = parseInt(widthInput.value) || 1024;
+            this.imgHeight = Math.round(this.imgWidth / this.aspect);
+            heightInput.value = this.imgHeight;
+            this._updating = false;
+        };
+        heightInput.oninput = () => {
+            if (this._updating) return;
+            this._updating = true;
+            this.imgHeight = parseInt(heightInput.value) || Math.round(1024 / this.aspect);
+            this.imgWidth = Math.round(this.imgHeight * this.aspect);
+            widthInput.value = this.imgWidth;
+            this._updating = false;
+        };
+
+        // Qualität (nur JPEG)
+        const qualityRow = contentEl.createDiv({ attr: { style: 'display: flex; align-items: center; gap: 8px; margin-bottom: 12px;' } });
+        qualityRow.createEl('span', { text: t('modal.exportQuality') + ':' });
+        const slider = qualityRow.createEl('input', { attr: { type: 'range', min: '10', max: '100', step: '5', value: this.quality, style: 'flex: 1;' } });
+        const valueDisplay = qualityRow.createEl('span', { text: this.quality + '%', attr: { style: 'min-width: 40px; text-align: right;' } });
+        slider.oninput = () => { this.quality = parseInt(slider.value); valueDisplay.textContent = this.quality + '%'; };
+
+        const updateFormatUI = () => {
+            btnStyle(pngBtn, this.format === 'png');
+            btnStyle(jpegBtn, this.format === 'jpeg');
+            qualityRow.style.display = this.format === 'jpeg' ? 'flex' : 'none';
+        };
+
+        pngBtn.onclick = () => { this.format = 'png'; updateFormatUI(); };
+        jpegBtn.onclick = () => { this.format = 'jpeg'; updateFormatUI(); };
+
+        // Buttons
+        const btnRow = contentEl.createDiv({ attr: { style: 'display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px;' } });
+        const cancelBtn = btnRow.createEl('button', { text: t('modal.colorPickerCancel') });
+        cancelBtn.onclick = () => this.close();
+        const exportBtn = btnRow.createEl('button', { text: t('modal.exportExport'), cls: 'mod-cta' });
+        exportBtn.onclick = () => { this.onExport(this.format, this.imgWidth, this.quality); this.close(); };
+
+        updateFormatUI();
+    }
+}
+
 class HexWorldEditorSettingTab extends PluginSettingTab {
     constructor(app, plugin) {
         super(app, plugin);
@@ -5519,6 +5662,7 @@ class HexWorldEditorSettingTab extends PluginSettingTab {
             ['print', [
                 ['printer', 'guide.print.pc'],
                 ['share', 'guide.print.mobile'],
+                ['download', 'guide.print.export'],
             ]],
             ['touch', [
                 ['pointer', 'guide.touch.tap'],
