@@ -261,6 +261,7 @@ const TRANSLATIONS = {
         'menu.shareMap': 'Karte teilen',
         'menu.exportMap': 'Karte exportieren',
         'notice.noContentToPrint': 'Keine Karteninhalte zum Drucken vorhanden',
+        'notice.exportSaved': 'Exportiert nach',
         'modal.exportTitle': 'Karte exportieren',
         'modal.exportFormat': 'Format',
         'modal.exportQuality': 'Qualität',
@@ -448,6 +449,7 @@ const TRANSLATIONS = {
         'menu.shareMap': 'Share map',
         'menu.exportMap': 'Export map',
         'notice.noContentToPrint': 'No map content to print',
+        'notice.exportSaved': 'Exported to',
         'modal.exportTitle': 'Export map',
         'modal.exportFormat': 'Format',
         'modal.exportQuality': 'Quality',
@@ -954,13 +956,29 @@ class HexWorldEditorView extends ItemView {
                             const ext = format === 'jpeg' ? '.jpg' : '.png';
                             const baseName = this.file ? this.file.basename.replace('.hexworld', '') : 'hexworld-map';
                             const blob = await new Promise(resolve => tmpCanvas.toBlob(resolve, mimeType, format === 'jpeg' ? quality / 100 : undefined));
-                            const link = document.createElement('a');
-                            link.href = URL.createObjectURL(blob);
-                            link.download = baseName + ext;
-                            document.body.appendChild(link);
-                            link.click();
-                            document.body.removeChild(link);
-                            setTimeout(() => URL.revokeObjectURL(link.href), 5000);
+                            if (this.isTouchDevice) {
+                                // Mobil: In Export-Unterordner neben der .hexworld-Datei speichern
+                                const parentFolder = this.file ? this.file.parent.path : '';
+                                const exportFolder = parentFolder ? `${parentFolder}/Hex Cartographer Export` : 'Hex Cartographer Export';
+                                if (!this.app.vault.getAbstractFileByPath(exportFolder)) {
+                                    await this.app.vault.createFolder(exportFolder);
+                                }
+                                const fileName = baseName + ext;
+                                const filePath = `${exportFolder}/${fileName}`;
+                                const buffer = await blob.arrayBuffer();
+                                const existing = this.app.vault.getAbstractFileByPath(filePath);
+                                if (existing) { await this.app.vault.modifyBinary(existing, buffer); }
+                                else { await this.app.vault.createBinary(filePath, buffer); }
+                                new Notice(`${t('notice.exportSaved')}: ${filePath}`);
+                            } else {
+                                const link = document.createElement('a');
+                                link.href = URL.createObjectURL(blob);
+                                link.download = baseName + ext;
+                                document.body.appendChild(link);
+                                link.click();
+                                document.body.removeChild(link);
+                                setTimeout(() => URL.revokeObjectURL(link.href), 5000);
+                            }
                         }).open();
                     });
             });
