@@ -512,12 +512,12 @@ class HexCartographerPlugin extends Plugin {
 
         this.registerView('hex-cartographer', (leaf) => new HexCartographerView(leaf, this));
 
-        this.registerExtensions(['hexworld.md'], 'hex-cartographer');
+        this.registerExtensions(['hexcartographer.md'], 'hex-cartographer');
 
-        // KRITISCH: Stelle sicher, dass .hexworld.md Dateien mit dem Editor geöffnet werden
+        // KRITISCH: Stelle sicher, dass .hexcartographer.md Dateien mit dem Editor geöffnet werden
         const originalOpenFile = this.app.workspace.openLinkText.bind(this.app.workspace);
         this.app.workspace.openLinkText = async (linktext, sourcePath, newLeaf, openViewState) => {
-            if (linktext.endsWith('.hexworld.md') || linktext.includes('.hexworld.md')) {
+            if (linktext.endsWith('.hexcartographer.md') || linktext.includes('.hexcartographer.md')) {
                 const file = this.app.metadataCache.getFirstLinkpathDest(linktext, sourcePath);
                 if (file && file instanceof TFile) {
                     const leaf = this.app.workspace.getLeaf(newLeaf);
@@ -541,7 +541,7 @@ class HexCartographerPlugin extends Plugin {
             this.app.workspace.on('file-open', async (file) => {
                 if (!file || !file.path) return;
 
-                if (file.path.endsWith('.hexworld.md')) {
+                if (file.path.endsWith('.hexcartographer.md')) {
                     await new Promise(resolve => setTimeout(resolve, 10));
 
                     const leaf = this.app.workspace.activeLeaf;
@@ -562,13 +562,13 @@ class HexCartographerPlugin extends Plugin {
         }, 500);
 
         this.registerEvent(this.app.vault.on('rename', async (file, oldPath) => {
-            if (oldPath.endsWith('.hexworld.md') && !file.path.endsWith('.hexworld.md')) {
-                const newName = file.name.replace(/\.md$/, '') + '.hexworld.md';
+            if (oldPath.endsWith('.hexcartographer.md') && !file.path.endsWith('.hexcartographer.md')) {
+                const newName = file.name.replace(/\.md$/, '') + '.hexcartographer.md';
                 const newPath = file.parent ? `${file.parent.path}/${newName}` : newName;
 
 
                 await this.app.fileManager.renameFile(file, newPath);
-            } else if (file.path.endsWith('.hexworld.md')) {
+            } else if (file.path.endsWith('.hexcartographer.md')) {
                 this.hideHexExtensionInExplorer();
             }
         }));
@@ -635,7 +635,7 @@ class HexCartographerPlugin extends Plugin {
         }));
 
         this.registerEvent(this.app.workspace.on('file-open', (file) => {
-            if (!file || file.extension !== 'hexworld') return;
+            if (!file || file.extension !== 'hexcartographer') return;
 
             const leaves = this.app.workspace.getLeavesOfType('hex-cartographer');
             leaves.forEach((leaf) => {
@@ -648,7 +648,7 @@ class HexCartographerPlugin extends Plugin {
     }
 
     async createNewHexMap(targetFile = null) {
-        const fileName = `HexMap_${Date.now()}.hexworld.md`;
+        const fileName = `HexMap_${Date.now()}.hexcartographer.md`;
 
         let folderPath = '';
         if (targetFile) {
@@ -685,9 +685,9 @@ class HexCartographerPlugin extends Plugin {
 
         try {
             const now = new Date().toISOString().split('T')[0];
-            const frontmatter = `---\ntype: hexworld\ncreated: ${now}\n---\n\n`;
+            const frontmatter = `---\ntype: hexcartographer\ncreated: ${now}\n---\n\n`;
             const jsonData = JSON.stringify(initialData, null, 2);
-            const content = `${frontmatter}# ${fileName.replace('.hexworld.md', '')}\n\n\`\`\`json\n${jsonData}\n\`\`\`\n`;
+            const content = `${frontmatter}# ${fileName.replace('.hexcartographer.md', '')}\n\n\`\`\`json\n${jsonData}\n\`\`\`\n`;
 
             const file = await this.app.vault.create(filePath, content);
             const leaf = this.app.workspace.getLeaf('tab');
@@ -703,11 +703,11 @@ class HexCartographerPlugin extends Plugin {
 
     hideHexExtensionInExplorer() {
         const hideExtension = () => {
-            const fileElements = document.querySelectorAll('.nav-file-title[data-path$=".hexworld.md"]');
+            const fileElements = document.querySelectorAll('.nav-file-title[data-path$=".hexcartographer.md"]');
             fileElements.forEach(el => {
                 const titleEl = el.querySelector('.nav-file-title-content');
-                if (titleEl && titleEl.textContent.includes('.hexworld')) {
-                    titleEl.textContent = titleEl.textContent.replace('.hexworld', '');
+                if (titleEl && titleEl.textContent.includes('.hexcartographer')) {
+                    titleEl.textContent = titleEl.textContent.replace('.hexcartographer', '');
                 }
 
                 if (!el.classList.contains('hex-cartographer-file')) {
@@ -902,7 +902,7 @@ class HexCartographerView extends ItemView {
     getViewType() { return 'hex-cartographer'; }
     getDisplayText() {
         if (!this.file) return 'Hex Cartographer';
-        return this.file.basename.replace('.hexworld', '');
+        return this.file.basename.replace('.hexcartographer', '');
     }
     getState() { return { file: this.file ? this.file.path : null }; }
 
@@ -933,7 +933,7 @@ class HexCartographerView extends ItemView {
                             document.body.appendChild(iframe);
                             const doc = iframe.contentDocument || iframe.contentWindow.document;
                             doc.open();
-                            doc.write(`<html><head><title>${this.file ? this.file.basename.replace('.hexworld', '') : 'Hex Cartographer Map'}</title><style>@media print { @page { margin: 10mm; } body { margin: 0; } img { max-width: 100%; max-height: 100%; } } body { margin: 0; }</style></head><body><img src="${dataUrl}" /></body></html>`);
+                            doc.write(`<html><head><title>${this.file ? this.file.basename.replace('.hexcartographer', '') : 'Hex Cartographer Map'}</title><style>@media print { @page { margin: 10mm; } body { margin: 0; } img { max-width: 100%; max-height: 100%; } } body { margin: 0; }</style></head><body><img src="${dataUrl}" /></body></html>`);
                             doc.close();
                             iframe.contentWindow.onafterprint = () => { document.body.removeChild(iframe); };
                             setTimeout(() => {
@@ -954,10 +954,10 @@ class HexCartographerView extends ItemView {
                             if (!tmpCanvas) { new Notice(t('notice.noContentToPrint')); return; }
                             const mimeType = format === 'jpeg' ? 'image/jpeg' : 'image/png';
                             const ext = format === 'jpeg' ? '.jpg' : '.png';
-                            const baseName = this.file ? this.file.basename.replace('.hexworld', '') : 'hexworld-map';
+                            const baseName = this.file ? this.file.basename.replace('.hexcartographer', '') : 'hex-cartographer-map';
                             const blob = await new Promise(resolve => tmpCanvas.toBlob(resolve, mimeType, format === 'jpeg' ? quality / 100 : undefined));
                             if (this.isTouchDevice) {
-                                // Mobil: In Export-Unterordner neben der .hexworld-Datei speichern
+                                // Mobil: In Export-Unterordner neben der .hexcartographer-Datei speichern
                                 const parentFolder = this.file ? this.file.parent.path : '';
                                 const exportFolder = parentFolder ? `${parentFolder}/Hex Cartographer Export` : 'Hex Cartographer Export';
                                 if (!this.app.vault.getAbstractFileByPath(exportFolder)) {
@@ -5024,9 +5024,9 @@ class HexCartographerView extends ItemView {
                 };
 
                 const now = new Date().toISOString().split('T')[0];
-                const frontmatter = `---\ntype: hexworld\ncreated: ${now}\n---\n\n`;
+                const frontmatter = `---\ntype: hexcartographer\ncreated: ${now}\n---\n\n`;
                 const jsonData = JSON.stringify(this.data, null, 2);
-                const title = this.file.basename.replace('.hexworld', '');
+                const title = this.file.basename.replace('.hexcartographer', '');
                 const content = `${frontmatter}# ${title}\n\n\`\`\`json\n${jsonData}\n\`\`\`\n`;
 
                 await this.app.vault.modify(this.file, content);

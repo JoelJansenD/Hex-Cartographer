@@ -169,7 +169,7 @@ input[type="color"][title="Werkzeugfarbe"]::-moz-color-swatch {
 }
 
 /* Fallback für Dateien, die noch nicht die Klasse haben */
-.nav-file-title[data-path$=".hexworld.md"]:not(.hex-cartographer-file) .nav-file-title-content::after {
+.nav-file-title[data-path$=".hexcartographer.md"]:not(.hex-cartographer-file) .nav-file-title-content::after {
     content: "HEXMAP";
     display: inline-block;
     margin-left: 4px;
@@ -185,5 +185,5 @@ input[type="color"][title="Werkzeugfarbe"]::-moz-color-swatch {
     line-height: 1;
 }
 
-/* Verstecke ".hexworld" Extension im Dateinamen im File Explorer */
+/* Verstecke ".hexcartographer" Extension im Dateinamen im File Explorer */
 /* Dies wird via JavaScript manipuliert */
