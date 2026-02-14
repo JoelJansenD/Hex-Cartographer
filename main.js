@@ -117,7 +117,7 @@ const TRANSLATIONS = {
         // Tooltips — Hauptwerkzeuge
         'tooltip.editMode': 'Edit-Modus\nKlick: Werkzeuge ein-/ausblenden',
         'tooltip.colorPicker': 'Werkzeugfarbe\nKlick: Farbwähler öffnen',
-        'tooltip.hexColor': 'Waben-Farbwerkzeug\nKlick: Waben einfärben',
+        'tooltip.hexColor': 'Waben\nKlick: Waben einfärben',
         'tooltip.fill': 'Fülleimer\nKlick: Zusammenhängende Fläche füllen\nErneut klicken: Fülleimer ausschalten',
         'tooltip.text': 'Text-Werkzeug\nKlick auf Karte: Neuen Text erstellen\nKlick auf Text: Text bearbeiten/verschieben',
         'tooltip.eraser': 'Radierer\nKlick: Wabeninhalt löschen\nDoppelklick: Zusammenhängendes löschen',
@@ -241,6 +241,14 @@ const TRANSLATIONS = {
         'guide.touch.zoom': 'Zwei-Finger-Pinch = Zoom.',
         'guide.touch.pan': 'Zwei-Finger-Ziehen = Karte verschieben.',
 
+        // Modal — Farbwähler
+        'modal.colorPickerTitle': 'Farbe wählen',
+        'modal.colorPickerCancel': 'Abbrechen',
+        'tooltip.colorEyedropper': 'Farbpipette\nTippe auf eine Wabe, um deren Farbe zu übernehmen',
+        'notice.tapToPickColor': 'Tippe auf eine Wabe, um die Farbe aufzunehmen',
+        'notice.colorPicked': 'Farbe aufgenommen',
+        'notice.noColorAtPosition': 'Keine Farbe an dieser Position',
+
         // Menü-Einträge
         'menu.createNew': 'Neue Hex World erstellen',
         'menu.openInEditor': 'Im Hex World Editor öffnen',
@@ -283,7 +291,7 @@ const TRANSLATIONS = {
         // Tooltips — Main tools
         'tooltip.editMode': 'Edit Mode\nClick: Show/hide tools',
         'tooltip.colorPicker': 'Tool Color\nClick: Open color picker',
-        'tooltip.hexColor': 'Hex Color Tool\nClick: Color hexes',
+        'tooltip.hexColor': 'Hexes\nClick: Color hexes',
         'tooltip.fill': 'Fill Bucket\nClick: Fill connected area\nClick again: Turn off fill',
         'tooltip.text': 'Text Tool\nClick on map: Create new text\nClick on text: Edit/move text',
         'tooltip.eraser': 'Eraser\nClick: Delete hex content\nDouble-click: Delete connected area',
@@ -371,7 +379,7 @@ const TRANSLATIONS = {
         'guide.navigation.zoom': 'Mouse wheel = Zoom.',
         'guide.navigation.pan': 'Middle mouse button or Shift+Drag = Pan map.',
         'guide.navigation.fit': 'Fit entire map to view.',
-        'guide.hexcolor': 'Hex Color',
+        'guide.hexcolor': 'Hexes',
         'guide.hexcolor.paint': 'Choose a color and click hexes to paint them.',
         'guide.hexcolor.palette': 'Right-click a palette slot = Save color.',
         'guide.symbols': 'Symbols',
@@ -407,6 +415,14 @@ const TRANSLATIONS = {
         'guide.touch.zoom': 'Two-finger pinch = Zoom.',
         'guide.touch.pan': 'Two-finger drag = Pan map.',
 
+        // Modal — Color picker
+        'modal.colorPickerTitle': 'Choose Color',
+        'modal.colorPickerCancel': 'Cancel',
+        'tooltip.colorEyedropper': 'Color Eyedropper\nTap on a hex to pick its color',
+        'notice.tapToPickColor': 'Tap on a hex to pick its color',
+        'notice.colorPicked': 'Color picked',
+        'notice.noColorAtPosition': 'No color at this position',
+
         // Menu entries
         'menu.createNew': 'Create new Hex World',
         'menu.openInEditor': 'Open in Hex World Editor',
@@ -425,6 +441,40 @@ function t(key, params) {
     }
     return str;
 }
+
+// === HSB/RGB/Hex Konvertierung ===
+function hexToRgb(hex) {
+    hex = hex.replace('#', '');
+    if (hex.length === 3) hex = hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2];
+    return { r: parseInt(hex.substring(0, 2), 16), g: parseInt(hex.substring(2, 4), 16), b: parseInt(hex.substring(4, 6), 16) };
+}
+function rgbToHex(r, g, b) {
+    return '#' + [r, g, b].map(v => Math.round(Math.max(0, Math.min(255, v))).toString(16).padStart(2, '0')).join('');
+}
+function rgbToHsb(r, g, b) {
+    r /= 255; g /= 255; b /= 255;
+    const max = Math.max(r, g, b), min = Math.min(r, g, b), d = max - min;
+    let h = 0;
+    if (d !== 0) {
+        if (max === r) h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
+        else if (max === g) h = ((b - r) / d + 2) / 6;
+        else h = ((r - g) / d + 4) / 6;
+    }
+    return { h: h * 360, s: max === 0 ? 0 : (d / max) * 100, b: max * 100 };
+}
+function hsbToRgb(h, s, b) {
+    h /= 360; s /= 100; b /= 100;
+    const i = Math.floor(h * 6), f = h * 6 - i, p = b * (1 - s), q = b * (1 - f * s), t = b * (1 - (1 - f) * s);
+    let r, g, bl;
+    switch (i % 6) {
+        case 0: r = b; g = t; bl = p; break; case 1: r = q; g = b; bl = p; break;
+        case 2: r = p; g = b; bl = t; break; case 3: r = p; g = q; bl = b; break;
+        case 4: r = t; g = p; bl = b; break; case 5: r = b; g = p; bl = q; break;
+    }
+    return { r: Math.round(r * 255), g: Math.round(g * 255), b: Math.round(bl * 255) };
+}
+function hsbToHex(h, s, b) { const rgb = hsbToRgb(h, s, b); return rgbToHex(rgb.r, rgb.g, rgb.b); }
+function hexToHsb(hex) { const rgb = hexToRgb(hex); return rgbToHsb(rgb.r, rgb.g, rgb.b); }
 
 // === Hauptklasse des Plugins ===
 class HexWorldEditorPlugin extends Plugin {
@@ -718,6 +768,8 @@ class HexWorldEditorView extends ItemView {
         this.colorPalette = [...DEFAULT_PALETTE];
         this.colorPalette2 = [...DEFAULT_PALETTE2];
         this.activeColorSlot = 1; // Standardfarbe: Grün
+        this.isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+        this.colorPickMode = false;
 
         this.initToolConfigs();
 
@@ -1413,7 +1465,19 @@ class HexWorldEditorView extends ItemView {
         });
         this.masterColorInput = masterColorInput;
 
-        masterColorBtn.onclick = () => masterColorInput.click();
+        masterColorBtn.onclick = () => {
+            if (this.isTouchDevice) {
+                new ColorPickerModal(this.app, this.masterColor, (color) => {
+                    this.masterColor = color;
+                    masterColorBtn.style.backgroundColor = this.masterColor;
+                    masterColorInput.value = this.masterColor;
+                    this.updateActivePathColor();
+                    this.requestSave();
+                }).open();
+            } else {
+                masterColorInput.click();
+            }
+        };
         this.makeInputInteractive(masterColorBtn);
         masterColorInput.oninput = (e) => {
             this.masterColor = e.target.value;
@@ -1423,6 +1487,24 @@ class HexWorldEditorView extends ItemView {
         masterColorInput.addEventListener('change', () => {
             this.requestSave();
         });
+
+        if (this.isTouchDevice) {
+            const colorEyedropperBtn = editContent.createEl('button', {
+                cls: 'hex-tool-btn',
+                attr: { title: t('tooltip.colorEyedropper') }
+            });
+            setIcon(colorEyedropperBtn, 'pipette');
+            colorEyedropperBtn.style.background = '#fff';
+            this.colorEyedropperBtn = colorEyedropperBtn;
+            colorEyedropperBtn.onclick = () => {
+                const wasActive = this.colorPickMode;
+                this.exitPathEditMode();
+                this.colorPickMode = !wasActive;
+                colorEyedropperBtn.style.background = this.colorPickMode ? 'var(--interactive-accent)' : '#fff';
+                colorEyedropperBtn.style.color = this.colorPickMode ? 'var(--text-on-accent)' : '';
+                if (this.colorPickMode) new Notice(t('notice.tapToPickColor'));
+            };
+        }
 
         editContent.createEl('span', { cls: 'hex-toolbar-sep', text: '\u200B' });
 
@@ -1504,7 +1586,7 @@ class HexWorldEditorView extends ItemView {
         btn.dataset.drawMode = mode;
         setIcon(btn, icon);
         btn.onclick = () => {
-            if (mode === 'eraser' && (this.patternPickMode || this.pathPickMode || this.borderPickMode)) return;
+            if (mode === 'eraser' && (this.patternPickMode || this.pathPickMode || this.borderPickMode || this.colorPickMode)) return;
             const needsRender = this.currentToolGroup === 'pattern' || this.borderSettings.pickedHex;
             if (mode !== 'eraser') this.exitPathEditMode();
             if (this.drawMode === mode && (mode === 'eraser' || mode === 'fill')) {
@@ -1791,7 +1873,7 @@ class HexWorldEditorView extends ItemView {
             });
 
             btn.onclick = () => {
-                if (this.currentToolGroup === 'pattern' || this.patternPickMode || this.pathPickMode || this.borderPickMode) {
+                if (this.currentToolGroup === 'pattern' || this.patternPickMode || this.pathPickMode || this.borderPickMode || this.colorPickMode) {
                     this.exitPathEditMode();
                     this.currentToolGroup = 'hexcolor';
                     this.drawMode = 'pen';
@@ -1804,16 +1886,32 @@ class HexWorldEditorView extends ItemView {
                 if (toolbar) this.updateToolbarState(toolbar);
             };
 
+            const openPaletteColorPicker = () => {
+                if (this.isTouchDevice) {
+                    new ColorPickerModal(this.app, this[paletteKey][index], (color) => {
+                        this[paletteKey][index] = color;
+                        btn.style.backgroundColor = color;
+                        hiddenInput.value = color;
+                        this.masterColor = color;
+                        if (this.masterColorInput) { this.masterColorInput.value = this.masterColor; if (this.masterColorBtn) this.masterColorBtn.style.backgroundColor = this.masterColor; }
+                        this.updateActivePathColor();
+                        this.requestSave();
+                    }).open();
+                } else {
+                    hiddenInput.click();
+                }
+            };
+
             btn.oncontextmenu = (e) => {
                 e.preventDefault();
-                hiddenInput.click();
+                openPaletteColorPicker();
             };
 
             let longPressTimer = null;
             btn.addEventListener('touchstart', (e) => {
                 longPressTimer = setTimeout(() => {
                     e.preventDefault();
-                    hiddenInput.click();
+                    openPaletteColorPicker();
                     longPressTimer = null;
                 }, 500);
             }, { passive: false });
@@ -2087,6 +2185,11 @@ class HexWorldEditorView extends ItemView {
             this.borderPickerBtn.style.background = '';
             this.borderPickerBtn.style.color = '';
         }
+        this.colorPickMode = false;
+        if (this.colorEyedropperBtn) {
+            this.colorEyedropperBtn.style.background = '#fff';
+            this.colorEyedropperBtn.style.color = '';
+        }
         if (this.borderSettings.activeRegionId !== null) {
             this.borderSettings.activeRegionId = null;
             this.borderSettings.pickedHex = null;
@@ -2331,6 +2434,31 @@ class HexWorldEditorView extends ItemView {
             this.mouseDownPos = { x: world.x, y: world.y };
             this.startHex = this.pixelToHex(world.x, world.y);
             this.lastHex = this.startHex;
+
+            if (this.colorPickMode) {
+                const cx = Math.round(this.mouseDownPos.x * this.data.zoom + this.data.offX);
+                const cy = Math.round(this.mouseDownPos.y * this.data.zoom + this.data.offY);
+                if (cx >= 0 && cy >= 0 && cx < this.canvas.width && cy < this.canvas.height) {
+                    const pixel = this.ctx.getImageData(cx, cy, 1, 1).data;
+                    if (pixel[3] > 0) {
+                        this.masterColor = rgbToHex(pixel[0], pixel[1], pixel[2]);
+                        if (this.masterColorInput) { this.masterColorInput.value = this.masterColor; if (this.masterColorBtn) this.masterColorBtn.style.backgroundColor = this.masterColor; }
+                        this.updateActivePathColor();
+                        new Notice(t('notice.colorPicked'));
+                    } else {
+                        new Notice(t('notice.noColorAtPosition'));
+                    }
+                } else {
+                    new Notice(t('notice.noColorAtPosition'));
+                }
+                this.colorPickMode = false;
+                if (this.colorEyedropperBtn) { this.colorEyedropperBtn.style.background = '#fff'; this.colorEyedropperBtn.style.color = ''; }
+                this.isMouseDown = false;
+                const toolbar = this.containerEl.querySelector('.hex-toolbar');
+                if (toolbar) this.updateToolbarState(toolbar);
+                this.render();
+                return;
+            }
 
             if (this.patternPickMode) {
                 const key = `${this.startHex.q}_${this.startHex.r}`;
@@ -2652,6 +2780,32 @@ class HexWorldEditorView extends ItemView {
                         this.startHex = this.pixelToHex(world.x, world.y);
                         this.lastHex = this.startHex;
 
+                        if (this.colorPickMode) {
+                            const cx = Math.round(this.mouseDownPos.x * this.data.zoom + this.data.offX);
+                            const cy = Math.round(this.mouseDownPos.y * this.data.zoom + this.data.offY);
+                            if (cx >= 0 && cy >= 0 && cx < this.canvas.width && cy < this.canvas.height) {
+                                const pixel = this.ctx.getImageData(cx, cy, 1, 1).data;
+                                if (pixel[3] > 0) {
+                                    this.masterColor = rgbToHex(pixel[0], pixel[1], pixel[2]);
+                                    if (this.masterColorInput) { this.masterColorInput.value = this.masterColor; if (this.masterColorBtn) this.masterColorBtn.style.backgroundColor = this.masterColor; }
+                                    this.updateActivePathColor();
+                                    new Notice(t('notice.colorPicked'));
+                                } else {
+                                    new Notice(t('notice.noColorAtPosition'));
+                                }
+                            } else {
+                                new Notice(t('notice.noColorAtPosition'));
+                            }
+                            this.colorPickMode = false;
+                            if (this.colorEyedropperBtn) { this.colorEyedropperBtn.style.background = '#fff'; this.colorEyedropperBtn.style.color = ''; }
+                            this.isMouseDown = false;
+                            this.touchState.pendingTouchStart = null;
+                            const toolbar = this.containerEl.querySelector('.hex-toolbar');
+                            if (toolbar) this.updateToolbarState(toolbar);
+                            this.render();
+                            return;
+                        }
+
                         if (this.patternPickMode) {
                             const key = `${this.startHex.q}_${this.startHex.r}`;
                             const hexData = this.data.hexes[key];
@@ -2842,6 +2996,32 @@ class HexWorldEditorView extends ItemView {
                     this.mouseDownPos = { x: world.x, y: world.y };
                     this.startHex = this.pixelToHex(world.x, world.y);
                     this.lastHex = this.startHex;
+
+                    if (this.colorPickMode) {
+                        const cx = Math.round(this.mouseDownPos.x * this.data.zoom + this.data.offX);
+                        const cy = Math.round(this.mouseDownPos.y * this.data.zoom + this.data.offY);
+                        if (cx >= 0 && cy >= 0 && cx < this.canvas.width && cy < this.canvas.height) {
+                            const pixel = this.ctx.getImageData(cx, cy, 1, 1).data;
+                            if (pixel[3] > 0) {
+                                this.masterColor = rgbToHex(pixel[0], pixel[1], pixel[2]);
+                                if (this.masterColorInput) { this.masterColorInput.value = this.masterColor; if (this.masterColorBtn) this.masterColorBtn.style.backgroundColor = this.masterColor; }
+                                this.updateActivePathColor();
+                                new Notice(t('notice.colorPicked'));
+                            } else {
+                                new Notice(t('notice.noColorAtPosition'));
+                            }
+                        } else {
+                            new Notice(t('notice.noColorAtPosition'));
+                        }
+                        this.colorPickMode = false;
+                        if (this.colorEyedropperBtn) { this.colorEyedropperBtn.style.background = '#fff'; this.colorEyedropperBtn.style.color = ''; }
+                        this.isMouseDown = false;
+                        this.touchState.pendingTouchStart = null;
+                        const toolbar = this.containerEl.querySelector('.hex-toolbar');
+                        if (toolbar) this.updateToolbarState(toolbar);
+                        this.render();
+                        return;
+                    }
 
                     if (this.patternPickMode) {
                         const key = `${this.startHex.q}_${this.startHex.r}`;
@@ -4847,6 +5027,155 @@ class TextInputModal extends Modal {
     }
 }
 
+
+class ColorPickerModal extends Modal {
+    constructor(app, initialColor, onSelect) {
+        super(app);
+        this.onSelect = onSelect;
+        this.initialColor = initialColor || '#ff0000';
+        const hsb = hexToHsb(this.initialColor);
+        this.hue = hsb.h;
+        this.sat = hsb.s;
+        this.bri = hsb.b;
+    }
+
+    onOpen() {
+        const { contentEl } = this;
+        contentEl.createEl('h2', { text: t('modal.colorPickerTitle') });
+
+        // Farbvorschau
+        this.previewEl = contentEl.createDiv({
+            attr: { style: 'width: 100%; height: 60px; border-radius: 6px; border: 1px solid var(--divider-color); margin-bottom: 12px;' }
+        });
+        this.previewEl.style.backgroundColor = this.initialColor;
+
+        // SB-Quadrat
+        const sbSize = 256;
+        this.sbCanvas = contentEl.createEl('canvas', {
+            attr: { width: sbSize, height: sbSize, style: 'width: 100%; aspect-ratio: 1; border-radius: 4px; cursor: crosshair; touch-action: none; display: block;' }
+        });
+        this.sbCtx = this.sbCanvas.getContext('2d');
+
+        // Hue-Leiste
+        this.hueCanvas = contentEl.createEl('canvas', {
+            attr: { width: 256, height: 24, style: 'width: 100%; height: 30px; border-radius: 4px; cursor: pointer; touch-action: none; display: block; margin-top: 10px;' }
+        });
+        this.hueCtx = this.hueCanvas.getContext('2d');
+
+        // Hex-Eingabe
+        const hexRow = contentEl.createDiv({ attr: { style: 'display: flex; align-items: center; gap: 8px; margin-top: 12px;' } });
+        hexRow.createEl('label', { text: 'Hex:',  attr: { style: 'font-weight: 500;' } });
+        this.hexInput = hexRow.createEl('input', { value: this.initialColor, attr: { style: 'flex: 1; padding: 6px; font-family: monospace;' } });
+        this.hexInput.addEventListener('input', () => {
+            const val = this.hexInput.value.trim();
+            if (/^#[0-9a-fA-F]{6}$/.test(val)) {
+                const hsb = hexToHsb(val);
+                this.hue = hsb.h; this.sat = hsb.s; this.bri = hsb.b;
+                this.renderAll();
+            }
+        });
+
+        // Buttons
+        const btnRow = contentEl.createDiv({ attr: { style: 'display: flex; gap: 10px; margin-top: 15px;' } });
+        const okBtn = btnRow.createEl('button', { text: 'OK', cls: 'mod-cta', attr: { style: 'flex: 1;' } });
+        okBtn.onclick = () => { this.onSelect(hsbToHex(this.hue, this.sat, this.bri)); this.close(); };
+        const cancelBtn = btnRow.createEl('button', { text: t('modal.colorPickerCancel'), attr: { style: 'flex: 1;' } });
+        cancelBtn.onclick = () => this.close();
+
+        // Pointer Events — SB-Quadrat
+        this._sbDragging = false;
+        this.sbCanvas.addEventListener('pointerdown', (e) => {
+            e.preventDefault();
+            this.sbCanvas.setPointerCapture(e.pointerId);
+            this._sbDragging = true;
+            this._updateSB(e);
+        });
+        this.sbCanvas.addEventListener('pointermove', (e) => { if (this._sbDragging) this._updateSB(e); });
+        this.sbCanvas.addEventListener('pointerup', () => { this._sbDragging = false; });
+
+        // Pointer Events — Hue-Leiste
+        this._hueDragging = false;
+        this.hueCanvas.addEventListener('pointerdown', (e) => {
+            e.preventDefault();
+            this.hueCanvas.setPointerCapture(e.pointerId);
+            this._hueDragging = true;
+            this._updateHue(e);
+        });
+        this.hueCanvas.addEventListener('pointermove', (e) => { if (this._hueDragging) this._updateHue(e); });
+        this.hueCanvas.addEventListener('pointerup', () => { this._hueDragging = false; });
+
+        this.renderAll();
+    }
+
+    _updateSB(e) {
+        const rect = this.sbCanvas.getBoundingClientRect();
+        this.sat = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
+        this.bri = Math.max(0, Math.min(100, (1 - (e.clientY - rect.top) / rect.height) * 100));
+        this.renderAll();
+    }
+
+    _updateHue(e) {
+        const rect = this.hueCanvas.getBoundingClientRect();
+        this.hue = Math.max(0, Math.min(360, ((e.clientX - rect.left) / rect.width) * 360));
+        this.renderAll();
+    }
+
+    renderAll() {
+        const hex = hsbToHex(this.hue, this.sat, this.bri);
+        this.previewEl.style.backgroundColor = hex;
+        this.hexInput.value = hex;
+        this.renderSB();
+        this.renderHue();
+    }
+
+    renderSB() {
+        const ctx = this.sbCtx;
+        const w = this.sbCanvas.width, h = this.sbCanvas.height;
+        // Hue-Füllung
+        ctx.fillStyle = hsbToHex(this.hue, 100, 100);
+        ctx.fillRect(0, 0, w, h);
+        // Weißer Horizontalverlauf (Sättigung)
+        const whiteGrad = ctx.createLinearGradient(0, 0, w, 0);
+        whiteGrad.addColorStop(0, 'rgba(255,255,255,1)');
+        whiteGrad.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = whiteGrad;
+        ctx.fillRect(0, 0, w, h);
+        // Schwarzer Vertikalverlauf (Helligkeit)
+        const blackGrad = ctx.createLinearGradient(0, 0, 0, h);
+        blackGrad.addColorStop(0, 'rgba(0,0,0,0)');
+        blackGrad.addColorStop(1, 'rgba(0,0,0,1)');
+        ctx.fillStyle = blackGrad;
+        ctx.fillRect(0, 0, w, h);
+        // Fadenkreuz-Indikator
+        const cx = (this.sat / 100) * w;
+        const cy = (1 - this.bri / 100) * h;
+        ctx.beginPath();
+        ctx.arc(cx, cy, 6, 0, Math.PI * 2);
+        ctx.strokeStyle = this.bri > 50 ? '#000' : '#fff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+    }
+
+    renderHue() {
+        const ctx = this.hueCtx;
+        const w = this.hueCanvas.width, h = this.hueCanvas.height;
+        const grad = ctx.createLinearGradient(0, 0, w, 0);
+        const stops = [0, 60, 120, 180, 240, 300, 360];
+        stops.forEach(deg => grad.addColorStop(deg / 360, `hsl(${deg}, 100%, 50%)`));
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, w, h);
+        // Indikator
+        const x = (this.hue / 360) * w;
+        ctx.beginPath();
+        ctx.rect(x - 3, 0, 6, h);
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+    }
+}
 
 class HexWorldEditorSettingTab extends PluginSettingTab {
     constructor(app, plugin) {
