@@ -193,13 +193,13 @@ const TRANSLATIONS = {
         'modal.confirmDeleteText': 'Text wirklich löschen?',
 
         // Einstellungen
-        'settings.donateText': 'Spendiere mir einen Kaffee. Ich freue mich darüber, Euch den Hexworld Editor kostenlos zur Verfügung zu stellen. Allerdings bedurfte die Entwicklung lange Zeit. Wenn mir etwas neues einfällt, wird es für Euch Updates geben. Ihr würdet mir eine große Freude bereiten, wenn ihr mir für diese Arbeit eine kleine Spende hinterlasst.',
+        'settings.donateText': 'Spendiere mir einen Kaffee. Ich freue mich darüber, Euch den Hex Cartographer kostenlos zur Verfügung zu stellen. Allerdings bedurfte die Entwicklung lange Zeit. Wenn mir etwas neues einfällt, wird es für Euch Updates geben. Ihr würdet mir eine große Freude bereiten, wenn ihr mir für diese Arbeit eine kleine Spende hinterlasst.',
         'settings.donateButton': 'Spende einen Kaffee',
 
         // Anleitung
         'guide.title': 'Kurzanleitung',
         'guide.basics': 'Grundlagen',
-        'guide.basics.create': 'Rechtsklick auf einen Ordner in der Dateiübersicht → „Neue Hex World erstellen."',
+        'guide.basics.create': 'Rechtsklick auf einen Ordner in der Dateiübersicht → „Neue Hex Karte erstellen."',
         'guide.basics.editMode': 'Bearbeitungsmodus ein-/ausschalten.',
         'guide.navigation': 'Navigation',
         'guide.navigation.zoom': 'Mausrad = Zoom.',
@@ -236,10 +236,10 @@ const TRANSLATIONS = {
         'guide.undoredo': 'Rückgängig / Wiederholen',
         'guide.undoredo.undo': 'Strg+Z = Rückgängig',
         'guide.undoredo.redo': 'Strg+Y = Wiederholen',
-        'guide.print': 'Drucken / Teilen',
-        'guide.print.pc': 'Drei-Punkte-Menü → „Karte drucken" öffnet den Druckdialog.',
-        'guide.print.mobile': 'Drei-Punkte-Menü → „Karte teilen" öffnet das native Teilen-Menü.',
+        'guide.print': 'Drucken / Exportieren',
+        'guide.print.pc': 'Drei-Punkte-Menü → „Karte drucken" öffnet den Druckdialog (PC).',
         'guide.print.export': 'Drei-Punkte-Menü → „Karte exportieren" speichert die Karte als JPEG oder PNG.',
+        'guide.print.exportMobile': 'Auf Mobilgeräten wird das Bild im Ordner „Hex Cartographer Export" neben der Kartendatei gespeichert.',
         'guide.touch': 'Infos für Benutzer mit Touch Screen',
         'guide.touch.tap': 'Tippen = Setzen, Platzieren, Auswählen.<br>Mit einem Finger streichen = Zeichnen.',
         'guide.touch.longpress': 'Langes Halten auf Werkzeug-Buttons = z.B. Symbolvariante wählen oder Palettenfarbe ändern.',
@@ -255,8 +255,8 @@ const TRANSLATIONS = {
         'notice.noColorAtPosition': 'Keine Farbe an dieser Position',
 
         // Menü-Einträge
-        'menu.createNew': 'Neue Hex World erstellen',
-        'menu.openInEditor': 'Im Hex World Editor öffnen',
+        'menu.createNew': 'Neue Hex Karte erstellen',
+        'menu.openInEditor': 'Im Hex Cartographer öffnen',
         'menu.printMap': 'Karte drucken',
         'menu.shareMap': 'Karte teilen',
         'menu.exportMap': 'Karte exportieren',
@@ -381,13 +381,13 @@ const TRANSLATIONS = {
         'modal.confirmDeleteText': 'Really delete this text?',
 
         // Settings
-        'settings.donateText': 'Buy me a coffee. I am happy to provide the Hexworld Editor to you for free. However, the development took a long time. When I come up with something new, there will be updates. It would make me very happy if you leave a small donation for this work.',
+        'settings.donateText': 'Buy me a coffee. I am happy to provide Hex Cartographer to you for free. However, the development took a long time. When I come up with something new, there will be updates. It would make me very happy if you leave a small donation for this work.',
         'settings.donateButton': 'Buy me a coffee',
 
         // Guide
         'guide.title': 'Quick Guide',
         'guide.basics': 'Basics',
-        'guide.basics.create': 'Right-click a folder in the file explorer → "Create new Hex World."',
+        'guide.basics.create': 'Right-click a folder in the file explorer → "Create new Hex Map."',
         'guide.basics.editMode': 'Toggle edit mode on/off.',
         'guide.navigation': 'Navigation',
         'guide.navigation.zoom': 'Mouse wheel = Zoom.',
@@ -424,10 +424,10 @@ const TRANSLATIONS = {
         'guide.undoredo': 'Undo / Redo',
         'guide.undoredo.undo': 'Ctrl+Z = Undo',
         'guide.undoredo.redo': 'Ctrl+Y = Redo',
-        'guide.print': 'Print / Share',
-        'guide.print.pc': 'Three-dot menu → "Print map" opens the print dialog.',
-        'guide.print.mobile': 'Three-dot menu → "Share map" opens the native share menu.',
+        'guide.print': 'Print / Export',
+        'guide.print.pc': 'Three-dot menu → "Print map" opens the print dialog (PC).',
         'guide.print.export': 'Three-dot menu → "Export map" saves the map as JPEG or PNG.',
+        'guide.print.exportMobile': 'On mobile devices, the image is saved in the "Hex Cartographer Export" folder next to the map file.',
         'guide.touch': 'Touch Screen Users',
         'guide.touch.tap': 'Tap = Left click (draw, place, select).',
         'guide.touch.longpress': 'Long press on tool buttons = Right click (e.g. choose symbol variant or change palette color).',
@@ -443,8 +443,8 @@ const TRANSLATIONS = {
         'notice.noColorAtPosition': 'No color at this position',
 
         // Menu entries
-        'menu.createNew': 'Create new Hex World',
-        'menu.openInEditor': 'Open in Hex World Editor',
+        'menu.createNew': 'Create new Hex Map',
+        'menu.openInEditor': 'Open in Hex Cartographer',
         'menu.printMap': 'Print map',
         'menu.shareMap': 'Share map',
         'menu.exportMap': 'Export map',
@@ -505,14 +505,14 @@ function hsbToHex(h, s, b) { const rgb = hsbToRgb(h, s, b); return rgbToHex(rgb.
 function hexToHsb(hex) { const rgb = hexToRgb(hex); return rgbToHsb(rgb.r, rgb.g, rgb.b); }
 
 // === Hauptklasse des Plugins ===
-class HexWorldEditorPlugin extends Plugin {
+class HexCartographerPlugin extends Plugin {
     async onload() {
         currentLanguage = getObsidianLanguage();
-        this.addSettingTab(new HexWorldEditorSettingTab(this.app, this));
+        this.addSettingTab(new HexCartographerSettingTab(this.app, this));
 
-        this.registerView('hexworld-editor', (leaf) => new HexWorldEditorView(leaf, this));
+        this.registerView('hex-cartographer', (leaf) => new HexCartographerView(leaf, this));
 
-        this.registerExtensions(['hexworld.md'], 'hexworld-editor');
+        this.registerExtensions(['hexworld.md'], 'hex-cartographer');
 
         // KRITISCH: Stelle sicher, dass .hexworld.md Dateien mit dem Editor geöffnet werden
         const originalOpenFile = this.app.workspace.openLinkText.bind(this.app.workspace);
@@ -525,9 +525,9 @@ class HexWorldEditorPlugin extends Plugin {
                         ...openViewState,
                         state: { ...openViewState?.state, file: file.path }
                     });
-                    if (leaf.view.getViewType() !== 'hexworld-editor') {
+                    if (leaf.view.getViewType() !== 'hex-cartographer') {
                         await leaf.setViewState({
-                            type: 'hexworld-editor',
+                            type: 'hex-cartographer',
                             state: { file: file.path }
                         });
                     }
@@ -549,7 +549,7 @@ class HexWorldEditorPlugin extends Plugin {
 
                     if (leaf.view.getViewType() === 'markdown') {
                         await leaf.setViewState({
-                            type: 'hexworld-editor',
+                            type: 'hex-cartographer',
                             state: { file: file.path }
                         });
                     }
@@ -558,7 +558,7 @@ class HexWorldEditorPlugin extends Plugin {
         );
 
         setTimeout(() => {
-            this.hideHexworldExtensionInExplorer();
+            this.hideHexExtensionInExplorer();
         }, 500);
 
         this.registerEvent(this.app.vault.on('rename', async (file, oldPath) => {
@@ -569,12 +569,12 @@ class HexWorldEditorPlugin extends Plugin {
 
                 await this.app.fileManager.renameFile(file, newPath);
             } else if (file.path.endsWith('.hexworld.md')) {
-                this.hideHexworldExtensionInExplorer();
+                this.hideHexExtensionInExplorer();
             }
         }));
 
-        this.addRibbonIcon('map', 'Create Hex World', async () => {
-            await this.createNewHexWorld();
+        this.addRibbonIcon('map', 'Create Hex Map', async () => {
+            await this.createNewHexMap();
         });
 
         this.registerEvent(
@@ -585,16 +585,16 @@ class HexWorldEditorPlugin extends Plugin {
                         .setIcon('map')
                         .setSection('create')
                         .onClick(async () => {
-                            await this.createNewHexWorld(file);
+                            await this.createNewHexMap(file);
                         });
                 });
             })
         );
 
         this.registerEvent(this.app.vault.on('delete', (file) => {
-            const leaves = this.app.workspace.getLeavesOfType('hexworld-editor');
+            const leaves = this.app.workspace.getLeavesOfType('hex-cartographer');
             leaves.forEach(leaf => {
-                if (leaf.view instanceof HexWorldEditorView && leaf.view.file && leaf.view.file.path === file.path) {
+                if (leaf.view instanceof HexCartographerView && leaf.view.file && leaf.view.file.path === file.path) {
                     if (leaf.view.saveTimeout) clearTimeout(leaf.view.saveTimeout);
                     leaf.detach();
                 }
@@ -602,10 +602,10 @@ class HexWorldEditorPlugin extends Plugin {
         }));
 
         this.registerEvent(this.app.vault.on('modify', (file) => {
-            const leaves = this.app.workspace.getLeavesOfType('hexworld-editor');
+            const leaves = this.app.workspace.getLeavesOfType('hex-cartographer');
             leaves.forEach(leaf => {
                 const view = leaf.view;
-                if (view instanceof HexWorldEditorView && view.file && view.file.path === file.path) {
+                if (view instanceof HexCartographerView && view.file && view.file.path === file.path) {
                     if (!view.isSaving) {
                         view.reloadFile();
                     }
@@ -614,10 +614,10 @@ class HexWorldEditorPlugin extends Plugin {
         }));
 
         this.registerEvent(this.app.vault.on('rename', (file, oldPath) => {
-            const leaves = this.app.workspace.getLeavesOfType('hexworld-editor');
+            const leaves = this.app.workspace.getLeavesOfType('hex-cartographer');
             leaves.forEach((leaf) => {
                 const view = leaf.view;
-                if (view instanceof HexWorldEditorView && view.file && view.file.path === oldPath) {
+                if (view instanceof HexCartographerView && view.file && view.file.path === oldPath) {
                     view.file = file;
                     leaf.updateHeader();
 
@@ -637,18 +637,18 @@ class HexWorldEditorPlugin extends Plugin {
         this.registerEvent(this.app.workspace.on('file-open', (file) => {
             if (!file || file.extension !== 'hexworld') return;
 
-            const leaves = this.app.workspace.getLeavesOfType('hexworld-editor');
+            const leaves = this.app.workspace.getLeavesOfType('hex-cartographer');
             leaves.forEach((leaf) => {
                 const view = leaf.view;
-                if (view instanceof HexWorldEditorView && view.file && view.file.path === file.path) {
+                if (view instanceof HexCartographerView && view.file && view.file.path === file.path) {
                     view.reloadFile();
                 }
             });
         }));
     }
 
-    async createNewHexWorld(targetFile = null) {
-        const fileName = `HexWorld_${Date.now()}.hexworld.md`;
+    async createNewHexMap(targetFile = null) {
+        const fileName = `HexMap_${Date.now()}.hexworld.md`;
 
         let folderPath = '';
         if (targetFile) {
@@ -692,7 +692,7 @@ class HexWorldEditorPlugin extends Plugin {
             const file = await this.app.vault.create(filePath, content);
             const leaf = this.app.workspace.getLeaf('tab');
             await leaf.setViewState({
-                type: 'hexworld-editor',
+                type: 'hex-cartographer',
                 active: true,
                 state: { file: file.path }
             });
@@ -701,7 +701,7 @@ class HexWorldEditorPlugin extends Plugin {
         }
     }
 
-    hideHexworldExtensionInExplorer() {
+    hideHexExtensionInExplorer() {
         const hideExtension = () => {
             const fileElements = document.querySelectorAll('.nav-file-title[data-path$=".hexworld.md"]');
             fileElements.forEach(el => {
@@ -710,8 +710,8 @@ class HexWorldEditorPlugin extends Plugin {
                     titleEl.textContent = titleEl.textContent.replace('.hexworld', '');
                 }
 
-                if (!el.classList.contains('hexworld-file')) {
-                    el.classList.add('hexworld-file');
+                if (!el.classList.contains('hex-cartographer-file')) {
+                    el.classList.add('hex-cartographer-file');
                 }
             });
         };
@@ -753,8 +753,8 @@ class HexWorldEditorPlugin extends Plugin {
 
 }
 
-// === View-Klasse für den Hex World Editor ===
-class HexWorldEditorView extends ItemView {
+// === View-Klasse für den Hex Cartographer ===
+class HexCartographerView extends ItemView {
     constructor(leaf, plugin) {
         super(leaf);
         this.plugin = plugin;
@@ -899,9 +899,9 @@ class HexWorldEditorView extends ItemView {
         }
     }
 
-    getViewType() { return 'hexworld-editor'; }
+    getViewType() { return 'hex-cartographer'; }
     getDisplayText() {
-        if (!this.file) return 'Hex World Editor';
+        if (!this.file) return 'Hex Cartographer';
         return this.file.basename.replace('.hexworld', '');
     }
     getState() { return { file: this.file ? this.file.path : null }; }
@@ -933,7 +933,7 @@ class HexWorldEditorView extends ItemView {
                             document.body.appendChild(iframe);
                             const doc = iframe.contentDocument || iframe.contentWindow.document;
                             doc.open();
-                            doc.write(`<html><head><title>${this.file ? this.file.basename.replace('.hexworld', '') : 'Hex World Map'}</title><style>@media print { @page { margin: 10mm; } body { margin: 0; } img { max-width: 100%; max-height: 100%; } } body { margin: 0; }</style></head><body><img src="${dataUrl}" /></body></html>`);
+                            doc.write(`<html><head><title>${this.file ? this.file.basename.replace('.hexworld', '') : 'Hex Cartographer Map'}</title><style>@media print { @page { margin: 10mm; } body { margin: 0; } img { max-width: 100%; max-height: 100%; } } body { margin: 0; }</style></head><body><img src="${dataUrl}" /></body></html>`);
                             doc.close();
                             iframe.contentWindow.onafterprint = () => { document.body.removeChild(iframe); };
                             setTimeout(() => {
@@ -991,7 +991,7 @@ class HexWorldEditorView extends ItemView {
             this.svgSymbols[key] = { pathData: data.pathData, viewBoxWidth: data.viewBoxWidth };
         }
 
-        const symbolsDir = '.obsidian/plugins/hexworld-editor/symbols';
+        const symbolsDir = '.obsidian/plugins/hex-cartographer/symbols';
         try {
             const listing = await this.app.vault.adapter.list(symbolsDir);
             if (listing && listing.files && listing.files.length > 0) {
@@ -1079,10 +1079,10 @@ class HexWorldEditorView extends ItemView {
                 this.file = file;
                 await this.reloadFile();
 
-                const existingLeaves = this.app.workspace.getLeavesOfType('hexworld-editor');
+                const existingLeaves = this.app.workspace.getLeavesOfType('hex-cartographer');
                 const existingLeaf = existingLeaves.find(leaf => {
                     const view = leaf.view;
-                    return view !== this && view instanceof HexWorldEditorView &&
+                    return view !== this && view instanceof HexCartographerView &&
                            view.file && view.file.path === file.path;
                 });
 
@@ -1300,7 +1300,7 @@ class HexWorldEditorView extends ItemView {
                 }
             }
         } catch(e) {
-            console.error("HexWorld Sync Fehler:", e);
+            console.error("HexCartographer Sync Fehler:", e);
         } finally {
             this.isReloading = false;
         }
@@ -5582,7 +5582,7 @@ class ExportMapModal extends Modal {
     }
 }
 
-class HexWorldEditorSettingTab extends PluginSettingTab {
+class HexCartographerSettingTab extends PluginSettingTab {
     constructor(app, plugin) {
         super(app, plugin);
         this.plugin = plugin;
@@ -5591,7 +5591,7 @@ class HexWorldEditorSettingTab extends PluginSettingTab {
     display() {
         const { containerEl } = this;
         containerEl.empty();
-        containerEl.createEl('h2', { text: 'Hexworld Editor' });
+        containerEl.createEl('h2', { text: 'Hex Cartographer' });
 
         new Setting(containerEl)
             .setDesc(t('settings.donateText'))
@@ -5660,8 +5660,8 @@ class HexWorldEditorSettingTab extends PluginSettingTab {
             ]],
             ['print', [
                 ['printer', 'guide.print.pc'],
-                ['share', 'guide.print.mobile'],
                 ['download', 'guide.print.export'],
+                ['smartphone', 'guide.print.exportMobile'],
             ]],
             ['touch', [
                 ['pointer', 'guide.touch.tap'],
@@ -5723,4 +5723,4 @@ const SVG_SYMBOL_DATA = {
     'town': { pathData: 'M144.52,164.25c1.4,2.35,4.7,2.75,6.67,4.64,4.67,4.49,2.9,10.42,3.2,16.24l-14.07,1.88c-1.44.34-3.86,2.12-4.77,2.15-1.91.07-4.38-2.9-5.95-3.32-3.07-.81-6.06,1.99-8.86,3.05-2.18.82-12.4,3.65-12.96,5.1l.49,7.96c7.12-4.26,15.25-5.79,22.91-8.69-1.43,3.89-1.15,7.43-1.23,11.52-3.63,1.38-7.47,2.3-11.09,3.7-2.45.94-4.6,2.5-7.13,3.31-2.93.93-11.77,1.95-12.77-1.65-1.4-5.04-.54-14.77-3.52-19.05-1.38-1.97-8.47-4.36-10.47-3.77-2.97.87-7.6,4.07-10.8,5.47-2.48,1.08-15.41,5.76-16.05,7.15l5.8,5.79c3.22,4.41,3.41,16.05,2.28,21.42-.87,4.16-9.93,12.12-13.33,15.09-1.74,1.53-1.04,2.82-4.31,3.22-8.23,1-7.76-5.97-8.97-11.93l-15.89-2.01c-1.1.28-8.43,18.28-8.51,20.9,2.59-.08,5.21.14,7.8-.03,1.04-.07,1.84-1.02,2.9-1.06.85-.03,5.9.65,6.45,1.05.44.31,4.33,6.25,4.6,7,.75,2.03.55,6.53,1.15,7.55.32.54,1.71.97,2.35,1.71,3.99,4.63,8.5,12.57,13.4,15.6,1.7,1.05,4.13,1.38,5.97,2.73,2.08,1.53,2.27,3.39,3.54,4.59.6.57,1.61.53,2.32,1.3.67.73,2.56,9.7,2.81,11.53.2,1.46-.27,5.24.16,5.93,2.11,3.4,13.05-2.84,16.15-3.66,6.97-1.83,15.18,3.84,21.71,6.1,8.73,3.02,18.34,4.35,26.03,9.93,6.74,4.9,3.33,19.94,7.12,23.04,4.33,3.54,15.68,4.88,21.1,7.02-.05-1.38-.07-2.73.26-4.09,1.04-4.26,9.63-9.39,13.35-12.16,1.17-.87,2.04-2.31,3.24-3.14,5.82-4,10.51-.32,16.5.25,8.23.78,16.91-.48,25.44.66,3.17.42,20.56,3.87,22.36,4.9.29.16,4.72,4.06,4.94,4.34,3.25,4,.2,15.67,2.31,20.89.21.3,6.09,1.52,7.06,1.64,3.78.48,10.7.9,14.43.63,3.89-.28,7.32-2.13,11.31,0-.49-7.4.11-11.3,4.93-16.83,3.68-4.22,5.24-5.4,11.01-5.81,11.07-.8,23.23,1.19,34.82.02,6.91-.7,14.98-5.21,21.95-.48,2.79,1.9,9.12,12.55,9.61,15.91.24,1.59-.04,3.28.05,4.88,9.98-2.62,20.21-2.62,30.36-4.03l.41-.38c1.25-10.4-5.69-18.34,4.66-25.4,6.35-4.33,11.18-3.13,18.07-4.55,8.53-1.76,27.22-8.06,34.86-3.83,1.46.81,3.18,2.87,4.83,3.87,6.07,3.71,11.77,4.39,11.21,13.44,2.54,1.08,17.62-5.86,18.28-6.94,1.5-2.47-2.09-8.59-2.05-11.88.02-1.97,1.46-6.79,2.96-8.1,4.86-4.24,20.08-8.58,26.85-12.01,4.36-2.21,16.41-11.04,20.29-10.77,1.11.08,2.09,1.05,3.26.98,0-1.91.81-3.47,2.75-3.97,4.06.26,5.55,4.7,6.55,8.02,4.73-.32,2.4-5.37,2.53-8.31.12-2.75.76-10.58,2.7-12.27.63-.55,2.07-.74,2.21-.97.66-1.06-.56-6.79,2.83-8.32l-4.53-9.88c.9-4.75,4-13.09,3.2-17.75-.31-1.8-2.78-4.35-3.17-6.31l-1.73,1.74c-.21-1.27.58-2.5.53-3.71-.24-5.03-9.93-20.67-12.83-26.04s-5.31-11.09-8.86-16.08c-2.85-4.01-4.71-9.15-7.84-13.04-.18-.8.04-1.09.85-.85,2.22.66,5.53,3.25,8.02,4.16,2.97,1.08,6.13,1.02,8.93,2.67,8.58,5.06,7.99,15.62,8.95,24.4,3.35.75,5.38,2.09,6.66,5.34,4.36-.35,7.56-3.71,11.98-2.81s12.64,14.47,16.36,18.43c2.02,2.15,7.41,5.52,7.8,7.85-.4,7.14-.98,14.28-1.75,21.38-.55,5.09.1,5.59.09,9.91-.02,11.06-1.14,22.82-1.23,34.24-.2,25.14,1.64,52.82.6,77.69-2.13,50.86-77.19,81.57-118.31,93.96-74.41,22.43-154.49,26.32-231.7,21.17-2.43-.16-10.97-1.8-12.49-.87-.69.42-.89,2.15-2.09,3.12-.72.58-7.85,3.8-8.6,3.87-2.61.24-3.87-1.65-6.1-2.36-25.91-3.86-52.43-12.12-78.21-15.74-4.77-.67-7.33.77-11.42.39-7.31-.67-7.53-6.67-7.33-12.68-32.11-11.31-68.3-26.21-91.28-52.27-24.94-28.29-17.33-64.4-17.08-99.45.13-18.94-2.22-35.62-2.92-53.97-.35-9.09,4.13-22.46,7.83-31.01,1.7-3.92,6.5-14.4,10.68-15.42,7.39-1.79,9.06,5.82,16.28,4.39.75-5.57-1.55-12.16-.45-17.56.13-.65,3.95-7.43,4.5-8.1,5.15-6.27,24.73-12.9,32.88-16.58,7.12-3.22,9.96-7.46,18.38-4.09,3.52,1.41,7.23,4.34,9.41,7.42,7.96-3.23,16.19-5.66,23.73-9.8,1.92-5.96-1.98-15.43,5.48-18.3,8.79-3.38,20.53-2.98,29.46-6.5l27.96-5.38-8.7,13.05-35.38,6.68ZM142.61,176.02c-.25-.33-5.95-3.94-6.2-3.65-1.36,6.64,2.89,6.77,7.53,9.28.46-.63-.78-4.92-1.33-5.62ZM55.66,213.08c-.17-.3-4.07-2.87-4.8-3.07-1.31-.36-2.42-.11-3.7.13-.85,3.02-1.74,13.95,1.09,15.3,1.36.65,6.3.23,7.25-.87,1.21-1.39.9-10.18.17-11.48ZM576.03,236.16l-10.46-13.65-6.36.89,7.51,13.63,9.3-.88ZM578.94,246.6c-4.49-.88-8.63,1.67-12.76.58l-1.74,11.02c4.87-5.84,7.61-3.78,13.91-2.32l.59-9.28ZM24.75,262.84c-3.58.37-7.67-.27-11.31,0-.85,8.23,9.01,4.12,13.92,4.05l-.58-4.63c-.85-.34-1.62.54-2.03.58ZM580.58,265.84l-8.61.18-6.95,11.89c5.87.39,9.68,5.11,14.17-.61,3.04-3.87,3.93-6.95,1.39-11.46ZM49.4,293.01c-2.47-1.15-6.32-4.07-8.14-6.07-2.65-2.92-3.88-7.91-7.93-10.07-.72-.21-10.41.84-11.38,1.16-.56.18-1.33,1.66-2.1,2.05l.1,40.36,16.99,14.33c3.25-5.51-.41-4.44-1.96-7.32-1.29-2.4-1.76-12.3-1.84-15.56-.32-13.37,4.06-14.3,15.42-17.7.82-.25,1.02.36.84-1.16ZM569.07,295.32l-.56-5.53-8.13-2.01c.33.99.33,3.96.69,4.53.23.36,7.39,3.62,8.01,3.01ZM58.11,311.56c-.33-1.69.84-8.14-.95-8.66-1.13-.33-13,3.06-13.46,4.4l.49,8.32c.56.62,11.55-5.4,13.92-4.06ZM114.36,405.81v-12.76c0-.23,1.94-3.63,2.31-4.07,2.99-3.63,9.74-4.94,14.21-4.33l86.73,17.67c2.29.67,4.92,2.14,6.28,4.16.79,1.18,5.31,12.77,5.31,13.83v31.03c11.15,1.63,25.86-5.58,28.19,10.48,8.8.5,17.87.03,26.64.52,1.95.11,6.13.44,7.82.88,7.12,1.82,3.38,15.85,5.29,17.04,39.51.1,79.42-2.96,118.34-9.96,8.3-1.49,16.57-3.19,24.78-5.09.93-5.69-1.9-17,2.14-21.35,1.21-1.3,6.16-4.04,7.95-4.81,6.29-2.69,20.35-7.92,26.79-8,2.81-.03,8.02,1.09,9.49,3.84.31.58,1.81,6.41,1.81,6.89v8.41c20.04-6.77,39.42-16.48,56.54-28.96-.63-4.32-.06-8.73-.29-13.08-.11-2.02-1.04-4.39-1.14-6.4-.31-6.09,2.8-18.06,6.71-22.85,1.78-2.18,5.84-4.54,6.5-7.42,2.31-10.14-3.73-22.02,4.5-31.46,1.62-1.85,3.27-3.7,4.9-5.54,1.32-1.5,8.7-8.16,8.7-9.28v-9.57c-3.06,4.8-8.22,6.73-12.19,10.14-1.92,1.65-3.67,5.03-6.11,5.49-1.07.2-3.03-.27-3.66.11-.17.1-.61,2-1.52,2.83-2.78,2.55-7.49,1.28-8.62-2.43-1.82-5.94,1.4-18.86-1.3-23.64-.91-1.61-3.43-2.37-3.15-4.69-4.34.15-7.07,3.29-10.23,5.13-8.37,4.86-17.08,9.27-26.3,12.28,1.4,2.44,4.78,2.46,6.68,4.04,4.89,4.04,2.29,11.13,2.57,16.57.32,6.23,4.23,14.59-3.32,18.1-7.59,3.52-16.62,5.56-24.49,7.99-5.83,1.8-11.08,5.51-17.16,6.63-2.67.49-5.86-.38-6.51-3.28-.49-2.18.44-3.61.33-5.09-.23-3.3-1.4-6.56-1.64-9.84-.34-4.58.4-9.51-.1-14.11-3.18-.69-7.5-5.28-9.76-6.18-6.01-2.41-21.25,2.54-27.66,4.19l-12.91,1.3c-1.34,1.27,8.16,10.39,7.49,13.1-.72,7.74,1.36,16.17.65,23.75-.4,4.28-2.2,6-6.26,7.08-7.28,1.95-17.01,2.34-24.85,3.57-6.81,1.07-13.22.99-19.68,1.78-1.72.21-2.82,1.3-4.61,1.22-3.91-.17-5.16-3.3-5.52-6.72-.75-7.2.93-19.7-1.86-25.98-.4-.91-4.05-6.84-4.53-7.07-3.64-1.77-11.77,2.2-15.96,2.61-10.82,1.05-22.27-.82-33-.52-3.64.1-5.6,2.52-7.29,5.47-1.58,9.4,2.42,23.6.44,32.34-.45,1.98-4.33,5.65-6.53,5.65-2.42,0-6.16-.99-8.72-1.17-13.78-.97-28.74-1.26-42.33-2.91-3.42-.42-8.92-2.04-9.55-6.11-1.51-9.85-1.07-21.27-2.36-31.28.22-4.24,4.42-6.23,6.97-8.99-7.19-1.43-14.35-3.12-21.73-3.51-8.05-.42-16.18,1.12-23.98-1.61l-1.24.17-12.1,9.99c-.16,2.46-.24,4.98-.14,7.44.21,5.6,4.22,21.12-3.88,22.75-11.23,2.26-34.69-9.56-46.52-12.95-2.12-.61-4.58-.2-6.83-1.29-5.17-2.5-3.27-8.61-3.65-13.17-.55-6.46-2.36-13.95-1.76-20.33.37-3.91,3.15-6.41,5.83-8.96-5.89.24-22.56-9.61-26.73-8.98-.73.11-5.72,2.2-6.57,2.67-.55.31-.71,1.15-1.13,1.46-1.18.87-2.85.58-3.26,2.83.44,5.65-1.65,13.06-.58,18.53.52,2.68,5.39,2.04,6.25,5.93.8,3.64,1.07,12.39.73,16.15-.23,2.5-.89,3.96-3.5,4.65-1.24.33-6.49-1.33-7.96-1.94-2.67-1.12-4.98-3.14-7.7-4.18-.53,6.86,1.24,21.62-10.05,16.14l-34.03-20.77c-.07,3.57.26,7.17.58,10.72,1.37,14.92,3.63,25.8,13.62,37.42,10.95,12.74,25.79,22.48,40.6,30.16,1.29.15.71-.16.85-.88,2.3-11.49-1.63-21.09,15.68-14.21-.57-4.22-.21-10.42.72-14.65.66-3.02,3.23-5.29,6.47-5.05,3.67.27,10.91,3.94,14.84,4.95l1.18-.62ZM552.84,320.26c5.01-4.92,11.6-7.1,15.07-13.63,0-.47-7.02-2.7-7.7-2.53-.76.19-1.63,1.59-2.51,2.16s-4.85,2.38-4.85,3.85v10.15ZM65.64,323.74c-1.39.18-2.61-1.69-3.67-1.63-.88.05-2.69,1.48-4.24,1.61s-2.7-.59-3.86-.45c-.49.06-3.01.94-2.74,1.91.09.32,4.71,2.71,5.75,3.53,2.76,2.18,4.76,5.67,8.75,6.04v-11.02ZM500.64,332.44l-3.48-1.16c.49,3.81-1.98,9.12,3.48,9.28v-8.12ZM126.54,331.86l-7.54,3.89,1.75,17.57c.38.39,7.1-6.89,7.42-7.96l-1.63-13.5ZM19.82,334.18v10.73l2.36,2.28,30.42,18.88c1.29.19.68-.19.85-.87.65-2.66.63-5.42.64-8.14l-.14-.75c-4.99-1.92-8.83-6.54-14.42-6.75l-19.71-15.38ZM47.67,335.34v5.5s22.88,13.68,22.88,13.68c2.74,1.87,2.17-2.99.91-3.81-.78-.51-2.45-.21-3.72-.92s-1.59-2.22-2.69-3.11c-2.23-1.8-6.83-3.11-9.56-4.94s-4.77-4.74-7.81-6.39ZM567.34,350.13c.14,3.28-.1,6.58,0,9.86,1.46,2.15,6.24,1.8,7.15-.43,1.69-4.12-.92-13.74-.2-18.42l-7.26,6.4c-.9.99.28,2.12.3,2.59ZM498.89,351.01c-3.15.44-8.27-4.45-10.59-3.99-1.31.26-5.91,3.42-7.98,4.26-3.35,1.35-7.46,2.36-11.03,2.89-1.36.86.98,5.64.61,7.28.55.53,7.96-3.18,9.4-3.65,3.61-1.18,7.49-1.45,11.05-2.87l8.55-3.91ZM161.26,363.84l-25.79-8.77c-2.85-.37-4.09,3.8-6.02,5.51l31.63,11.28c1.15.14.74.02.85-.85.29-2.25-.93-4.81-.67-7.17ZM236.15,374.77c.15-1.93,2.58-3.3,2.89-4.94.78-4.03-1.49-10.35-.57-14.78l-4.54,3.31c.73,4.53.49,9.19,1.14,13.73.09.64.21,2.71,1.08,2.67ZM555.74,411.32c12.78-10.43,18.78-26.62,18.55-42.92l-5.2,6.68c-3.38,3.26-7.81,6.66-10.99,9.89-5.09,5.16-1.5,19.65-2.36,26.35ZM401.46,375.94c-2-8.23-5.41-5.06-11.31-4.64-4.05.29-8.64-.01-12.69.65s-7.71,2.89-11.95,2.26v5.81c2.53-.17,5.3.26,7.78-.05,5.13-.65,11.65-2.73,16.93-3.37,3.58-.43,7.56.2,11.25-.64ZM281.87,377.2c-5.72-1.77-11.6-.5-17.61-.66-3.34-.09-7.48-.44-10.93-.67-3.73-.24-4.48-2.4-7.58,2.42-2.49,3.86,1.4,5.29,4.69,5.69,9.18,1.12,19.09.99,28.36,1.83,4.97-.37,4.11-4.98,3.07-8.61ZM139.3,403.2c-4.57-1.34-7.39-.37-8.12,4.63.39.39,8.86-3.9,8.12-4.63ZM131.18,414.8v8.7l27.85-15.37c0-.65-9.36-2.66-10.6-1.9l-17.24,8.57ZM168.88,410.16l-37.7,21.17v10.15l37.7-22.04v-9.28ZM212.38,442.06v-8.41c0-1.88-27.94-18.01-31.33-20.87l-5.52-.91.3,9.02,36.55,21.16ZM114.36,428.72v-9.57c-3.88-2.61-7.73-4.82-12.44-5.52-2.04,3.49.25,6.92-.65,10.49l13.09,4.61ZM212.38,425.24c1.26-7.38-7.66-7.2-12.75-8.11l12.75,8.11ZM168.88,439.16v-12.76l-37.7,22.04v9.28l37.7-18.56ZM175.26,428.14v10.73l36.27,18.84c1.17.16.75-.04.85-.85.2-1.49.28-6.6-.57-7.56l-36.55-21.16ZM114.36,453.08v-12.47l-27.51-10.12c-.64.31-.8.76-.91,1.42-.23,1.38-.77,8.79-.29,9.58,9.2,4.63,18.88,8.5,28.71,11.59ZM450.76,451.05v11.31l27.5-8.05-.24-12.83c-6.04-.22-10.4,2.63-15.49,4.52-2.16.81-11.19,3.03-11.77,5.05ZM168.88,446.12l-37.13,18.26c-1.53,5.54-1.34,12.9,5.4,6.56l31.73-13.8v-11.02ZM175.26,446.7v11.6l36.32,13.86c1.1.26.71-.01.8-.8.15-1.31.22-5.06-.29-6.1l-36.83-18.56ZM229.2,461.78v15.08l16.82,1.74c-.82-5.95,1.93-11.59.57-17.39l-17.39.57ZM168.88,464.1l-24.36,10.45c.1.9.86.89,1.5,1.1,1.33.42,13.07,2.55,13.76,2.42.48-.1.76-1.48,1.56-2.06,1.88-1.37,5.3-2.93,7.54-3.78v-8.12ZM212.38,487.3l-.57-8.42-36.55-13.62.12,7.42c5.05,2.22,9.96,8.33,14.64,10.58,3.2,1.54,14.73,3.36,18.75,3.87,1.21.15,2.4.25,3.61.16ZM286.04,472.79l-29.59-.58v6.97s29.59,1.16,29.59,1.16v-7.55ZM251.82,99.57c.42-2.35,3.41-4.77,5.65-5.37,6.95-1.87,17.19-2.59,24.63-3.79,2.23-.36,4.32-1.12,6.52-1.57,2.8,1.49,15.4,9.16,15.4,11.89v12.47c2.22-.06,4.38-.77,6.51-1.32,6.35-1.64,15.66-5.4,21.67-6.16,3.26-.42,4.31-.21,6.29,2.31,5.11,6.5,12.33,20.29,16.67,27.99,6.03,10.72,11.34,21.9,17.2,32.73.84,4.84-8.71,8.83-12.66,8.27.33,10.09,2.51,19.91,4.54,29.73-3.39,3.13-6.46,10.99-9.51,13.73-1.53,1.38-4.61.87-5.23,1.73l-.25,6.42-4.63-.58c.04-2.27-.21-7.18,1.11-9.03,1.6-2.22,10.97-2.58,11.1-3.49l-7.26-37.22c-4.52,1.74-10.73-.9-14.98,0-2.54.53-7.25,4.43-10.11,5.54-3.03,1.18-10.55,2.64-13.87,2.95-5.79.53-11.97-.34-17.79.19-1.82.55-2.68,4.9-4.2,6.24-2.8,2.47-20.01,3.64-24.62,4.67l1.46,54.52,2.3-1.75c.14-15.69-1.82-31.51-2.03-47.27.28-2.38,1.16-3.33,3.32-4.22,5.37-2.19,22.97-4.44,29.54-5.26,2.68-.33,7.08-1.68,7.74,1.96l2.33,33.92,9.46-1.09c5.73,6.44-5.26,3.81-8.48,5.71-.38.22-2.65,5.01-4.46,5.24l-2.39-37.94-.59-2c-4.58-1.29-3.54,3.99-3.43,7.19.26,7.5,1.28,15.11,1.76,22.6.36,5.67.15,11.47.84,17.15l2.67,2.07c-.03,1.34.3,2.83-.56,4.02-.36.5-9.76,6.15-10.46,6.36-2.42.73-5.8.11-8.36.18l-.85-.89-1.19-10.88-4.33-.25-.85,1.22c.9,2.08.42,6.84-1,8.53-.66.79-8.31,3.94-9.66,4.26-8.89,2.11-8.23-3.92-12.07-9.76l2.32.29v-17.69l-.96-.78c-2.73-.65-9.84-.08-11.77-1.57-1.54-1.18-5.53-9.01-4.67-11.28-3.03.77-3.08-2.46-4.64-4.35,4.32-1.24,8.5.76,12.78.62.75-.5-.04-6.66-.57-7.03l-12.16.39-1.21,4.58-3.39-6.77c-.06-.68.53-1.29,1.02-1.67,1.09-.86,8.14-1.39,10.17-1.44,2.34-.06,8.19-.48,9.55,1.53,1.55,2.28,1.37,11.41,1.79,11.85h3.48v-19.43c0-.51-3.03-1.73-3.49-2.47l-33.06-61.62-1.64.96-25.5,40.65c1.44,3.21.46,5.11.44,7.96-.02,3.97.08,7.95.02,11.91l-3.46-4.36c-1.23-1.14-5.56-3.42-6.1-4.34-.72-1.22.23-3.67-.83-4.39-3.51-.89-9.78.37-9.94-4.62-.09-2.73,1.83-3.08,3.19-4.96,12.95-17.9,24.86-36.67,39.79-53.01,9.14-.32,18.41-.6,27.56-.32,2.58.08,6.14,1.78,8.39-.27.76-6.06-1.02-14.57,0-20.3ZM259.94,105.08v10.15c2.92,1.93,6.36,2.99,9.86,2.61l-.66-9.2-9.2-3.56ZM295.9,106.24c-4.7,1.28-12.1,1.4-16.42,3.01-1.32.49-1,1.86-1.01,3.08-.03,2.33.79,4.36.62,6.67,5.43-1.2,12.02-1.16,16.82-3.77v-8.99ZM341.72,142.78c4.56,5.8,8.98,11.77,13.23,17.8,1.81,2.57,4.92,10.58,8.21,7.44l-29.85-53.08c-1.93-1.75-11.17,2.26-13.96,2.88l29.58,51.69c.94.93,6.06.85,6.12-.33-5.33-8.25-9.1-17.52-13.32-26.39ZM344.04,170.62l-29.85-51.1-4.94,1.51,4.04,8.99-7.65-8-6.27,1.05,30.15,48.47c4.84-2.66,9.32-.43,14.51-.92ZM294.63,124.93c-.76-.45-11.37,1.21-12.91,1.64-.63.18-1.07.17-1.46.84l31.6,50.17c1.34,1.35,3.22-.23,4.92,0l-3.47-9.86c3.9,1.94,8.25,12.26,12.12,5.6l-30.8-48.4ZM245.73,128.28h-10.15l4.05,12.18-9.52-11.64-4.39-1.12.27,1.75c11.42,18.19,19.91,40.6,31.51,58.39.5.77,1.86,2.71,2.7,2.84,2.76.42,8.63-2.38,11.92-1.5l-6.37-14.5c2.56,1.73,9.1,12.27,11.03,13.07.73.3,4.82-.19,4.56-1.67l-35.6-57.79ZM289.81,178.74c3.91-.69,11.81,0,16.24,0,.05,0,1.38,1.4.86-.28-.19-.61-1.09-1.88-1.49-2.57-9.25-15.98-20.33-31-29.57-47.01l-1.09-.95c-2.09.71-4.33.63-6.4.95s-.06,1.63.59,2.87c2.78,5.32,5.23,10.84,7.81,16.26l-14.74-18.6c-1.34-.88-6.49-.63-8.58-.71-.6-.02-.81-.78-1.59.46l32.47,53.65c2.32-.61,2.58-3.54,5.5-4.06ZM292.21,200.27c-1.48.49-.99,4.64-.94,6.02.47,12.11,1.94,27.94,3.48,40.02.21,1.64.51,5.54,2.6,5.53,2.47,0,2.11-3.92,2.05-5.55-.47-12.58-2.1-27.93-3.51-40.57-.29-2.6-.18-6.62-3.69-5.45ZM288.41,256.4c1.26.26,3.11.15,3.73-1.1l-4.39-50.72c-.21-1.22-1.05-3.07-2.49-3.11-1.66.27-2.08,1.5-2.13,3.07l5.28,51.86ZM256.46,228.62l-.55-5.55c-4.9.28-13.35-5.78-11.64,2.94.57,2.91,9.63,2.69,12.19,2.6ZM425.82,163.37c.42-2.35,3.41-4.77,5.65-5.37,6.95-1.87,17.19-2.59,24.63-3.79,2.23-.36,4.32-1.12,6.52-1.57,2.8,1.49,15.4,9.16,15.4,11.89v12.47c2.22-.06,4.38-.77,6.51-1.32,6.4-1.66,15.04-5.15,21.18-6.07,3.8-.57,4.77-.4,7.01,2.57,5.28,7,11.94,19.63,16.44,27.64,6.11,10.85,11.63,22.11,17.29,33.2-1.19,5.73-7.82,7.36-12.78,8.11.62,14.95,4.86,29.28,8.14,43.75-3.13-1.1-6.32,2.84-8.4,2.93-1.91.08.06-2.85-1.84-3.46l-7.77,1.38c-1.69,1.75.54,5.72-.54,6.96-.71.81-9.31,5.72-10.91,6.53-7.7,3.9-21.17,7.31-27.55,11.74-.77.53-1,1.85-2.19,2.6-6.72,4.27-13.83,7.99-20.46,12.4l-4.35-3.19c-.71-2.05-.23-11.48-1.64-11.81l-4.59.58-.31,7.49-16.18.64c1.22-4.27,1.27-6.28-.3-10.43-.78-2.05-3.06-4.87-3.5-6.36-.5-1.7.09-3.67-.33-4.89-.45-1.29-2.33-.59-3.13-1.51-.63-.72-.62-3.05-2.02-3.78l4.64-.28-.25-5.26c-4.45-1.32-8.98-.35-10.2-6.04l2.3-1.24-.8-6.06c-4.33-1-7.26.5-8.45-5.18h9.57c4.43,0,3.87,10.25,4.35,13.34h3.48v-19.43c0-.51-3.03-1.73-3.49-2.47l-33.06-61.62c-.88-.21-.93.13-1.41.61-1.46,1.46-4.91,7.62-6.36,9.88-5.31,8.22-10.55,16.59-15.66,24.94-1.42,2.31-3.28,4.9-3.82,7.49-3.16-4.44-8.43-6.31-12.11-10.23,10.9-16.25,22.38-32.24,35.33-46.89,9.14-.32,18.41-.6,27.56-.32,2.58.08,6.14,1.78,8.39-.27.76-6.06-1.02-14.57,0-20.3ZM433.94,168.88v10.15c2.92,1.93,6.36,2.99,9.86,2.61l-.66-9.2-9.2-3.56ZM469.9,170.04c-4.7,1.28-12.1,1.4-16.42,3.01-1.32.49-1,1.86-1.01,3.08-.03,2.33.79,4.36.62,6.67,5.43-1.2,12.02-1.16,16.82-3.77v-8.99ZM515.72,206.58c4.56,5.8,8.98,11.77,13.23,17.8,1.81,2.57,4.92,10.58,8.21,7.44l-29.85-53.08c-1.93-1.75-11.17,2.26-13.96,2.88l29.58,51.69c.94.93,6.06.85,6.12-.33-5.37-8.24-9.11-17.51-13.32-26.39ZM518.04,234.42l-29.85-51.1-4.94,1.51,4.04,8.99-7.65-8-6.27,1.05,30.15,48.47c4.84-2.66,9.32-.43,14.51-.92ZM468.62,188.73c-.76-.45-11.37,1.21-12.91,1.64-.63.18-1.07.17-1.46.84l31.6,50.17c1.34,1.35,3.22-.23,4.92,0l-3.47-9.86c3.9,1.94,8.25,12.26,12.12,5.6l-30.8-48.4ZM419.73,192.08h-10.15l4.05,12.18-9.52-11.64-4.39-1.12.27,1.75c11.42,18.19,19.91,40.6,31.51,58.39.5.77,1.86,2.71,2.7,2.84,2.76.42,8.63-2.38,11.92-1.5l-6.37-14.5c2.56,1.73,9.1,12.27,11.03,13.07.73.3,4.82-.19,4.56-1.67l-35.6-57.79ZM480.92,242.54l-32.16-50.82c-2.09.71-4.33.63-6.4.95s-.06,1.63.59,2.87c2.78,5.32,5.23,10.84,7.81,16.26l-14.74-18.6c-1.34-.88-6.49-.63-8.58-.71-.6-.02-.81-.78-1.59.46l32.47,53.65c1,.73,3.17-4.06,5.5-4.06h17.11ZM530.78,279.64l-7.21-37.53c-4.63,1.72-10.54-.94-14.97,0-2.54.54-7.25,4.43-10.11,5.54s-10.26,2.64-13.29,2.95c-4.78.48-14.7-.92-18.38.18-1.81.55-2.63,4.8-4.06,6.09-3.01,2.7-19.97,3.75-24.76,4.82l.68,53.56,1.34.96,2.03-2.62-2.34-45.83c-.06-2.56,1.09-3.87,3.34-4.78,5.38-2.19,22.96-4.44,29.54-5.26,2.68-.33,7.08-1.68,7.74,1.96l2.33,33.92c7.31-.59,12.26-4.15,11.02,6.38l25.45-7.29c-2.67-10.77,2.57-11.9,11.65-13.03ZM476.2,263.5l-3.15.46c-.97,3.37.18,7.01.32,10.19.5,11.04.31,24.64,1.8,35.34.24,1.75.76,2.41,2.58,2.63,1.66-.07,2.07-2.44,2.03-3.73-.2-7.1-1.29-14.39-1.76-21.5-.2-3.1-.53-22.6-1.82-23.4ZM466.2,264.07c-1.48.49-.99,4.64-.94,6.02.47,12.11,1.94,27.94,3.48,40.02.21,1.64.51,5.54,2.6,5.53,2.47,0,2.11-3.92,2.05-5.55-.47-12.58-2.1-27.93-3.51-40.57-.29-2.6-.18-6.62-3.69-5.45ZM462.41,320.2c1.26.26,3.11.15,3.73-1.1l-4.39-50.72c-.21-1.22-1.05-3.07-2.49-3.11-1.66.27-2.08,1.5-2.13,3.07l5.28,51.86ZM489.03,297.65l-5.73.63-.06,4.58,6.13-1.7-.34-3.51ZM135.82,198.17c.42-2.35,3.41-4.77,5.65-5.37,6.95-1.87,17.19-2.59,24.63-3.79,2.23-.36,4.32-1.12,6.52-1.57,2.8,1.49,15.4,9.16,15.4,11.89v12.47c2.22-.06,4.38-.77,6.51-1.32,5.18-1.34,20.43-6.78,24.55-6.25,1.92.25,2.56,1.32,3.64,2.75,5.23,6.93,11.97,19.69,16.44,27.64,5.89,10.46,10.99,21.4,16.86,31.88,1.86,5.63-7.74,9.46-12.31,9.12l1.74,15.9-6.4,10.19c-1.38.18-.92.02-1.21-.8-2.44-6.85-2.26-15.96-3.5-23.18l-.76-.81c-4.52,1.74-10.73-.9-14.98,0-2.54.53-7.25,4.43-10.11,5.54-3.03,1.18-10.55,2.64-13.87,2.95-5.79.53-11.97-.34-17.79.19-1.82.55-2.68,4.9-4.2,6.24-2.8,2.47-20.01,3.64-24.62,4.67l.58,46.4c-6.73-.2-5.05-7.12-5.96-11.73-1.51-7.67-2.98-12.04-10.57-15.5l-.54-7.03c-.57-.84-4.09-.62-5.29-.57-2.45.11-7.24.09-8.06,2.27l-3.83-1.43c-.22-2.1.17-3.82,2.19-4.75,3.86.28,15.88-2.26,18.43.46,1.79,1.9,1.57,9.4,2.03,12.18h3.48v-19.43c0-.62-3.07-1.4-3.4-2.4l-33.15-61.68-1.64.96-25.5,40.65c1.44,3.2.46,5.12.44,7.96-.04,6.88.3,13.78-.24,20.64l-2.63,1.13-1.88-11.18c-1.39-4.81-6.09-5.91-5.34-11.48-.75-1.07-10-.16-10.25-4.89-.14-2.66,1.88-3.14,3.2-4.98,12.94-17.9,24.86-36.67,39.79-53.01,9.14-.32,18.41-.6,27.56-.32,2.58.08,6.14,1.78,8.39-.27.76-6.06-1.02-14.57,0-20.3ZM143.94,203.68v10.15c2.92,1.93,6.36,2.99,9.86,2.61l-.66-9.2-9.2-3.56ZM179.9,204.84c-4.7,1.28-12.1,1.4-16.42,3.01-1.32.49-1,1.86-1.01,3.08-.03,2.33.79,4.36.62,6.67,5.43-1.2,12.02-1.16,16.82-3.77v-8.99ZM225.73,241.38c4.56,5.8,8.98,11.77,13.23,17.8,1.81,2.57,4.92,10.58,8.21,7.44l-29.85-53.08c-1.93-1.75-11.17,2.26-13.96,2.88l29.58,51.69c.94.93,6.06.85,6.12-.33-5.33-8.25-9.1-17.52-13.32-26.39ZM228.04,269.21l-29.85-51.1-4.94,1.51,4.04,8.99-7.65-8-6.27,1.05,30.15,48.47c4.84-2.66,9.32-.43,14.51-.92ZM178.63,223.52c-.76-.45-11.37,1.21-12.91,1.64-.63.18-1.07.17-1.46.84l31.6,50.17c1.34,1.35,3.22-.23,4.92,0l-3.47-9.86c3.9,1.94,8.25,12.26,12.12,5.6l-30.8-48.4ZM129.73,226.88h-10.15l4.05,12.18-9.52-11.64-4.39-1.12.27,1.75c11.42,18.19,19.91,40.6,31.51,58.39.5.77,1.86,2.71,2.7,2.84,2.76.42,8.63-2.38,11.92-1.5l-6.37-14.5c2.56,1.73,9.1,12.27,11.03,13.07.73.3,4.82-.19,4.56-1.67l-35.6-57.79ZM173.81,277.34c3.91-.69,11.81,0,16.24,0,.05,0,1.38,1.4.86-.28-.19-.61-1.09-1.88-1.49-2.57-9.25-15.98-20.33-31-29.57-47.01l-1.09-.95c-2.09.71-4.33.63-6.4.95s-.06,1.63.59,2.87c2.78,5.32,5.23,10.84,7.81,16.26l-14.74-18.6c-1.34-.88-6.49-.63-8.58-.71-.6-.02-.81-.78-1.59.46l32.47,53.65c2.32-.61,2.58-3.54,5.5-4.06ZM309.82,244.57c.42-2.35,3.41-4.77,5.65-5.37,6.95-1.87,17.19-2.59,24.63-3.79,2.23-.36,4.32-1.12,6.52-1.57,2.8,1.49,15.4,9.16,15.4,11.89v12.47c2.22-.06,4.38-.77,6.51-1.32,5.18-1.34,20.43-6.78,24.55-6.25,1.92.25,2.56,1.32,3.64,2.75,5.23,6.93,11.97,19.69,16.44,27.64,5.89,10.46,10.99,21.4,16.86,31.88,1.86,5.63-7.75,9.46-12.31,9.12v2.32s-8.97,1.17-8.97,1.17l-1.15-2.19c-4.46,1.7-10.32-.74-14.49-.1-2.72.42-7.36,4.33-10.18,5.47-3.23,1.31-11.24,2.88-14.8,3.18-4.98.41-12.34-.84-16.8.02-2.43.47-2.15,3.48-3.58,3.96s-4.33-.09-6.22.16c-8.13,1.09-14.6,2.59-23.24,2.86-1.89.06-7.66.36-8.74-.6l-31.61-58.58-1.64.96-25.5,40.65c1.72,5.84-.13,12.01.47,18.13-2.05-.75-2.87-2.75-4.43-3.97-1.38-1.08-5.19-2.24-5.35-2.48-.55-.87.6-4.08-.62-4.89-2.67-.76-8.58.07-9.64-3.12-1.27-3.82,1.18-4.11,2.88-6.46,12.87-17.8,24.74-36.36,39.46-52.76.49-.49,1.1-.49,1.74-.58,6.46-.86,18.62-.19,25.58,0,1.4.04,8.96,1.6,8.96-.26.76-6.06-1.02-14.57,0-20.3ZM317.94,250.08v10.15c2.92,1.93,6.36,2.99,9.86,2.61l-.66-9.2-9.2-3.56ZM353.9,251.24c-4.7,1.28-12.1,1.4-16.42,3.01-1.32.49-1,1.86-1.01,3.08-.03,2.33.79,4.36.62,6.67,5.43-1.2,12.02-1.16,16.82-3.77v-8.99ZM399.72,287.78c4.56,5.8,8.98,11.77,13.23,17.8,1.81,2.57,4.92,10.58,8.21,7.44l-29.85-53.08c-1.93-1.75-11.17,2.26-13.96,2.88l29.58,51.69c.94.93,6.06.85,6.12-.33-5.33-8.25-9.1-17.52-13.32-26.39ZM402.04,315.61l-29.85-51.1-4.94,1.51,4.04,8.99-7.65-8-6.27,1.05,30.15,48.47c4.84-2.66,9.32-.43,14.51-.92ZM352.62,269.92c-.76-.45-11.37,1.21-12.91,1.64-.63.18-1.07.17-1.46.84l31.6,50.17c1.34,1.35,3.22-.23,4.92,0l-3.47-9.86c3.9,1.94,8.25,12.26,12.12,5.6l-30.8-48.4ZM303.73,273.28h-10.15l4.05,12.18-9.52-11.64-4.39-1.12.27,1.75c11.42,18.19,19.91,40.6,31.51,58.39.5.77,1.86,2.71,2.7,2.84,2.76.42,8.63-2.38,11.92-1.5l-6.37-14.5c2.56,1.73,9.1,12.27,11.03,13.07.73.3,4.82-.19,4.56-1.67l-35.6-57.79ZM347.81,323.74c3.91-.69,11.81,0,16.24,0,.05,0,1.38,1.4.86-.28-.19-.61-1.09-1.88-1.49-2.57-9.25-15.98-20.33-31-29.57-47.01l-1.09-.95c-2.09.71-4.33.63-6.4.95s-.06,1.63.59,2.87c2.78,5.32,5.23,10.84,7.81,16.26l-14.74-18.6c-1.34-.88-6.49-.63-8.58-.71-.6-.02-.81-.78-1.59.46l32.47,53.65c2.32-.61,2.58-3.54,5.5-4.06ZM190.33,294.46c-.66-3.64-5.06-2.29-7.74-1.96-7.87.98-20.34,2.66-27.75,4.73-7.93,2.22-4.76,8.22-4.5,14.59.18,4.38.55,30.98,2.29,32.51.57.5,2.77,1.07,3.49.62,2.87-5.87,9.6-8.21,13.82-12.93l-2.42-30.76,2.51-1.04,1.63,2.47,2.44,25.69,3.29-1.99-2.05-26.64c.46-1.41,3.39-1.44,3.88.02l2.46,25.67,2.28.04c.62-3.66-2.37-25.81-.62-27.01.41-.28,1.01-.26,1.5-.3.46-.03.93-.06,1.36.12,1.41.87,1.64,24.82,2.43,28.31l4.02.61-2.33-32.76ZM342.74,182.94c1.51-.18,3.54-.48,4.08,1.43.3,1.06.63,4.86.72,6.24.26,4-.33,8.1.07,12.11,1.86,2.35,8.24,4.78,6,8.52-.85,1.42-27.23,8.06-30.85,9.7-.42.01-7.45-2.74-7.74-3.03-1.09-1.07-.5-12.01-.54-14.54-.09-5.29-2.91-11.94,3.89-14.62,4.42-1.74,19.51-5.22,24.37-5.81ZM341.54,204.37c-3.21,1.67-21.7,4.79-22.75,6.84-1.14,2.99,1.99,4.3,4.59,4.04,1.82-.18,20.49-5.65,22-6.46.39-.21.71-.39.96-.77l-4.8-3.66ZM226.75,281.54c1.51-.18,3.54-.48,4.08,1.43.3,1.06.63,4.86.72,6.24.26,4-.33,8.1.07,12.11l4.45,4.15c-1.77,1.93-3.32,5.93-5.69,6.97s-21.83,7.04-23.6,7.1c-.42.01-7.45-2.74-7.74-3.03-1.09-1.07-.5-12.01-.54-14.54-.09-5.29-2.91-11.94,3.89-14.62,4.42-1.74,19.51-5.22,24.37-5.81ZM225.55,302.97c-3.21,1.67-21.7,4.79-22.75,6.84-1.14,2.99,1.99,4.3,4.59,4.04,1.82-.18,20.49-5.65,22-6.46.39-.21.71-.39.96-.77l-4.8-3.66ZM396.24,166.56c2.98.31,4.7-2.22,7.15-3.58,1.85-1.02,6.8-3.84,8.49-4.27,3.02-.78,6.92.36,9.47-.39,1.03-.3,2.98-2.94,4.27-3.85,4.41-3.09,9.7-2.43,14.7-3.86-8.89-.61-21.15-4.61-29.84-3.16-2.29.38-3.83,2.52-5.72,3.56-5.95,3.29-12.48,5.47-18.23,9.03l-12.33-1.02c1.72,3.55,3.67,6.91,4.13,10.94l7.47.65v6.38c-1.94-.2-3.63-1.44-5.56-1.68-5.37-.69-4.72,1.41-8.17,3.91-1.84,1.33-3.66,2.1-5.73,2.97-1.45,2.07,1.67,2.48,3.1,2.77,3.56.7,7.25.52,10.8,1.23,3.69-5.39,8.97-10.15,16-8.02v-11.6ZM376.38,333.75c-8.38,3.29-2.46,16.28-3.92,23.05l16.82-4.64c-1.37-5.71-1.93-12.68,1.74-17.68,1.6-2.19,4.31-3.24,5.8-5.51-6.18,2-14.58,2.48-20.44,4.78ZM107.09,275c2.27-.14,3.57-2.23,3.81-4.31.28-2.42.28-16.02-.44-17.57-1.52-3.27-11.41-4.48-13.43-.95-1.42,2.48-2.18,14.3-1.76,17.3.1.71.81,2.59,1.29,3.07.93.93,9.08,2.55,10.54,2.46ZM280.55,321.31c2.63-.06,4.06-1.74,4.35-4.23s.28-16.02-.44-17.57c-1.52-3.27-11.41-4.48-13.43-.95-1.42,2.48-2.18,14.3-1.76,17.3.1.71.81,2.59,1.29,3.07.96.97,8.45,2.41,10,2.38ZM396.55,240.12c2.63-.06,4.06-1.74,4.35-4.23s.28-16.02-.44-17.57c-1.52-3.27-11.41-4.48-13.43-.95-1.42,2.48-2.18,14.3-1.76,17.3.1.71.81,2.59,1.29,3.07.96.97,8.45,2.41,10,2.38ZM222.55,176.32c2.63-.06,4.06-1.74,4.35-4.23s.28-16.02-.44-17.57c-1.52-3.27-11.41-4.48-13.43-.95-1.42,2.48-2.18,14.3-1.76,17.3.1.71.81,2.59,1.29,3.07.96.97,8.45,2.41,10,2.38ZM358.54,338.83l6.37,8.11c-1.07-4.75.72-10.32-6.37-8.11ZM382.78,409.17c7.55-.52,12.14-.59,12.9,8.22.24,2.81.36,12.99-.68,15.03-.64,1.26-2.49,2.64-3.82,3.14-3.4,1.3-12.85,4.18-16.27,4.61-4.19.52-12.57,1.26-14.89-2.79-1.6-2.8-1.91-14.33-1.51-17.66.17-1.38.68-2.62,1.5-3.72,2.99-4.02,17.69-6.47,22.76-6.82ZM385.8,419.43c-.9-.9-15.52,1.89-16.84,3.18-1.45,1.41.7,5.72.01,7.85,5.91,0,11.16-2.75,16.76-4.12l.06-6.91ZM516.74,246.74c1.51-.18,3.54-.48,4.08,1.43.3,1.06.63,4.86.72,6.24.26,4-.33,8.1.07,12.11,1.86,2.35,8.24,4.78,6,8.52-.85,1.42-27.23,8.06-30.85,9.7-.42.01-7.45-2.74-7.74-3.03-1.09-1.07-.5-12.01-.54-14.54-.09-5.29-2.91-11.94,3.89-14.62,4.42-1.74,19.51-5.22,24.37-5.81ZM515.54,268.17c-3.21,1.67-21.7,4.79-22.75,6.84-1.14,2.99,1.99,4.3,4.59,4.04,1.82-.18,20.49-5.65,22-6.46.39-.21.71-.39.96-.77l-4.8-3.66Z', viewBoxWidth: 595.28 }
 };
 
-module.exports = HexWorldEditorPlugin;
+module.exports = HexCartographerPlugin;

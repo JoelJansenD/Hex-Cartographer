@@ -3,7 +3,7 @@
     color: white;
 }
 
-.hex-world-editor-container {
+.hex-cartographer-container {
     display: flex;
     flex-direction: column;
     height: 100%;
@@ -115,7 +115,7 @@ input[type="color"][title="Werkzeugfarbe"]::-moz-color-swatch {
 }
 
 /* Dark mode support */
-.theme-dark .hex-world-editor-container {
+.theme-dark .hex-cartographer-container {
     background-color: #1e1e1e;
 }
 
@@ -152,8 +152,8 @@ input[type="color"][title="Werkzeugfarbe"]::-moz-color-swatch {
 
 /* Datei-Typ-Anzeige im File Explorer (wie CANVAS) */
 /* Platziere Badge direkt nach dem Dateinamen */
-.nav-file-title.hexworld-file .nav-file-title-content::after {
-    content: "HEXWORLD";
+.nav-file-title.hex-cartographer-file .nav-file-title-content::after {
+    content: "HEXMAP";
     display: inline-block;
     margin-left: 4px;
     padding: 1px 4px;
@@ -169,8 +169,8 @@ input[type="color"][title="Werkzeugfarbe"]::-moz-color-swatch {
 }
 
 /* Fallback für Dateien, die noch nicht die Klasse haben */
-.nav-file-title[data-path$=".hexworld.md"]:not(.hexworld-file) .nav-file-title-content::after {
-    content: "HEXWORLD";
+.nav-file-title[data-path$=".hexworld.md"]:not(.hex-cartographer-file) .nav-file-title-content::after {
+    content: "HEXMAP";
     display: inline-block;
     margin-left: 4px;
     padding: 1px 4px;
@@ -185,5 +185,5 @@ input[type="color"][title="Werkzeugfarbe"]::-moz-color-swatch {
     line-height: 1;
 }
 
-/* Verstecke ".hexworld" im Dateinamen im File Explorer */
+/* Verstecke ".hexworld" Extension im Dateinamen im File Explorer */
 /* Dies wird via JavaScript manipuliert */
