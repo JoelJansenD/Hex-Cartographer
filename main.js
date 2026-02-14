@@ -2442,6 +2442,28 @@ class HexWorldEditorView extends ItemView {
                 return;
             }
 
+            if (e.button === 2 && this.editMode) {
+                e.preventDefault();
+                const now = Date.now();
+                const hex = this.pixelToHex(world.x, world.y);
+                const key = `${hex.q}_${hex.r}`;
+                if (this._rightClickLast && now - this._rightClickLast.time < 400 && this._rightClickLast.key === key) {
+                    this._rightClickLast = null;
+                    this.handleEraserFlood(hex);
+                    this.render();
+                    this.requestSave();
+                    return;
+                }
+                this._rightClickLast = { time: now, key };
+                this.isRightMouseErasing = true;
+                this.rightEraseLastHex = null;
+                this.pushHistory();
+                this.handleEraser(hex, world.x, world.y);
+                this.rightEraseLastHex = key;
+                this.render();
+                return;
+            }
+
             this.pendingHistory = true;
             this.isMouseDown = true;
             this.mouseDownPos = { x: world.x, y: world.y };
@@ -2551,18 +2573,34 @@ class HexWorldEditorView extends ItemView {
             }
         });
 
+        this.canvas.addEventListener('contextmenu', (e) => {
+            if (this.editMode) e.preventDefault();
+        });
+
         this.canvas.addEventListener('dblclick', (e) => {
-            if (!this.editMode || this.drawMode !== 'eraser') return;
-            const world = this.getWorldCoords(e);
-            const hex = this.pixelToHex(world.x, world.y);
-            if (this.history.length > 0) this.history.pop();
-            this.handleEraserFlood(hex);
-            this.render();
-            this.requestSave();
+            if (!this.editMode) return;
+            if (e.button === 2 || this.drawMode === 'eraser') {
+                const world = this.getWorldCoords(e);
+                const hex = this.pixelToHex(world.x, world.y);
+                if (this.history.length > 0) this.history.pop();
+                this.handleEraserFlood(hex);
+                this.render();
+                this.requestSave();
+            }
         });
 
         this.containerEl.addEventListener('mousemove', (e) => {
             const world = this.getWorldCoords(e);
+            if (this.isRightMouseErasing) {
+                const hex = this.pixelToHex(world.x, world.y);
+                const key = `${hex.q}_${hex.r}`;
+                if (key !== this.rightEraseLastHex) {
+                    this.handleEraser(hex, world.x, world.y);
+                    this.rightEraseLastHex = key;
+                    this.render();
+                }
+                return;
+            }
             if (this.isDraggingMap) {
                 this.data.offX += e.movementX;
                 this.data.offY += e.movementY;
@@ -2619,6 +2657,12 @@ class HexWorldEditorView extends ItemView {
         });
 
         const stop = (e) => {
+            if (this.isRightMouseErasing) {
+                this.isRightMouseErasing = false;
+                this.rightEraseLastHex = null;
+                this.requestSave();
+                return;
+            }
             const world = this.getWorldCoords(e);
             if (this.isMouseDown && this.mouseDownPos) {
                 if (this.roadDragIndex !== null && this.roadSettings.editMode) {
@@ -4079,19 +4123,21 @@ class HexWorldEditorView extends ItemView {
             });
         };
 
-        this.drawRivers();
-
-        drawSymbolLayer(['question', 'exclamation', 'cross']);
-
-        this.drawRoads();
-
         drawSymbolLayer(['swamp','grass', 'bush', 'tree', 'pine', 'palm']);
 
         drawSymbolLayer(['hill', 'mountain']);
 
+        this.drawRivers();
+
+        this.drawRoads();
+
+        drawSymbolLayer(['question', 'exclamation', 'cross']);
+
         drawSymbolLayer(['tent', 'house', 'village', 'town', 'castle', 'harbor', 'monastery', 'tower', 'ruin', 'cave', 'oasis']);
 
         this.drawBorders();
+
+        this.drawPathWaypoints(); // Wegpunkte immer als letztes (ueber allen anderen Elementen)
 
         if (this.svgLayer) {
             while (this.svgLayer.firstChild) this.svgLayer.removeChild(this.svgLayer.firstChild);
@@ -4542,12 +4588,26 @@ class HexWorldEditorView extends ItemView {
         if (!this.data.rivers) return;
         this.data.rivers.forEach(river => {
             if (!river.waypoints || river.waypoints.length === 0) return;
-
             if (river.waypoints.length >= 2) {
                 this.drawPathChains(river);
             }
+        });
+    }
 
-            if (this.riverSettings.editMode && river.id === this.riverSettings.activeRiverId) {
+    drawRoads() {
+        if (!this.data.roads) return;
+        this.data.roads.forEach(road => {
+            if (!road.waypoints || road.waypoints.length === 0) return;
+            if (road.waypoints.length >= 2) {
+                this.drawPathChains(road);
+            }
+        });
+    }
+
+    drawPathWaypoints() {
+        if (this.riverSettings.editMode && this.data.rivers) {
+            const river = this.data.rivers.find(r => r.id === this.riverSettings.activeRiverId);
+            if (river && river.waypoints) {
                 const activeIdx = this.riverSettings.insertAfter;
                 const activeWp = activeIdx !== null ? river.waypoints[activeIdx] : null;
                 river.waypoints.forEach((wp) => {
@@ -4559,19 +4619,10 @@ class HexWorldEditorView extends ItemView {
                     this.ctx.fill();
                 });
             }
-        });
-    }
-
-    drawRoads() {
-        if (!this.data.roads) return;
-        this.data.roads.forEach(road => {
-            if (!road.waypoints || road.waypoints.length === 0) return;
-
-            if (road.waypoints.length >= 2) {
-                this.drawPathChains(road);
-            }
-
-            if (this.roadSettings.editMode && road.id === this.roadSettings.activeRoadId) {
+        }
+        if (this.roadSettings.editMode && this.data.roads) {
+            const road = this.data.roads.find(r => r.id === this.roadSettings.activeRoadId);
+            if (road && road.waypoints) {
                 const activeIdx = this.roadSettings.insertAfter;
                 const activeWp = activeIdx !== null ? road.waypoints[activeIdx] : null;
                 road.waypoints.forEach((wp) => {
@@ -4583,7 +4634,7 @@ class HexWorldEditorView extends ItemView {
                     this.ctx.fill();
                 });
             }
-        });
+        }
     }
 
     drawPathChains(path) {
@@ -4645,42 +4696,54 @@ class HexWorldEditorView extends ItemView {
             return { p1, p2, from: l.from, to: l.to, fullDist };
         });
 
-        computedLines.forEach((cl) => {
-            const { p1, p2, from, to, fullDist } = cl;
+        const allPts = [];
+        computedLines.forEach((cl, segIdx) => {
+            const { p1, p2, from, to } = cl;
             const dx = p2.x - p1.x, dy = p2.y - p1.y;
             const dist = Math.sqrt(dx * dx + dy * dy);
-            const curveSegs = Math.max(3, Math.floor(dist / 8));
+            const curveSegs = Math.max(3, Math.floor(dist / 5)); // Wellendichte: Teiler kleiner = mehr Wellen, groesser = weniger | Erstes Argument = Mindestzahl Wellen pro Segment
             const nx = -dy / dist, ny = dx / dist;
 
-            if (dashCount > 1) {
-                const unitLen = fullDist / dashCount;
-                this.ctx.setLineDash([unitLen, unitLen]);
-                this.ctx.lineDashOffset = (dashCount % 2 === 0) ? unitLen / 2 : 0;
-            }
+            if (segIdx === 0) allPts.push({ x: p1.x, y: p1.y });
 
-            this.ctx.beginPath();
-            this.ctx.moveTo(p1.x, p1.y);
-
-            for (let i = 1; i <= curveSegs; i++) {
+            for (let i = 1; i < curveSegs; i++) {
                 const t = i / curveSegs;
-                const px = p1.x + dx * t, py = p1.y + dy * t;
+                const baseX = p1.x + dx * t;
+                const baseY = p1.y + dy * t;
                 const seedHash = Math.abs(from.q * 7 + from.r * 13 + to.q * 11 + to.r * 17 + i * 3);
                 const seed = seedHash % 10;
-                const direction = (i % 2 === 0 ? 1 : -1);
-                const amplitude = (this.data.gridSize * 0.15) * ((seed - 5) / 5) * direction;
-
-                if (i === curveSegs) {
-                    this.ctx.lineTo(p2.x, p2.y);
-                } else {
-                    const cpx = px + nx * amplitude, cpy = py + ny * amplitude;
-                    const nextT = (i + 0.5) / curveSegs;
-                    this.ctx.quadraticCurveTo(cpx, cpy, p1.x + dx * nextT, p1.y + dy * nextT);
-                }
+                const sine = Math.sin(t * Math.PI * curveSegs / 2);
+                const amplitude = (this.data.gridSize * 0.09) * (0.4 + seed / 15) * sine; // Wellenhoehe: 0.09 = Ausschlag relativ zur Wabengroesse (kleiner = flacher, groesser = staerker) | 0.4 = min. Zufallsfaktor, seed/15 = max. Zufallsvariation
+                allPts.push({ x: baseX + nx * amplitude, y: baseY + ny * amplitude });
             }
-            this.ctx.stroke();
 
-            if (dashCount > 1) { this.ctx.setLineDash([]); this.ctx.lineDashOffset = 0; }
+            allPts.push({ x: p2.x, y: p2.y });
         });
+
+        if (allPts.length < 2) return;
+
+        if (dashCount > 1 && computedLines.length > 0) {
+            const unitLen = computedLines[0].fullDist / dashCount;
+            this.ctx.setLineDash([unitLen, unitLen]);
+            this.ctx.lineDashOffset = (dashCount % 2 === 0) ? unitLen / 2 : 0;
+        }
+
+        this.ctx.beginPath();
+        this.ctx.moveTo(allPts[0].x, allPts[0].y);
+        for (let i = 0; i < allPts.length - 1; i++) {
+            const a = allPts[Math.max(0, i - 1)];
+            const b = allPts[i];
+            const c = allPts[i + 1];
+            const d = allPts[Math.min(allPts.length - 1, i + 2)];
+            const cp1x = b.x + (c.x - a.x) / 6;
+            const cp1y = b.y + (c.y - a.y) / 6;
+            const cp2x = c.x - (d.x - b.x) / 6;
+            const cp2y = c.y - (d.y - b.y) / 6;
+            this.ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, c.x, c.y);
+        }
+        this.ctx.stroke();
+
+        if (dashCount > 1) { this.ctx.setLineDash([]); this.ctx.lineDashOffset = 0; }
     }
 
     async saveData() {
