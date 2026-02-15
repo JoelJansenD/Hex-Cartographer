@@ -193,6 +193,8 @@ const TRANSLATIONS = {
         'modal.confirmDeleteText': 'Text wirklich löschen?',
 
         // Einstellungen
+        'settings.exportWidth': 'Standard-Exportbreite (px)',
+        'settings.exportWidthDesc': 'Standardbreite in Pixeln beim Exportieren als Bild.',
         'settings.donateText': 'Spendiere mir einen Kaffee. Ich freue mich darüber, Euch den Hex Cartographer kostenlos zur Verfügung zu stellen. Allerdings bedurfte die Entwicklung lange Zeit. Wenn mir etwas neues einfällt, wird es für Euch Updates geben. Ihr würdet mir eine große Freude bereiten, wenn ihr mir für diese Arbeit eine kleine Spende hinterlasst.',
         'settings.donateButton': 'Spende einen Kaffee',
 
@@ -207,6 +209,7 @@ const TRANSLATIONS = {
         'guide.navigation.fit': 'Ganze Karte zeigen.',
         'guide.hexcolor': 'Wabenfarbe',
         'guide.hexcolor.paint': 'Farbe wählen und auf Waben klicken zum Einfärben.',
+        'guide.hexcolor.eyedropper': 'Farbpipette: Farbe auf der Karte aufnehmen.',
         'guide.hexcolor.palette': 'Rechtsklick auf Palettenplatz = Farbe speichern.',
         'guide.symbols': 'Symbole',
         'guide.symbols.groups': 'Werkzeuggruppe wählen (Extras, Vegetation, Berg, Gebäude).',
@@ -238,7 +241,7 @@ const TRANSLATIONS = {
         'guide.undoredo.redo': 'Strg+Y = Wiederholen',
         'guide.print': 'Drucken / Exportieren',
         'guide.print.pc': 'Drei-Punkte-Menü → „Karte drucken" öffnet den Druckdialog (PC).',
-        'guide.print.export': 'Drei-Punkte-Menü → „Karte exportieren" speichert die Karte als JPEG oder PNG.',
+        'guide.print.export': 'Drei-Punkte-Menü → „Als Bild exportieren" speichert die Karte als JPEG oder PNG.',
         'guide.print.exportMobile': 'Auf Mobilgeräten wird das Bild im Ordner „Hex Cartographer Export" neben der Kartendatei gespeichert.',
         'guide.touch': 'Infos für Benutzer mit Touch Screen',
         'guide.touch.tap': 'Tippen = Setzen, Platzieren, Auswählen.<br>Mit einem Finger streichen = Zeichnen.',
@@ -249,7 +252,7 @@ const TRANSLATIONS = {
         // Modal — Farbwähler
         'modal.colorPickerTitle': 'Farbe wählen',
         'modal.colorPickerCancel': 'Abbrechen',
-        'tooltip.colorEyedropper': 'Farbpipette\nTippe auf eine Wabe, um deren Farbe zu übernehmen',
+        'tooltip.colorEyedropper': 'Farbpipette\nTippe auf die Karte, um eine beliebige Farbe zu übernehmen',
         'notice.tapToPickColor': 'Tippe auf eine Wabe, um die Farbe aufzunehmen',
         'notice.colorPicked': 'Farbe aufgenommen',
         'notice.noColorAtPosition': 'Keine Farbe an dieser Position',
@@ -259,10 +262,10 @@ const TRANSLATIONS = {
         'menu.openInEditor': 'Im Hex Cartographer öffnen',
         'menu.printMap': 'Karte drucken',
         'menu.shareMap': 'Karte teilen',
-        'menu.exportMap': 'Karte exportieren',
+        'menu.exportMap': 'Als Bild exportieren',
         'notice.noContentToPrint': 'Keine Karteninhalte zum Drucken vorhanden',
         'notice.exportSaved': 'Exportiert nach',
-        'modal.exportTitle': 'Karte exportieren',
+        'modal.exportTitle': 'Als Bild exportieren',
         'modal.exportFormat': 'Format',
         'modal.exportQuality': 'Qualität',
         'modal.exportExport': 'Exportieren',
@@ -304,7 +307,7 @@ const TRANSLATIONS = {
 
         // Tooltips — Main tools
         'tooltip.editMode': 'Edit Mode\nClick: Show/hide tools',
-        'tooltip.colorPicker': 'Tool Color\nClick: Open color picker',
+        'tooltip.colorPicker': 'Tool Color\nClick: Pick any color from the map',
         'tooltip.hexColor': 'Hexes\nClick: Color hexes',
         'tooltip.fill': 'Fill Bucket\nClick: Fill connected area\nClick again: Turn off fill',
         'tooltip.text': 'Text Tool\nClick on map: Create new text\nClick on text: Edit/move text',
@@ -381,6 +384,8 @@ const TRANSLATIONS = {
         'modal.confirmDeleteText': 'Really delete this text?',
 
         // Settings
+        'settings.exportWidth': 'Default export width (px)',
+        'settings.exportWidthDesc': 'Default width in pixels when exporting as image.',
         'settings.donateText': 'Buy me a coffee. I am happy to provide Hex Cartographer to you for free. However, the development took a long time. When I come up with something new, there will be updates. It would make me very happy if you leave a small donation for this work.',
         'settings.donateButton': 'Buy me a coffee',
 
@@ -395,6 +400,7 @@ const TRANSLATIONS = {
         'guide.navigation.fit': 'Fit entire map to view.',
         'guide.hexcolor': 'Hexes',
         'guide.hexcolor.paint': 'Choose a color and click hexes to paint them.',
+        'guide.hexcolor.eyedropper': 'Color eyedropper: Pick a color from the map.',
         'guide.hexcolor.palette': 'Right-click a palette slot = Save color.',
         'guide.symbols': 'Symbols',
         'guide.symbols.groups': 'Choose a tool group (Extras, Vegetation, Mountain, Building).',
@@ -426,7 +432,7 @@ const TRANSLATIONS = {
         'guide.undoredo.redo': 'Ctrl+Y = Redo',
         'guide.print': 'Print / Export',
         'guide.print.pc': 'Three-dot menu → "Print map" opens the print dialog (PC).',
-        'guide.print.export': 'Three-dot menu → "Export map" saves the map as JPEG or PNG.',
+        'guide.print.export': 'Three-dot menu → "Export as image" saves the map as JPEG or PNG.',
         'guide.print.exportMobile': 'On mobile devices, the image is saved in the "Hex Cartographer Export" folder next to the map file.',
         'guide.touch': 'Touch Screen Users',
         'guide.touch.tap': 'Tap = Left click (draw, place, select).',
@@ -447,10 +453,10 @@ const TRANSLATIONS = {
         'menu.openInEditor': 'Open in Hex Cartographer',
         'menu.printMap': 'Print map',
         'menu.shareMap': 'Share map',
-        'menu.exportMap': 'Export map',
+        'menu.exportMap': 'Export as image',
         'notice.noContentToPrint': 'No map content to print',
         'notice.exportSaved': 'Exported to',
-        'modal.exportTitle': 'Export map',
+        'modal.exportTitle': 'Export as image',
         'modal.exportFormat': 'Format',
         'modal.exportQuality': 'Quality',
         'modal.exportExport': 'Export',
@@ -504,9 +510,12 @@ function hsbToRgb(h, s, b) {
 function hsbToHex(h, s, b) { const rgb = hsbToRgb(h, s, b); return rgbToHex(rgb.r, rgb.g, rgb.b); }
 function hexToHsb(hex) { const rgb = hexToRgb(hex); return rgbToHsb(rgb.r, rgb.g, rgb.b); }
 
+const DEFAULT_SETTINGS = { exportWidth: 1024 };
+
 // === Hauptklasse des Plugins ===
 class HexCartographerPlugin extends Plugin {
     async onload() {
+        await this.loadSettings();
         currentLanguage = getObsidianLanguage();
         this.addSettingTab(new HexCartographerSettingTab(this.app, this));
 
@@ -751,6 +760,13 @@ class HexCartographerPlugin extends Plugin {
         this.register(() => clearInterval(intervalId));
     }
 
+    async loadSettings() {
+        this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+    }
+
+    async saveSettings() {
+        await this.saveData(this.settings);
+    }
 }
 
 // === View-Klasse für den Hex Cartographer ===
@@ -949,7 +965,7 @@ class HexCartographerView extends ItemView {
                     .onClick(() => {
                         const mapSize = this.getMapWorldSize();
                         if (!mapSize) { new Notice(t('notice.noContentToPrint')); return; }
-                        new ExportMapModal(this.app, mapSize, async (format, width, quality) => {
+                        new ExportMapModal(this.app, mapSize, this.plugin.settings.exportWidth, async (format, width, quality) => {
                             const tmpCanvas = this.renderFullMap({ targetWidth: width });
                             if (!tmpCanvas) { new Notice(t('notice.noContentToPrint')); return; }
                             const mimeType = format === 'jpeg' ? 'image/jpeg' : 'image/png';
@@ -1595,23 +1611,21 @@ class HexCartographerView extends ItemView {
             this.requestSave();
         });
 
-        if (this.isTouchDevice) {
-            const colorEyedropperBtn = editContent.createEl('button', {
-                cls: 'hex-tool-btn',
-                attr: { title: t('tooltip.colorEyedropper') }
-            });
-            setIcon(colorEyedropperBtn, 'pipette');
-            colorEyedropperBtn.style.background = '#fff';
-            this.colorEyedropperBtn = colorEyedropperBtn;
-            colorEyedropperBtn.onclick = () => {
-                const wasActive = this.colorPickMode;
-                this.exitPathEditMode();
-                this.colorPickMode = !wasActive;
-                colorEyedropperBtn.style.background = this.colorPickMode ? 'var(--interactive-accent)' : '#fff';
-                colorEyedropperBtn.style.color = this.colorPickMode ? 'var(--text-on-accent)' : '';
-                if (this.colorPickMode) new Notice(t('notice.tapToPickColor'));
-            };
-        }
+        const colorEyedropperBtn = editContent.createEl('button', {
+            cls: 'hex-tool-btn',
+            attr: { title: t('tooltip.colorEyedropper') }
+        });
+        setIcon(colorEyedropperBtn, 'pipette');
+        colorEyedropperBtn.style.background = '#fff';
+        this.colorEyedropperBtn = colorEyedropperBtn;
+        colorEyedropperBtn.onclick = () => {
+            const wasActive = this.colorPickMode;
+            this.exitPathEditMode();
+            this.colorPickMode = !wasActive;
+            colorEyedropperBtn.style.background = this.colorPickMode ? 'var(--interactive-accent)' : '#fff';
+            colorEyedropperBtn.style.color = this.colorPickMode ? 'var(--text-on-accent)' : '';
+            if (this.colorPickMode) new Notice(t('notice.tapToPickColor'));
+        };
 
         editContent.createEl('span', { cls: 'hex-toolbar-sep', text: '\u200B' });
 
@@ -5500,14 +5514,14 @@ class ColorPickerModal extends Modal {
 }
 
 class ExportMapModal extends Modal {
-    constructor(app, mapSize, onExport) {
+    constructor(app, mapSize, defaultWidth, onExport) {
         super(app);
         this.onExport = onExport;
         this.aspect = mapSize.w / mapSize.h;
         this.format = 'png';
         this.quality = 85;
-        this.imgWidth = 1024;
-        this.imgHeight = Math.round(1024 / this.aspect);
+        this.imgWidth = defaultWidth || 1024;
+        this.imgHeight = Math.round(this.imgWidth / this.aspect);
         this._updating = false;
     }
 
@@ -5603,6 +5617,24 @@ class HexCartographerSettingTab extends PluginSettingTab {
                     });
             });
 
+        new Setting(containerEl)
+            .setName(t('settings.exportWidth'))
+            .setDesc(t('settings.exportWidthDesc'))
+            .addText(text => {
+                text.inputEl.type = 'number';
+                text.inputEl.min = '64';
+                text.inputEl.max = '8192';
+                text.inputEl.step = '1';
+                text.setValue(String(this.plugin.settings.exportWidth))
+                    .onChange(async (value) => {
+                        const num = parseInt(value);
+                        if (num >= 64 && num <= 8192) {
+                            this.plugin.settings.exportWidth = num;
+                            await this.plugin.saveSettings();
+                        }
+                    });
+            });
+
         this.buildGuide(containerEl);
     }
 
@@ -5621,6 +5653,7 @@ class HexCartographerSettingTab extends PluginSettingTab {
             ]],
             ['hexcolor', [
                 ['hexagon', 'guide.hexcolor.paint'],
+                ['pipette', 'guide.hexcolor.eyedropper'],
                 [null, 'guide.hexcolor.palette'],
             ]],
             ['symbols', [
