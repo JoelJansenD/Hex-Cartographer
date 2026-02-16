@@ -1990,39 +1990,13 @@ class HexCartographerPlugin extends Plugin {
 
         this.registerExtensions(['hexcartographer.md'], 'hex-cartographer');
 
-        // KRITISCH: Stelle sicher, dass .hexcartographer.md Dateien mit dem Editor geöffnet werden
-        const originalOpenFile = this.app.workspace.openLinkText.bind(this.app.workspace);
-        this.app.workspace.openLinkText = async (linktext, sourcePath, newLeaf, openViewState) => {
-            if (linktext.endsWith('.hexcartographer.md') || linktext.includes('.hexcartographer.md')) {
-                const file = this.app.metadataCache.getFirstLinkpathDest(linktext, sourcePath);
-                if (file && file instanceof TFile) {
-                    const leaf = this.app.workspace.getLeaf(newLeaf);
-                    await leaf.openFile(file, {
-                        ...openViewState,
-                        state: { ...openViewState?.state, file: file.path }
-                    });
-                    if (leaf.view.getViewType() !== 'hex-cartographer') {
-                        await leaf.setViewState({
-                            type: 'hex-cartographer',
-                            state: { file: file.path }
-                        });
-                    }
-                    return;
-                }
-            }
-            return originalOpenFile(linktext, sourcePath, newLeaf, openViewState);
-        };
-
         this.registerEvent(
             this.app.workspace.on('file-open', async (file) => {
                 if (!file || !file.path) return;
-
                 if (file.path.endsWith('.hexcartographer.md')) {
                     await new Promise(resolve => setTimeout(resolve, 10));
-
                     const leaf = this.app.workspace.activeLeaf;
                     if (!leaf) return;
-
                     if (leaf.view.getViewType() === 'markdown') {
                         await leaf.setViewState({
                             type: 'hex-cartographer',
@@ -2093,21 +2067,24 @@ class HexCartographerPlugin extends Plugin {
             const leaves = this.app.workspace.getLeavesOfType('hex-cartographer');
             leaves.forEach((leaf) => {
                 const view = leaf.view;
-                if (view instanceof HexCartographerView && view.file && view.file.path === oldPath) {
+                if (view instanceof HexCartographerView && view.file &&
+                    (view.file.path === oldPath || view.file === file)) {
                     view.file = file;
-                    leaf.updateHeader();
-
-                    setTimeout(() => {
-                        const activeLeaf = this.app.workspace.activeLeaf;
-                        if (activeLeaf === leaf) {
-                            const tabHeaderEl = document.querySelector('.workspace-tabs.mod-active .workspace-tab-header.is-active .workspace-tab-header-inner-title');
-                            if (tabHeaderEl) {
-                                tabHeaderEl.innerText = file.basename;
-                            }
-                        }
-                    }, 10);
                 }
             });
+            setTimeout(() => {
+                const allLeaves = this.app.workspace.getLeavesOfType('hex-cartographer');
+                allLeaves.forEach((leaf) => {
+                    const view = leaf.view;
+                    if (view instanceof HexCartographerView && view.file) {
+                        leaf.updateHeader();
+                        const titleEl = leaf.tabHeaderEl?.querySelector('.workspace-tab-header-inner-title');
+                        if (titleEl) {
+                            titleEl.textContent = view.getDisplayText();
+                        }
+                    }
+                });
+            }, 300);
         }));
 
         this.registerEvent(this.app.workspace.on('file-open', (file) => {
@@ -2121,10 +2098,56 @@ class HexCartographerPlugin extends Plugin {
                 }
             });
         }));
+
+        this.registerEvent(this.app.workspace.on('active-leaf-change', (leaf) => {
+            document.querySelectorAll('.nav-file-title.hex-active').forEach(el => {
+                el.classList.remove('is-active');
+                el.classList.remove('hex-active');
+            });
+
+            if (leaf?.view instanceof HexCartographerView && leaf.view.file) {
+                setTimeout(() => {
+                    document.querySelectorAll('.nav-file-title.is-active').forEach(el => {
+                        el.classList.remove('is-active');
+                    });
+                    const fileEl = document.querySelector(`.nav-file-title[data-path="${CSS.escape(leaf.view.file.path)}"]`);
+                    if (fileEl) {
+                        fileEl.classList.add('is-active');
+                        fileEl.classList.add('hex-active');
+                    }
+                }, 50);
+            } else if (leaf?.view?.file) {
+                setTimeout(() => {
+                    const fileEl = document.querySelector(`.nav-file-title[data-path="${CSS.escape(leaf.view.file.path)}"]`);
+                    if (fileEl && !fileEl.classList.contains('is-active')) {
+                        fileEl.classList.add('is-active');
+                    }
+                }, 100);
+            }
+        }));
+
+        this.app.workspace.onLayoutReady(() => {
+            setTimeout(() => {
+                const activeLeaf = this.app.workspace.activeLeaf;
+                if (!activeLeaf) return;
+                const state = activeLeaf.getViewState();
+                const filePath = state?.state?.file ||
+                    (activeLeaf.view instanceof HexCartographerView && activeLeaf.view.file?.path);
+                if (state?.type === 'hex-cartographer' && filePath) {
+                    const fileEl = document.querySelector(`.nav-file-title[data-path="${CSS.escape(filePath)}"]`);
+                    if (fileEl) {
+                        fileEl.classList.add('is-active');
+                        fileEl.classList.add('hex-active');
+                    }
+                }
+            }, 500);
+        });
     }
 
     async createNewHexMap(targetFile = null) {
-        const fileName = `HexMap_${Date.now()}.hexcartographer.md`;
+        const now = new Date();
+        const pad = (n) => String(n).padStart(2, '0');
+        const fileName = `HexMap_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}-${pad(now.getDate())}${pad(now.getMonth() + 1)}${String(now.getFullYear()).slice(-2)}.hexcartographer.md`;
 
         let folderPath = '';
         if (targetFile) {
@@ -2166,7 +2189,7 @@ class HexCartographerPlugin extends Plugin {
             const content = `${frontmatter}# ${fileName.replace('.hexcartographer.md', '')}\n\n\`\`\`json\n${jsonData}\n\`\`\`\n`;
 
             const file = await this.app.vault.create(filePath, content);
-            const leaf = this.app.workspace.getLeaf('tab');
+            const leaf = this.app.workspace.getLeaf(false);
             await leaf.setViewState({
                 type: 'hex-cartographer',
                 active: true,
@@ -2240,6 +2263,7 @@ class HexCartographerPlugin extends Plugin {
 class HexCartographerView extends ItemView {
     constructor(leaf, plugin) {
         super(leaf);
+        this.navigation = true;
         this.plugin = plugin;
         this.file = null;
         this.data = { hexes: {}, rivers: [], roads: [], texts: [], borders: [], gridSize: DEFAULT_GRID_SIZE, zoom: 1, offX: DEFAULT_OFF_X, offY: DEFAULT_OFF_Y };
@@ -2561,27 +2585,6 @@ class HexCartographerView extends ItemView {
             if (file instanceof TFile) {
                 this.file = file;
                 await this.reloadFile();
-
-                const existingLeaves = this.app.workspace.getLeavesOfType('hex-cartographer');
-                const existingLeaf = existingLeaves.find(leaf => {
-                    const view = leaf.view;
-                    return view !== this && view instanceof HexCartographerView &&
-                           view.file && view.file.path === file.path;
-                });
-
-                if (existingLeaf) {
-                    const existingParent = existingLeaf.parent;
-                    const newParent = this.leaf.parent;
-
-                    if (existingParent === newParent) {
-                        await super.setState(state, result);
-                        setTimeout(() => {
-                            this.app.workspace.setActiveLeaf(existingLeaf, { focus: true });
-                            this.leaf.detach();
-                        }, 10);
-                        return;
-                    }
-                }
             }
         }
         await super.setState(state, result);
