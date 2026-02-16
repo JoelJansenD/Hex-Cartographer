@@ -10,7 +10,6 @@ const TOOLBAR_INPUT_HEIGHT = '24px';
 
 // === Farben (Standardwerte) ===
 const DEFAULT_MASTER_COLOR = '#000000';
-const DEFAULT_HEX_COLOR = '#6CC261';
 const DEFAULT_RIVER_COLOR = '#3295D2';
 const DEFAULT_ROAD_COLOR = '#f5deb3';
 const DEFAULT_BORDER_COLOR = '#FF0000';
@@ -33,7 +32,7 @@ const DEFAULT_ROAD_WIDTH = 3;
 const DEFAULT_BORDER_HIGHLIGHT_WIDTH = 3;
 const DEFAULT_BORDER_DASHES = 1;
 const DEFAULT_PATH_DASHES = 1;
-const PATH_END_INSET = 0.1;
+const PATH_END_INSET = 0.15;
 const MAX_HISTORY = 50;
 const MAX_ZOOM = 2;
 const VIEWPORT_PADDING = 0.9;
@@ -133,7 +132,7 @@ const TRANSLATIONS = {
         'tooltip.patternPicker': 'Muster aufnehmen\nKlick: Wabe als Muster übernehmen',
 
         // Tooltips — Fluss/Weg
-        'tooltip.river': 'Fluss-Werkzeug\nKlick: Wegpunkte setzen/verschieben\nKlick Radierer: Teilstück löschen\nDoppelklick Radierer: Ganzen Fluss löschen',
+        'tooltip.river': 'Fluss-Werkzeug\nKlick: Wegpunkte setzen/verschieben\nDoppelklick Endpunkt: Fluss schließen (nur ohne Abzweigungen)\nKlick Radierer: Teilstück löschen\nDoppelklick Radierer: Ganzen Fluss löschen',
         'tooltip.road': 'Weg-Werkzeug\nKlick: Wegpunkte setzen/verschieben\nKlick Radierer: Teilstück löschen\nDoppelklick Radierer: Ganzen Weg löschen',
         'tooltip.pathPicker': 'Fluss/Weg aufnehmen\nKlick: Vorhandenen Fluss/Weg auswählen',
         'tooltip.pathFinish': 'Abschließen\nKlick: Aktuellen Fluss/Weg fertigstellen',
@@ -201,7 +200,7 @@ const TRANSLATIONS = {
         // Anleitung
         'guide.title': 'Kurzanleitung',
         'guide.basics': 'Grundlagen',
-        'guide.basics.create': 'Rechtsklick auf einen Ordner in der Dateiübersicht → „Neue Hex Karte erstellen."',
+        'guide.basics.create': 'Rechtsklick auf einen Ordner in der Dateiübersicht → „Neue Hex Cartographer Karte erstellen."',
         'guide.basics.editMode': 'Bearbeitungsmodus ein-/ausschalten.',
         'guide.navigation': 'Navigation',
         'guide.navigation.zoom': 'Mausrad = Zoom.',
@@ -224,7 +223,7 @@ const TRANSLATIONS = {
         'guide.pattern.stamp': 'Muster auf Waben setzen. Ziehen um mit Muster zu zeichnen.',
         'guide.pattern.pick': 'Vorhandenes Muster aufnehmen, um damit zu zeichnen.',
         'guide.paths': 'Flüsse & Wege',
-        'guide.paths.river': 'Wegpunkte setzen für Flüsse.',
+        'guide.paths.river': 'Wegpunkte setzen für Flüsse. Flussenden laufen an Sackgassen spitz zu. Doppelklick auf einen Endpunkt schließt den Fluss (nur ohne Abzweigungen). Letzten Punkt auf den vorletzten ziehen deaktiviert die Verengung an diesem Ende.',
         'guide.paths.road': 'Wegpunkte setzen für Wege.',
         'guide.paths.pick': 'Bestehenden Fluss/Weg auswählen und bearbeiten.',
         'guide.paths.width': 'Breite der Flüsse/Wege über die Eingabefelder mit einem Wert anpassen.',
@@ -258,7 +257,7 @@ const TRANSLATIONS = {
         'notice.noColorAtPosition': 'Keine Farbe an dieser Position',
 
         // Menü-Einträge
-        'menu.createNew': 'Neue Hex Karte erstellen',
+        'menu.createNew': 'Neue Hex Cartographer Karte erstellen',
         'menu.openInEditor': 'Im Hex Cartographer öffnen',
         'menu.printMap': 'Karte drucken',
         'menu.shareMap': 'Karte teilen',
@@ -324,7 +323,7 @@ const TRANSLATIONS = {
         'tooltip.patternPicker': 'Pick Pattern\nClick: Pick hex as pattern',
 
         // Tooltips — River/Road
-        'tooltip.river': 'River Tool\nClick: Place/move waypoints\nClick Eraser: Delete segment\nDouble-click Eraser: Delete entire river',
+        'tooltip.river': 'River Tool\nClick: Place/move waypoints\nDouble-click endpoint: Close river (only without branches)\nClick Eraser: Delete segment\nDouble-click Eraser: Delete entire river',
         'tooltip.road': 'Road Tool\nClick: Place/move waypoints\nClick Eraser: Delete segment\nDouble-click Eraser: Delete entire road',
         'tooltip.pathPicker': 'Pick River/Road\nClick: Select existing river/road',
         'tooltip.pathFinish': 'Finish\nClick: Complete current river/road',
@@ -392,7 +391,7 @@ const TRANSLATIONS = {
         // Guide
         'guide.title': 'Quick Guide',
         'guide.basics': 'Basics',
-        'guide.basics.create': 'Right-click a folder in the file explorer → "Create new Hex Map."',
+        'guide.basics.create': 'Right-click a folder in the file explorer → "Create new Hex Cartographer Map."',
         'guide.basics.editMode': 'Toggle edit mode on/off.',
         'guide.navigation': 'Navigation',
         'guide.navigation.zoom': 'Mouse wheel = Zoom.',
@@ -415,7 +414,7 @@ const TRANSLATIONS = {
         'guide.pattern.stamp': 'Place pattern on hexes. Drag to draw with pattern.',
         'guide.pattern.pick': 'Pick up an existing pattern to draw with.',
         'guide.paths': 'Rivers & Roads',
-        'guide.paths.river': 'Place waypoints for rivers.',
+        'guide.paths.river': 'Place waypoints for rivers. River ends taper at dead ends. Double-click an endpoint to close the river (only without branches). Drag the last point onto the second-to-last to disable tapering at that end.',
         'guide.paths.road': 'Place waypoints for roads.',
         'guide.paths.pick': 'Select an existing river/road to edit.',
         'guide.paths.width': 'Adjust river/road width via the input fields.',
@@ -449,7 +448,7 @@ const TRANSLATIONS = {
         'notice.noColorAtPosition': 'No color at this position',
 
         // Menu entries
-        'menu.createNew': 'Create new Hex Map',
+        'menu.createNew': 'Create new Hex Cartographer Map',
         'menu.openInEditor': 'Open in Hex Cartographer',
         'menu.printMap': 'Print map',
         'menu.shareMap': 'Share map',
@@ -503,7 +502,7 @@ const TRANSLATIONS = {
         'tooltip.toolGroupVariant': '{label}\n点击：绘制\n右键点击：选择变体',
         'tooltip.pattern': '图案工具\n点击：使用已采集的图案绘制\n双击橡皮擦：删除相连图案',
         'tooltip.patternPicker': '采集图案\n点击：将六角格作为图案采集',
-        'tooltip.river': '河流工具\n点击：设置/移动路径点\n点击橡皮擦：删除路段\n双击橡皮擦：删除整条河流',
+        'tooltip.river': '河流工具\n点击：设置/移动路径点\n双击端点：关闭河流（仅无分支时）\n点击橡皮擦：删除路段\n双击橡皮擦：删除整条河流',
         'tooltip.road': '道路工具\n点击：设置/移动路径点\n点击橡皮擦：删除路段\n双击橡皮擦：删除整条道路',
         'tooltip.pathPicker': '采集河流/道路\n点击：选择已有的河流/道路',
         'tooltip.pathFinish': '完成\n点击：完成当前河流/道路',
@@ -559,7 +558,7 @@ const TRANSLATIONS = {
         'settings.donateButton': '请我喝杯咖啡',
         'guide.title': '快速指南',
         'guide.basics': '基础操作',
-        'guide.basics.create': '右键点击文件浏览器中的文件夹 → "创建新 Hex 地图"。',
+        'guide.basics.create': '右键点击文件浏览器中的文件夹 → "创建新 Hex Cartographer 地图"。',
         'guide.basics.editMode': '开启/关闭编辑模式。',
         'guide.navigation': '导航',
         'guide.navigation.zoom': '鼠标滚轮 = 缩放。',
@@ -582,7 +581,7 @@ const TRANSLATIONS = {
         'guide.pattern.stamp': '将图案放置到六角格上。拖动可用图案绘制。',
         'guide.pattern.pick': '采集已有图案，用于绘制。',
         'guide.paths': '河流与道路',
-        'guide.paths.river': '为河流设置路径点。',
+        'guide.paths.river': '为河流设置路径点。河流在死胡同处逐渐变细。双击端点可关闭河流（仅无分支时）。将最后一个点拖到倒数第二个点上可禁用该端的收窄效果。',
         'guide.paths.road': '为道路设置路径点。',
         'guide.paths.pick': '选择并编辑已有的河流/道路。',
         'guide.paths.width': '通过输入框调整河流/道路的宽度值。',
@@ -612,7 +611,7 @@ const TRANSLATIONS = {
         'notice.tapToPickColor': '点击一个六角格以采集颜色',
         'notice.colorPicked': '颜色已采集',
         'notice.noColorAtPosition': '该位置没有颜色',
-        'menu.createNew': '创建新 Hex 地图',
+        'menu.createNew': '创建新 Hex Cartographer 地图',
         'menu.openInEditor': '在 Hex Cartographer 中打开',
         'menu.printMap': '打印地图',
         'menu.shareMap': '分享地图',
@@ -666,7 +665,7 @@ const TRANSLATIONS = {
         'tooltip.toolGroupVariant': '{label}\nКлик: Рисовать\nПравый клик: Выбрать вариант',
         'tooltip.pattern': 'Инструмент «Шаблон»\nКлик: Рисовать выбранным шаблоном\nДвойной клик ластиком: Удалить связанный шаблон',
         'tooltip.patternPicker': 'Захватить шаблон\nКлик: Скопировать соту как шаблон',
-        'tooltip.river': 'Инструмент «Река»\nКлик: Установить/переместить путевые точки\nКлик ластиком: Удалить сегмент\nДвойной клик ластиком: Удалить всю реку',
+        'tooltip.river': 'Инструмент «Река»\nКлик: Установить/переместить путевые точки\nДвойной клик по конечной точке: Замкнуть реку (только без ответвлений)\nКлик ластиком: Удалить сегмент\nДвойной клик ластиком: Удалить всю реку',
         'tooltip.road': 'Инструмент «Дорога»\nКлик: Установить/переместить путевые точки\nКлик ластиком: Удалить сегмент\nДвойной клик ластиком: Удалить всю дорогу',
         'tooltip.pathPicker': 'Захватить реку/дорогу\nКлик: Выбрать существующую реку/дорогу',
         'tooltip.pathFinish': 'Завершить\nКлик: Завершить текущую реку/дорогу',
@@ -722,7 +721,7 @@ const TRANSLATIONS = {
         'settings.donateButton': 'Угостить кофе',
         'guide.title': 'Краткое руководство',
         'guide.basics': 'Основы',
-        'guide.basics.create': 'Правый клик по папке в проводнике файлов → «Создать новую Hex карту».',
+        'guide.basics.create': 'Правый клик по папке в проводнике файлов → «Создать новую карту Hex Cartographer».',
         'guide.basics.editMode': 'Включить/выключить режим редактирования.',
         'guide.navigation': 'Навигация',
         'guide.navigation.zoom': 'Колесо мыши = Масштаб.',
@@ -745,7 +744,7 @@ const TRANSLATIONS = {
         'guide.pattern.stamp': 'Поставить шаблон на соты. Перетаскивайте для рисования шаблоном.',
         'guide.pattern.pick': 'Захватить существующий шаблон для рисования.',
         'guide.paths': 'Реки и дороги',
-        'guide.paths.river': 'Установить путевые точки для рек.',
+        'guide.paths.river': 'Установить путевые точки для рек. Концы рек сужаются в тупиках. Двойной клик по конечной точке замыкает реку (только без ответвлений). Перетащите последнюю точку на предпоследнюю, чтобы отключить сужение на этом конце.',
         'guide.paths.road': 'Установить путевые точки для дорог.',
         'guide.paths.pick': 'Выбрать и редактировать существующую реку/дорогу.',
         'guide.paths.width': 'Настроить ширину рек/дорог через поля ввода.',
@@ -775,7 +774,7 @@ const TRANSLATIONS = {
         'notice.tapToPickColor': 'Нажмите на соту, чтобы захватить цвет',
         'notice.colorPicked': 'Цвет захвачен',
         'notice.noColorAtPosition': 'На этой позиции нет цвета',
-        'menu.createNew': 'Создать новую Hex карту',
+        'menu.createNew': 'Создать новую карту Hex Cartographer',
         'menu.openInEditor': 'Открыть в Hex Cartographer',
         'menu.printMap': 'Печать карты',
         'menu.shareMap': 'Поделиться картой',
@@ -829,7 +828,7 @@ const TRANSLATIONS = {
         'tooltip.toolGroupVariant': '{label}\nクリック：描画\n右クリック：バリエーションを選択',
         'tooltip.pattern': 'パターンツール\nクリック：取得したパターンで描画\nダブルクリック消しゴム：つながったパターンを削除',
         'tooltip.patternPicker': 'パターンを取得\nクリック：ヘックスをパターンとして取得',
-        'tooltip.river': '川ツール\nクリック：経由点を設置/移動\nクリック消しゴム：区間を削除\nダブルクリック消しゴム：川全体を削除',
+        'tooltip.river': '川ツール\nクリック：経由点を設置/移動\n端点ダブルクリック：川を閉じる（分岐なしの場合のみ）\nクリック消しゴム：区間を削除\nダブルクリック消しゴム：川全体を削除',
         'tooltip.road': '道ツール\nクリック：経由点を設置/移動\nクリック消しゴム：区間を削除\nダブルクリック消しゴム：道全体を削除',
         'tooltip.pathPicker': '川/道を取得\nクリック：既存の川/道を選択',
         'tooltip.pathFinish': '完了\nクリック：現在の川/道を確定',
@@ -885,7 +884,7 @@ const TRANSLATIONS = {
         'settings.donateButton': 'コーヒーをおごる',
         'guide.title': 'クイックガイド',
         'guide.basics': '基本操作',
-        'guide.basics.create': 'ファイルブラウザのフォルダを右クリック → 「新しい Hex マップを作成」。',
+        'guide.basics.create': 'ファイルブラウザのフォルダを右クリック → 「新しい Hex Cartographer マップを作成」。',
         'guide.basics.editMode': '編集モードのオン/オフ。',
         'guide.navigation': 'ナビゲーション',
         'guide.navigation.zoom': 'マウスホイール = ズーム。',
@@ -908,7 +907,7 @@ const TRANSLATIONS = {
         'guide.pattern.stamp': 'ヘックスにパターンを配置。ドラッグでパターンを描画。',
         'guide.pattern.pick': '既存のパターンを取得して描画に使用。',
         'guide.paths': '川と道',
-        'guide.paths.river': '川の経由点を設置。',
+        'guide.paths.river': '川の経由点を設置。川の行き止まりは先細りになります。端点をダブルクリックすると川を閉じます（分岐なしの場合のみ）。最後の点を手前の点にドラッグすると、その端の先細りを無効にします。',
         'guide.paths.road': '道の経由点を設置。',
         'guide.paths.pick': '既存の川/道を選択して編集。',
         'guide.paths.width': '入力フィールドで川/道の幅を調整。',
@@ -938,7 +937,7 @@ const TRANSLATIONS = {
         'notice.tapToPickColor': 'ヘックスをタップして色を取得',
         'notice.colorPicked': '色を取得しました',
         'notice.noColorAtPosition': 'この位置に色がありません',
-        'menu.createNew': '新しい Hex マップを作成',
+        'menu.createNew': '新しい Hex Cartographer マップを作成',
         'menu.openInEditor': 'Hex Cartographer で開く',
         'menu.printMap': 'マップを印刷',
         'menu.shareMap': 'マップを共有',
@@ -992,7 +991,7 @@ const TRANSLATIONS = {
         'tooltip.toolGroupVariant': '{label}\nClic : Dessiner\nClic droit : Choisir une variante',
         'tooltip.pattern': 'Outil motif\nClic : Dessiner avec le motif capturé\nDouble-clic gomme : Effacer le motif contigu',
         'tooltip.patternPicker': 'Capturer un motif\nClic : Capturer un hexagone comme motif',
-        'tooltip.river': 'Outil rivière\nClic : Placer/déplacer des points de passage\nClic gomme : Supprimer un segment\nDouble-clic gomme : Supprimer toute la rivière',
+        'tooltip.river': 'Outil rivière\nClic : Placer/déplacer des points de passage\nDouble-clic point final : Fermer la rivière (uniquement sans embranchements)\nClic gomme : Supprimer un segment\nDouble-clic gomme : Supprimer toute la rivière',
         'tooltip.road': 'Outil chemin\nClic : Placer/déplacer des points de passage\nClic gomme : Supprimer un segment\nDouble-clic gomme : Supprimer tout le chemin',
         'tooltip.pathPicker': 'Capturer rivière/chemin\nClic : Sélectionner une rivière/un chemin existant',
         'tooltip.pathFinish': 'Terminer\nClic : Finaliser la rivière/le chemin en cours',
@@ -1048,7 +1047,7 @@ const TRANSLATIONS = {
         'settings.donateButton': 'Offrir un café',
         'guide.title': 'Guide rapide',
         'guide.basics': 'Bases',
-        'guide.basics.create': 'Clic droit sur un dossier dans l\'explorateur de fichiers → « Créer une nouvelle carte Hex ».',
+        'guide.basics.create': 'Clic droit sur un dossier dans l\'explorateur de fichiers → « Créer une nouvelle carte Hex Cartographer ».',
         'guide.basics.editMode': 'Activer/désactiver le mode édition.',
         'guide.navigation': 'Navigation',
         'guide.navigation.zoom': 'Molette = Zoom.',
@@ -1071,7 +1070,7 @@ const TRANSLATIONS = {
         'guide.pattern.stamp': 'Appliquer un motif sur les hexagones. Glisser pour dessiner avec le motif.',
         'guide.pattern.pick': 'Capturer un motif existant pour dessiner avec.',
         'guide.paths': 'Rivières & Chemins',
-        'guide.paths.river': 'Placer des points de passage pour les rivières.',
+        'guide.paths.river': 'Placer des points de passage pour les rivières. Les extrémités des rivières s\'affinent en impasse. Double-cliquer sur un point final ferme la rivière (uniquement sans embranchements). Glisser le dernier point sur l\'avant-dernier désactive l\'effilement à cette extrémité.',
         'guide.paths.road': 'Placer des points de passage pour les chemins.',
         'guide.paths.pick': 'Sélectionner et modifier une rivière/un chemin existant.',
         'guide.paths.width': 'Ajuster la largeur des rivières/chemins via les champs de saisie.',
@@ -1101,7 +1100,7 @@ const TRANSLATIONS = {
         'notice.tapToPickColor': 'Touchez un hexagone pour capturer la couleur',
         'notice.colorPicked': 'Couleur capturée',
         'notice.noColorAtPosition': 'Aucune couleur à cette position',
-        'menu.createNew': 'Créer une nouvelle carte Hex',
+        'menu.createNew': 'Créer une nouvelle carte Hex Cartographer',
         'menu.openInEditor': 'Ouvrir dans Hex Cartographer',
         'menu.printMap': 'Imprimer la carte',
         'menu.shareMap': 'Partager la carte',
@@ -1155,7 +1154,7 @@ const TRANSLATIONS = {
         'tooltip.toolGroupVariant': '{label}\nClique: Desenhar\nClique direito: Escolher variante',
         'tooltip.pattern': 'Ferramenta de padrão\nClique: Desenhar com o padrão capturado\nDuplo clique borracha: Apagar padrão contíguo',
         'tooltip.patternPicker': 'Capturar padrão\nClique: Capturar hexágono como padrão',
-        'tooltip.river': 'Ferramenta de rio\nClique: Colocar/mover pontos de passagem\nClique borracha: Excluir segmento\nDuplo clique borracha: Excluir rio inteiro',
+        'tooltip.river': 'Ferramenta de rio\nClique: Colocar/mover pontos de passagem\nDuplo clique ponto final: Fechar rio (apenas sem ramificações)\nClique borracha: Excluir segmento\nDuplo clique borracha: Excluir rio inteiro',
         'tooltip.road': 'Ferramenta de caminho\nClique: Colocar/mover pontos de passagem\nClique borracha: Excluir segmento\nDuplo clique borracha: Excluir caminho inteiro',
         'tooltip.pathPicker': 'Capturar rio/caminho\nClique: Selecionar rio/caminho existente',
         'tooltip.pathFinish': 'Finalizar\nClique: Concluir o rio/caminho atual',
@@ -1211,7 +1210,7 @@ const TRANSLATIONS = {
         'settings.donateButton': 'Pagar um café',
         'guide.title': 'Guia rápido',
         'guide.basics': 'Básico',
-        'guide.basics.create': 'Clique direito em uma pasta no explorador de arquivos → "Criar novo mapa Hex".',
+        'guide.basics.create': 'Clique direito em uma pasta no explorador de arquivos → "Criar novo mapa Hex Cartographer".',
         'guide.basics.editMode': 'Ativar/desativar modo de edição.',
         'guide.navigation': 'Navegação',
         'guide.navigation.zoom': 'Roda do mouse = Zoom.',
@@ -1234,7 +1233,7 @@ const TRANSLATIONS = {
         'guide.pattern.stamp': 'Aplicar padrão nos hexágonos. Arrastar para desenhar com padrão.',
         'guide.pattern.pick': 'Capturar padrão existente para desenhar.',
         'guide.paths': 'Rios & Caminhos',
-        'guide.paths.river': 'Colocar pontos de passagem para rios.',
+        'guide.paths.river': 'Colocar pontos de passagem para rios. As extremidades dos rios afinam em becos sem saída. Duplo clique num ponto final fecha o rio (apenas sem ramificações). Arrastar o último ponto para o penúltimo desativa o afinamento nessa extremidade.',
         'guide.paths.road': 'Colocar pontos de passagem para caminhos.',
         'guide.paths.pick': 'Selecionar e editar rio/caminho existente.',
         'guide.paths.width': 'Ajustar a largura dos rios/caminhos pelos campos de entrada.',
@@ -1264,7 +1263,7 @@ const TRANSLATIONS = {
         'notice.tapToPickColor': 'Toque em um hexágono para capturar a cor',
         'notice.colorPicked': 'Cor capturada',
         'notice.noColorAtPosition': 'Nenhuma cor nesta posição',
-        'menu.createNew': 'Criar novo mapa Hex',
+        'menu.createNew': 'Criar novo mapa Hex Cartographer',
         'menu.openInEditor': 'Abrir no Hex Cartographer',
         'menu.printMap': 'Imprimir mapa',
         'menu.shareMap': 'Compartilhar mapa',
@@ -1318,7 +1317,7 @@ const TRANSLATIONS = {
         'tooltip.toolGroupVariant': '{label}\n클릭: 그리기\n우클릭: 변형 선택',
         'tooltip.pattern': '패턴 도구\n클릭: 캡처한 패턴으로 그리기\n더블 클릭 지우개: 인접한 패턴 지우기',
         'tooltip.patternPicker': '패턴 캡처\n클릭: 헥스 셀을 패턴으로 캡처',
-        'tooltip.river': '강 도구\n클릭: 경유점 배치/이동\n클릭 지우개: 구간 삭제\n더블 클릭 지우개: 전체 강 삭제',
+        'tooltip.river': '강 도구\n클릭: 경유점 배치/이동\n끝점 더블 클릭: 강 닫기 (분기 없는 경우만)\n클릭 지우개: 구간 삭제\n더블 클릭 지우개: 전체 강 삭제',
         'tooltip.road': '길 도구\n클릭: 경유점 배치/이동\n클릭 지우개: 구간 삭제\n더블 클릭 지우개: 전체 길 삭제',
         'tooltip.pathPicker': '강/길 캡처\n클릭: 기존 강/길 선택',
         'tooltip.pathFinish': '완료\n클릭: 현재 강/길 완성',
@@ -1374,7 +1373,7 @@ const TRANSLATIONS = {
         'settings.donateButton': '커피 한 잔 기부하기',
         'guide.title': '빠른 가이드',
         'guide.basics': '기본',
-        'guide.basics.create': '파일 탐색기에서 폴더를 우클릭 → "새 Hex 지도 만들기".',
+        'guide.basics.create': '파일 탐색기에서 폴더를 우클릭 → "새 Hex Cartographer 지도 만들기".',
         'guide.basics.editMode': '편집 모드 켜기/끄기.',
         'guide.navigation': '탐색',
         'guide.navigation.zoom': '마우스 휠 = 확대/축소.',
@@ -1397,7 +1396,7 @@ const TRANSLATIONS = {
         'guide.pattern.stamp': '헥스 셀에 패턴을 적용합니다. 드래그하여 패턴으로 그립니다.',
         'guide.pattern.pick': '기존 패턴을 캡처하여 그립니다.',
         'guide.paths': '강 & 길',
-        'guide.paths.river': '강의 경유점을 배치합니다.',
+        'guide.paths.river': '강의 경유점을 배치합니다. 강의 막다른 끝은 점점 가늘어집니다. 끝점을 더블 클릭하면 강을 닫습니다 (분기 없는 경우만). 마지막 점을 끝에서 두 번째 점으로 드래그하면 해당 끝의 테이퍼를 비활성화합니다.',
         'guide.paths.road': '길의 경유점을 배치합니다.',
         'guide.paths.pick': '기존 강/길을 선택하여 편집합니다.',
         'guide.paths.width': '입력 필드를 통해 강/길의 너비를 조정합니다.',
@@ -1427,7 +1426,7 @@ const TRANSLATIONS = {
         'notice.tapToPickColor': '헥스 셀을 탭하여 색상을 캡처하세요',
         'notice.colorPicked': '색상 캡처 완료',
         'notice.noColorAtPosition': '이 위치에 색상이 없습니다',
-        'menu.createNew': '새 Hex 지도 만들기',
+        'menu.createNew': '새 Hex Cartographer 지도 만들기',
         'menu.openInEditor': 'Hex Cartographer에서 열기',
         'menu.printMap': '지도 인쇄',
         'menu.shareMap': '지도 공유',
@@ -1481,7 +1480,7 @@ const TRANSLATIONS = {
         'tooltip.toolGroupVariant': '{label}\nClic: Dibujar\nClic derecho: Elegir variante',
         'tooltip.pattern': 'Herramienta de patrón\nClic: Dibujar con patrón capturado\nDoble clic borrador: Borrar patrón contiguo',
         'tooltip.patternPicker': 'Capturar patrón\nClic: Usar celda como patrón',
-        'tooltip.river': 'Herramienta de río\nClic: Colocar/mover puntos de ruta\nClic borrador: Borrar segmento\nDoble clic borrador: Borrar río completo',
+        'tooltip.river': 'Herramienta de río\nClic: Colocar/mover puntos de ruta\nDoble clic punto final: Cerrar río (solo sin ramificaciones)\nClic borrador: Borrar segmento\nDoble clic borrador: Borrar río completo',
         'tooltip.road': 'Herramienta de camino\nClic: Colocar/mover puntos de ruta\nClic borrador: Borrar segmento\nDoble clic borrador: Borrar camino completo',
         'tooltip.pathPicker': 'Capturar río/camino\nClic: Seleccionar río/camino existente',
         'tooltip.pathFinish': 'Finalizar\nClic: Completar río/camino actual',
@@ -1537,7 +1536,7 @@ const TRANSLATIONS = {
         'settings.donateButton': 'Dona un café',
         'guide.title': 'Guía rápida',
         'guide.basics': 'Conceptos básicos',
-        'guide.basics.create': 'Clic derecho en una carpeta en el explorador de archivos → «Crear nuevo mapa Hex».',
+        'guide.basics.create': 'Clic derecho en una carpeta en el explorador de archivos → «Crear nuevo mapa Hex Cartographer».',
         'guide.basics.editMode': 'Activar/desactivar modo de edición.',
         'guide.navigation': 'Navegación',
         'guide.navigation.zoom': 'Rueda del ratón = Zoom.',
@@ -1560,7 +1559,7 @@ const TRANSLATIONS = {
         'guide.pattern.stamp': 'Colocar patrón en celdas. Arrastrar para dibujar con patrón.',
         'guide.pattern.pick': 'Capturar patrón existente para dibujar con él.',
         'guide.paths': 'Ríos y caminos',
-        'guide.paths.river': 'Colocar puntos de ruta para ríos.',
+        'guide.paths.river': 'Colocar puntos de ruta para ríos. Los extremos de los ríos se estrechan en callejones sin salida. Doble clic en un punto final cierra el río (solo sin ramificaciones). Arrastrar el último punto sobre el penúltimo desactiva el estrechamiento en ese extremo.',
         'guide.paths.road': 'Colocar puntos de ruta para caminos.',
         'guide.paths.pick': 'Seleccionar y editar río/camino existente.',
         'guide.paths.width': 'Ajustar el ancho de ríos/caminos mediante los campos de entrada.',
@@ -1590,7 +1589,7 @@ const TRANSLATIONS = {
         'notice.tapToPickColor': 'Toca una celda para capturar el color',
         'notice.colorPicked': 'Color capturado',
         'notice.noColorAtPosition': 'No hay color en esta posición',
-        'menu.createNew': 'Crear nuevo mapa Hex',
+        'menu.createNew': 'Crear nuevo mapa Hex Cartographer',
         'menu.openInEditor': 'Abrir en Hex Cartographer',
         'menu.printMap': 'Imprimir mapa',
         'menu.shareMap': 'Compartir mapa',
@@ -1644,7 +1643,7 @@ const TRANSLATIONS = {
         'tooltip.toolGroupVariant': '{label}\nKliknij: Rysuj\nPrawy przycisk: Wybierz wariant',
         'tooltip.pattern': 'Narzędzie wzoru\nKliknij: Rysuj pobranym wzorem\nPodwójne kliknięcie gumką: Usuń przyległy wzór',
         'tooltip.patternPicker': 'Pobierz wzór\nKliknij: Użyj komórki jako wzoru',
-        'tooltip.river': 'Narzędzie rzeki\nKliknij: Ustaw/przesuń punkty trasy\nKliknij gumką: Usuń odcinek\nPodwójne kliknięcie gumką: Usuń całą rzekę',
+        'tooltip.river': 'Narzędzie rzeki\nKliknij: Ustaw/przesuń punkty trasy\nPodwójne kliknięcie punktu końcowego: Zamknij rzekę (tylko bez rozgałęzień)\nKliknij gumką: Usuń odcinek\nPodwójne kliknięcie gumką: Usuń całą rzekę',
         'tooltip.road': 'Narzędzie drogi\nKliknij: Ustaw/przesuń punkty trasy\nKliknij gumką: Usuń odcinek\nPodwójne kliknięcie gumką: Usuń całą drogę',
         'tooltip.pathPicker': 'Pobierz rzekę/drogę\nKliknij: Wybierz istniejącą rzekę/drogę',
         'tooltip.pathFinish': 'Zakończ\nKliknij: Zakończ bieżącą rzekę/drogę',
@@ -1700,7 +1699,7 @@ const TRANSLATIONS = {
         'settings.donateButton': 'Postaw kawę',
         'guide.title': 'Skrócona instrukcja',
         'guide.basics': 'Podstawy',
-        'guide.basics.create': 'Prawy przycisk na folder w przeglądarce plików → „Utwórz nową mapę Hex".',
+        'guide.basics.create': 'Prawy przycisk na folder w przeglądarce plików → „Utwórz nową mapę Hex Cartographer".',
         'guide.basics.editMode': 'Włącz/wyłącz tryb edycji.',
         'guide.navigation': 'Nawigacja',
         'guide.navigation.zoom': 'Kółko myszy = Zoom.',
@@ -1723,7 +1722,7 @@ const TRANSLATIONS = {
         'guide.pattern.stamp': 'Umieść wzór na komórkach. Przeciągnij, aby rysować wzorem.',
         'guide.pattern.pick': 'Pobierz istniejący wzór, aby nim rysować.',
         'guide.paths': 'Rzeki i drogi',
-        'guide.paths.river': 'Ustaw punkty trasy dla rzek.',
+        'guide.paths.river': 'Ustaw punkty trasy dla rzek. Końce rzek zwężają się w ślepych uliczkach. Podwójne kliknięcie punktu końcowego zamyka rzekę (tylko bez rozgałęzień). Przeciągnij ostatni punkt na przedostatni, aby wyłączyć zwężanie na tym końcu.',
         'guide.paths.road': 'Ustaw punkty trasy dla dróg.',
         'guide.paths.pick': 'Wybierz i edytuj istniejącą rzekę/drogę.',
         'guide.paths.width': 'Dostosuj szerokość rzek/dróg za pomocą pól wartości.',
@@ -1753,7 +1752,7 @@ const TRANSLATIONS = {
         'notice.tapToPickColor': 'Dotknij komórki, aby pobrać kolor',
         'notice.colorPicked': 'Kolor pobrany',
         'notice.noColorAtPosition': 'Brak koloru w tej pozycji',
-        'menu.createNew': 'Utwórz nową mapę Hex',
+        'menu.createNew': 'Utwórz nową mapę Hex Cartographer',
         'menu.openInEditor': 'Otwórz w Hex Cartographer',
         'menu.printMap': 'Drukuj mapę',
         'menu.shareMap': 'Udostępnij mapę',
@@ -1807,7 +1806,7 @@ const TRANSLATIONS = {
         'tooltip.toolGroupVariant': '{label}\nClic: Disegna\nClic destro: Scegli variante',
         'tooltip.pattern': 'Strumento motivo\nClic: Disegna con motivo acquisito\nDoppio clic gomma: Cancella motivo contiguo',
         'tooltip.patternPicker': 'Acquisisci motivo\nClic: Usa cella come motivo',
-        'tooltip.river': 'Strumento fiume\nClic: Posiziona/sposta punti di percorso\nClic gomma: Cancella segmento\nDoppio clic gomma: Cancella intero fiume',
+        'tooltip.river': 'Strumento fiume\nClic: Posiziona/sposta punti di percorso\nDoppio clic punto finale: Chiudi fiume (solo senza diramazioni)\nClic gomma: Cancella segmento\nDoppio clic gomma: Cancella intero fiume',
         'tooltip.road': 'Strumento strada\nClic: Posiziona/sposta punti di percorso\nClic gomma: Cancella segmento\nDoppio clic gomma: Cancella intera strada',
         'tooltip.pathPicker': 'Acquisisci fiume/strada\nClic: Seleziona fiume/strada esistente',
         'tooltip.pathFinish': 'Completa\nClic: Completa fiume/strada corrente',
@@ -1863,7 +1862,7 @@ const TRANSLATIONS = {
         'settings.donateButton': 'Offri un caffè',
         'guide.title': 'Guida rapida',
         'guide.basics': 'Nozioni di base',
-        'guide.basics.create': 'Clic destro su una cartella nel browser file → «Crea nuova mappa Hex».',
+        'guide.basics.create': 'Clic destro su una cartella nel browser file → «Crea nuova mappa Hex Cartographer».',
         'guide.basics.editMode': 'Attiva/disattiva modalità modifica.',
         'guide.navigation': 'Navigazione',
         'guide.navigation.zoom': 'Rotella del mouse = Zoom.',
@@ -1886,7 +1885,7 @@ const TRANSLATIONS = {
         'guide.pattern.stamp': 'Posiziona motivo sulle celle. Trascina per disegnare con il motivo.',
         'guide.pattern.pick': 'Acquisisci motivo esistente per disegnare con esso.',
         'guide.paths': 'Fiumi e strade',
-        'guide.paths.river': 'Posiziona punti di percorso per fiumi.',
+        'guide.paths.river': 'Posiziona punti di percorso per fiumi. Le estremità dei fiumi si assottigliano nei vicoli ciechi. Doppio clic su un punto finale chiude il fiume (solo senza diramazioni). Trascinare l\'ultimo punto sul penultimo disattiva l\'assottigliamento a quella estremità.',
         'guide.paths.road': 'Posiziona punti di percorso per strade.',
         'guide.paths.pick': 'Seleziona e modifica fiume/strada esistente.',
         'guide.paths.width': 'Regola la larghezza di fiumi/strade tramite i campi di input.',
@@ -1916,7 +1915,7 @@ const TRANSLATIONS = {
         'notice.tapToPickColor': 'Tocca una cella per acquisire il colore',
         'notice.colorPicked': 'Colore acquisito',
         'notice.noColorAtPosition': 'Nessun colore in questa posizione',
-        'menu.createNew': 'Crea nuova mappa Hex',
+        'menu.createNew': 'Crea nuova mappa Hex Cartographer',
         'menu.openInEditor': 'Apri in Hex Cartographer',
         'menu.printMap': 'Stampa mappa',
         'menu.shareMap': 'Condividi mappa',
@@ -2174,9 +2173,9 @@ class HexCartographerPlugin extends Plugin {
             settings: {
                 colorPalette: [...DEFAULT_PALETTE],
                 colorPalette2: [...DEFAULT_PALETTE2],
-                activeColorSlot: 1,
+                activeColorSlot: 0,
                 drawMode: 'pen',
-                currentToolGroup: null,
+                currentToolGroup: 'hexcolor',
                 patternData: null,
                 patternSourceHex: null
             }
@@ -2298,11 +2297,11 @@ class HexCartographerView extends ItemView {
         this.pendingHistory = false;
 
         this.masterColor = DEFAULT_MASTER_COLOR;
-        this.hexColorColor = DEFAULT_HEX_COLOR;
+        this.hexColorColor = DEFAULT_PALETTE[0];
 
         this.colorPalette = [...DEFAULT_PALETTE];
         this.colorPalette2 = [...DEFAULT_PALETTE2];
-        this.activeColorSlot = 1; // Standardfarbe: Grün
+        this.activeColorSlot = 0; // Standardfarbe: erste Palettenfarbe
         this.isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
         this.colorPickMode = false;
 
@@ -3651,9 +3650,13 @@ class HexCartographerView extends ItemView {
                          this.lastWaypointClick.idx === clickedIdx &&
                          (now - this.lastWaypointClick.time) < 400;
         if (isDouble) {
-            const wp = path.waypoints[clickedIdx];
-            path.waypoints.push({ q: wp.q, r: wp.r });
-            settings.insertAfter = path.waypoints.length - 1;
+            const isEndpoint = clickedIdx === 0 || clickedIdx === path.waypoints.length - 1;
+            const hasBreaks = path.waypoints.some(wp => wp.break);
+            if (isEndpoint && !hasBreaks && path.waypoints.length >= 3) {
+                const first = path.waypoints[0];
+                path.waypoints.push({ q: first.q, r: first.r });
+                settings.insertAfter = path.waypoints.length - 1;
+            }
             this.lastWaypointClick = null;
         } else {
             this.lastWaypointClick = {
@@ -6319,7 +6322,7 @@ class HexCartographerView extends ItemView {
         this.data.rivers.forEach(river => {
             if (!river.waypoints || river.waypoints.length === 0) return;
             if (river.waypoints.length >= 2) {
-                this.drawPathChains(river);
+                this.drawPathChains(river, true);
             }
         });
     }
@@ -6367,7 +6370,7 @@ class HexCartographerView extends ItemView {
         }
     }
 
-    drawPathChains(path) {
+    drawPathChains(path, taper = false) {
         const wps = path.waypoints;
         const chains = [];
         let currentChain = [];
@@ -6396,19 +6399,46 @@ class HexCartographerView extends ItemView {
 
         chains.forEach(chain => {
             const segments = [];
-            for (let i = 0; i < chain.length - 1; i++) {
+            const pairCount = chain.length - 1;
+            const pairSegCounts = [];
+            for (let i = 0; i < pairCount; i++) {
                 const pathSegs = this.calculateHexPath(chain[i], chain[i + 1], path.width);
+                pairSegCounts.push(pathSegs.length);
                 segments.push(...pathSegs);
             }
             const startKey = `${chain[0].q}_${chain[0].r}`;
             const endKey = `${chain[chain.length - 1].q}_${chain[chain.length - 1].r}`;
             const trimStart = segCount[startKey] === 1;
             const trimEnd = segCount[endKey] === 1;
-            this.drawWavyLines(segments, path.color, path.width, trimStart, trimEnd, path.dashes || 1);
+
+            const canTaper = taper && (trimStart || trimEnd) && !(pairCount === 1 && trimStart && trimEnd);
+            if (canTaper) {
+                let offset = 0;
+                for (let i = 0; i < pairCount; i++) {
+                    const n = pairSegCounts[i];
+                    if (i === 0 && trimStart) {
+                        for (let j = 0; j < n; j++) {
+                            const t = n <= 1 ? 0 : j / (n - 1);
+                            const e = t * t * (3 - 2 * t);
+                            segments[offset + j].width = path.width * (0.01 + 0.99 * e);
+                        }
+                    } else if (i === pairCount - 1 && trimEnd) {
+                        for (let j = 0; j < n; j++) {
+                            const t = n <= 1 ? 0 : j / (n - 1);
+                            const e = t * t * (3 - 2 * t);
+                            segments[offset + j].width = path.width * (1.0 - 0.99 * e);
+                        }
+                    }
+                    offset += n;
+                }
+            }
+
+            const hasTaper = canTaper;
+            this.drawWavyLines(segments, path.color, path.width, trimStart, trimEnd, path.dashes || 1, hasTaper);
         });
     }
 
-    drawWavyLines(lines, color, defaultWidth, trimStart, trimEnd, dashCount) {
+    drawWavyLines(lines, color, defaultWidth, trimStart, trimEnd, dashCount, taper = false) {
         if (!lines || lines.length === 0) return;
         this.ctx.strokeStyle = color;
         this.ctx.lineCap = "round";
@@ -6423,18 +6453,19 @@ class HexCartographerView extends ItemView {
             if (trimEnd && idx === lines.length - 1) p2 = { x: p2.x + (p1.x - p2.x) * inset, y: p2.y + (p1.y - p2.y) * inset };
             const fdx = fullP2.x - fullP1.x, fdy = fullP2.y - fullP1.y;
             const fullDist = Math.sqrt(fdx * fdx + fdy * fdy);
-            return { p1, p2, from: l.from, to: l.to, fullDist };
+            return { p1, p2, from: l.from, to: l.to, fullDist, width: l.width };
         });
 
         const allPts = [];
         computedLines.forEach((cl, segIdx) => {
-            const { p1, p2, from, to } = cl;
+            const { p1, p2, from, to, width } = cl;
             const dx = p2.x - p1.x, dy = p2.y - p1.y;
             const dist = Math.sqrt(dx * dx + dy * dy);
-            const curveSegs = Math.max(3, Math.floor(dist / 5)); // Wellendichte: Teiler kleiner = mehr Wellen, groesser = weniger | Erstes Argument = Mindestzahl Wellen pro Segment
+            const curveSegs = Math.max(3, Math.floor(dist / 5));
             const nx = -dy / dist, ny = dx / dist;
+            const nextWidth = segIdx < computedLines.length - 1 ? computedLines[segIdx + 1].width : (taper && trimEnd ? defaultWidth * 0.01 : width);
 
-            if (segIdx === 0) allPts.push({ x: p1.x, y: p1.y });
+            if (segIdx === 0) allPts.push({ x: p1.x, y: p1.y, w: width });
 
             for (let i = 1; i < curveSegs; i++) {
                 const t = i / curveSegs;
@@ -6443,11 +6474,11 @@ class HexCartographerView extends ItemView {
                 const seedHash = Math.abs(from.q * 7 + from.r * 13 + to.q * 11 + to.r * 17 + i * 3);
                 const seed = seedHash % 10;
                 const sine = Math.sin(t * Math.PI * curveSegs / 2);
-                const amplitude = (this.data.gridSize * 0.09) * (0.4 + seed / 15) * sine; // Wellenhoehe: 0.09 = Ausschlag relativ zur Wabengroesse (kleiner = flacher, groesser = staerker) | 0.4 = min. Zufallsfaktor, seed/15 = max. Zufallsvariation
-                allPts.push({ x: baseX + nx * amplitude, y: baseY + ny * amplitude });
+                const amplitude = (this.data.gridSize * 0.09) * (0.4 + seed / 15) * sine;
+                allPts.push({ x: baseX + nx * amplitude, y: baseY + ny * amplitude, w: width + (nextWidth - width) * t });
             }
 
-            allPts.push({ x: p2.x, y: p2.y });
+            allPts.push({ x: p2.x, y: p2.y, w: nextWidth });
         });
 
         if (allPts.length < 2) return;
@@ -6458,20 +6489,38 @@ class HexCartographerView extends ItemView {
             this.ctx.lineDashOffset = (dashCount % 2 === 0) ? unitLen / 2 : 0;
         }
 
-        this.ctx.beginPath();
-        this.ctx.moveTo(allPts[0].x, allPts[0].y);
-        for (let i = 0; i < allPts.length - 1; i++) {
-            const a = allPts[Math.max(0, i - 1)];
-            const b = allPts[i];
-            const c = allPts[i + 1];
-            const d = allPts[Math.min(allPts.length - 1, i + 2)];
-            const cp1x = b.x + (c.x - a.x) / 6;
-            const cp1y = b.y + (c.y - a.y) / 6;
-            const cp2x = c.x - (d.x - b.x) / 6;
-            const cp2y = c.y - (d.y - b.y) / 6;
-            this.ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, c.x, c.y);
+        if (taper) {
+            for (let i = 0; i < allPts.length - 1; i++) {
+                const a = allPts[Math.max(0, i - 1)];
+                const b = allPts[i];
+                const c = allPts[i + 1];
+                const d = allPts[Math.min(allPts.length - 1, i + 2)];
+                const cp1x = b.x + (c.x - a.x) / 6;
+                const cp1y = b.y + (c.y - a.y) / 6;
+                const cp2x = c.x - (d.x - b.x) / 6;
+                const cp2y = c.y - (d.y - b.y) / 6;
+                this.ctx.lineWidth = b.w;
+                this.ctx.beginPath();
+                this.ctx.moveTo(b.x, b.y);
+                this.ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, c.x, c.y);
+                this.ctx.stroke();
+            }
+        } else {
+            this.ctx.beginPath();
+            this.ctx.moveTo(allPts[0].x, allPts[0].y);
+            for (let i = 0; i < allPts.length - 1; i++) {
+                const a = allPts[Math.max(0, i - 1)];
+                const b = allPts[i];
+                const c = allPts[i + 1];
+                const d = allPts[Math.min(allPts.length - 1, i + 2)];
+                const cp1x = b.x + (c.x - a.x) / 6;
+                const cp1y = b.y + (c.y - a.y) / 6;
+                const cp2x = c.x - (d.x - b.x) / 6;
+                const cp2y = c.y - (d.y - b.y) / 6;
+                this.ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, c.x, c.y);
+            }
+            this.ctx.stroke();
         }
-        this.ctx.stroke();
 
         if (dashCount > 1) { this.ctx.setLineDash([]); this.ctx.lineDashOffset = 0; }
     }
