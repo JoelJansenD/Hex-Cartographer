@@ -116,7 +116,7 @@ const TRANSLATIONS = {
 
         // Tooltips — Hauptwerkzeuge
         'tooltip.editMode': 'Edit-Modus\nKlick: Werkzeuge ein-/ausblenden',
-        'tooltip.colorPicker': 'Werkzeugfarbe\nKlick: Farbwähler öffnen',
+        'tooltip.colorPicker': 'Aktuelle Farbe\nKlick: Farbwähler öffnen',
         'tooltip.hexColor': 'Waben\nKlick: Waben einfärben',
         'tooltip.fill': 'Fülleimer\nKlick: Zusammenhängende Fläche füllen\nErneut klicken: Fülleimer ausschalten',
         'tooltip.text': 'Text-Werkzeug\nKlick auf Karte: Neuen Text erstellen\nKlick auf Text: Text bearbeiten/verschieben',
@@ -124,7 +124,7 @@ const TRANSLATIONS = {
         'tooltip.undo': 'Rückgängig\nStrg+Z: Letzte Aktion rückgängig machen',
         'tooltip.redo': 'Wiederholen\nStrg+Y: Rückgängig gemachte Aktion wiederholen',
         'tooltip.fit': 'Karte einpassen\nKlick: Fenster mit gesamter Karte ausfüllen',
-        'tooltip.palette': 'Farbpalette\nKlick: Farbe als Werkzeugfarbe übernehmen\nRechtsklick: Palettenfarbe ändern',
+        'tooltip.palette': 'Farbpalette\nKlick: Farbe als aktuelle Farbe übernehmen\nRechtsklick: Palettenfarbe ändern',
         'tooltip.toolGroup': '{name}\nKlick: Zeichnen\nRechtsklick: Variante wählen',
         'tooltip.toolGroupVariant': '{label}\nKlick: Zeichnen\nRechtsklick: Variante wählen',
 
@@ -307,7 +307,7 @@ const TRANSLATIONS = {
 
         // Tooltips — Main tools
         'tooltip.editMode': 'Edit Mode\nClick: Show/hide tools',
-        'tooltip.colorPicker': 'Tool Color\nClick: Pick any color from the map',
+        'tooltip.colorPicker': 'Current Color\nClick: Pick any color from the map',
         'tooltip.hexColor': 'Hexes\nClick: Color hexes',
         'tooltip.fill': 'Fill Bucket\nClick: Fill connected area\nClick again: Turn off fill',
         'tooltip.text': 'Text Tool\nClick on map: Create new text\nClick on text: Edit/move text',
@@ -315,7 +315,7 @@ const TRANSLATIONS = {
         'tooltip.undo': 'Undo\nCtrl+Z: Undo last action',
         'tooltip.redo': 'Redo\nCtrl+Y: Redo undone action',
         'tooltip.fit': 'Fit Map\nClick: Fit entire map to window',
-        'tooltip.palette': 'Color Palette\nClick: Use color as tool color\nRight-click: Change palette color',
+        'tooltip.palette': 'Color Palette\nClick: Use as current color\nRight-click: Change palette color',
         'tooltip.toolGroup': '{name}\nClick: Draw\nRight-click: Choose variant',
         'tooltip.toolGroupVariant': '{label}\nClick: Draw\nRight-click: Choose variant',
 
@@ -490,7 +490,7 @@ const TRANSLATIONS = {
         'variant.cave': '洞穴',
         'variant.oasis': '绿洲',
         'tooltip.editMode': '编辑模式\n点击：显示/隐藏工具',
-        'tooltip.colorPicker': '工具颜色\n点击：打开颜色选择器',
+        'tooltip.colorPicker': '当前颜色\n点击：打开颜色选择器',
         'tooltip.hexColor': '六角格\n点击：为六角格着色',
         'tooltip.fill': '填充工具\n点击：填充相连区域\n再次点击：关闭填充工具',
         'tooltip.text': '文本工具\n点击地图：创建新文本\n点击文本：编辑/移动文本',
@@ -498,7 +498,7 @@ const TRANSLATIONS = {
         'tooltip.undo': '撤销\nCtrl+Z：撤销上一步操作',
         'tooltip.redo': '重做\nCtrl+Y：重做已撤销的操作',
         'tooltip.fit': '适应地图\n点击：在窗口中显示整个地图',
-        'tooltip.palette': '调色板\n点击：将颜色设为工具颜色\n右键点击：更改调色板颜色',
+        'tooltip.palette': '调色板\n点击：设为当前颜色\n右键点击：更改调色板颜色',
         'tooltip.toolGroup': '{name}\n点击：绘制\n右键点击：选择变体',
         'tooltip.toolGroupVariant': '{label}\n点击：绘制\n右键点击：选择变体',
         'tooltip.pattern': '图案工具\n点击：使用已采集的图案绘制\n双击橡皮擦：删除相连图案',
@@ -653,7 +653,7 @@ const TRANSLATIONS = {
         'variant.cave': 'Пещера',
         'variant.oasis': 'Оазис',
         'tooltip.editMode': 'Режим редактирования\nКлик: Показать/скрыть инструменты',
-        'tooltip.colorPicker': 'Цвет инструмента\nКлик: Открыть выбор цвета',
+        'tooltip.colorPicker': 'Текущий цвет\nКлик: Открыть выбор цвета',
         'tooltip.hexColor': 'Соты\nКлик: Окрасить соты',
         'tooltip.fill': 'Заливка\nКлик: Залить связанную область\nПовторный клик: Отключить заливку',
         'tooltip.text': 'Текстовый инструмент\nКлик по карте: Создать новый текст\nКлик по тексту: Редактировать/переместить текст',
@@ -661,7 +661,7 @@ const TRANSLATIONS = {
         'tooltip.undo': 'Отменить\nCtrl+Z: Отменить последнее действие',
         'tooltip.redo': 'Повторить\nCtrl+Y: Повторить отменённое действие',
         'tooltip.fit': 'Вписать карту\nКлик: Показать всю карту в окне',
-        'tooltip.palette': 'Палитра цветов\nКлик: Использовать цвет как цвет инструмента\nПравый клик: Изменить цвет палитры',
+        'tooltip.palette': 'Палитра цветов\nКлик: Использовать как текущий цвет\nПравый клик: Изменить цвет палитры',
         'tooltip.toolGroup': '{name}\nКлик: Рисовать\nПравый клик: Выбрать вариант',
         'tooltip.toolGroupVariant': '{label}\nКлик: Рисовать\nПравый клик: Выбрать вариант',
         'tooltip.pattern': 'Инструмент «Шаблон»\nКлик: Рисовать выбранным шаблоном\nДвойной клик ластиком: Удалить связанный шаблон',
@@ -816,7 +816,7 @@ const TRANSLATIONS = {
         'variant.cave': '洞窟',
         'variant.oasis': 'オアシス',
         'tooltip.editMode': '編集モード\nクリック：ツールの表示/非表示',
-        'tooltip.colorPicker': 'ツールの色\nクリック：カラーピッカーを開く',
+        'tooltip.colorPicker': '現在の色\nクリック：カラーピッカーを開く',
         'tooltip.hexColor': 'ヘックス\nクリック：ヘックスを着色',
         'tooltip.fill': '塗りつぶし\nクリック：つながった領域を塗りつぶす\n再度クリック：塗りつぶしをオフ',
         'tooltip.text': 'テキストツール\nマップをクリック：新しいテキストを作成\nテキストをクリック：テキストを編集/移動',
@@ -824,7 +824,7 @@ const TRANSLATIONS = {
         'tooltip.undo': '元に戻す\nCtrl+Z：最後の操作を元に戻す',
         'tooltip.redo': 'やり直し\nCtrl+Y：元に戻した操作をやり直す',
         'tooltip.fit': 'マップを合わせる\nクリック：ウィンドウにマップ全体を表示',
-        'tooltip.palette': 'カラーパレット\nクリック：色をツールの色として使用\n右クリック：パレットの色を変更',
+        'tooltip.palette': 'カラーパレット\nクリック：現在の色として使用\n右クリック：パレットの色を変更',
         'tooltip.toolGroup': '{name}\nクリック：描画\n右クリック：バリエーションを選択',
         'tooltip.toolGroupVariant': '{label}\nクリック：描画\n右クリック：バリエーションを選択',
         'tooltip.pattern': 'パターンツール\nクリック：取得したパターンで描画\nダブルクリック消しゴム：つながったパターンを削除',
@@ -979,7 +979,7 @@ const TRANSLATIONS = {
         'variant.cave': 'Grotte',
         'variant.oasis': 'Oasis',
         'tooltip.editMode': 'Mode édition\nClic : Afficher/masquer les outils',
-        'tooltip.colorPicker': 'Couleur de l\'outil\nClic : Ouvrir le sélecteur de couleur',
+        'tooltip.colorPicker': 'Couleur actuelle\nClic : Ouvrir le sélecteur de couleur',
         'tooltip.hexColor': 'Hexagones\nClic : Colorier les hexagones',
         'tooltip.fill': 'Pot de peinture\nClic : Remplir une zone contiguë\nCliquer à nouveau : Désactiver le pot de peinture',
         'tooltip.text': 'Outil texte\nClic sur la carte : Créer un nouveau texte\nClic sur un texte : Modifier/déplacer le texte',
@@ -987,7 +987,7 @@ const TRANSLATIONS = {
         'tooltip.undo': 'Annuler\nCtrl+Z : Annuler la dernière action',
         'tooltip.redo': 'Rétablir\nCtrl+Y : Rétablir l\'action annulée',
         'tooltip.fit': 'Ajuster la carte\nClic : Afficher toute la carte dans la fenêtre',
-        'tooltip.palette': 'Palette de couleurs\nClic : Utiliser comme couleur d\'outil\nClic droit : Modifier la couleur de la palette',
+        'tooltip.palette': 'Palette de couleurs\nClic : Utiliser comme couleur actuelle\nClic droit : Modifier la couleur de la palette',
         'tooltip.toolGroup': '{name}\nClic : Dessiner\nClic droit : Choisir une variante',
         'tooltip.toolGroupVariant': '{label}\nClic : Dessiner\nClic droit : Choisir une variante',
         'tooltip.pattern': 'Outil motif\nClic : Dessiner avec le motif capturé\nDouble-clic gomme : Effacer le motif contigu',
@@ -1142,7 +1142,7 @@ const TRANSLATIONS = {
         'variant.cave': 'Caverna',
         'variant.oasis': 'Oásis',
         'tooltip.editMode': 'Modo de edição\nClique: Mostrar/ocultar ferramentas',
-        'tooltip.colorPicker': 'Cor da ferramenta\nClique: Abrir seletor de cor',
+        'tooltip.colorPicker': 'Cor atual\nClique: Abrir seletor de cor',
         'tooltip.hexColor': 'Hexágonos\nClique: Colorir hexágonos',
         'tooltip.fill': 'Balde de tinta\nClique: Preencher área contígua\nClicar novamente: Desativar balde de tinta',
         'tooltip.text': 'Ferramenta de texto\nClique no mapa: Criar novo texto\nClique no texto: Editar/mover texto',
@@ -1150,7 +1150,7 @@ const TRANSLATIONS = {
         'tooltip.undo': 'Desfazer\nCtrl+Z: Desfazer última ação',
         'tooltip.redo': 'Refazer\nCtrl+Y: Refazer ação desfeita',
         'tooltip.fit': 'Ajustar mapa\nClique: Exibir o mapa inteiro na janela',
-        'tooltip.palette': 'Paleta de cores\nClique: Usar como cor da ferramenta\nClique direito: Alterar cor da paleta',
+        'tooltip.palette': 'Paleta de cores\nClique: Usar como cor atual\nClique direito: Alterar cor da paleta',
         'tooltip.toolGroup': '{name}\nClique: Desenhar\nClique direito: Escolher variante',
         'tooltip.toolGroupVariant': '{label}\nClique: Desenhar\nClique direito: Escolher variante',
         'tooltip.pattern': 'Ferramenta de padrão\nClique: Desenhar com o padrão capturado\nDuplo clique borracha: Apagar padrão contíguo',
@@ -1305,7 +1305,7 @@ const TRANSLATIONS = {
         'variant.cave': '동굴',
         'variant.oasis': '오아시스',
         'tooltip.editMode': '편집 모드\n클릭: 도구 표시/숨기기',
-        'tooltip.colorPicker': '도구 색상\n클릭: 색상 선택기 열기',
+        'tooltip.colorPicker': '현재 색상\n클릭: 색상 선택기 열기',
         'tooltip.hexColor': '헥스 셀\n클릭: 헥스 셀 색칠하기',
         'tooltip.fill': '채우기 도구\n클릭: 인접한 영역 채우기\n다시 클릭: 채우기 도구 끄기',
         'tooltip.text': '텍스트 도구\n지도 클릭: 새 텍스트 만들기\n텍스트 클릭: 텍스트 편집/이동',
@@ -1313,7 +1313,7 @@ const TRANSLATIONS = {
         'tooltip.undo': '실행 취소\nCtrl+Z: 마지막 작업 실행 취소',
         'tooltip.redo': '다시 실행\nCtrl+Y: 취소한 작업 다시 실행',
         'tooltip.fit': '지도 맞추기\n클릭: 창에 전체 지도 표시',
-        'tooltip.palette': '색상 팔레트\n클릭: 도구 색상으로 사용\n우클릭: 팔레트 색상 변경',
+        'tooltip.palette': '색상 팔레트\n클릭: 현재 색상으로 사용\n우클릭: 팔레트 색상 변경',
         'tooltip.toolGroup': '{name}\n클릭: 그리기\n우클릭: 변형 선택',
         'tooltip.toolGroupVariant': '{label}\n클릭: 그리기\n우클릭: 변형 선택',
         'tooltip.pattern': '패턴 도구\n클릭: 캡처한 패턴으로 그리기\n더블 클릭 지우개: 인접한 패턴 지우기',
@@ -1468,7 +1468,7 @@ const TRANSLATIONS = {
         'variant.cave': 'Cueva',
         'variant.oasis': 'Oasis',
         'tooltip.editMode': 'Modo edición\nClic: Mostrar/ocultar herramientas',
-        'tooltip.colorPicker': 'Color de herramienta\nClic: Abrir selector de color',
+        'tooltip.colorPicker': 'Color actual\nClic: Abrir selector de color',
         'tooltip.hexColor': 'Celdas\nClic: Colorear celdas',
         'tooltip.fill': 'Cubo de relleno\nClic: Rellenar área contigua\nClic de nuevo: Desactivar cubo de relleno',
         'tooltip.text': 'Herramienta de texto\nClic en mapa: Crear nuevo texto\nClic en texto: Editar/mover texto',
@@ -1476,7 +1476,7 @@ const TRANSLATIONS = {
         'tooltip.undo': 'Deshacer\nCtrl+Z: Deshacer última acción',
         'tooltip.redo': 'Rehacer\nCtrl+Y: Rehacer acción deshecha',
         'tooltip.fit': 'Ajustar mapa\nClic: Ajustar ventana al mapa completo',
-        'tooltip.palette': 'Paleta de colores\nClic: Usar color como color de herramienta\nClic derecho: Cambiar color de paleta',
+        'tooltip.palette': 'Paleta de colores\nClic: Usar como color actual\nClic derecho: Cambiar color de paleta',
         'tooltip.toolGroup': '{name}\nClic: Dibujar\nClic derecho: Elegir variante',
         'tooltip.toolGroupVariant': '{label}\nClic: Dibujar\nClic derecho: Elegir variante',
         'tooltip.pattern': 'Herramienta de patrón\nClic: Dibujar con patrón capturado\nDoble clic borrador: Borrar patrón contiguo',
@@ -1631,7 +1631,7 @@ const TRANSLATIONS = {
         'variant.cave': 'Jaskinia',
         'variant.oasis': 'Oaza',
         'tooltip.editMode': 'Tryb edycji\nKliknij: Pokaż/ukryj narzędzia',
-        'tooltip.colorPicker': 'Kolor narzędzia\nKliknij: Otwórz wybór koloru',
+        'tooltip.colorPicker': 'Aktualny kolor\nKliknij: Otwórz wybór koloru',
         'tooltip.hexColor': 'Komórki\nKliknij: Pokoloruj komórki',
         'tooltip.fill': 'Wiadro wypełnienia\nKliknij: Wypełnij przyległy obszar\nKliknij ponownie: Wyłącz wiadro wypełnienia',
         'tooltip.text': 'Narzędzie tekstowe\nKliknij na mapę: Utwórz nowy tekst\nKliknij na tekst: Edytuj/przesuń tekst',
@@ -1639,7 +1639,7 @@ const TRANSLATIONS = {
         'tooltip.undo': 'Cofnij\nCtrl+Z: Cofnij ostatnią akcję',
         'tooltip.redo': 'Ponów\nCtrl+Y: Ponów cofniętą akcję',
         'tooltip.fit': 'Dopasuj mapę\nKliknij: Dopasuj okno do całej mapy',
-        'tooltip.palette': 'Paleta kolorów\nKliknij: Użyj koloru jako koloru narzędzia\nPrawy przycisk: Zmień kolor palety',
+        'tooltip.palette': 'Paleta kolorów\nKliknij: Użyj jako aktualny kolor\nPrawy przycisk: Zmień kolor palety',
         'tooltip.toolGroup': '{name}\nKliknij: Rysuj\nPrawy przycisk: Wybierz wariant',
         'tooltip.toolGroupVariant': '{label}\nKliknij: Rysuj\nPrawy przycisk: Wybierz wariant',
         'tooltip.pattern': 'Narzędzie wzoru\nKliknij: Rysuj pobranym wzorem\nPodwójne kliknięcie gumką: Usuń przyległy wzór',
@@ -1794,7 +1794,7 @@ const TRANSLATIONS = {
         'variant.cave': 'Grotta',
         'variant.oasis': 'Oasi',
         'tooltip.editMode': 'Modalità modifica\nClic: Mostra/nascondi strumenti',
-        'tooltip.colorPicker': 'Colore strumento\nClic: Apri selettore colore',
+        'tooltip.colorPicker': 'Colore attuale\nClic: Apri selettore colore',
         'tooltip.hexColor': 'Celle\nClic: Colora celle',
         'tooltip.fill': 'Secchio di riempimento\nClic: Riempi area contigua\nClic di nuovo: Disattiva secchio di riempimento',
         'tooltip.text': 'Strumento testo\nClic sulla mappa: Crea nuovo testo\nClic sul testo: Modifica/sposta testo',
@@ -1802,7 +1802,7 @@ const TRANSLATIONS = {
         'tooltip.undo': 'Annulla\nCtrl+Z: Annulla ultima azione',
         'tooltip.redo': 'Ripeti\nCtrl+Y: Ripeti azione annullata',
         'tooltip.fit': 'Adatta mappa\nClic: Adatta finestra all\'intera mappa',
-        'tooltip.palette': 'Tavolozza colori\nClic: Usa colore come colore strumento\nClic destro: Cambia colore tavolozza',
+        'tooltip.palette': 'Tavolozza colori\nClic: Usa come colore attuale\nClic destro: Cambia colore tavolozza',
         'tooltip.toolGroup': '{name}\nClic: Disegna\nClic destro: Scegli variante',
         'tooltip.toolGroupVariant': '{label}\nClic: Disegna\nClic destro: Scegli variante',
         'tooltip.pattern': 'Strumento motivo\nClic: Disegna con motivo acquisito\nDoppio clic gomma: Cancella motivo contiguo',
@@ -6692,10 +6692,9 @@ class TextInputModal extends Modal {
 
         const colorSection = contentEl.createDiv({ style: 'margin-bottom: 20px;' });
         colorSection.createEl('label', { text: t('modal.textColor'), style: 'display: block; margin-bottom: 5px; font-weight: 500;' });
-        const colorInput = colorSection.createEl('input', { type: 'color', value: this.color });
-        colorInput.style.width = '100%';
-        colorInput.style.height = '40px';
-        colorInput.style.cursor = 'pointer';
+        const colorPicker = createColorPickerElement(colorSection, this.app, this.color, (color) => {
+            this.color = color;
+        });
 
         const paletteContainer = colorSection.createDiv({ style: 'display: flex; flex-direction: column; gap: 3px; margin-top: 10px;' });
         paletteContainer.createEl('span', { text: t('modal.palette'), attr: { style: 'font-size: 11px; margin-bottom: 3px;' } });
@@ -6710,7 +6709,7 @@ class TextInputModal extends Modal {
                     }
                 });
                 paletteBtn.onclick = () => {
-                    colorInput.value = color;
+                    colorPicker.setColor(color);
                     this.color = color;
                 };
             });
@@ -6808,7 +6807,7 @@ class TextInputModal extends Modal {
                 mainInput.value,
                 parseInt(sInput.value),
                 linkDisplay.value,
-                colorInput.value,
+                this.color,
                 outlineInput.checked,
                 boldInput.checked,
                 shadowEnabled,
@@ -6978,6 +6977,46 @@ class ColorPickerModal extends Modal {
         ctx.lineWidth = 1;
         ctx.stroke();
     }
+}
+
+function createColorPickerElement(containerEl, app, initialColor, onChange) {
+    const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+    let currentColor = initialColor;
+    const btn = containerEl.createEl('button', {
+        attr: { style: 'width: 100%; height: 40px; border: 1px solid var(--divider-color); border-radius: 4px; cursor: pointer; padding: 0; box-sizing: border-box;' }
+    });
+    btn.style.backgroundColor = initialColor;
+    let hiddenInput = null;
+    if (isTouchDevice) {
+        btn.addEventListener('click', () => {
+            new ColorPickerModal(app, currentColor, (color) => {
+                currentColor = color;
+                btn.style.backgroundColor = color;
+                onChange(color);
+            }).open();
+        });
+    } else {
+        hiddenInput = containerEl.createEl('input', {
+            type: 'color',
+            value: initialColor,
+            attr: { style: 'position: absolute; width: 0; height: 0; opacity: 0; pointer-events: none;' }
+        });
+        btn.addEventListener('click', () => hiddenInput.click());
+        hiddenInput.addEventListener('input', (e) => {
+            currentColor = e.target.value;
+            btn.style.backgroundColor = e.target.value;
+            onChange(e.target.value);
+        });
+    }
+    return {
+        setColor(color) {
+            currentColor = color;
+            btn.style.backgroundColor = color;
+            if (hiddenInput) hiddenInput.value = color;
+        },
+        getColor() { return currentColor; },
+        btn
+    };
 }
 
 class ExportMapModal extends Modal {
