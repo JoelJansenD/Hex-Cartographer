@@ -5751,6 +5751,7 @@ class HexCartographerView extends ItemView {
 
         drawSymbolLayer(['hill', 'mountain']);
 
+        this.buildOverlapMap();
         this.drawRivers();
 
         this.drawRoads();
@@ -5952,6 +5953,7 @@ class HexCartographerView extends ItemView {
 
         drawSymbolLayer(['swamp','grass', 'bush', 'tree', 'pine', 'palm']);
         drawSymbolLayer(['hill', 'mountain']);
+        this.buildOverlapMap();
         this.drawRivers();
         this.drawRoads();
         drawSymbolLayer(['question', 'exclamation', 'cross', 'dot']);
@@ -6381,12 +6383,53 @@ class HexCartographerView extends ItemView {
         this.ctx.restore();
     }
 
+    _segKey(from, to) {
+        if (from.q < to.q || (from.q === to.q && from.r < to.r))
+            return `${from.q},${from.r}|${to.q},${to.r}`;
+        return `${to.q},${to.r}|${from.q},${from.r}`;
+    }
+
+    buildOverlapMap() {
+        this.overlapMap = {};
+        const addSegments = (pathObj, type) => {
+            if (!pathObj.waypoints || pathObj.waypoints.length < 2) return;
+            const wps = pathObj.waypoints;
+            const chains = [];
+            let currentChain = [];
+            for (let i = 0; i < wps.length; i++) {
+                if (wps[i].break) {
+                    currentChain = [wps[i]];
+                } else {
+                    currentChain.push(wps[i]);
+                }
+                if (i === wps.length - 1 || (wps[i + 1] && wps[i + 1].break)) {
+                    if (currentChain.length >= 2) chains.push(currentChain);
+                    if (wps[i + 1] && wps[i + 1].break) currentChain = [];
+                }
+            }
+            chains.forEach(chain => {
+                for (let i = 0; i < chain.length - 1; i++) {
+                    const pathSegs = this.calculateHexPath(chain[i], chain[i + 1], pathObj.width);
+                    pathSegs.forEach(seg => {
+                        const key = this._segKey(seg.from, seg.to);
+                        if (!this.overlapMap[key]) this.overlapMap[key] = { hasRiver: false, hasRoad: false, maxWidth: 0 };
+                        if (type === 'river') this.overlapMap[key].hasRiver = true;
+                        else this.overlapMap[key].hasRoad = true;
+                        this.overlapMap[key].maxWidth = Math.max(this.overlapMap[key].maxWidth, pathObj.width);
+                    });
+                }
+            });
+        };
+        if (this.data.rivers) this.data.rivers.forEach(r => addSegments(r, 'river'));
+        if (this.data.roads) this.data.roads.forEach(r => addSegments(r, 'road'));
+    }
+
     drawRivers() {
         if (!this.data.rivers) return;
         this.data.rivers.forEach(river => {
             if (!river.waypoints || river.waypoints.length === 0) return;
             if (river.waypoints.length >= 2) {
-                this.drawPathChains(river, true);
+                this.drawPathChains(river, true, 'river');
             }
         });
     }
@@ -6396,7 +6439,7 @@ class HexCartographerView extends ItemView {
         this.data.roads.forEach(road => {
             if (!road.waypoints || road.waypoints.length === 0) return;
             if (road.waypoints.length >= 2) {
-                this.drawPathChains(road);
+                this.drawPathChains(road, false, 'road');
             }
         });
     }
@@ -6434,7 +6477,7 @@ class HexCartographerView extends ItemView {
         }
     }
 
-    drawPathChains(path, taper = false) {
+    drawPathChains(path, taper = false, pathType = null) {
         const wps = path.waypoints;
         const chains = [];
         let currentChain = [];
@@ -6470,6 +6513,19 @@ class HexCartographerView extends ItemView {
                 pairSegCounts.push(pathSegs.length);
                 segments.push(...pathSegs);
             }
+            if (pathType && this.overlapMap) {
+                segments.forEach(seg => {
+                    const key = this._segKey(seg.from, seg.to);
+                    const info = this.overlapMap[key];
+                    if (info && info.hasRiver && info.hasRoad) {
+                        const isCanonical = seg.from.q < seg.to.q || (seg.from.q === seg.to.q && seg.from.r < seg.to.r);
+                        const typeSign = pathType === 'river' ? 1 : -1;
+                        const dirSign = isCanonical ? 1 : -1;
+                        seg.lateralOffset = (info.maxWidth / 2) * typeSign * dirSign;
+                    }
+                });
+            }
+
             const startKey = `${chain[0].q}_${chain[0].r}`;
             const endKey = `${chain[chain.length - 1].q}_${chain[chain.length - 1].r}`;
             const trimStart = segCount[startKey] === 1;
@@ -6517,6 +6573,11 @@ class HexCartographerView extends ItemView {
             if (trimEnd && idx === lines.length - 1) p2 = { x: p2.x + (p1.x - p2.x) * inset, y: p2.y + (p1.y - p2.y) * inset };
             const fdx = fullP2.x - fullP1.x, fdy = fullP2.y - fullP1.y;
             const fullDist = Math.sqrt(fdx * fdx + fdy * fdy);
+            if (l.lateralOffset && fullDist > 0) {
+                const onx = -fdy / fullDist, ony = fdx / fullDist;
+                p1 = { x: p1.x + onx * l.lateralOffset, y: p1.y + ony * l.lateralOffset };
+                p2 = { x: p2.x + onx * l.lateralOffset, y: p2.y + ony * l.lateralOffset };
+            }
             return { p1, p2, from: l.from, to: l.to, fullDist, width: l.width };
         });
 
