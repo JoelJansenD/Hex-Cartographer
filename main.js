@@ -34,7 +34,8 @@ const DEFAULT_BORDER_DASHES = 1;
 const DEFAULT_PATH_DASHES = 1;
 const PATH_END_INSET = 0.15;
 const MAX_HISTORY = 50;
-const MAX_ZOOM = 2;
+const MIN_ZOOM = 0.01; // Minimale Verkleinerung (1% einer Wabe)
+const MAX_ZOOM = 4; // Maximale Vergrößerung (400% einer Wabe)
 const VIEWPORT_PADDING = 0.9;
 
 // === Text-Defaults ===
@@ -2633,6 +2634,11 @@ class HexCartographerView extends ItemView {
                 newData.gridSize = 30;
             }
 
+            if (!newData.zoom || newData.zoom < MIN_ZOOM || newData.zoom > MAX_ZOOM || !isFinite(newData.zoom)) {
+                console.warn('Invalid zoom detected:', newData.zoom, '- resetting to 1');
+                newData.zoom = 1;
+            }
+
             if (Array.isArray(newData.hexes)) {
                 const migratedHexes = {};
                 newData.hexes.forEach(h => {
@@ -2936,7 +2942,7 @@ class HexCartographerView extends ItemView {
         const canvasHeight = this.canvas.height;
         const zoomX = (canvasWidth * VIEWPORT_PADDING) / width;
         const zoomY = (canvasHeight * VIEWPORT_PADDING) / height;
-        const newZoom = Math.min(zoomX, zoomY, MAX_ZOOM);
+        const newZoom = Math.max(MIN_ZOOM, Math.min(zoomX, zoomY, MAX_ZOOM));
 
         this.data.zoom = newZoom;
         this.data.offX = canvasWidth / 2 - centerX * newZoom;
@@ -4290,13 +4296,15 @@ class HexCartographerView extends ItemView {
                     const hitText = this.getTextAt(world.x, world.y);
                     if (hitText) {
                         if (this.currentToolGroup === 'text') {
+                            const hitX = hitText.x, hitY = hitText.y;
                             new TextInputModal(this.app, (v, s, l, c, o, b, sh, shd, sho) => {
-                                if (v) {
-                                    hitText.text = v; hitText.size = s; hitText.link = l;
-                                    hitText.color = c; hitText.outline = o; hitText.bold = b;
-                                    hitText.shadow = sh; hitText.shadowDistance = shd; hitText.shadowOpatown = sho;
+                                const target = this.data.texts.find(t => t.x === hitX && t.y === hitY);
+                                if (v && target) {
+                                    target.text = v; target.size = s; target.link = l;
+                                    target.color = c; target.outline = o; target.bold = b;
+                                    target.shadow = sh; target.shadowDistance = shd; target.shadowOpatown = sho;
                                 }
-                                else { this.data.texts = this.data.texts.filter(t => t !== hitText); }
+                                else if (!v) { this.data.texts = this.data.texts.filter(t => !(t.x === hitX && t.y === hitY)); }
                                 this.render(); this.requestSave();
                             }, hitText.text, hitText.size, hitText.link, hitText.color, hitText.outline, hitText.bold, hitText.shadow, hitText.shadowDistance, hitText.shadowOpatown, this.colorPalette, this.colorPalette2).open();
                         } else if (hitText.link) {
@@ -4323,7 +4331,8 @@ class HexCartographerView extends ItemView {
 
             const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
             const oldZoom = this.data.zoom;
-            const newZoom = oldZoom * zoomFactor;
+            const newZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, oldZoom * zoomFactor));
+            if (newZoom === oldZoom) return;
 
             const rect = this.canvas.getBoundingClientRect();
             const mouseX = e.clientX - rect.left;
@@ -4538,7 +4547,7 @@ class HexCartographerView extends ItemView {
                 const dy = touch2.clientY - touch1.clientY;
                 const currentDistance = Math.sqrt(dx * dx + dy * dy);
                 const zoomFactor = currentDistance / this.touchState.initialDistance;
-                const newZoom = this.touchState.initialZoom * zoomFactor;
+                const newZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, this.touchState.initialZoom * zoomFactor));
 
                 const pivotWorldX = (this.touchState.pivotX - this.touchState.initialPanX) / this.touchState.initialZoom;
                 const pivotWorldY = (this.touchState.pivotY - this.touchState.initialPanY) / this.touchState.initialZoom;
@@ -4795,13 +4804,15 @@ class HexCartographerView extends ItemView {
                         const hitText = this.getTextAt(world.x, world.y);
                         if (hitText) {
                             if (this.currentToolGroup === 'text') {
+                                const hitX = hitText.x, hitY = hitText.y;
                                 new TextInputModal(this.app, (v, s, l, c, o, b, sh, shd, sho) => {
-                                    if (v) {
-                                        hitText.text = v; hitText.size = s; hitText.link = l;
-                                        hitText.color = c; hitText.outline = o; hitText.bold = b;
-                                        hitText.shadow = sh; hitText.shadowDistance = shd; hitText.shadowOpatown = sho;
+                                    const target = this.data.texts.find(t => t.x === hitX && t.y === hitY);
+                                    if (v && target) {
+                                        target.text = v; target.size = s; target.link = l;
+                                        target.color = c; target.outline = o; target.bold = b;
+                                        target.shadow = sh; target.shadowDistance = shd; target.shadowOpatown = sho;
                                     }
-                                    else { this.data.texts = this.data.texts.filter(t => t !== hitText); }
+                                    else if (!v) { this.data.texts = this.data.texts.filter(t => !(t.x === hitX && t.y === hitY)); }
                                     this.render(); this.requestSave();
                                 }, hitText.text, hitText.size, hitText.link, hitText.color, hitText.outline, hitText.bold, hitText.shadow, hitText.shadowDistance, hitText.shadowOpatown, this.colorPalette, this.colorPalette2).open();
                             } else if (hitText.link) {
@@ -6850,8 +6861,16 @@ class TextInputModal extends Modal {
             selector.open();
         };
 
-        const btnRow = contentEl.createDiv({ style: 'display: flex; gap: 10px; margin-top: 25px; padding-top: 15px; border-top: 1px solid var(--background-modifier-border);' });
-        const okBtn = btnRow.createEl('button', { text: 'OK', cls: 'mod-cta', style: 'flex: 1;' });
+        const btnRow = contentEl.createDiv();
+        btnRow.style.cssText = 'display: grid; grid-template-columns: 1fr 1fr 1fr; width: 100%; margin-top: 25px; padding-top: 15px; border-top: 1px solid var(--background-modifier-border);';
+        const cancelBtn = btnRow.createEl('button', { text: t('modal.cancel') });
+        cancelBtn.style.justifySelf = 'start';
+        cancelBtn.onclick = () => this.close();
+        const deleteBtn = btnRow.createEl('button', { text: t('modal.deleteText') });
+        deleteBtn.style.cssText = 'justify-self: center; color: var(--text-error);';
+        deleteBtn.onclick = () => { this.onSubmit('', 0, '', '', false, false, false, 0, 0); this.close(); };
+        const okBtn = btnRow.createEl('button', { text: 'OK', cls: 'mod-cta' });
+        okBtn.style.justifySelf = 'end';
         okBtn.onclick = () => {
             const opatownValue = shadowOpatownInput.value === '' ? 0 : parseInt(shadowOpatownInput.value);
             const clampedOpatown = Math.max(0, Math.min(100, opatownValue));
@@ -6869,14 +6888,6 @@ class TextInputModal extends Modal {
                 clampedOpatown
             );
             this.close();
-        };
-
-        const deleteBtn = btnRow.createEl('button', { text: t('modal.deleteText'), style: 'flex: 1; color: var(--text-error);' });
-        deleteBtn.onclick = () => {
-            if (confirm(t('modal.confirmDeleteText'))) {
-                this.onSubmit('', 0, '', '', false, false, false, 0, 0);
-                this.close();
-            }
         };
 
         mainInput.focus();
