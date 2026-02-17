@@ -43,20 +43,24 @@ const DEFAULT_SHADOW_DISTANCE = 5;
 const DEFAULT_SHADOW_OPACITY = 50;
 
 // === UI-Styling ===
-const ACTIVE_BOX_SHADOW = '0 0 8px rgba(74, 158, 255, 0.4)';
+const ACTIVE_COLOR = '#4A9EFF';
+const ACTIVE_BOX_SHADOW = `0 0 8px ${ACTIVE_COLOR}66`;
+const ACTIVE_BORDER = `3px solid ${ACTIVE_COLOR}`;
+const PICKER_ACTIVE_BG = ACTIVE_COLOR;
+const BUTTON_BG_DEFAULT = '#ffffff';
 
 // === Symbol-Konfiguration (Größe/Position pro Symbol) ===
 const SVG_SYMBOL_CONFIG = {
     'question':    { size: 0.5,   align: 'center', marginX: 0, marginY: 0 },
     'exclamation': { size: 0.5,   align: 'center', marginX: 0, marginY: 0 },
     'cross':       { size: 0.5,   align: 'center', marginX: 0, marginY: 0 },
-    'dot':         { size: 0.4,   align: 'center', marginX: 0, marginY: 0 },
+    'dot':         { size: 0.45,   align: 'center', marginX: 0, marginY: 0 },
     'grass':       { size: 0.30,  align: 'center', marginX: 0, marginY: 0 },
     'swamp':       { size: 0.30,  align: 'center', marginX: 0, marginY: 0 },
     'bush':        { size: 0.35,  align: 'center', marginX: 0, marginY: 0 },
     'tree':        { size: 0.30,  align: 'center', marginX: 0, marginY: -6 },
-    'pine':        { size: 0.35,  align: 'center', marginX: 0, marginY: 0 },
-    'palm':        { size: 0.425, align: 'center', marginX: 0, marginY: 0 },
+    'pine':        { size: 0.35,  align: 'center', marginX: 0, marginY: -2 },
+    'palm':        { size: 0.325, align: 'center', marginX: 0, marginY: 0 },
     'hill':        { size: 0.50,  align: 'center', marginX: 0, marginY: 0 },
     'mountain':    { size: 0.60,  align: 'center', marginX: 0, marginY: 0 },
     'tent':        { size: 0.325,  align: 'center', marginX: 0, marginY: 0 },
@@ -3022,8 +3026,7 @@ class HexCartographerView extends ItemView {
     }
 
     createToolbar(toolbar) {
-        const editModeBtn = toolbar.createEl('button', { cls: 'hex-tool-btn', attr: { title: t('tooltip.editMode') } });
-        setIcon(editModeBtn, 'wrench');
+        const editModeBtn = this.createToolButton(toolbar, { icon: 'wrench', title: t('tooltip.editMode') });
         this.editModeBtn = editModeBtn;
         editModeBtn.onclick = () => {
             this.editMode = !this.editMode;
@@ -3093,18 +3096,14 @@ class HexCartographerView extends ItemView {
             this.requestSave();
         });
 
-        const colorEyedropperBtn = editContent.createEl('button', {
-            cls: 'hex-tool-btn',
-            attr: { title: t('tooltip.colorEyedropper') }
-        });
-        setIcon(colorEyedropperBtn, 'pipette');
-        colorEyedropperBtn.style.background = '#fff';
+        const colorEyedropperBtn = this.createToolButton(editContent, { icon: 'pipette', title: t('tooltip.colorEyedropper') });
+        colorEyedropperBtn.style.background = BUTTON_BG_DEFAULT;
         this.colorEyedropperBtn = colorEyedropperBtn;
         colorEyedropperBtn.onclick = () => {
             const wasActive = this.colorPickMode;
             this.exitPathEditMode();
             this.colorPickMode = !wasActive;
-            colorEyedropperBtn.style.background = this.colorPickMode ? 'var(--interactive-accent)' : '#fff';
+            colorEyedropperBtn.style.background = this.colorPickMode ? PICKER_ACTIVE_BG : BUTTON_BG_DEFAULT;
             colorEyedropperBtn.style.color = this.colorPickMode ? 'var(--text-on-accent)' : '';
             if (this.colorPickMode) new Notice(t('notice.tapToPickColor'));
         };
@@ -3115,9 +3114,7 @@ class HexCartographerView extends ItemView {
         
         editContent.createEl('span', { cls: 'hex-toolbar-sep', text: '\u200B' });
 
-        const hexColorBtn = editContent.createEl('button', { cls: 'hex-tool-btn', attr: { title: t('tooltip.hexColor') } });
-        hexColorBtn.dataset.toolGroup = 'hexcolor';
-        setIcon(hexColorBtn, 'hexagon');
+        const hexColorBtn = this.createToolButton(editContent, { icon: 'hexagon', title: t('tooltip.hexColor'), dataset: { toolGroup: 'hexcolor' } });
         hexColorBtn.onclick = () => {
             const needsRender = this.currentToolGroup === 'pattern' || this.borderSettings.pickedHex;
             this.exitPathEditMode();
@@ -3143,9 +3140,7 @@ class HexCartographerView extends ItemView {
 
         this.createDrawModeButton(editContent, 'fill', 'paint-bucket', t('tooltip.fill'));
 
-        const textBtn = editContent.createEl('button', { cls: 'hex-tool-btn', attr: { title: t('tooltip.text') } });
-        textBtn.dataset.toolGroup = 'text';
-        setIcon(textBtn, 'type');
+        const textBtn = this.createToolButton(editContent, { icon: 'type', title: t('tooltip.text'), dataset: { toolGroup: 'text' } });
         textBtn.onclick = () => {
             const needsRender = this.currentToolGroup === 'pattern' || this.borderSettings.pickedHex;
             this.exitPathEditMode();
@@ -3169,25 +3164,20 @@ class HexCartographerView extends ItemView {
 
         editContent.createEl('span', { cls: 'hex-toolbar-sep', text: '\u200B' });
 
-        const undoBtn = editContent.createEl('button', { cls: 'hex-tool-btn', attr: { title: t('tooltip.undo') } });
-        setIcon(undoBtn, 'undo-2');
+        const undoBtn = this.createToolButton(editContent, { icon: 'undo-2', title: t('tooltip.undo') });
         undoBtn.onclick = () => this.undo();
 
-        const redoBtn = editContent.createEl('button', { cls: 'hex-tool-btn', attr: { title: t('tooltip.redo') } });
-        setIcon(redoBtn, 'redo-2');
+        const redoBtn = this.createToolButton(editContent, { icon: 'redo-2', title: t('tooltip.redo') });
         redoBtn.onclick = () => this.redo();
 
-        const fitBtn = toolbar.createEl('button', { cls: 'hex-tool-btn', attr: { title: t('tooltip.fit') } });
-        setIcon(fitBtn, 'maximize-2');
+        const fitBtn = this.createToolButton(toolbar, { icon: 'maximize-2', title: t('tooltip.fit') });
         fitBtn.onclick = () => this.fitMapToView();
 
         this.updateToolbarState(toolbar);
     }
 
     createDrawModeButton(toolbar, mode, icon, title) {
-        const btn = toolbar.createEl('button', { cls: 'hex-tool-btn', attr: { title } });
-        btn.dataset.drawMode = mode;
-        setIcon(btn, icon);
+        const btn = this.createToolButton(toolbar, { icon, title, dataset: { drawMode: mode } });
         btn.onclick = () => {
             if (mode === 'eraser' && (this.patternPickMode || this.pathPickMode || this.borderPickMode || this.colorPickMode)) return;
             const needsRender = this.currentToolGroup === 'pattern' || this.borderSettings.pickedHex;
@@ -3225,14 +3215,11 @@ class HexCartographerView extends ItemView {
         wrapper.dataset.toolGroupWrapper = groupId;
 
         const btnWrapper = wrapper.createDiv({ style: 'position: relative; display: inline-block;' });
-        const btn = btnWrapper.createEl('button', {
-            cls: 'hex-tool-btn',
-            attr: {
-                title: t('tooltip.toolGroup', { name: config.name }),
-                style: `position: relative; background: ${config.backgroundEnabled ? config.backgroundColor : '#ffffff'};`
-            }
+        const btn = this.createToolButton(btnWrapper, {
+            title: t('tooltip.toolGroup', { name: config.name }),
+            dataset: { toolGroup: groupId },
+            style: `position: relative; background: ${config.backgroundEnabled ? config.backgroundColor : BUTTON_BG_DEFAULT};`
         });
-        btn.dataset.toolGroup = groupId;
 
         const currentVariant = config.variants.find(v => v.id === config.currentVariant);
 
@@ -3283,12 +3270,7 @@ class HexCartographerView extends ItemView {
     createPatternTool(toolbar) {
         const wrapper = toolbar.createDiv({ style: 'display: flex; align-items: center; gap: 4px;' });
 
-        const patternBtn = wrapper.createEl('button', {
-            cls: 'hex-tool-btn',
-            attr: { title: t('tooltip.pattern') }
-        });
-        patternBtn.dataset.toolGroup = 'pattern';
-        setIcon(patternBtn, 'copy');
+        const patternBtn = this.createToolButton(wrapper, { icon: 'copy', title: t('tooltip.pattern'), dataset: { toolGroup: 'pattern' } });
 
         patternBtn.onclick = () => {
             if (!this.patternData) {
@@ -3297,23 +3279,19 @@ class HexCartographerView extends ItemView {
             }
             this.exitPathEditMode();
             this.currentToolGroup = 'pattern';
-            this.drawMode = 'pen'; // Automatisch in Zeichenmodus wechseln
+            this.drawMode = 'pen';
             this.updateToolbarState(toolbar);
-            this.render(); // Sofort rendern, um Muster-Wabe anzuzeigen
+            this.render();
             this.requestSave();
         };
 
-        const pickerBtn = wrapper.createEl('button', {
-            cls: 'hex-tool-btn',
-            attr: { title: t('tooltip.patternPicker'), style: 'width: 24px; padding: 2px;' }
-        });
-        setIcon(pickerBtn, 'pipette');
+        const pickerBtn = this.createToolButton(wrapper, { icon: 'pipette', title: t('tooltip.patternPicker'), style: 'width: 24px; padding: 2px;' });
 
         pickerBtn.onclick = () => {
             const wasActive = this.patternPickMode;
             this.exitPathEditMode();
             this.patternPickMode = !wasActive;
-            pickerBtn.style.background = this.patternPickMode ? 'var(--interactive-accent)' : '';
+            pickerBtn.style.background = this.patternPickMode ? PICKER_ACTIVE_BG : BUTTON_BG_DEFAULT;
             if (this.patternPickMode) {
                 this.currentToolGroup = null;
                 new Notice(t('notice.clickToPickPattern'));
@@ -3412,7 +3390,7 @@ class HexCartographerView extends ItemView {
 
         const bgRow = bgSection.createDiv({ style: 'display: flex; gap: 10px; align-items: center; margin-bottom: 10px;' });
         bgRow.createEl('label', { text: 'Farbe:' });
-        const bgPicker = bgRow.createEl('input', { type: 'color', value: config.backgroundColor || '#ffffff' });
+        const bgPicker = bgRow.createEl('input', { type: 'color', value: config.backgroundColor || BUTTON_BG_DEFAULT });
 
         const bgPaletteRow = bgSection.createDiv({ style: 'display: flex; gap: 5px; flex-wrap: wrap;' });
         bgPaletteRow.createEl('span', { text: 'Palette:', attr: { style: 'width: 100%; font-size: 11px; margin-bottom: 5px;' } });
@@ -3545,10 +3523,8 @@ class HexCartographerView extends ItemView {
 
         const topRow = wrapper.createDiv({ style: 'display: flex; gap: 2px; align-items: center;' });
 
-        const riverBtn = topRow.createEl('button', { cls: 'hex-tool-btn', attr: { title: t('tooltip.river') } });
+        const riverBtn = this.createToolButton(topRow, { icon: 'waves', title: t('tooltip.river'), dataset: { toolGroup: 'river' } });
         this.riverBtn = riverBtn;
-        riverBtn.dataset.toolGroup = 'river';
-        setIcon(riverBtn, 'waves');
         riverBtn.onclick = () => {
             const needsRender = this.currentToolGroup === 'pattern' || this.borderSettings.pickedHex;
             this.exitPathEditMode();
@@ -3559,10 +3535,8 @@ class HexCartographerView extends ItemView {
             this.requestSave();
         };
 
-        const roadBtn = topRow.createEl('button', { cls: 'hex-tool-btn', attr: { title: t('tooltip.road') } });
+        const roadBtn = this.createToolButton(topRow, { icon: 'route', title: t('tooltip.road'), dataset: { toolGroup: 'road' } });
         this.roadBtn = roadBtn;
-        roadBtn.dataset.toolGroup = 'road';
-        setIcon(roadBtn, 'route');
         roadBtn.onclick = () => {
             const needsRender = this.currentToolGroup === 'pattern' || this.borderSettings.pickedHex;
             this.exitPathEditMode();
@@ -3573,8 +3547,7 @@ class HexCartographerView extends ItemView {
             this.requestSave();
         };
 
-        const pickerBtn = topRow.createEl('button', { cls: 'hex-tool-btn', attr: { title: t('tooltip.pathPicker') } });
-        setIcon(pickerBtn, 'mouse-pointer');
+        const pickerBtn = this.createToolButton(topRow, { icon: 'mouse-pointer', title: t('tooltip.pathPicker') });
         this.pathPickerBtn = pickerBtn;
         pickerBtn.onclick = () => {
             const settings = this.currentToolGroup === 'river' ? this.riverSettings : this.roadSettings;
@@ -3587,12 +3560,12 @@ class HexCartographerView extends ItemView {
                 this.lastToolGroup = this.currentToolGroup;
                 this.currentToolGroup = null;
                 this.patternPickMode = false;
-                if (this.patternPickerBtn) { this.patternPickerBtn.style.background = ''; }
+                if (this.patternPickerBtn) { this.patternPickerBtn.style.background = BUTTON_BG_DEFAULT; }
                 this.borderPickMode = false;
-                if (this.borderPickerBtn) { this.borderPickerBtn.style.background = ''; this.borderPickerBtn.style.color = ''; }
+                if (this.borderPickerBtn) { this.borderPickerBtn.style.background = BUTTON_BG_DEFAULT; this.borderPickerBtn.style.color = ''; }
             }
             this.drawMode = 'pen';
-            pickerBtn.style.background = this.pathPickMode ? 'var(--interactive-accent)' : '';
+            pickerBtn.style.background = this.pathPickMode ? PICKER_ACTIVE_BG : BUTTON_BG_DEFAULT;
             pickerBtn.style.color = this.pathPickMode ? 'var(--text-on-accent)' : '';
             this.updateToolbarState(toolbar);
         };
@@ -3723,7 +3696,7 @@ class HexCartographerView extends ItemView {
         this.lastToolGroup = null;
         this.pathPickMode = false;
         if (this.pathPickerBtn) {
-            this.pathPickerBtn.style.background = '';
+            this.pathPickerBtn.style.background = BUTTON_BG_DEFAULT;
             this.pathPickerBtn.style.color = '';
         }
         this.drawMode = 'pen';
@@ -3778,23 +3751,23 @@ class HexCartographerView extends ItemView {
         }
         if (this.pathPickerBtn) {
             setIcon(this.pathPickerBtn, 'mouse-pointer');
-            this.pathPickerBtn.style.background = '';
+            this.pathPickerBtn.style.background = BUTTON_BG_DEFAULT;
             this.pathPickerBtn.style.color = '';
             this.pathPickerBtn.setAttribute('title', t('tooltip.pathPicker'));
         }
         this.pathPickMode = false;
         this.patternPickMode = false;
         if (this.patternPickerBtn) {
-            this.patternPickerBtn.style.background = '';
+            this.patternPickerBtn.style.background = BUTTON_BG_DEFAULT;
         }
         this.borderPickMode = false;
         if (this.borderPickerBtn) {
-            this.borderPickerBtn.style.background = '';
+            this.borderPickerBtn.style.background = BUTTON_BG_DEFAULT;
             this.borderPickerBtn.style.color = '';
         }
         this.colorPickMode = false;
         if (this.colorEyedropperBtn) {
-            this.colorEyedropperBtn.style.background = '#fff';
+            this.colorEyedropperBtn.style.background = BUTTON_BG_DEFAULT;
             this.colorEyedropperBtn.style.color = '';
         }
         if (this.borderSettings.activeRegionId !== null) {
@@ -3813,10 +3786,8 @@ class HexCartographerView extends ItemView {
 
         const topRow = wrapper.createDiv({ style: 'display: flex; gap: 2px; align-items: center;' });
 
-        const btn = topRow.createEl('button', { cls: 'hex-tool-btn', attr: { title: t('tooltip.border') } });
+        const btn = this.createToolButton(topRow, { icon: 'shield', title: t('tooltip.border'), dataset: { toolGroup: 'border' } });
         this.borderBtn = btn;
-        btn.dataset.toolGroup = 'border';
-        setIcon(btn, 'shield');
 
         btn.onclick = () => {
             const wasPatternActive = this.currentToolGroup === 'pattern';
@@ -3835,8 +3806,7 @@ class HexCartographerView extends ItemView {
             this.requestSave();
         };
 
-        const pickerBtn = topRow.createEl('button', { cls: 'hex-tool-btn', attr: { title: t('tooltip.borderPicker') } });
-        setIcon(pickerBtn, 'mouse-pointer');
+        const pickerBtn = this.createToolButton(topRow, { icon: 'mouse-pointer', title: t('tooltip.borderPicker') });
         this.borderPickerBtn = pickerBtn;
         pickerBtn.onclick = () => {
             if (this.borderSettings.activeRegionId !== null) {
@@ -3852,13 +3822,12 @@ class HexCartographerView extends ItemView {
             this.borderPickMode = !wasActive;
             this.currentToolGroup = this.borderPickMode ? null : 'border';
             this.drawMode = 'pen';
-            pickerBtn.style.background = this.borderPickMode ? 'var(--interactive-accent)' : '';
+            pickerBtn.style.background = this.borderPickMode ? PICKER_ACTIVE_BG : BUTTON_BG_DEFAULT;
             pickerBtn.style.color = this.borderPickMode ? 'var(--text-on-accent)' : '';
             this.updateToolbarState(toolbar);
         };
 
-        const visBtn = topRow.createEl('button', { cls: 'hex-tool-btn', attr: { title: t('tooltip.borderVisibility') } });
-        setIcon(visBtn, this.borderSettings.visible ? 'eye' : 'eye-off');
+        const visBtn = this.createToolButton(topRow, { icon: this.borderSettings.visible ? 'eye' : 'eye-off', title: t('tooltip.borderVisibility') });
         visBtn.style.opacity = this.borderSettings.visible ? '1' : '0.4';
         visBtn.onclick = () => {
             this.borderSettings.visible = !this.borderSettings.visible;
@@ -3898,6 +3867,17 @@ class HexCartographerView extends ItemView {
         input.addEventListener('pointerdown', (e) => e.stopPropagation());
     }
 
+    createToolButton(parent, { icon, title, dataset, style } = {}) {
+        const btn = parent.createEl('button', {
+            cls: 'hex-tool-btn',
+            attr: { title, ...(style ? { style } : {}) }
+        });
+        btn.style.background = BUTTON_BG_DEFAULT;
+        if (dataset) Object.assign(btn.dataset, dataset);
+        if (icon) setIcon(btn, icon);
+        return btn;
+    }
+
     recalcToolbarWidths() {
         if (this.riverBtn && this.roadBtn && this.riverWidthInput && this.roadWidthInput) {
             this.riverWidthInput.style.width = `${this.riverBtn.offsetWidth}px`;
@@ -3910,7 +3890,12 @@ class HexCartographerView extends ItemView {
     }
 
     updateToolbarState(toolbar) {
-        if (this.editModeBtn) this.editModeBtn.classList.toggle('active', this.editMode);
+        if (this.editModeBtn) {
+            this.editModeBtn.classList.toggle('active', this.editMode);
+            this.editModeBtn.style.background = this.editMode ? PICKER_ACTIVE_BG : BUTTON_BG_DEFAULT;
+            this.editModeBtn.style.border = this.editMode ? ACTIVE_BORDER : '';
+            this.editModeBtn.style.boxShadow = this.editMode ? ACTIVE_BOX_SHADOW : '';
+        }
         if (this.editContent) this.editContent.style.display = this.editMode ? 'contents' : 'none';
 
         if (this.borderVisBtn) {
@@ -3925,12 +3910,12 @@ class HexCartographerView extends ItemView {
         if (this.pathPickerBtn) {
             if (activePathSettings.editMode) {
                 setIcon(this.pathPickerBtn, 'check');
-                this.pathPickerBtn.style.background = 'var(--interactive-accent)';
+                this.pathPickerBtn.style.background = PICKER_ACTIVE_BG;
                 this.pathPickerBtn.style.color = 'var(--text-on-accent)';
                 this.pathPickerBtn.setAttribute('title', t('tooltip.pathFinish'));
             } else if (!this.pathPickMode) {
                 setIcon(this.pathPickerBtn, 'mouse-pointer');
-                this.pathPickerBtn.style.background = '';
+                this.pathPickerBtn.style.background = BUTTON_BG_DEFAULT;
                 this.pathPickerBtn.style.color = '';
                 this.pathPickerBtn.setAttribute('title', t('tooltip.pathPicker'));
             }
@@ -3939,12 +3924,12 @@ class HexCartographerView extends ItemView {
         if (this.borderPickerBtn) {
             if (this.borderSettings.activeRegionId !== null) {
                 setIcon(this.borderPickerBtn, 'check');
-                this.borderPickerBtn.style.background = 'var(--interactive-accent)';
+                this.borderPickerBtn.style.background = PICKER_ACTIVE_BG;
                 this.borderPickerBtn.style.color = 'var(--text-on-accent)';
                 this.borderPickerBtn.setAttribute('title', t('tooltip.borderFinish'));
             } else if (!this.borderPickMode) {
                 setIcon(this.borderPickerBtn, 'mouse-pointer');
-                this.borderPickerBtn.style.background = '';
+                this.borderPickerBtn.style.background = BUTTON_BG_DEFAULT;
                 this.borderPickerBtn.style.color = '';
                 this.borderPickerBtn.setAttribute('title', t('tooltip.borderPicker'));
             }
@@ -3953,7 +3938,11 @@ class HexCartographerView extends ItemView {
         if (this.borderDashesInput) this.borderDashesInput.value = (this.borderSettings.dashes || DEFAULT_BORDER_DASHES).toString();
 
         toolbar.querySelectorAll('[data-draw-mode]').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.drawMode === this.drawMode);
+            const isActive = btn.dataset.drawMode === this.drawMode;
+            btn.classList.toggle('active', isActive);
+            btn.style.background = isActive ? PICKER_ACTIVE_BG : BUTTON_BG_DEFAULT;
+            btn.style.border = isActive ? ACTIVE_BORDER : '';
+            btn.style.boxShadow = isActive ? ACTIVE_BOX_SHADOW : '';
         });
 
         ['grass', 'tree', 'mountain', 'building'].forEach(groupId => {
@@ -3971,10 +3960,10 @@ class HexCartographerView extends ItemView {
                 btn.setAttribute('title', t('tooltip.toolGroupVariant', { label: currentVariant.label }));
             }
 
-            btn.style.background = config.backgroundEnabled ? config.backgroundColor : '#ffffff';
+            btn.style.background = isActive ? PICKER_ACTIVE_BG : (config.backgroundEnabled ? config.backgroundColor : BUTTON_BG_DEFAULT);
             btn.style.color = config.symbolColor;
 
-            btn.style.border = isActive ? '3px solid #4A9EFF' : '';
+            btn.style.border = isActive ? ACTIVE_BORDER : '';
             btn.style.boxShadow = isActive ? ACTIVE_BOX_SHADOW : '';
         });
 
@@ -3983,10 +3972,10 @@ class HexCartographerView extends ItemView {
             if (!['grass', 'tree', 'mountain', 'building'].includes(groupId)) {
                 const isActive = btn.dataset.toolGroup === this.currentToolGroup;
                 btn.classList.toggle('active', isActive);
+                btn.style.background = isActive ? PICKER_ACTIVE_BG : BUTTON_BG_DEFAULT;
+                btn.style.border = isActive ? ACTIVE_BORDER : '';
+                btn.style.boxShadow = isActive ? ACTIVE_BOX_SHADOW : '';
                 if (groupId === 'hexcolor') {
-                    btn.style.background = '#ffffff';
-                    btn.style.border = isActive ? '3px solid #4A9EFF' : '';
-                    btn.style.boxShadow = isActive ? ACTIVE_BOX_SHADOW : '';
                     btn.style.color = this.hexColorColor;
                 }
             }
@@ -4081,7 +4070,7 @@ class HexCartographerView extends ItemView {
                     new Notice(t('notice.noColorAtPosition'));
                 }
                 this.colorPickMode = false;
-                if (this.colorEyedropperBtn) { this.colorEyedropperBtn.style.background = '#fff'; this.colorEyedropperBtn.style.color = ''; }
+                if (this.colorEyedropperBtn) { this.colorEyedropperBtn.style.background = BUTTON_BG_DEFAULT; this.colorEyedropperBtn.style.color = ''; }
                 this.isMouseDown = false;
                 const toolbar = this.containerEl.querySelector('.hex-toolbar');
                 if (toolbar) this.updateToolbarState(toolbar);
@@ -4105,7 +4094,7 @@ class HexCartographerView extends ItemView {
                 }
                 this.patternPickMode = false;
                 if (this.patternPickerBtn) {
-                    this.patternPickerBtn.style.background = '';
+                    this.patternPickerBtn.style.background = BUTTON_BG_DEFAULT;
                 }
                 const toolbar = this.containerEl.querySelector('.hex-toolbar');
                 if (toolbar) {
@@ -4140,7 +4129,7 @@ class HexCartographerView extends ItemView {
                 }
                 this.borderPickMode = false;
                 if (this.borderPickerBtn) {
-                    this.borderPickerBtn.style.background = '';
+                    this.borderPickerBtn.style.background = BUTTON_BG_DEFAULT;
                     this.borderPickerBtn.style.color = '';
                 }
                 this.currentToolGroup = 'border';
@@ -4448,7 +4437,7 @@ class HexCartographerView extends ItemView {
                                 new Notice(t('notice.noColorAtPosition'));
                             }
                             this.colorPickMode = false;
-                            if (this.colorEyedropperBtn) { this.colorEyedropperBtn.style.background = '#fff'; this.colorEyedropperBtn.style.color = ''; }
+                            if (this.colorEyedropperBtn) { this.colorEyedropperBtn.style.background = BUTTON_BG_DEFAULT; this.colorEyedropperBtn.style.color = ''; }
                             this.isMouseDown = false;
                             this.touchState.pendingTouchStart = null;
                             const toolbar = this.containerEl.querySelector('.hex-toolbar');
@@ -4473,7 +4462,7 @@ class HexCartographerView extends ItemView {
                             }
                             this.patternPickMode = false;
                             if (this.patternPickerBtn) {
-                                this.patternPickerBtn.style.background = '';
+                                this.patternPickerBtn.style.background = BUTTON_BG_DEFAULT;
                             }
                             const toolbar = this.containerEl.querySelector('.hex-toolbar');
                             if (toolbar) {
@@ -4508,7 +4497,7 @@ class HexCartographerView extends ItemView {
                                 new Notice(t('notice.noBorderAtPosition'));
                             }
                             this.borderPickMode = false;
-                            if (this.borderPickerBtn) { this.borderPickerBtn.style.background = ''; this.borderPickerBtn.style.color = ''; }
+                            if (this.borderPickerBtn) { this.borderPickerBtn.style.background = BUTTON_BG_DEFAULT; this.borderPickerBtn.style.color = ''; }
                             this.currentToolGroup = 'border';
                             this.drawMode = 'pen';
                             const toolbar = this.containerEl.querySelector('.hex-toolbar');
@@ -4665,7 +4654,7 @@ class HexCartographerView extends ItemView {
                             new Notice(t('notice.noColorAtPosition'));
                         }
                         this.colorPickMode = false;
-                        if (this.colorEyedropperBtn) { this.colorEyedropperBtn.style.background = '#fff'; this.colorEyedropperBtn.style.color = ''; }
+                        if (this.colorEyedropperBtn) { this.colorEyedropperBtn.style.background = BUTTON_BG_DEFAULT; this.colorEyedropperBtn.style.color = ''; }
                         this.isMouseDown = false;
                         this.touchState.pendingTouchStart = null;
                         const toolbar = this.containerEl.querySelector('.hex-toolbar');
@@ -4690,7 +4679,7 @@ class HexCartographerView extends ItemView {
                         }
                         this.patternPickMode = false;
                         if (this.patternPickerBtn) {
-                            this.patternPickerBtn.style.background = '';
+                            this.patternPickerBtn.style.background = BUTTON_BG_DEFAULT;
                         }
                         const toolbar = this.containerEl.querySelector('.hex-toolbar');
                         if (toolbar) {
@@ -4726,7 +4715,7 @@ class HexCartographerView extends ItemView {
                             new Notice(t('notice.noBorderAtPosition'));
                         }
                         this.borderPickMode = false;
-                        if (this.borderPickerBtn) { this.borderPickerBtn.style.background = ''; this.borderPickerBtn.style.color = ''; }
+                        if (this.borderPickerBtn) { this.borderPickerBtn.style.background = BUTTON_BG_DEFAULT; this.borderPickerBtn.style.color = ''; }
                         this.currentToolGroup = 'border';
                         this.drawMode = 'pen';
                         const toolbar = this.containerEl.querySelector('.hex-toolbar');
@@ -5005,7 +4994,7 @@ class HexCartographerView extends ItemView {
             this.roadSettings.insertAfter = null;
             if (this.pathPickerBtn) {
                 setIcon(this.pathPickerBtn, 'check');
-                this.pathPickerBtn.style.background = 'var(--interactive-accent)';
+                this.pathPickerBtn.style.background = PICKER_ACTIVE_BG;
                 this.pathPickerBtn.style.color = 'var(--text-on-accent)';
                 this.pathPickerBtn.setAttribute('title', t('tooltip.roadFinish'));
             }
@@ -5129,7 +5118,7 @@ class HexCartographerView extends ItemView {
             this.riverSettings.insertAfter = null;
             if (this.pathPickerBtn) {
                 setIcon(this.pathPickerBtn, 'check');
-                this.pathPickerBtn.style.background = 'var(--interactive-accent)';
+                this.pathPickerBtn.style.background = PICKER_ACTIVE_BG;
                 this.pathPickerBtn.style.color = 'var(--text-on-accent)';
                 this.pathPickerBtn.setAttribute('title', t('tooltip.riverFinish'));
             }
