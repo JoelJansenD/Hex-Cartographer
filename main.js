@@ -201,6 +201,8 @@ const TRANSLATIONS = {
         // Einstellungen
         'settings.exportWidth': 'Standard-Breite für Bildexport in Pixeln.',
         'settings.exportWidthDesc': 'Standardbreite in Pixeln beim Exportieren als Bild.',
+        'settings.showCrosshair': 'Fadenkreuz anzeigen',
+        'settings.showCrosshairDesc': 'Zeigt ein Fadenkreuz im Zentrum der Karte an.',
         'settings.donateText': 'Spendiere mir einen Kaffee. Ich freue mich darüber, Euch den Hex Cartographer kostenlos zur Verfügung zu stellen. Allerdings bedurfte die Entwicklung lange Zeit. Wenn mir etwas neues einfällt, wird es für Euch Updates geben. Ihr würdet mir eine große Freude bereiten, wenn ihr mir für diese Arbeit eine kleine Spende hinterlasst.',
         'settings.donateButton': 'Spende einen Kaffee',
 
@@ -393,6 +395,8 @@ const TRANSLATIONS = {
         // Settings
         'settings.exportWidth': 'Default width for image export in pixels.',
         'settings.exportWidthDesc': 'Default width in pixels when exporting as image.',
+        'settings.showCrosshair': 'Show crosshair',
+        'settings.showCrosshairDesc': 'Displays a crosshair at the center of the map.',
         'settings.donateText': 'Buy me a coffee. I am happy to provide Hex Cartographer to you for free. However, the development took a long time. When I come up with something new, there will be updates. It would make me very happy if you leave a small donation for this work.',
         'settings.donateButton': 'Buy me a coffee',
 
@@ -563,6 +567,8 @@ const TRANSLATIONS = {
         'modal.confirmDeleteText': '确定要删除文本吗？',
         'settings.exportWidth': '图片导出的默认宽度（像素）。',
         'settings.exportWidthDesc': '导出为图片时的默认宽度（像素）。',
+        'settings.showCrosshair': '显示十字准线',
+        'settings.showCrosshairDesc': '在地图中心显示十字准线。',
         'settings.donateText': '请我喝杯咖啡。我很高兴能为大家免费提供 Hex Cartographer。然而，开发花费了很长时间。如果我有了新的想法，会为大家提供更新。如果您能为这项工作留下一点捐赠，我会非常高兴。',
         'settings.donateButton': '请我喝杯咖啡',
         'guide.title': '快速指南',
@@ -727,6 +733,8 @@ const TRANSLATIONS = {
         'modal.confirmDeleteText': 'Действительно удалить текст?',
         'settings.exportWidth': 'Стандартная ширина для экспорта изображений в пикселях.',
         'settings.exportWidthDesc': 'Стандартная ширина в пикселях при экспорте в изображение.',
+        'settings.showCrosshair': 'Показать перекрестие',
+        'settings.showCrosshairDesc': 'Отображает перекрестие в центре карты.',
         'settings.donateText': 'Угостите меня кофе. Я рад предоставлять Hex Cartographer бесплатно для всех. Тем не менее, разработка заняла много времени. Если мне придут новые идеи, вас ждут обновления. Я буду очень рад, если вы оставите небольшое пожертвование за эту работу.',
         'settings.donateButton': 'Угостить кофе',
         'guide.title': 'Краткое руководство',
@@ -891,6 +899,8 @@ const TRANSLATIONS = {
         'modal.confirmDeleteText': '本当にテキストを削除しますか？',
         'settings.exportWidth': '画像エクスポートのデフォルト幅（ピクセル）。',
         'settings.exportWidthDesc': '画像としてエクスポートする際のデフォルト幅（ピクセル）。',
+        'settings.showCrosshair': '十字線を表示',
+        'settings.showCrosshairDesc': 'マップの中心に十字線を表示します。',
         'settings.donateText': 'コーヒーをおごってください。Hex Cartographer を無料で提供できることを嬉しく思っています。しかし、開発には長い時間がかかりました。新しいアイデアが浮かべば、アップデートを提供します。この作業に対して少額の寄付をいただけると大変嬉しいです。',
         'settings.donateButton': 'コーヒーをおごる',
         'guide.title': 'クイックガイド',
@@ -1055,6 +1065,8 @@ const TRANSLATIONS = {
         'modal.confirmDeleteText': 'Vraiment supprimer le texte ?',
         'settings.exportWidth': 'Largeur par défaut pour l\'export d\'image en pixels.',
         'settings.exportWidthDesc': 'Largeur par défaut en pixels lors de l\'export en image.',
+        'settings.showCrosshair': 'Afficher le réticule',
+        'settings.showCrosshairDesc': 'Affiche un réticule au centre de la carte.',
         'settings.donateText': 'Offrez-moi un café. Je suis heureux de mettre Hex Cartographer gratuitement à votre disposition. Cependant, le développement a nécessité beaucoup de temps. Si de nouvelles idées me viennent, vous recevrez des mises à jour. Vous me feriez très plaisir en laissant un petit don pour ce travail.',
         'settings.donateButton': 'Offrir un café',
         'guide.title': 'Guide rapide',
@@ -1219,6 +1231,8 @@ const TRANSLATIONS = {
         'modal.confirmDeleteText': 'Realmente excluir o texto?',
         'settings.exportWidth': 'Largura padrão para exportação de imagem em pixels.',
         'settings.exportWidthDesc': 'Largura padrão em pixels ao exportar como imagem.',
+        'settings.showCrosshair': 'Mostrar retículo',
+        'settings.showCrosshairDesc': 'Exibe um retículo no centro do mapa.',
         'settings.donateText': 'Me pague um café. Fico feliz em disponibilizar o Hex Cartographer gratuitamente para vocês. No entanto, o desenvolvimento levou muito tempo. Se eu tiver novas ideias, haverá atualizações para vocês. Ficaria muito feliz se deixassem uma pequena doação por este trabalho.',
         'settings.donateButton': 'Pagar um café',
         'guide.title': 'Guia rápido',
@@ -1383,6 +1397,8 @@ const TRANSLATIONS = {
         'modal.confirmDeleteText': '텍스트를 정말 삭제하시겠습니까?',
         'settings.exportWidth': '이미지 내보내기의 기본 너비(픽셀).',
         'settings.exportWidthDesc': '이미지로 내보낼 때 기본 너비(픽셀)입니다.',
+        'settings.showCrosshair': '십자선 표시',
+        'settings.showCrosshairDesc': '지도 중심에 십자선을 표시합니다.',
         'settings.donateText': '커피 한 잔 사주세요. Hex Cartographer를 무료로 제공하게 되어 기쁩니다. 하지만 개발에 오랜 시간이 걸렸습니다. 새로운 아이디어가 떠오르면 업데이트를 제공하겠습니다. 이 작업에 대해 작은 기부를 남겨주시면 큰 기쁨이 되겠습니다.',
         'settings.donateButton': '커피 한 잔 기부하기',
         'guide.title': '빠른 가이드',
@@ -1547,6 +1563,8 @@ const TRANSLATIONS = {
         'modal.confirmDeleteText': '¿Eliminar texto realmente?',
         'settings.exportWidth': 'Ancho predeterminado para exportación de imagen en píxeles.',
         'settings.exportWidthDesc': 'Ancho predeterminado en píxeles al exportar como imagen.',
+        'settings.showCrosshair': 'Mostrar retícula',
+        'settings.showCrosshairDesc': 'Muestra una retícula en el centro del mapa.',
         'settings.donateText': 'Invítame a un café. Me alegra poner Hex Cartographer a vuestra disposición de forma gratuita. Sin embargo, el desarrollo requirió mucho tiempo. Si se me ocurre algo nuevo, habrá actualizaciones para vosotros. Me haríais muy feliz si dejáis una pequeña donación por este trabajo.',
         'settings.donateButton': 'Dona un café',
         'guide.title': 'Guía rápida',
@@ -1711,6 +1729,8 @@ const TRANSLATIONS = {
         'modal.confirmDeleteText': 'Czy na pewno usunąć tekst?',
         'settings.exportWidth': 'Domyślna szerokość eksportu obrazu w pikselach.',
         'settings.exportWidthDesc': 'Domyślna szerokość w pikselach przy eksporcie jako obraz.',
+        'settings.showCrosshair': 'Pokaż celownik',
+        'settings.showCrosshairDesc': 'Wyświetla celownik w centrum mapy.',
         'settings.donateText': 'Postaw mi kawę. Cieszę się, że mogę udostępnić Wam Hex Cartographer za darmo. Jednak jego rozwój wymagał długiego czasu. Jeśli wpadnę na nowy pomysł, będą dla Was aktualizacje. Sprawiłoby mi ogromną radość, gdybyście zostawili drobną darowiznę za tę pracę.',
         'settings.donateButton': 'Postaw kawę',
         'guide.title': 'Skrócona instrukcja',
@@ -1875,6 +1895,8 @@ const TRANSLATIONS = {
         'modal.confirmDeleteText': 'Eliminare davvero il testo?',
         'settings.exportWidth': 'Larghezza predefinita per l\'esportazione di immagini in pixel.',
         'settings.exportWidthDesc': 'Larghezza predefinita in pixel durante l\'esportazione come immagine.',
+        'settings.showCrosshair': 'Mostra mirino',
+        'settings.showCrosshairDesc': 'Mostra un mirino al centro della mappa.',
         'settings.donateText': 'Offrimi un caffè. Sono felice di mettere Hex Cartographer a vostra disposizione gratuitamente. Tuttavia, lo sviluppo ha richiesto molto tempo. Se mi viene in mente qualcosa di nuovo, ci saranno aggiornamenti per voi. Mi farebbe molto piacere se lasciaste una piccola donazione per questo lavoro.',
         'settings.donateButton': 'Offri un caffè',
         'guide.title': 'Guida rapida',
@@ -1993,7 +2015,7 @@ function hsbToRgb(h, s, b) {
 function hsbToHex(h, s, b) { const rgb = hsbToRgb(h, s, b); return rgbToHex(rgb.r, rgb.g, rgb.b); }
 function hexToHsb(hex) { const rgb = hexToRgb(hex); return rgbToHsb(rgb.r, rgb.g, rgb.b); }
 
-const DEFAULT_SETTINGS = { exportWidth: 1024 };
+const DEFAULT_SETTINGS = { exportWidth: 1024, showCrosshair: true };
 
 // === Hauptklasse des Plugins ===
 class HexCartographerPlugin extends Plugin {
@@ -2435,39 +2457,6 @@ class HexCartographerView extends ItemView {
     onPaneMenu(menu, source) {
         if (source === 'more-options') {
             menu.addItem((item) => {
-                item.setTitle(t('menu.openInEditor'))
-                    .setIcon('map')
-                    .onClick(async () => {
-                    });
-            });
-
-            if (!this.isTouchDevice) {
-                menu.addItem((item) => {
-                    item.setTitle(t('menu.printMap'))
-                        .setIcon('printer')
-                        .onClick(() => {
-                            const tmpCanvas = this.renderFullMap();
-                            if (!tmpCanvas) { new Notice(t('notice.noContentToPrint')); return; }
-                            const dataUrl = tmpCanvas.toDataURL('image/png');
-                            const iframe = document.createElement('iframe');
-                            iframe.style.position = 'fixed';
-                            iframe.style.left = '-9999px';
-                            iframe.style.width = '0';
-                            iframe.style.height = '0';
-                            document.body.appendChild(iframe);
-                            const doc = iframe.contentDocument || iframe.contentWindow.document;
-                            doc.open();
-                            doc.write(`<html><head><title>${this.file ? this.file.basename.replace('.hexcartographer', '') : 'Hex Cartographer Map'}</title><style>@media print { @page { margin: 10mm; } body { margin: 0; } img { max-width: 100%; max-height: 100%; } } body { margin: 0; }</style></head><body><img src="${dataUrl}" /></body></html>`);
-                            doc.close();
-                            iframe.contentWindow.onafterprint = () => { document.body.removeChild(iframe); };
-                            setTimeout(() => {
-                                iframe.contentWindow.print();
-                            }, 200);
-                        });
-                });
-            }
-
-            menu.addItem((item) => {
                 item.setTitle(t('menu.exportMap'))
                     .setIcon('download')
                     .onClick(() => {
@@ -2506,6 +2495,32 @@ class HexCartographerView extends ItemView {
                         }).open();
                     });
             });
+
+            if (!this.isTouchDevice) {
+                menu.addItem((item) => {
+                    item.setTitle(t('menu.printMap'))
+                        .setIcon('printer')
+                        .onClick(() => {
+                            const tmpCanvas = this.renderFullMap();
+                            if (!tmpCanvas) { new Notice(t('notice.noContentToPrint')); return; }
+                            const dataUrl = tmpCanvas.toDataURL('image/png');
+                            const iframe = document.createElement('iframe');
+                            iframe.style.position = 'fixed';
+                            iframe.style.left = '-9999px';
+                            iframe.style.width = '0';
+                            iframe.style.height = '0';
+                            document.body.appendChild(iframe);
+                            const doc = iframe.contentDocument || iframe.contentWindow.document;
+                            doc.open();
+                            doc.write(`<html><head><title>${this.file ? this.file.basename.replace('.hexcartographer', '') : 'Hex Cartographer Map'}</title><style>@media print { @page { margin: 10mm; } body { margin: 0; } img { max-width: 100%; max-height: 100%; } } body { margin: 0; }</style></head><body><img src="${dataUrl}" /></body></html>`);
+                            doc.close();
+                            iframe.contentWindow.onafterprint = () => { document.body.removeChild(iframe); };
+                            setTimeout(() => {
+                                iframe.contentWindow.print();
+                            }, 200);
+                        });
+                });
+            }
         }
         super.onPaneMenu(menu, source);
     }
@@ -2792,12 +2807,18 @@ class HexCartographerView extends ItemView {
             if (JSON.stringify(this.data) !== JSON.stringify(newData)) {
                 this.data = Object.assign({}, newData);
 
-                if (this.canvas && Object.keys(this.data.hexes).length > 0) {
-                    setTimeout(() => {
-                        this.fitMapToView();
-                    }, 100);
-                } else if (this.canvas) {
-                    this.render();
+                if (this.canvas) {
+                    if (this.data.settings && this.data.settings.viewportSaved) {
+                        this.render();
+                    } else if (Object.keys(this.data.hexes).length > 0) {
+                        setTimeout(() => { this.fitMapToView(); }, 100);
+                    } else {
+                        if (this.canvas.width > 0) {
+                            this.data.offX = this.canvas.width / 2;
+                            this.data.offY = this.canvas.height / 2;
+                        }
+                        this.render();
+                    }
                 }
             }
 
@@ -5765,7 +5786,28 @@ class HexCartographerView extends ItemView {
 
         this.ctx.restore();
 
+        this.renderCrosshair();
         this.renderTexts();
+    }
+
+    renderCrosshair() {
+        if (!this.plugin.settings.showCrosshair) return;
+
+        const origin = this.hexToPixel({ q: 0, r: 0 });
+        const sx = origin.x * this.data.zoom + this.data.offX;
+        const sy = origin.y * this.data.zoom + this.data.offY;
+        const arm = 2 * this.data.gridSize * this.data.zoom;
+
+        this.ctx.save();
+        this.ctx.strokeStyle = 'rgba(128, 128, 128, 0.5)';
+        this.ctx.lineWidth = 2;
+        this.ctx.beginPath();
+        this.ctx.moveTo(sx - arm, sy);
+        this.ctx.lineTo(sx + arm, sy);
+        this.ctx.moveTo(sx, sy - arm);
+        this.ctx.lineTo(sx, sy + arm);
+        this.ctx.stroke();
+        this.ctx.restore();
     }
 
     renderTexts() {
@@ -6582,7 +6624,8 @@ class HexCartographerView extends ItemView {
                     lastUsedTextBold: this.lastUsedTextBold,
                     lastUsedTextShadow: this.lastUsedTextShadow,
                     lastUsedTextShadowDistance: this.lastUsedTextShadowDistance,
-                    lastUsedTextShadowOpatown: this.lastUsedTextShadowOpatown
+                    lastUsedTextShadowOpatown: this.lastUsedTextShadowOpatown,
+                    viewportSaved: true
                 };
 
                 const now = new Date().toISOString().split('T')[0];
@@ -6610,6 +6653,14 @@ class HexCartographerView extends ItemView {
         if (!this.canvas) return;
         this.canvas.width = this.canvas.clientWidth;
         this.canvas.height = this.canvas.clientHeight;
+
+        if (!this._initialResizeDone) {
+            this._initialResizeDone = true;
+            if (!this.data.settings || !this.data.settings.viewportSaved) {
+                this.data.offX = this.canvas.width / 2;
+                this.data.offY = this.canvas.height / 2;
+            }
+        }
 
         if (this.textCanvas) {
             this.textCanvas.width = this.textCanvas.clientWidth;
@@ -7219,6 +7270,20 @@ class HexCartographerSettingTab extends PluginSettingTab {
                             this.plugin.settings.exportWidth = num;
                             await this.plugin.saveSettings();
                         }
+                    });
+            });
+
+        new Setting(containerEl)
+            .setName(t('settings.showCrosshair'))
+            .setDesc(t('settings.showCrosshairDesc'))
+            .addToggle(toggle => {
+                toggle.setValue(this.plugin.settings.showCrosshair)
+                    .onChange(async (value) => {
+                        this.plugin.settings.showCrosshair = value;
+                        await this.plugin.saveSettings();
+                        this.app.workspace.iterateAllLeaves(leaf => {
+                            if (leaf.view instanceof HexCartographerView) leaf.view.render();
+                        });
                     });
             });
 
