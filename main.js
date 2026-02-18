@@ -140,8 +140,8 @@ const TRANSLATIONS = {
         'tooltip.patternPicker': 'Muster aufnehmen\nKlick: Wabe als Muster übernehmen',
 
         // Tooltips — Fluss/Weg
-        'tooltip.river': 'Fluss-Werkzeug\nKlick: Wegpunkte setzen/verschieben\nDoppelklick Endpunkt: Fluss schließen (nur ohne Abzweigungen)\nRechtsklick in Karte: Teilstück löschen\nDoppelklick Radierer: Ganzen Fluss löschen',
-        'tooltip.road': 'Weg-Werkzeug\nKlick: Wegpunkte setzen/verschieben\nRechtsklick in Karte: Teilstück löschen\nDoppelklick Radierer: Ganzen Weg löschen',
+        'tooltip.river': 'Fluss-Werkzeug\nKlick: Wegpunkte setzen/verschieben\nDoppelklick auf aktiven Wegpunkt verbindet diesen mit letzten geklickten Wegpunkt\nRechtsklick in Karte: Teilstück löschen\nDoppelklick Radierer: Ganzen Fluss löschen',
+        'tooltip.road': 'Weg-Werkzeug\nKlick: Wegpunkte setzen/verschieben\nDoppelklick auf aktiven Wegpunkt verbindet diesen mit letzten geklickten Wegpunkt\nRechtsklick in Karte: Teilstück löschen\nDoppelklick Radierer: Ganzen Weg löschen',
         'tooltip.pathPicker': 'Fluss/Weg aufnehmen\nBei Überlappung: Entsprechenden Button zum bearbeiten drücken',
         'tooltip.pathFinish': 'Abschließen\nKlick: Aktuellen Fluss/Weg fertigstellen',
         'tooltip.roadFinish': 'Weg abschließen',
@@ -3699,19 +3699,23 @@ class HexCartographerView extends ItemView {
                          this.lastWaypointClick.idx === clickedIdx &&
                          (now - this.lastWaypointClick.time) < 400;
         if (isDouble) {
-            const isEndpoint = clickedIdx === 0 || clickedIdx === path.waypoints.length - 1;
-            const hasBreaks = path.waypoints.some(wp => wp.break);
-            if (isEndpoint && !hasBreaks && path.waypoints.length >= 3) {
-                const first = path.waypoints[0];
-                path.waypoints.push({ q: first.q, r: first.r });
-                settings.insertAfter = path.waypoints.length - 1;
+            const anchorIdx = this.lastWaypointClick.previousInsertAfter;
+            if (anchorIdx !== null && anchorIdx !== undefined && anchorIdx !== clickedIdx) {
+                const fromWp = path.waypoints[anchorIdx];
+                const toWp = path.waypoints[clickedIdx];
+                if (fromWp && toWp && (fromWp.q !== toWp.q || fromWp.r !== toWp.r)) {
+                    path.waypoints.push({ q: fromWp.q, r: fromWp.r, break: true });
+                    path.waypoints.push({ q: toWp.q, r: toWp.r });
+                    settings.insertAfter = path.waypoints.length - 1;
+                }
             }
             this.lastWaypointClick = null;
         } else {
             this.lastWaypointClick = {
                 pathId: path.id,
                 idx: clickedIdx,
-                time: now
+                time: now,
+                previousInsertAfter: settings.insertAfter
             };
             settings.insertAfter = clickedIdx;
         }
@@ -4286,7 +4290,11 @@ class HexCartographerView extends ItemView {
                 this.draggedText.y = world.y;
                 this.render();
             } else if (this.isMouseDown) {
-                if (this.roadDragIndex !== null && this.roadSettings.editMode) {
+                if (!this.editMode) {
+                    this.data.offX += e.movementX;
+                    this.data.offY += e.movementY;
+                    this.render();
+                } else if (this.roadDragIndex !== null && this.roadSettings.editMode) {
                     const road = this.data.roads && this.data.roads.find(r => r.id === this.roadSettings.activeRoadId);
                     if (road) {
                         const currentHex = this.pixelToHex(world.x, world.y);
@@ -4448,7 +4456,9 @@ class HexCartographerView extends ItemView {
             pendingTouchStart: null,
             hasMovedSinceStart: false,
             lastTapTime: 0,
-            lastTapHex: null
+            lastTapHex: null,
+            lastTouchX: undefined,
+            lastTouchY: undefined
         };
 
         this.canvas.addEventListener('touchstart', (e) => {
@@ -4511,6 +4521,8 @@ class HexCartographerView extends ItemView {
 
                 this.touchState.touchStartTimeout = setTimeout(() => {
                     if (this.touchState.pendingTouchStart && !this.touchState.isTwoFingerGesture) {
+                        this.touchState.lastTouchX = this.touchState.pendingTouchStart.touch.clientX;
+                        this.touchState.lastTouchY = this.touchState.pendingTouchStart.touch.clientY;
                         const world = this.getWorldCoords(this.touchState.pendingTouchStart.mouseEvent);
                         this.pendingHistory = true;
                         this.isMouseDown = true;
@@ -4677,7 +4689,16 @@ class HexCartographerView extends ItemView {
                     this.draggedText.y = world.y;
                     this.render();
                 } else if (this.isMouseDown) {
-                    if (this.roadDragIndex !== null && this.roadSettings.editMode) {
+                    if (!this.editMode) {
+                        const touch = e.touches[0];
+                        if (this.touchState.lastTouchX !== undefined) {
+                            this.data.offX += touch.clientX - this.touchState.lastTouchX;
+                            this.data.offY += touch.clientY - this.touchState.lastTouchY;
+                            this.render();
+                        }
+                        this.touchState.lastTouchX = touch.clientX;
+                        this.touchState.lastTouchY = touch.clientY;
+                    } else if (this.roadDragIndex !== null && this.roadSettings.editMode) {
                         const road = this.data.roads && this.data.roads.find(r => r.id === this.roadSettings.activeRoadId);
                         if (road) {
                             const currentHex = this.pixelToHex(world.x, world.y);
@@ -4945,6 +4966,8 @@ class HexCartographerView extends ItemView {
                 this.lastHex = null;
                 this.startHex = null;
                 this.touchState.pendingTouchStart = null;
+                this.touchState.lastTouchX = undefined;
+                this.touchState.lastTouchY = undefined;
                 this.render();
             }
 
@@ -4961,6 +4984,8 @@ class HexCartographerView extends ItemView {
 
             this.touchState.isTwoFingerGesture = false;
             this.touchState.pendingTouchStart = null;
+            this.touchState.lastTouchX = undefined;
+            this.touchState.lastTouchY = undefined;
             this.isMouseDown = false;
             this.draggedText = null;
             this.roadDragIndex = null;
