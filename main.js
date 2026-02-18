@@ -72,7 +72,7 @@ const SVG_SYMBOL_CONFIG = {
     'castle':      { size: 0.65,  align: 'center', marginX: 0, marginY: 0 },
     'harbor':      { size: 0.60,  align: 'center', marginX: 0, marginY: -8 },
     'monastery':   { size: 0.60,  align: 'center', marginX: 0, marginY: -3 },
-    'tower':       { size: 0.60,  align: 'center', marginX: 0, marginY: 0 },
+    'tower':       { size: 0.50,  align: 'center', marginX: 0, marginY: -7 },
     'ruin':        { size: 0.30,  align: 'center', marginX: 0, marginY: 0 },
     'cave':        { size: 0.30,  align: 'center', marginX: 0, marginY: 0 },
     'oasis':       { size: 0.30,  align: 'center', marginX: 0, marginY: 0 }
