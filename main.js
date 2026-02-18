@@ -2816,6 +2816,34 @@ class HexCartographerView extends ItemView {
                 newData.roads = waypoints.length > 0 ? [{ id: 1, color: DEFAULT_ROAD_COLOR, width: DEFAULT_ROAD_WIDTH, waypoints }] : [];
             }
 
+            // Sanitize: remove viewport properties that may leak into data objects (e.g. from sync conflicts)
+            const VIEWPORT_KEYS = ['offX', 'offY', 'zoom', 'viewportSaved'];
+            if (newData.borders) {
+                for (const region of newData.borders) {
+                    if (region.hexes) {
+                        region.hexes = region.hexes.filter(h => {
+                            if (!isFinite(h.q) || !isFinite(h.r) || Math.abs(h.q) > 9999 || Math.abs(h.r) > 9999) {
+                                console.warn('Removed corrupted border hex:', h);
+                                return false;
+                            }
+                            return true;
+                        });
+                        for (const h of region.hexes) {
+                            for (const key of VIEWPORT_KEYS) {
+                                if (key in h) { console.warn('Stripped', key, 'from border hex:', h); delete h[key]; }
+                            }
+                        }
+                    }
+                }
+            }
+            if (newData.texts) {
+                for (const t of newData.texts) {
+                    for (const key of VIEWPORT_KEYS) {
+                        if (key in t) { console.warn('Stripped', key, 'from text:', t.text); delete t[key]; }
+                    }
+                }
+            }
+
             if (JSON.stringify(this.data) !== JSON.stringify(newData)) {
                 this.data = Object.assign({}, newData);
 
@@ -4410,7 +4438,7 @@ class HexCartographerView extends ItemView {
                     }
                 }
             }
-            if (this.isMouseDown || this.draggedText) this.requestSave();
+            if (this.isMouseDown || this.draggedText || this.isDraggingMap) this.requestSave();
             this.isMouseDown = false;
             this.isDraggingMap = false;
             this.draggedText = null;
@@ -4443,6 +4471,7 @@ class HexCartographerView extends ItemView {
             this.data.zoom = newZoom;
 
             this.render();
+            this.requestSave();
         }, { passive: false });
 
         this.touchState = {
@@ -4764,6 +4793,7 @@ class HexCartographerView extends ItemView {
             if (this.touchState.isTwoFingerGesture && e.touches.length < 2) {
                 e.preventDefault();
                 this.touchState.isTwoFingerGesture = false;
+                this.requestSave();
             } else if (e.touches.length === 0 && !this.touchState.isTwoFingerGesture) {
                 e.preventDefault();
 
