@@ -167,6 +167,7 @@ const TRANSLATIONS = {
         'notice.noHexAtPosition': 'Keine Wabe an dieser Position',
         'notice.riverSelected': 'Fluss #{id} ausgewählt',
         'notice.roadSelected': 'Weg #{id} ausgewählt',
+        'notice.chooseRiverOrRoad': 'Fluss oder Weg auswählen',
         'notice.noRiverOrRoad': 'Kein Fluss oder Weg an dieser Position',
         'notice.borderSelected': 'Grenze #{id} ausgewählt',
         'notice.noBorderAtPosition': 'Keine Grenze an dieser Position',
@@ -361,6 +362,7 @@ const TRANSLATIONS = {
         'notice.noHexAtPosition': 'No hex at this position',
         'notice.riverSelected': 'River #{id} selected',
         'notice.roadSelected': 'Road #{id} selected',
+        'notice.chooseRiverOrRoad': 'Choose river or road',
         'notice.noRiverOrRoad': 'No river or road at this position',
         'notice.borderSelected': 'Border #{id} selected',
         'notice.noBorderAtPosition': 'No border at this position',
@@ -539,6 +541,7 @@ const TRANSLATIONS = {
         'notice.noHexAtPosition': '该位置没有六角格',
         'notice.riverSelected': '河流 #{id} 已选择',
         'notice.roadSelected': '道路 #{id} 已选择',
+        'notice.chooseRiverOrRoad': '选择河流或道路',
         'notice.noRiverOrRoad': '该位置没有河流或道路',
         'notice.borderSelected': '边界 #{id} 已选择',
         'notice.noBorderAtPosition': '该位置没有边界',
@@ -705,6 +708,7 @@ const TRANSLATIONS = {
         'notice.noHexAtPosition': 'На этой позиции нет соты',
         'notice.riverSelected': 'Река #{id} выбрана',
         'notice.roadSelected': 'Дорога #{id} выбрана',
+        'notice.chooseRiverOrRoad': 'Выберите реку или дорогу',
         'notice.noRiverOrRoad': 'На этой позиции нет реки или дороги',
         'notice.borderSelected': 'Граница #{id} выбрана',
         'notice.noBorderAtPosition': 'На этой позиции нет границы',
@@ -871,6 +875,7 @@ const TRANSLATIONS = {
         'notice.noHexAtPosition': 'この位置にヘックスがありません',
         'notice.riverSelected': '川 #{id} を選択しました',
         'notice.roadSelected': '道 #{id} を選択しました',
+        'notice.chooseRiverOrRoad': '川または道を選択してください',
         'notice.noRiverOrRoad': 'この位置に川または道がありません',
         'notice.borderSelected': '境界 #{id} を選択しました',
         'notice.noBorderAtPosition': 'この位置に境界がありません',
@@ -1037,6 +1042,7 @@ const TRANSLATIONS = {
         'notice.noHexAtPosition': 'Aucun hexagone à cette position',
         'notice.riverSelected': 'Rivière #{id} sélectionnée',
         'notice.roadSelected': 'Chemin #{id} sélectionné',
+        'notice.chooseRiverOrRoad': 'Choisir rivière ou chemin',
         'notice.noRiverOrRoad': 'Aucune rivière ou chemin à cette position',
         'notice.borderSelected': 'Frontière #{id} sélectionnée',
         'notice.noBorderAtPosition': 'Aucune frontière à cette position',
@@ -1203,6 +1209,7 @@ const TRANSLATIONS = {
         'notice.noHexAtPosition': 'Nenhum hexágono nesta posição',
         'notice.riverSelected': 'Rio #{id} selecionado',
         'notice.roadSelected': 'Caminho #{id} selecionado',
+        'notice.chooseRiverOrRoad': 'Escolha rio ou caminho',
         'notice.noRiverOrRoad': 'Nenhum rio ou caminho nesta posição',
         'notice.borderSelected': 'Fronteira #{id} selecionada',
         'notice.noBorderAtPosition': 'Nenhuma fronteira nesta posição',
@@ -1369,6 +1376,7 @@ const TRANSLATIONS = {
         'notice.noHexAtPosition': '이 위치에 헥스 셀이 없습니다',
         'notice.riverSelected': '강 #{id} 선택됨',
         'notice.roadSelected': '길 #{id} 선택됨',
+        'notice.chooseRiverOrRoad': '강 또는 길 선택',
         'notice.noRiverOrRoad': '이 위치에 강 또는 길이 없습니다',
         'notice.borderSelected': '경계 #{id} 선택됨',
         'notice.noBorderAtPosition': '이 위치에 경계가 없습니다',
@@ -1535,6 +1543,7 @@ const TRANSLATIONS = {
         'notice.noHexAtPosition': 'No hay celda en esta posición',
         'notice.riverSelected': 'Río #{id} seleccionado',
         'notice.roadSelected': 'Camino #{id} seleccionado',
+        'notice.chooseRiverOrRoad': 'Elegir río o camino',
         'notice.noRiverOrRoad': 'No hay río ni camino en esta posición',
         'notice.borderSelected': 'Frontera #{id} seleccionada',
         'notice.noBorderAtPosition': 'No hay frontera en esta posición',
@@ -1701,6 +1710,7 @@ const TRANSLATIONS = {
         'notice.noHexAtPosition': 'Brak komórki w tej pozycji',
         'notice.riverSelected': 'Rzeka #{id} wybrana',
         'notice.roadSelected': 'Droga #{id} wybrana',
+        'notice.chooseRiverOrRoad': 'Wybierz rzekę lub drogę',
         'notice.noRiverOrRoad': 'Brak rzeki lub drogi w tej pozycji',
         'notice.borderSelected': 'Granica #{id} wybrana',
         'notice.noBorderAtPosition': 'Brak granicy w tej pozycji',
@@ -1867,6 +1877,7 @@ const TRANSLATIONS = {
         'notice.noHexAtPosition': 'Nessuna cella in questa posizione',
         'notice.riverSelected': 'Fiume #{id} selezionato',
         'notice.roadSelected': 'Strada #{id} selezionata',
+        'notice.chooseRiverOrRoad': 'Scegli fiume o strada',
         'notice.noRiverOrRoad': 'Nessun fiume o strada in questa posizione',
         'notice.borderSelected': 'Confine #{id} selezionato',
         'notice.noBorderAtPosition': 'Nessun confine in questa posizione',
@@ -2327,6 +2338,7 @@ class HexCartographerView extends ItemView {
         this.roadSettings = { width: DEFAULT_ROAD_WIDTH, activeRoadId: null, editMode: false, insertAfter: null };
         this.pathDashes = DEFAULT_PATH_DASHES;
         this.pathPickMode = false;
+        this.pathPickPending = null;
         this.lastToolGroup = null;
         // Wie weit Pfad-Endpunkte ins Hex reichen: 0 = Hex-Rand, 1 = Hex-Zentrum
         this.pathEndInset = PATH_END_INSET;
@@ -3558,6 +3570,10 @@ class HexCartographerView extends ItemView {
         const riverBtn = this.createToolButton(topRow, { icon: 'waves', title: t('tooltip.river'), dataset: { toolGroup: 'river' } });
         this.riverBtn = riverBtn;
         riverBtn.onclick = () => {
+            if (this.pathPickPending) {
+                this.completePathPick(this.pathPickPending.river, 'river');
+                return;
+            }
             const needsRender = this.currentToolGroup === 'pattern' || this.borderSettings.pickedHex;
             this.exitPathEditMode();
             this.currentToolGroup = 'river';
@@ -3570,6 +3586,10 @@ class HexCartographerView extends ItemView {
         const roadBtn = this.createToolButton(topRow, { icon: 'route', title: t('tooltip.road'), dataset: { toolGroup: 'road' } });
         this.roadBtn = roadBtn;
         roadBtn.onclick = () => {
+            if (this.pathPickPending) {
+                this.completePathPick(this.pathPickPending.road, 'road');
+                return;
+            }
             const needsRender = this.currentToolGroup === 'pattern' || this.borderSettings.pickedHex;
             this.exitPathEditMode();
             this.currentToolGroup = 'road';
@@ -3582,6 +3602,16 @@ class HexCartographerView extends ItemView {
         const pickerBtn = this.createToolButton(topRow, { icon: 'mouse-pointer', title: t('tooltip.pathPicker') });
         this.pathPickerBtn = pickerBtn;
         pickerBtn.onclick = () => {
+            if (this.pathPickPending) {
+                this.pathPickPending = null;
+                this.pathPickMode = false;
+                this.currentToolGroup = this.lastToolGroup;
+                this.lastToolGroup = null;
+                pickerBtn.style.background = BUTTON_BG_DEFAULT;
+                pickerBtn.style.color = '';
+                this.updateToolbarState(toolbar);
+                return;
+            }
             const settings = this.currentToolGroup === 'river' ? this.riverSettings : this.roadSettings;
             if (settings.editMode) {
                 this.exitPathEditMode();
@@ -3688,42 +3718,33 @@ class HexCartographerView extends ItemView {
         this.requestSave();
     }
 
-    pickPathAtHex(hex) {
-        const foundRiver = this.findRiverAtHex(hex);
-        const foundRoad = this.findRoadAtHex(hex);
-        if (foundRiver) {
-            this.exitPathEditMode();
+    completePathPick(path, type) {
+        this.exitPathEditMode();
+        this.pathPickPending = null;
+        if (type === 'river') {
             this.currentToolGroup = 'river';
-            this.riverSettings.activeRiverId = foundRiver.id;
-            this.riverSettings.width = foundRiver.width;
+            this.riverSettings.activeRiverId = path.id;
+            this.riverSettings.width = path.width;
             this.riverSettings.editMode = true;
-            this.riverSettings.insertAfter = foundRiver.waypoints.length - 1;
-            this.masterColor = foundRiver.color;
+            this.riverSettings.insertAfter = path.waypoints.length - 1;
+            this.masterColor = path.color;
             if (this.masterColorInput) { this.masterColorInput.value = this.masterColor; if (this.masterColorBtn) this.masterColorBtn.style.backgroundColor = this.masterColor; }
-            if (this.riverWidthInput) this.riverWidthInput.value = foundRiver.width.toString();
-            this.pathDashes = foundRiver.dashes || DEFAULT_PATH_DASHES;
+            if (this.riverWidthInput) this.riverWidthInput.value = path.width.toString();
+            this.pathDashes = path.dashes || DEFAULT_PATH_DASHES;
             if (this.pathDashesInput) this.pathDashesInput.value = this.pathDashes.toString();
-            new Notice(t('notice.riverSelected', { id: foundRiver.id }));
-        } else if (foundRoad) {
-            this.exitPathEditMode();
-            this.currentToolGroup = 'road';
-            this.roadSettings.activeRoadId = foundRoad.id;
-            this.roadSettings.width = foundRoad.width;
-            this.roadSettings.editMode = true;
-            this.roadSettings.insertAfter = foundRoad.waypoints.length - 1;
-            this.masterColor = foundRoad.color;
-            if (this.masterColorInput) { this.masterColorInput.value = this.masterColor; if (this.masterColorBtn) this.masterColorBtn.style.backgroundColor = this.masterColor; }
-            if (this.roadWidthInput) this.roadWidthInput.value = foundRoad.width.toString();
-            this.pathDashes = foundRoad.dashes || DEFAULT_PATH_DASHES;
-            if (this.pathDashesInput) this.pathDashesInput.value = this.pathDashes.toString();
-            new Notice(t('notice.roadSelected', { id: foundRoad.id }));
+            new Notice(t('notice.riverSelected', { id: path.id }));
         } else {
-            this.currentToolGroup = this.lastToolGroup;
-            if (this.currentToolGroup === 'hexcolor') {
-                this.masterColor = this.hexColorColor;
-            } else if (this.currentToolGroup && this.toolConfigs[this.currentToolGroup]) {
-                this.masterColor = this.toolConfigs[this.currentToolGroup].symbolColor;
-            }
+            this.currentToolGroup = 'road';
+            this.roadSettings.activeRoadId = path.id;
+            this.roadSettings.width = path.width;
+            this.roadSettings.editMode = true;
+            this.roadSettings.insertAfter = path.waypoints.length - 1;
+            this.masterColor = path.color;
+            if (this.masterColorInput) { this.masterColorInput.value = this.masterColor; if (this.masterColorBtn) this.masterColorBtn.style.backgroundColor = this.masterColor; }
+            if (this.roadWidthInput) this.roadWidthInput.value = path.width.toString();
+            this.pathDashes = path.dashes || DEFAULT_PATH_DASHES;
+            if (this.pathDashesInput) this.pathDashesInput.value = this.pathDashes.toString();
+            new Notice(t('notice.roadSelected', { id: path.id }));
         }
         this.lastToolGroup = null;
         this.pathPickMode = false;
@@ -3735,6 +3756,44 @@ class HexCartographerView extends ItemView {
         const toolbar = this.containerEl.querySelector('.hex-toolbar');
         if (toolbar) this.updateToolbarState(toolbar);
         this.render();
+        this.requestSave();
+    }
+
+    pickPathAtHex(hex) {
+        this.pathPickPending = null;
+        const foundRiver = this.findRiverAtHex(hex);
+        const foundRoad = this.findRoadAtHex(hex);
+
+        if (foundRiver && foundRoad) {
+            this.pathPickPending = { river: foundRiver, road: foundRoad };
+            new Notice(t('notice.chooseRiverOrRoad'));
+            const toolbar = this.containerEl.querySelector('.hex-toolbar');
+            if (toolbar) this.updateToolbarState(toolbar);
+            return;
+        }
+
+        if (foundRiver) {
+            this.completePathPick(foundRiver, 'river');
+        } else if (foundRoad) {
+            this.completePathPick(foundRoad, 'road');
+        } else {
+            this.currentToolGroup = this.lastToolGroup;
+            if (this.currentToolGroup === 'hexcolor') {
+                this.masterColor = this.hexColorColor;
+            } else if (this.currentToolGroup && this.toolConfigs[this.currentToolGroup]) {
+                this.masterColor = this.toolConfigs[this.currentToolGroup].symbolColor;
+            }
+            this.lastToolGroup = null;
+            this.pathPickMode = false;
+            if (this.pathPickerBtn) {
+                this.pathPickerBtn.style.background = BUTTON_BG_DEFAULT;
+                this.pathPickerBtn.style.color = '';
+            }
+            this.drawMode = 'pen';
+            const toolbar = this.containerEl.querySelector('.hex-toolbar');
+            if (toolbar) this.updateToolbarState(toolbar);
+            this.render();
+        }
     }
 
     updateActivePathColor() {
@@ -4002,11 +4061,12 @@ class HexCartographerView extends ItemView {
         toolbar.querySelectorAll('[data-tool-group]').forEach(btn => {
             const groupId = btn.dataset.toolGroup;
             if (!['grass', 'tree', 'mountain', 'building'].includes(groupId)) {
-                const isActive = btn.dataset.toolGroup === this.currentToolGroup;
+                const isPending = this.pathPickPending && (groupId === 'river' || groupId === 'road');
+                const isActive = !isPending && btn.dataset.toolGroup === this.currentToolGroup;
                 btn.classList.toggle('active', isActive);
                 btn.style.background = isActive ? PICKER_ACTIVE_BG : BUTTON_BG_DEFAULT;
-                btn.style.border = isActive ? ACTIVE_BORDER : '';
-                btn.style.boxShadow = isActive ? ACTIVE_BOX_SHADOW : '';
+                btn.style.border = (isActive || isPending) ? ACTIVE_BORDER : '';
+                btn.style.boxShadow = (isActive || isPending) ? ACTIVE_BOX_SHADOW : '';
                 if (groupId === 'hexcolor') {
                     btn.style.color = this.hexColorColor;
                 }
