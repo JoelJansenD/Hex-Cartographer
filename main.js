@@ -29,6 +29,7 @@ const DEFAULT_OFF_X = 400;
 const DEFAULT_OFF_Y = 300;
 const DEFAULT_RIVER_WIDTH = 5;
 const DEFAULT_ROAD_WIDTH = 3;
+const PATH_OVERLAP_SPACING = 1.5; // Abstandsfaktor Kante-zu-Kante: 1.0 = berühren sich, 1.5 = kleine Lücke, 2.0 = deutlicher Abstand
 const DEFAULT_BORDER_HIGHLIGHT_WIDTH = 3;
 const DEFAULT_BORDER_DASHES = 1;
 const DEFAULT_PATH_DASHES = 1;
@@ -141,7 +142,7 @@ const TRANSLATIONS = {
         // Tooltips — Fluss/Weg
         'tooltip.river': 'Fluss-Werkzeug\nKlick: Wegpunkte setzen/verschieben\nDoppelklick Endpunkt: Fluss schließen (nur ohne Abzweigungen)\nRechtsklick in Karte: Teilstück löschen\nDoppelklick Radierer: Ganzen Fluss löschen',
         'tooltip.road': 'Weg-Werkzeug\nKlick: Wegpunkte setzen/verschieben\nRechtsklick in Karte: Teilstück löschen\nDoppelklick Radierer: Ganzen Weg löschen',
-        'tooltip.pathPicker': 'Fluss/Weg aufnehmen\nKlick: Vorhandenen Fluss/Weg auswählen',
+        'tooltip.pathPicker': 'Fluss/Weg aufnehmen\nBei Überlappung: Entsprechenden Button zum bearbeiten drücken',
         'tooltip.pathFinish': 'Abschließen\nKlick: Aktuellen Fluss/Weg fertigstellen',
         'tooltip.roadFinish': 'Weg abschließen',
         'tooltip.riverFinish': 'Fluss abschließen',
@@ -233,9 +234,9 @@ const TRANSLATIONS = {
         'guide.pattern.stamp': 'Muster auf Waben setzen. Ziehen um mit Muster zu zeichnen.',
         'guide.pattern.pick': 'Vorhandenes Muster aufnehmen, um damit zu zeichnen.',
         'guide.paths': 'Flüsse & Wege',
-        'guide.paths.river': 'Wegpunkte setzen für Flüsse. Flussenden laufen an Sackgassen spitz zu. Doppelklick auf einen Endpunkt schließt den Fluss (nur ohne Abzweigungen). Letzten Punkt auf den vorletzten ziehen deaktiviert die Verengung an diesem Ende.',
+        'guide.paths.river': 'Wegpunkte setzen für Flüsse. Doppelklick auf einen Endpunkt schließt den Fluss (nur ohne Abzweigungen). Flussenden laufen an Sackgassen spitz zu. Letzten Punkt auf den vorletzten ziehen deaktiviert die Verengung an diesem Ende.',
         'guide.paths.road': 'Wegpunkte setzen für Wege.',
-        'guide.paths.pick': 'Bestehenden Fluss/Weg auswählen und bearbeiten.',
+        'guide.paths.pick': 'Bestehenden Fluss/Weg auswählen und bearbeiten. Liegen beide auf einer Wabe, leuchten Fluss- und Weg-Button auf — Klick wählt aus.',
         'guide.paths.width': 'Breite der Flüsse/Wege über die Eingabefelder mit einem Wert anpassen.',
         'guide.paths.dashes': 'Unterteilt jedes Waben-Segment in abwechselnd Strich und Lücke (1 = durchgehend, 2 = halbe Linie, 3 = zwei Striche usw.).',
         'guide.borders': 'Grenzen',
@@ -336,7 +337,7 @@ const TRANSLATIONS = {
         // Tooltips — River/Road
         'tooltip.river': 'River Tool\nClick: Place/move waypoints\nDouble-click endpoint: Close river (only without branches)\nRight-click on map: Delete segment\nDouble-click Eraser: Delete entire river',
         'tooltip.road': 'Road Tool\nClick: Place/move waypoints\nRight-click on map: Delete segment\nDouble-click Eraser: Delete entire road',
-        'tooltip.pathPicker': 'Pick River/Road\nClick: Select existing river/road',
+        'tooltip.pathPicker': 'Pick River/Road\nClick: Select existing river/road\nIf both: choose with river/road buttons',
         'tooltip.pathFinish': 'Finish\nClick: Complete current river/road',
         'tooltip.roadFinish': 'Finish road',
         'tooltip.riverFinish': 'Finish river',
@@ -430,7 +431,7 @@ const TRANSLATIONS = {
         'guide.paths': 'Rivers & Roads',
         'guide.paths.river': 'Place waypoints for rivers. River ends taper at dead ends. Double-click an endpoint to close the river (only without branches). Drag the last point onto the second-to-last to disable tapering at that end.',
         'guide.paths.road': 'Place waypoints for roads.',
-        'guide.paths.pick': 'Select an existing river/road to edit.',
+        'guide.paths.pick': 'Select an existing river/road to edit. If both overlap, the river and road buttons highlight — click one to choose.',
         'guide.paths.width': 'Adjust river/road width via the input fields.',
         'guide.paths.dashes': 'Divides each hex-to-hex section into alternating dashes and gaps (1 = continuous, 2 = half line, 3 = two dashes, etc.).',
         'guide.borders': 'Borders',
@@ -519,7 +520,7 @@ const TRANSLATIONS = {
         'tooltip.patternPicker': '采集图案\n点击：将六角格作为图案采集',
         'tooltip.river': '河流工具\n点击：设置/移动路径点\n双击端点：关闭河流（仅无分支时）\n右键地图：删除路段\n双击橡皮擦：删除整条河流',
         'tooltip.road': '道路工具\n点击：设置/移动路径点\n右键地图：删除路段\n双击橡皮擦：删除整条道路',
-        'tooltip.pathPicker': '采集河流/道路\n点击：选择已有的河流/道路',
+        'tooltip.pathPicker': '采集河流/道路\n点击：选择已有的河流/道路\n两者都有时：用河流/道路按钮选择',
         'tooltip.pathFinish': '完成\n点击：完成当前河流/道路',
         'tooltip.roadFinish': '完成道路',
         'tooltip.riverFinish': '完成河流',
@@ -601,7 +602,7 @@ const TRANSLATIONS = {
         'guide.paths': '河流与道路',
         'guide.paths.river': '为河流设置路径点。河流在死胡同处逐渐变细。双击端点可关闭河流（仅无分支时）。将最后一个点拖到倒数第二个点上可禁用该端的收窄效果。',
         'guide.paths.road': '为道路设置路径点。',
-        'guide.paths.pick': '选择并编辑已有的河流/道路。',
+        'guide.paths.pick': '选择并编辑已有的河流/道路。若两者重叠，河流和道路按钮会高亮——点击选择。',
         'guide.paths.width': '通过输入框调整河流/道路的宽度值。',
         'guide.paths.dashes': '将每个六角格段分为交替的线段和间隔（1 = 实线，2 = 半线，3 = 两段线等）。',
         'guide.borders': '边界',
@@ -686,7 +687,7 @@ const TRANSLATIONS = {
         'tooltip.patternPicker': 'Захватить шаблон\nКлик: Скопировать соту как шаблон',
         'tooltip.river': 'Инструмент «Река»\nКлик: Установить/переместить путевые точки\nДвойной клик по конечной точке: Замкнуть реку (только без ответвлений)\nПравый клик на карте: Удалить сегмент\nДвойной клик ластиком: Удалить всю реку',
         'tooltip.road': 'Инструмент «Дорога»\nКлик: Установить/переместить путевые точки\nПравый клик на карте: Удалить сегмент\nДвойной клик ластиком: Удалить всю дорогу',
-        'tooltip.pathPicker': 'Захватить реку/дорогу\nКлик: Выбрать существующую реку/дорогу',
+        'tooltip.pathPicker': 'Захватить реку/дорогу\nКлик: Выбрать существующую реку/дорогу\nЕсли оба: выберите кнопкой река/дорога',
         'tooltip.pathFinish': 'Завершить\nКлик: Завершить текущую реку/дорогу',
         'tooltip.roadFinish': 'Завершить дорогу',
         'tooltip.riverFinish': 'Завершить реку',
@@ -768,7 +769,7 @@ const TRANSLATIONS = {
         'guide.paths': 'Реки и дороги',
         'guide.paths.river': 'Установить путевые точки для рек. Концы рек сужаются в тупиках. Двойной клик по конечной точке замыкает реку (только без ответвлений). Перетащите последнюю точку на предпоследнюю, чтобы отключить сужение на этом конце.',
         'guide.paths.road': 'Установить путевые точки для дорог.',
-        'guide.paths.pick': 'Выбрать и редактировать существующую реку/дорогу.',
+        'guide.paths.pick': 'Выбрать и редактировать существующую реку/дорогу. При совпадении подсвечиваются кнопки реки и дороги — нажмите для выбора.',
         'guide.paths.width': 'Настроить ширину рек/дорог через поля ввода.',
         'guide.paths.dashes': 'Разбивает каждый сегмент соты на чередующиеся штрихи и пробелы (1 = сплошная, 2 = половина линии, 3 = два штриха и т.д.).',
         'guide.borders': 'Границы',
@@ -853,7 +854,7 @@ const TRANSLATIONS = {
         'tooltip.patternPicker': 'パターンを取得\nクリック：ヘックスをパターンとして取得',
         'tooltip.river': '川ツール\nクリック：経由点を設置/移動\n端点ダブルクリック：川を閉じる（分岐なしの場合のみ）\nマップ上で右クリック：区間を削除\nダブルクリック消しゴム：川全体を削除',
         'tooltip.road': '道ツール\nクリック：経由点を設置/移動\nマップ上で右クリック：区間を削除\nダブルクリック消しゴム：道全体を削除',
-        'tooltip.pathPicker': '川/道を取得\nクリック：既存の川/道を選択',
+        'tooltip.pathPicker': '川/道を取得\nクリック：既存の川/道を選択\n両方ある場合：川/道ボタンで選択',
         'tooltip.pathFinish': '完了\nクリック：現在の川/道を確定',
         'tooltip.roadFinish': '道を確定',
         'tooltip.riverFinish': '川を確定',
@@ -935,7 +936,7 @@ const TRANSLATIONS = {
         'guide.paths': '川と道',
         'guide.paths.river': '川の経由点を設置。川の行き止まりは先細りになります。端点をダブルクリックすると川を閉じます（分岐なしの場合のみ）。最後の点を手前の点にドラッグすると、その端の先細りを無効にします。',
         'guide.paths.road': '道の経由点を設置。',
-        'guide.paths.pick': '既存の川/道を選択して編集。',
+        'guide.paths.pick': '既存の川/道を選択して編集。両方が重なる場合、川と道のボタンが光ります — クリックで選択。',
         'guide.paths.width': '入力フィールドで川/道の幅を調整。',
         'guide.paths.dashes': '各ヘックスセグメントを線と間隔に交互に分割（1 = 実線、2 = 半分の線、3 = 2本の線など）。',
         'guide.borders': '境界',
@@ -1020,7 +1021,7 @@ const TRANSLATIONS = {
         'tooltip.patternPicker': 'Capturer un motif\nClic : Capturer un hexagone comme motif',
         'tooltip.river': 'Outil rivière\nClic : Placer/déplacer des points de passage\nDouble-clic point final : Fermer la rivière (uniquement sans embranchements)\nClic droit sur la carte : Supprimer un segment\nDouble-clic gomme : Supprimer toute la rivière',
         'tooltip.road': 'Outil chemin\nClic : Placer/déplacer des points de passage\nClic droit sur la carte : Supprimer un segment\nDouble-clic gomme : Supprimer tout le chemin',
-        'tooltip.pathPicker': 'Capturer rivière/chemin\nClic : Sélectionner une rivière/un chemin existant',
+        'tooltip.pathPicker': 'Capturer rivière/chemin\nClic : Sélectionner une rivière/un chemin existant\nSi les deux : choisir avec les boutons rivière/chemin',
         'tooltip.pathFinish': 'Terminer\nClic : Finaliser la rivière/le chemin en cours',
         'tooltip.roadFinish': 'Terminer le chemin',
         'tooltip.riverFinish': 'Terminer la rivière',
@@ -1102,7 +1103,7 @@ const TRANSLATIONS = {
         'guide.paths': 'Rivières & Chemins',
         'guide.paths.river': 'Placer des points de passage pour les rivières. Les extrémités des rivières s\'affinent en impasse. Double-cliquer sur un point final ferme la rivière (uniquement sans embranchements). Glisser le dernier point sur l\'avant-dernier désactive l\'effilement à cette extrémité.',
         'guide.paths.road': 'Placer des points de passage pour les chemins.',
-        'guide.paths.pick': 'Sélectionner et modifier une rivière/un chemin existant.',
+        'guide.paths.pick': 'Sélectionner et modifier une rivière/un chemin existant. Si les deux se chevauchent, les boutons rivière et chemin s\'illuminent — cliquez pour choisir.',
         'guide.paths.width': 'Ajuster la largeur des rivières/chemins via les champs de saisie.',
         'guide.paths.dashes': 'Divise chaque segment d\'hexagone en alternance de tiret et d\'espace (1 = continu, 2 = demi-ligne, 3 = deux tirets, etc.).',
         'guide.borders': 'Frontières',
@@ -1187,7 +1188,7 @@ const TRANSLATIONS = {
         'tooltip.patternPicker': 'Capturar padrão\nClique: Capturar hexágono como padrão',
         'tooltip.river': 'Ferramenta de rio\nClique: Colocar/mover pontos de passagem\nDuplo clique ponto final: Fechar rio (apenas sem ramificações)\nClique direito no mapa: Excluir segmento\nDuplo clique borracha: Excluir rio inteiro',
         'tooltip.road': 'Ferramenta de caminho\nClique: Colocar/mover pontos de passagem\nClique direito no mapa: Excluir segmento\nDuplo clique borracha: Excluir caminho inteiro',
-        'tooltip.pathPicker': 'Capturar rio/caminho\nClique: Selecionar rio/caminho existente',
+        'tooltip.pathPicker': 'Capturar rio/caminho\nClique: Selecionar rio/caminho existente\nSe ambos: escolha com os botões rio/caminho',
         'tooltip.pathFinish': 'Finalizar\nClique: Concluir o rio/caminho atual',
         'tooltip.roadFinish': 'Finalizar caminho',
         'tooltip.riverFinish': 'Finalizar rio',
@@ -1269,7 +1270,7 @@ const TRANSLATIONS = {
         'guide.paths': 'Rios & Caminhos',
         'guide.paths.river': 'Colocar pontos de passagem para rios. As extremidades dos rios afinam em becos sem saída. Duplo clique num ponto final fecha o rio (apenas sem ramificações). Arrastar o último ponto para o penúltimo desativa o afinamento nessa extremidade.',
         'guide.paths.road': 'Colocar pontos de passagem para caminhos.',
-        'guide.paths.pick': 'Selecionar e editar rio/caminho existente.',
+        'guide.paths.pick': 'Selecionar e editar rio/caminho existente. Se ambos se sobrepõem, os botões rio e caminho acendem — clique para escolher.',
         'guide.paths.width': 'Ajustar a largura dos rios/caminhos pelos campos de entrada.',
         'guide.paths.dashes': 'Divide cada segmento de hexágono em alternância de traço e espaço (1 = contínuo, 2 = meia linha, 3 = dois traços, etc.).',
         'guide.borders': 'Fronteiras',
@@ -1354,7 +1355,7 @@ const TRANSLATIONS = {
         'tooltip.patternPicker': '패턴 캡처\n클릭: 헥스 셀을 패턴으로 캡처',
         'tooltip.river': '강 도구\n클릭: 경유점 배치/이동\n끝점 더블 클릭: 강 닫기 (분기 없는 경우만)\n지도에서 우클릭: 구간 삭제\n더블 클릭 지우개: 전체 강 삭제',
         'tooltip.road': '길 도구\n클릭: 경유점 배치/이동\n지도에서 우클릭: 구간 삭제\n더블 클릭 지우개: 전체 길 삭제',
-        'tooltip.pathPicker': '강/길 캡처\n클릭: 기존 강/길 선택',
+        'tooltip.pathPicker': '강/길 캡처\n클릭: 기존 강/길 선택\n둘 다 있으면: 강/길 버튼으로 선택',
         'tooltip.pathFinish': '완료\n클릭: 현재 강/길 완성',
         'tooltip.roadFinish': '길 완료',
         'tooltip.riverFinish': '강 완료',
@@ -1436,7 +1437,7 @@ const TRANSLATIONS = {
         'guide.paths': '강 & 길',
         'guide.paths.river': '강의 경유점을 배치합니다. 강의 막다른 끝은 점점 가늘어집니다. 끝점을 더블 클릭하면 강을 닫습니다 (분기 없는 경우만). 마지막 점을 끝에서 두 번째 점으로 드래그하면 해당 끝의 테이퍼를 비활성화합니다.',
         'guide.paths.road': '길의 경유점을 배치합니다.',
-        'guide.paths.pick': '기존 강/길을 선택하여 편집합니다.',
+        'guide.paths.pick': '기존 강/길을 선택하여 편집합니다. 둘 다 겹치면 강/길 버튼이 강조됩니다 — 클릭하여 선택.',
         'guide.paths.width': '입력 필드를 통해 강/길의 너비를 조정합니다.',
         'guide.paths.dashes': '각 헥스 셀 구간을 대시와 간격으로 번갈아 나눕니다 (1 = 연속, 2 = 반 선, 3 = 두 대시 등).',
         'guide.borders': '경계',
@@ -1521,7 +1522,7 @@ const TRANSLATIONS = {
         'tooltip.patternPicker': 'Capturar patrón\nClic: Usar celda como patrón',
         'tooltip.river': 'Herramienta de río\nClic: Colocar/mover puntos de ruta\nDoble clic punto final: Cerrar río (solo sin ramificaciones)\nClic derecho en mapa: Borrar segmento\nDoble clic borrador: Borrar río completo',
         'tooltip.road': 'Herramienta de camino\nClic: Colocar/mover puntos de ruta\nClic derecho en mapa: Borrar segmento\nDoble clic borrador: Borrar camino completo',
-        'tooltip.pathPicker': 'Capturar río/camino\nClic: Seleccionar río/camino existente',
+        'tooltip.pathPicker': 'Capturar río/camino\nClic: Seleccionar río/camino existente\nSi ambos: elige con los botones río/camino',
         'tooltip.pathFinish': 'Finalizar\nClic: Completar río/camino actual',
         'tooltip.roadFinish': 'Finalizar camino',
         'tooltip.riverFinish': 'Finalizar río',
@@ -1603,7 +1604,7 @@ const TRANSLATIONS = {
         'guide.paths': 'Ríos y caminos',
         'guide.paths.river': 'Colocar puntos de ruta para ríos. Los extremos de los ríos se estrechan en callejones sin salida. Doble clic en un punto final cierra el río (solo sin ramificaciones). Arrastrar el último punto sobre el penúltimo desactiva el estrechamiento en ese extremo.',
         'guide.paths.road': 'Colocar puntos de ruta para caminos.',
-        'guide.paths.pick': 'Seleccionar y editar río/camino existente.',
+        'guide.paths.pick': 'Seleccionar y editar río/camino existente. Si ambos coinciden, los botones río y camino se iluminan — haz clic para elegir.',
         'guide.paths.width': 'Ajustar el ancho de ríos/caminos mediante los campos de entrada.',
         'guide.paths.dashes': 'Divide cada segmento de celda en alternancia de trazo y hueco (1 = continuo, 2 = media línea, 3 = dos trazos, etc.).',
         'guide.borders': 'Fronteras',
@@ -1688,7 +1689,7 @@ const TRANSLATIONS = {
         'tooltip.patternPicker': 'Pobierz wzór\nKliknij: Użyj komórki jako wzoru',
         'tooltip.river': 'Narzędzie rzeki\nKliknij: Ustaw/przesuń punkty trasy\nPodwójne kliknięcie punktu końcowego: Zamknij rzekę (tylko bez rozgałęzień)\nPrawy klik na mapie: Usuń odcinek\nPodwójne kliknięcie gumką: Usuń całą rzekę',
         'tooltip.road': 'Narzędzie drogi\nKliknij: Ustaw/przesuń punkty trasy\nPrawy klik na mapie: Usuń odcinek\nPodwójne kliknięcie gumką: Usuń całą drogę',
-        'tooltip.pathPicker': 'Pobierz rzekę/drogę\nKliknij: Wybierz istniejącą rzekę/drogę',
+        'tooltip.pathPicker': 'Pobierz rzekę/drogę\nKliknij: Wybierz istniejącą rzekę/drogę\nJeśli oba: wybierz przyciskiem rzeka/droga',
         'tooltip.pathFinish': 'Zakończ\nKliknij: Zakończ bieżącą rzekę/drogę',
         'tooltip.roadFinish': 'Zakończ drogę',
         'tooltip.riverFinish': 'Zakończ rzekę',
@@ -1770,7 +1771,7 @@ const TRANSLATIONS = {
         'guide.paths': 'Rzeki i drogi',
         'guide.paths.river': 'Ustaw punkty trasy dla rzek. Końce rzek zwężają się w ślepych uliczkach. Podwójne kliknięcie punktu końcowego zamyka rzekę (tylko bez rozgałęzień). Przeciągnij ostatni punkt na przedostatni, aby wyłączyć zwężanie na tym końcu.',
         'guide.paths.road': 'Ustaw punkty trasy dla dróg.',
-        'guide.paths.pick': 'Wybierz i edytuj istniejącą rzekę/drogę.',
+        'guide.paths.pick': 'Wybierz i edytuj istniejącą rzekę/drogę. Jeśli oba się pokrywają, przyciski rzeka i droga podświetlą się — kliknij aby wybrać.',
         'guide.paths.width': 'Dostosuj szerokość rzek/dróg za pomocą pól wartości.',
         'guide.paths.dashes': 'Dzieli każdy segment komórki na naprzemienne kreski i przerwy (1 = ciągła, 2 = pół linii, 3 = dwie kreski itd.).',
         'guide.borders': 'Granice',
@@ -1855,7 +1856,7 @@ const TRANSLATIONS = {
         'tooltip.patternPicker': 'Acquisisci motivo\nClic: Usa cella come motivo',
         'tooltip.river': 'Strumento fiume\nClic: Posiziona/sposta punti di percorso\nDoppio clic punto finale: Chiudi fiume (solo senza diramazioni)\nClic destro sulla mappa: Cancella segmento\nDoppio clic gomma: Cancella intero fiume',
         'tooltip.road': 'Strumento strada\nClic: Posiziona/sposta punti di percorso\nClic destro sulla mappa: Cancella segmento\nDoppio clic gomma: Cancella intera strada',
-        'tooltip.pathPicker': 'Acquisisci fiume/strada\nClic: Seleziona fiume/strada esistente',
+        'tooltip.pathPicker': 'Acquisisci fiume/strada\nClic: Seleziona fiume/strada esistente\nSe entrambi: scegli con i pulsanti fiume/strada',
         'tooltip.pathFinish': 'Completa\nClic: Completa fiume/strada corrente',
         'tooltip.roadFinish': 'Completa strada',
         'tooltip.riverFinish': 'Completa fiume',
@@ -1937,7 +1938,7 @@ const TRANSLATIONS = {
         'guide.paths': 'Fiumi e strade',
         'guide.paths.river': 'Posiziona punti di percorso per fiumi. Le estremità dei fiumi si assottigliano nei vicoli ciechi. Doppio clic su un punto finale chiude il fiume (solo senza diramazioni). Trascinare l\'ultimo punto sul penultimo disattiva l\'assottigliamento a quella estremità.',
         'guide.paths.road': 'Posiziona punti di percorso per strade.',
-        'guide.paths.pick': 'Seleziona e modifica fiume/strada esistente.',
+        'guide.paths.pick': 'Seleziona e modifica fiume/strada esistente. Se entrambi si sovrappongono, i pulsanti fiume e strada si illuminano — clicca per scegliere.',
         'guide.paths.width': 'Regola la larghezza di fiumi/strade tramite i campi di input.',
         'guide.paths.dashes': 'Divide ogni segmento di cella in tratti e spazi alternati (1 = continuo, 2 = mezza linea, 3 = due tratti ecc.).',
         'guide.borders': 'Confini',
@@ -6472,10 +6473,14 @@ class HexCartographerView extends ItemView {
                     const pathSegs = this.calculateHexPath(chain[i], chain[i + 1], pathObj.width);
                     pathSegs.forEach(seg => {
                         const key = this._segKey(seg.from, seg.to);
-                        if (!this.overlapMap[key]) this.overlapMap[key] = { hasRiver: false, hasRoad: false, maxWidth: 0 };
-                        if (type === 'river') this.overlapMap[key].hasRiver = true;
-                        else this.overlapMap[key].hasRoad = true;
-                        this.overlapMap[key].maxWidth = Math.max(this.overlapMap[key].maxWidth, pathObj.width);
+                        if (!this.overlapMap[key]) this.overlapMap[key] = { hasRiver: false, hasRoad: false, maxRiverWidth: 0, maxRoadWidth: 0 };
+                        if (type === 'river') {
+                            this.overlapMap[key].hasRiver = true;
+                            this.overlapMap[key].maxRiverWidth = Math.max(this.overlapMap[key].maxRiverWidth, pathObj.width);
+                        } else {
+                            this.overlapMap[key].hasRoad = true;
+                            this.overlapMap[key].maxRoadWidth = Math.max(this.overlapMap[key].maxRoadWidth, pathObj.width);
+                        }
                     });
                 }
             });
@@ -6581,7 +6586,7 @@ class HexCartographerView extends ItemView {
                         const isCanonical = seg.from.q < seg.to.q || (seg.from.q === seg.to.q && seg.from.r < seg.to.r);
                         const typeSign = pathType === 'river' ? 1 : -1;
                         const dirSign = isCanonical ? 1 : -1;
-                        seg.lateralOffset = (info.maxWidth / 2) * typeSign * dirSign;
+                        seg.lateralOffset = ((info.maxRiverWidth + info.maxRoadWidth) / 4) * PATH_OVERLAP_SPACING * typeSign * dirSign;
                     }
                 });
             }
@@ -6656,7 +6661,9 @@ class HexCartographerView extends ItemView {
                 const t = i / curveSegs;
                 const baseX = p1.x + dx * t;
                 const baseY = p1.y + dy * t;
-                const seedHash = Math.abs(from.q * 7 + from.r * 13 + to.q * 11 + to.r * 17 + i * 3);
+                const sf = (from.q < to.q || (from.q === to.q && from.r < to.r)) ? from : to;
+                const st = sf === from ? to : from;
+                const seedHash = Math.abs(sf.q * 7 + sf.r * 13 + st.q * 11 + st.r * 17 + i * 3);
                 const seed = seedHash % 10;
                 const sine = Math.sin(t * Math.PI * curveSegs / 2);
                 const amplitude = (this.data.gridSize * 0.09) * (0.4 + seed / 15) * sine;
