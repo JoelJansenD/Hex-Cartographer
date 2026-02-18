@@ -4519,10 +4519,17 @@ class HexCartographerView extends ItemView {
                     timestamp: Date.now()
                 };
 
+                if (!this.editMode) {
+                    this.touchState.lastTouchX = touch.clientX;
+                    this.touchState.lastTouchY = touch.clientY;
+                }
+
                 this.touchState.touchStartTimeout = setTimeout(() => {
                     if (this.touchState.pendingTouchStart && !this.touchState.isTwoFingerGesture) {
-                        this.touchState.lastTouchX = this.touchState.pendingTouchStart.touch.clientX;
-                        this.touchState.lastTouchY = this.touchState.pendingTouchStart.touch.clientY;
+                        if (this.touchState.lastTouchX === undefined) {
+                            this.touchState.lastTouchX = this.touchState.pendingTouchStart.touch.clientX;
+                            this.touchState.lastTouchY = this.touchState.pendingTouchStart.touch.clientY;
+                        }
                         const world = this.getWorldCoords(this.touchState.pendingTouchStart.mouseEvent);
                         this.pendingHistory = true;
                         this.isMouseDown = true;
@@ -4668,6 +4675,18 @@ class HexCartographerView extends ItemView {
                 this.render();
             } else if (e.touches.length === 1 && !this.touchState.isTwoFingerGesture) {
                 if (!this.isMouseDown && this.touchState.pendingTouchStart) {
+                    if (!this.editMode) {
+                        e.preventDefault();
+                        this.touchState.hasMovedSinceStart = true;
+                        const touch = e.touches[0];
+                        if (this.touchState.lastTouchX !== undefined) {
+                            this.data.offX += touch.clientX - this.touchState.lastTouchX;
+                            this.data.offY += touch.clientY - this.touchState.lastTouchY;
+                            this.render();
+                        }
+                        this.touchState.lastTouchX = touch.clientX;
+                        this.touchState.lastTouchY = touch.clientY;
+                    }
                     return;
                 }
 
