@@ -2069,13 +2069,14 @@ class HexCartographerPlugin extends Plugin {
                 if (!file || !file.path) return;
                 if (file.path.endsWith('.hexcartographer.md')) {
                     await new Promise(resolve => setTimeout(resolve, 10));
-                    const leaf = this.app.workspace.activeLeaf;
-                    if (!leaf) return;
-                    if (leaf.view.getViewType() === 'markdown') {
-                        await leaf.setViewState({
-                            type: 'hex-cartographer',
-                            state: { file: file.path }
-                        });
+                    const leaves = this.app.workspace.getLeavesOfType('markdown');
+                    for (const leaf of leaves) {
+                        if (leaf.view.file && leaf.view.file.path === file.path) {
+                            await leaf.setViewState({
+                                type: 'hex-cartographer',
+                                state: { file: file.path }
+                            });
+                        }
                     }
                 }
             })
@@ -2089,8 +2090,6 @@ class HexCartographerPlugin extends Plugin {
             if (oldPath.endsWith('.hexcartographer.md') && !file.path.endsWith('.hexcartographer.md')) {
                 const newName = file.name.replace(/\.md$/, '') + '.hexcartographer.md';
                 const newPath = file.parent ? `${file.parent.path}/${newName}` : newName;
-
-
                 await this.app.fileManager.renameFile(file, newPath);
             } else if (file.path.endsWith('.hexcartographer.md')) {
                 this.hideHexExtensionInExplorer();

@@ -1,12 +1,28 @@
-# Hex Cartographer
+# Englisch
+## Hex Cartographer
 
-Hex Cartographer is a hex map editor for Obsidian. Design fantasy worlds with lovingly crafted symbols, terrain types, rivers, paths & borders. Add text annotations & print, or export the results as images. Perfect for RPG game masters, authors, and worldbuilders.
+**Hex Cartographer – Bring Your Fantasy Worlds to Life**
 
+Hex Cartographer is a powerful addon for the Obsidian Markdown Editor that enables you to create detailed hex maps for your fantasy worlds.
+
+Create unique landscapes with colored hex tiles and an extensive collection of lovingly crafted symbols. Let your creativity run free: Define diverse terrains and ground types, connect locations with winding paths or rivers, add labeled regions, and mark borders between kingdoms.
+
+Your finished maps can be easily printed or exported as high-resolution images – perfect for RPG game masters, fantasy authors, and anyone creating their own worlds.
+# Example Map
+
+![[hc-maps-westeros.png]]
+# Symbols Library
+
+![[hc-symbols-library.png]]
+
+# Editor
+
+![[hc-editor-001.png]]
 ## Key Features
 
 #### Visual Map Creation
 - Interactive hexagonal grid editor to create endless maps
-- Draw terrain types, rivers, roads, and paths with easy-to-use tools
+- Draw terrain types, rivers, roads, borders, and paths with easy-to-use tools
 - Place symbols for vegetation, buildings, cities, landmarks, and points of interest
 - Add text annotations directly on the map
 #### Obsidian Integration
