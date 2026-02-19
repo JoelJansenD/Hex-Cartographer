@@ -82,14 +82,14 @@ Your finished maps can be printed or exported as high-resolution PNG/JPEG images
 | Action | Desktop | Mobile |
 |--------|---------|--------|
 | Paint / Place | Left-click | Tap |
-| Erase | Right-click (hold + drag for multiple) | — |
-| Erase connected | Double right-click | — |
+| Erase | Right-click (hold + drag for multiple) | Eraser Icon |
+| Erase all | Double right-click | Eraser Icon, then double tap|
 | Zoom | Mouse wheel | Two-finger pinch |
 | Pan | Middle mouse / Shift+Drag | Two-finger drag |
 | Symbol variant | Right-click tool button | Long-press tool button |
 | Palette color | Right-click palette slot | Long-press palette slot |
-| Undo | Ctrl+Z | — |
-| Redo | Ctrl+Y | — |
+| Undo | Ctrl+Z | Undo Icon |
+| Redo | Ctrl+Y | Redo Icon |
 
 ## Languages
 
