@@ -1,5 +1,6 @@
-# Englisch
 ## Hex Cartographer
+
+[![Buy me a coffee](https://img.shields.io/badge/Buy%20me%20a%20coffee-Ko--fi-4a9eff?logo=ko-fi&logoColor=white)](https://ko-fi.com/christophwerner)
 
 **Hex Cartographer – Bring Your Fantasy Worlds to Life**
 
