@@ -10,14 +10,14 @@ Create unique landscapes with colored hex tiles and an extensive collection of l
 Your finished maps can be easily printed or exported as high-resolution images – perfect for RPG game masters, fantasy authors, and anyone creating their own worlds.
 # Example Map
 
-![[hc-maps-westeros.png]]
+![Example Map](readmedata/hc-maps-westeros.png)
 # Symbols Library
 
-![[hc-symbols-library.png]]
+![Symbols Library](readmedata/hc-symbols-library.png)
 
 # Editor
 
-![[hc-editor-001.png]]
+![Editor](readmedata/hc-editor-001.png)
 ## Key Features
 
 #### Visual Map Creation
