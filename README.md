@@ -1,44 +1,106 @@
-## Hex Cartographer
+# Hex Cartographer
 
 [![Buy me a coffee](https://img.shields.io/badge/Buy%20me%20a%20coffee-Ko--fi-4a9eff?logo=ko-fi&logoColor=white)](https://ko-fi.com/christophwerner)
 
-**Hex Cartographer – Bring Your Fantasy Worlds to Life**
+**Bring Your Fantasy Worlds to Life**
 
-Hex Cartographer is a powerful addon for the Obsidian Markdown Editor that enables you to create detailed hex maps for your fantasy worlds.
+Hex Cartographer is a visual hex map editor for [Obsidian](https://obsidian.md). Create detailed fantasy world maps with colored hex tiles, hand-crafted SVG symbols, rivers, roads, borders, and text annotations — all stored as plain text in your vault.
 
-Create unique landscapes with colored hex tiles and an extensive collection of lovingly crafted symbols. Let your creativity run free: Define diverse terrains and ground types, connect locations with winding paths or rivers, add labeled regions, and mark borders between kingdoms.
+Your finished maps can be printed or exported as high-resolution PNG/JPEG images — perfect for RPG game masters, fantasy authors, and worldbuilders.
 
-Your finished maps can be easily printed or exported as high-resolution images – perfect for RPG game masters, fantasy authors, and anyone creating their own worlds.
-# Example Map
+## Example Map
 
 ![Example Map](readmedata/hc-maps-westeros.png)
-# Symbols Library
+
+## Symbols Library
 
 ![Symbols Library](readmedata/hc-symbols-library.png)
 
-# Editor
+## Editor
 
 ![Editor](readmedata/hc-editor-001.png)
-## Key Features
 
-#### Visual Map Creation
-- Interactive hexagonal grid editor to create endless maps
-- Draw terrain types, rivers, roads, borders, and paths with easy-to-use tools
-- Place symbols for vegetation, buildings, cities, landmarks, and points of interest
-- Add text annotations directly on the map
-#### Obsidian Integration
-- Maps are stored in a markdown-like format - plain text and version control friendly
-- Link map text annotations to your Obsidian notes
-- Seamlessly integrates with your existing vault structure
-- Full mobile support with touch controls for tablets and phones
-#### Customization & Styling
-- Pre-defined color palettes for quick terrain styling
-- Pattern tools for varied visual representation
-- Custom symbol library for personalized maps
-- Export-ready: Print or export to PNG or JPEG files
-#### Perfect For
-- Tabletop RPG campaign maps
-- Novel and story worldbuilding
-- Fantasy cartography projects
-- Board game design
-- Any creative worldbuilding endeavor
+## Features
+
+#### Hex Grid Editor
+- Infinite scrollable hex grid canvas
+- Paint hexes with custom colors and palettes
+- Color eyedropper to pick colors from the map
+- Fill tool for quick area painting
+- Pattern stamp tool to apply repeating tile layouts
+
+#### Symbols & Terrain
+- 25+ hand-crafted SVG symbols across 4 groups: Extras, Vegetation, Mountains, Buildings
+- Symbols inherit the active master color for full flexibility
+- Right-click to switch between symbol variants
+
+#### Rivers, Roads & Borders
+- Draw rivers and roads by placing waypoints
+- Adjustable line width and dash patterns
+- Rivers taper naturally at dead ends
+- Draw border regions with customizable styles
+- Toggle border visibility on/off
+
+#### Text Annotations
+- Place text labels anywhere on the map
+- Customize font size, color, bold, and italic
+- Link text to other notes in your Obsidian vault
+
+#### Export & Print
+- Export maps as high-resolution PNG or JPEG
+- Print directly from the three-dot menu
+- On mobile, exports are saved next to the map file
+
+#### Full Mobile Support
+- Touch-optimized: tap to place, swipe to draw
+- Two-finger pinch to zoom, two-finger drag to pan
+- Long-press on tool buttons for variant selection
+
+## Installation
+
+1. Open Obsidian Settings
+2. Go to **Community Plugins** and disable **Restricted Mode**
+3. Click **Browse** and search for **Hex Cartographer**
+4. Click **Install**, then **Enable**
+
+#### Manual Installation
+1. Download `main.js`, `styles.css`, and `manifest.json` from the [latest release](https://github.com/Taroslord/Hex-Cartographer/releases)
+2. Create a folder `hex-cartographer` in your vault's `.obsidian/plugins/` directory
+3. Place the downloaded files inside
+4. Restart Obsidian and enable the plugin
+
+## Getting Started
+
+1. Right-click a folder in the file explorer and select **Create new Hex Cartographer Map**
+2. Toggle **Edit Mode** to start drawing
+3. Select a color from the palette and click hexes to paint terrain
+4. Switch tool groups in the toolbar to place symbols, draw paths, or add text
+5. Use **Ctrl+Z** / **Ctrl+Y** to undo and redo
+
+## Controls
+
+| Action | Desktop | Mobile |
+|--------|---------|--------|
+| Paint / Place | Left-click | Tap |
+| Erase | Right-click (hold + drag for multiple) | — |
+| Erase connected | Double right-click | — |
+| Zoom | Mouse wheel | Two-finger pinch |
+| Pan | Middle mouse / Shift+Drag | Two-finger drag |
+| Symbol variant | Right-click tool button | Long-press tool button |
+| Palette color | Right-click palette slot | Long-press palette slot |
+| Undo | Ctrl+Z | — |
+| Redo | Ctrl+Y | — |
+
+## Languages
+
+**Hex Cartographer supports 11 languages**. The language is automatically detected from your Obsidian settings.
+
+German, English, Chinese, Russian, Japanese, French, Portuguese, Korean, Spanish, Polish, Italian
+
+## License
+
+This plugin is licensed under the [GNU General Public License v3.0](LICENSE).
+
+---
+
+[![Buy me a coffee](https://img.shields.io/badge/Buy%20me%20a%20coffee-Ko--fi-4a9eff?logo=ko-fi&logoColor=white)](https://ko-fi.com/christophwerner)
