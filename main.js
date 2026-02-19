@@ -2865,8 +2865,30 @@ class HexCartographerView extends ItemView {
                             return true;
                         });
                         for (const h of region.hexes) {
+                            if (!Number.isInteger(h.q)) { console.warn('Rounded border hex q:', h.q); h.q = Math.round(h.q); }
+                            if (!Number.isInteger(h.r)) { console.warn('Rounded border hex r:', h.r); h.r = Math.round(h.r); }
                             for (const key of VIEWPORT_KEYS) {
                                 if (key in h) { console.warn('Stripped', key, 'from border hex:', h); delete h[key]; }
+                            }
+                        }
+                    }
+                }
+            }
+            for (const pathArr of [newData.rivers, newData.roads]) {
+                if (pathArr) {
+                    for (const path of pathArr) {
+                        if (path.waypoints) {
+                            path.waypoints = path.waypoints.filter(w => {
+                                if (w.break) return true;
+                                if (!isFinite(w.q) || !isFinite(w.r) || Math.abs(w.q) > 9999 || Math.abs(w.r) > 9999) {
+                                    console.warn('Removed corrupted waypoint:', w);
+                                    return false;
+                                }
+                                return true;
+                            });
+                            for (const w of path.waypoints) {
+                                if (!Number.isInteger(w.q)) { w.q = Math.round(w.q); }
+                                if (!Number.isInteger(w.r)) { w.r = Math.round(w.r); }
                             }
                         }
                     }
@@ -3052,6 +3074,7 @@ class HexCartographerView extends ItemView {
         this.data.offY = canvasHeight / 2 - centerY * newZoom;
 
         this.render();
+        this.requestSave();
     }
 
     async onOpen() {
@@ -5173,9 +5196,11 @@ class HexCartographerView extends ItemView {
         });
         this.data.borders = this.data.borders.filter(r => r.hexes.length > 0 || r.id === region.id);
 
-        const exists = region.hexes.some(b => b.q === hex.q && b.r === hex.r);
+        const hq = Math.round(hex.q);
+        const hr = Math.round(hex.r);
+        const exists = region.hexes.some(b => b.q === hq && b.r === hr);
         if (!exists) {
-            region.hexes.push({ q: hex.q, r: hex.r });
+            region.hexes.push({ q: hq, r: hr });
         }
 
         const toolbar = this.containerEl.querySelector('.hex-toolbar');
@@ -6847,6 +6872,11 @@ class HexCartographerView extends ItemView {
                     };
                 });
 
+                if (this.canvas && this.data.zoom) {
+                    this.data.centerWorldX = (this.canvas.width / 2 - this.data.offX) / this.data.zoom;
+                    this.data.centerWorldY = (this.canvas.height / 2 - this.data.offY) / this.data.zoom;
+                }
+
                 this.data.settings = {
                     colorPalette: this.colorPalette,
                     colorPalette2: this.colorPalette2,
@@ -6899,7 +6929,10 @@ class HexCartographerView extends ItemView {
 
         if (!this._initialResizeDone) {
             this._initialResizeDone = true;
-            if (!this.data.settings || !this.data.settings.viewportSaved) {
+            if (this.data.settings && this.data.settings.viewportSaved && this.data.centerWorldX !== undefined && this.data.centerWorldY !== undefined) {
+                this.data.offX = this.canvas.width / 2 - this.data.centerWorldX * this.data.zoom;
+                this.data.offY = this.canvas.height / 2 - this.data.centerWorldY * this.data.zoom;
+            } else if (!this.data.settings || !this.data.settings.viewportSaved) {
                 this.data.offX = this.canvas.width / 2;
                 this.data.offY = this.canvas.height / 2;
             }
