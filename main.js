@@ -5092,7 +5092,7 @@ class HexCartographerView extends ItemView {
                         }
                     }
                 }
-                if (this.isMouseDown || this.draggedText) this.requestSave();
+                if (this.isMouseDown || this.draggedText || this.touchState.hasMovedSinceStart) this.requestSave();
 
                 if (this.editMode && this.drawMode === 'eraser' && e.changedTouches.length > 0) {
                     const tapTouch = e.changedTouches[0];
