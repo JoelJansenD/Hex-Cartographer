@@ -2093,6 +2093,18 @@ class HexCartographerPlugin extends Plugin {
             })
         );
 
+        this.registerEvent(
+            this.app.workspace.on('active-leaf-change', async (leaf) => {
+                if (leaf && leaf.view && leaf.view.getViewType() === 'markdown' &&
+                    leaf.view.file && leaf.view.file.path.endsWith('.hexcartographer.md')) {
+                    await leaf.setViewState({
+                        type: 'hex-cartographer',
+                        state: { file: leaf.view.file.path }
+                    });
+                }
+            })
+        );
+
         setTimeout(() => {
             this.hideHexExtensionInExplorer();
         }, 500);
