@@ -2852,14 +2852,52 @@ class HexCartographerView extends ItemView {
                 newData.roads = waypoints.length > 0 ? [{ id: 1, color: DEFAULT_ROAD_COLOR, width: DEFAULT_ROAD_WIDTH, waypoints }] : [];
             }
 
-            // Sanitize: remove viewport properties that may leak into data objects (e.g. from sync conflicts)
+            // Sanitize: remove viewport properties and corrupted coordinates
             const VIEWPORT_KEYS = ['offX', 'offY', 'zoom', 'viewportSaved'];
+
+            // Compute bounding box from hex data for plausibility checks
+            let minQ = Infinity, maxQ = -Infinity, minR = Infinity, maxR = -Infinity;
+            if (newData.hexes) {
+                for (const key of Object.keys(newData.hexes)) {
+                    const h = newData.hexes[key];
+                    if (isFinite(h.q) && isFinite(h.r)) {
+                        if (h.q < minQ) minQ = h.q;
+                        if (h.q > maxQ) maxQ = h.q;
+                        if (h.r < minR) minR = h.r;
+                        if (h.r > maxR) maxR = h.r;
+                    }
+                }
+            }
+            const hasBounds = isFinite(minQ);
+            const margin = 50;
+            const boundsMinQ = hasBounds ? minQ - margin : -9999;
+            const boundsMaxQ = hasBounds ? maxQ + margin : 9999;
+            const boundsMinR = hasBounds ? minR - margin : -9999;
+            const boundsMaxR = hasBounds ? maxR + margin : 9999;
+
+            // Sanitize hex data (was missing before)
+            if (newData.hexes) {
+                for (const key of Object.keys(newData.hexes)) {
+                    const h = newData.hexes[key];
+                    if (!isFinite(h.q) || !isFinite(h.r)) {
+                        console.warn('Removed corrupted hex:', key, h);
+                        delete newData.hexes[key];
+                    }
+                }
+            }
+
             if (newData.borders) {
                 for (const region of newData.borders) {
                     if (region.hexes) {
                         region.hexes = region.hexes.filter(h => {
-                            if (!isFinite(h.q) || !isFinite(h.r) || Math.abs(h.q) > 9999 || Math.abs(h.r) > 9999) {
-                                console.warn('Removed corrupted border hex:', h);
+                            if (!isFinite(h.q) || !isFinite(h.r)) {
+                                console.warn('Removed corrupted border hex (non-finite):', h);
+                                return false;
+                            }
+                            const rq = Math.round(h.q);
+                            const rr = Math.round(h.r);
+                            if (rq < boundsMinQ || rq > boundsMaxQ || rr < boundsMinR || rr > boundsMaxR) {
+                                console.warn('Removed border hex outside map bounds:', h, { boundsMinQ, boundsMaxQ, boundsMinR, boundsMaxR });
                                 return false;
                             }
                             return true;
@@ -2880,8 +2918,14 @@ class HexCartographerView extends ItemView {
                         if (path.waypoints) {
                             path.waypoints = path.waypoints.filter(w => {
                                 if (w.break) return true;
-                                if (!isFinite(w.q) || !isFinite(w.r) || Math.abs(w.q) > 9999 || Math.abs(w.r) > 9999) {
-                                    console.warn('Removed corrupted waypoint:', w);
+                                if (!isFinite(w.q) || !isFinite(w.r)) {
+                                    console.warn('Removed corrupted waypoint (non-finite):', w);
+                                    return false;
+                                }
+                                const rq = Math.round(w.q);
+                                const rr = Math.round(w.r);
+                                if (rq < boundsMinQ || rq > boundsMaxQ || rr < boundsMinR || rr > boundsMaxR) {
+                                    console.warn('Removed waypoint outside map bounds:', w);
                                     return false;
                                 }
                                 return true;
@@ -4569,6 +4613,7 @@ class HexCartographerView extends ItemView {
                 e.preventDefault();
                 this.touchState.isTwoFingerGesture = true;
                 this.touchState.hasMovedSinceStart = false;
+                this.touchState.pendingTouchStart = null;
 
                 if (this.isMouseDown && !this.touchState.hasMovedSinceStart) {
                     this.isMouseDown = false;
@@ -5140,6 +5185,10 @@ class HexCartographerView extends ItemView {
     processInput(e, isInitial) {
         this.pushHistoryIfNeeded();
         const world = this.getWorldCoords(e);
+        if (!isFinite(world.x) || !isFinite(world.y) || Math.abs(world.x) > 1e6 || Math.abs(world.y) > 1e6) {
+            console.warn('Rejected processInput: implausible world coords', world);
+            return;
+        }
         const hex = this.pixelToHex(world.x, world.y);
 
         if (this.currentToolGroup === 'text' && this.drawMode === 'none' && isInitial) {
@@ -5181,6 +5230,15 @@ class HexCartographerView extends ItemView {
     addBorderHex(hex) {
         if (!this.data.borders) this.data.borders = [];
 
+        const hq = Math.round(hex.q);
+        const hr = Math.round(hex.r);
+
+        const bounds = this.getHexBounds();
+        if (bounds && (hq < bounds.minQ - 50 || hq > bounds.maxQ + 50 || hr < bounds.minR - 50 || hr > bounds.maxR + 50)) {
+            console.warn('Rejected border hex: outside plausible range', { q: hq, r: hr, bounds });
+            return;
+        }
+
         let region = this.data.borders.find(r => r.id === this.borderSettings.activeRegionId);
         if (!region) {
             const maxId = this.data.borders.reduce((max, r) => Math.max(max, r.id || 0), 0);
@@ -5195,9 +5253,6 @@ class HexCartographerView extends ItemView {
             }
         });
         this.data.borders = this.data.borders.filter(r => r.hexes.length > 0 || r.id === region.id);
-
-        const hq = Math.round(hex.q);
-        const hr = Math.round(hex.r);
         const exists = region.hexes.some(b => b.q === hq && b.r === hr);
         if (!exists) {
             region.hexes.push({ q: hq, r: hr });
@@ -6952,6 +7007,20 @@ class HexCartographerView extends ItemView {
             x: (e.clientX - r.left - this.data.offX) / this.data.zoom,
             y: (e.clientY - r.top - this.data.offY) / this.data.zoom
         };
+    }
+
+    getHexBounds() {
+        const keys = Object.keys(this.data.hexes || {});
+        if (keys.length === 0) return null;
+        let minQ = Infinity, maxQ = -Infinity, minR = Infinity, maxR = -Infinity;
+        for (const key of keys) {
+            const h = this.data.hexes[key];
+            if (h.q < minQ) minQ = h.q;
+            if (h.q > maxQ) maxQ = h.q;
+            if (h.r < minR) minR = h.r;
+            if (h.r > maxR) maxR = h.r;
+        }
+        return { minQ, maxQ, minR, maxR };
     }
 
     hexToPixel(h) {
