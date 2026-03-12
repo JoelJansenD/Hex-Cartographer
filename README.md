@@ -1,6 +1,6 @@
 # Hex Cartographer
 
-[![Buy me a coffee](https://img.shields.io/badge/Buy%20me%20a%20coffee-Ko--fi-4a9eff?logo=ko-fi&logoColor=white)](https://ko-fi.com/christophwerner)
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/christophwerner)
 
 **Bring Your Fantasy Worlds to Life**
 
@@ -103,4 +103,4 @@ This plugin is licensed under the [GNU General Public License v3.0](LICENSE).
 
 ---
 
-[![Buy me a coffee](https://img.shields.io/badge/Buy%20me%20a%20coffee-Ko--fi-4a9eff?logo=ko-fi&logoColor=white)](https://ko-fi.com/christophwerner)
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/christophwerner)
