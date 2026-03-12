@@ -127,6 +127,7 @@ const TRANSLATIONS = {
 
         // Tooltips — Hauptwerkzeuge
         'tooltip.editMode': 'Edit-Modus\nKlick: Werkzeuge ein-/ausblenden',
+        'tooltip.hexOrientation': 'Waben Ausrichtung ändern\nKlick: Waben um 90° drehen',
         'tooltip.colorPicker': 'Aktuelle Farbe\nKlick: Farbwähler öffnen',
         'tooltip.hexColor': 'Waben\nKlick: Waben einfärben\nRechtsklick in Karte: Löschen',
         'tooltip.fill': 'Fülleimer\nKlick: Zusammenhängende Fläche füllen\nErneut klicken: Fülleimer ausschalten',
@@ -210,6 +211,8 @@ const TRANSLATIONS = {
         'settings.exportWidthDesc': 'Standardbreite in Pixeln beim Exportieren als Bild.',
         'settings.showCrosshair': 'Fadenkreuz anzeigen',
         'settings.showCrosshairDesc': 'Zeigt ein Fadenkreuz im Zentrum der Karte an.',
+        'settings.hideHexBorders': 'Waben-Rahmen ausblenden',
+        'settings.hideHexBordersDesc': 'Blendet die grauen Rahmenlinien zwischen den Waben aus.',
         'settings.donateText': 'Spendiere mir einen Kaffee. Ich freue mich darüber, Euch den Hex Cartographer kostenlos zur Verfügung zu stellen. Allerdings bedurfte die Entwicklung lange Zeit. Wenn mir etwas neues einfällt, wird es für Euch Updates geben. Ihr würdet mir eine große Freude bereiten, wenn ihr mir für diese Arbeit eine kleine Spende hinterlasst.',
         'settings.donateButton': 'Spende einen Kaffee',
 
@@ -325,6 +328,7 @@ const TRANSLATIONS = {
 
         // Tooltips — Main tools
         'tooltip.editMode': 'Edit Mode\nClick: Show/hide tools',
+        'tooltip.hexOrientation': 'Hex Orientation\nClick: Rotate hexes 90°',
         'tooltip.colorPicker': 'Current Color\nClick: Pick any color from the map',
         'tooltip.hexColor': 'Hexes\nClick: Color hexes\nRight-click on map: Delete',
         'tooltip.fill': 'Fill Bucket\nClick: Fill connected area\nClick again: Turn off fill',
@@ -408,6 +412,8 @@ const TRANSLATIONS = {
         'settings.exportWidthDesc': 'Default width in pixels when exporting as image.',
         'settings.showCrosshair': 'Show crosshair',
         'settings.showCrosshairDesc': 'Displays a crosshair at the center of the map.',
+        'settings.hideHexBorders': 'Hide hex borders',
+        'settings.hideHexBordersDesc': 'Hides the gray border lines between hexes.',
         'settings.donateText': 'Buy me a coffee. I am happy to provide Hex Cartographer to you for free. However, the development took a long time. When I come up with something new, there will be updates. It would make me very happy if you leave a small donation for this work.',
         'settings.donateButton': 'Buy me a coffee',
 
@@ -515,6 +521,7 @@ const TRANSLATIONS = {
         'variant.cave': '洞穴',
         'variant.oasis': '绿洲',
         'tooltip.editMode': '编辑模式\n点击：显示/隐藏工具',
+        'tooltip.hexOrientation': '六边形方向\n点击：旋转六边形90°',
         'tooltip.colorPicker': '当前颜色\n点击：打开颜色选择器',
         'tooltip.hexColor': '六角格\n点击：为六角格着色\n右键地图：删除',
         'tooltip.fill': '填充工具\n点击：填充相连区域\n再次点击：关闭填充工具',
@@ -584,6 +591,8 @@ const TRANSLATIONS = {
         'settings.exportWidthDesc': '导出为图片时的默认宽度（像素）。',
         'settings.showCrosshair': '显示十字准线',
         'settings.showCrosshairDesc': '在地图中心显示十字准线。',
+        'settings.hideHexBorders': '隐藏六边形边框',
+        'settings.hideHexBordersDesc': '隐藏六边形之间的灰色边框线。',
         'settings.donateText': '请我喝杯咖啡。我很高兴能为大家免费提供 Hex Cartographer。然而，开发花费了很长时间。如果我有了新的想法，会为大家提供更新。如果您能为这项工作留下一点捐赠，我会非常高兴。',
         'settings.donateButton': '请我喝杯咖啡',
         'guide.title': '快速指南',
@@ -685,6 +694,7 @@ const TRANSLATIONS = {
         'variant.cave': 'Пещера',
         'variant.oasis': 'Оазис',
         'tooltip.editMode': 'Режим редактирования\nКлик: Показать/скрыть инструменты',
+        'tooltip.hexOrientation': 'Ориентация шестиугольников\nКлик: Повернуть на 90°',
         'tooltip.colorPicker': 'Текущий цвет\nКлик: Открыть выбор цвета',
         'tooltip.hexColor': 'Соты\nКлик: Окрасить соты\nПравый клик на карте: Удалить',
         'tooltip.fill': 'Заливка\nКлик: Залить связанную область\nПовторный клик: Отключить заливку',
@@ -754,6 +764,8 @@ const TRANSLATIONS = {
         'settings.exportWidthDesc': 'Стандартная ширина в пикселях при экспорте в изображение.',
         'settings.showCrosshair': 'Показать перекрестие',
         'settings.showCrosshairDesc': 'Отображает перекрестие в центре карты.',
+        'settings.hideHexBorders': 'Скрыть границы шестиугольников',
+        'settings.hideHexBordersDesc': 'Скрывает серые линии границ между шестиугольниками.',
         'settings.donateText': 'Угостите меня кофе. Я рад предоставлять Hex Cartographer бесплатно для всех. Тем не менее, разработка заняла много времени. Если мне придут новые идеи, вас ждут обновления. Я буду очень рад, если вы оставите небольшое пожертвование за эту работу.',
         'settings.donateButton': 'Угостить кофе',
         'guide.title': 'Краткое руководство',
@@ -855,6 +867,7 @@ const TRANSLATIONS = {
         'variant.cave': '洞窟',
         'variant.oasis': 'オアシス',
         'tooltip.editMode': '編集モード\nクリック：ツールの表示/非表示',
+        'tooltip.hexOrientation': '六角形の向き\nクリック：六角形を90°回転',
         'tooltip.colorPicker': '現在の色\nクリック：カラーピッカーを開く',
         'tooltip.hexColor': 'ヘックス\nクリック：ヘックスを着色\nマップ上で右クリック：削除',
         'tooltip.fill': '塗りつぶし\nクリック：つながった領域を塗りつぶす\n再度クリック：塗りつぶしをオフ',
@@ -924,6 +937,8 @@ const TRANSLATIONS = {
         'settings.exportWidthDesc': '画像としてエクスポートする際のデフォルト幅（ピクセル）。',
         'settings.showCrosshair': '十字線を表示',
         'settings.showCrosshairDesc': 'マップの中心に十字線を表示します。',
+        'settings.hideHexBorders': '六角形の枠線を非表示',
+        'settings.hideHexBordersDesc': '六角形間のグレーの枠線を非表示にします。',
         'settings.donateText': 'コーヒーをおごってください。Hex Cartographer を無料で提供できることを嬉しく思っています。しかし、開発には長い時間がかかりました。新しいアイデアが浮かべば、アップデートを提供します。この作業に対して少額の寄付をいただけると大変嬉しいです。',
         'settings.donateButton': 'コーヒーをおごる',
         'guide.title': 'クイックガイド',
@@ -1025,6 +1040,7 @@ const TRANSLATIONS = {
         'variant.cave': 'Grotte',
         'variant.oasis': 'Oasis',
         'tooltip.editMode': 'Mode édition\nClic : Afficher/masquer les outils',
+        'tooltip.hexOrientation': 'Orientation des hexagones\nClic : Rotation de 90°',
         'tooltip.colorPicker': 'Couleur actuelle\nClic : Ouvrir le sélecteur de couleur',
         'tooltip.hexColor': 'Hexagones\nClic : Colorier les hexagones\nClic droit sur la carte : Supprimer',
         'tooltip.fill': 'Pot de peinture\nClic : Remplir une zone contiguë\nCliquer à nouveau : Désactiver le pot de peinture',
@@ -1094,6 +1110,8 @@ const TRANSLATIONS = {
         'settings.exportWidthDesc': 'Largeur par défaut en pixels lors de l\'export en image.',
         'settings.showCrosshair': 'Afficher le réticule',
         'settings.showCrosshairDesc': 'Affiche un réticule au centre de la carte.',
+        'settings.hideHexBorders': 'Masquer les bordures des hexagones',
+        'settings.hideHexBordersDesc': 'Masque les lignes grises entre les hexagones.',
         'settings.donateText': 'Offrez-moi un café. Je suis heureux de mettre Hex Cartographer gratuitement à votre disposition. Cependant, le développement a nécessité beaucoup de temps. Si de nouvelles idées me viennent, vous recevrez des mises à jour. Vous me feriez très plaisir en laissant un petit don pour ce travail.',
         'settings.donateButton': 'Offrir un café',
         'guide.title': 'Guide rapide',
@@ -1195,6 +1213,7 @@ const TRANSLATIONS = {
         'variant.cave': 'Caverna',
         'variant.oasis': 'Oásis',
         'tooltip.editMode': 'Modo de edição\nClique: Mostrar/ocultar ferramentas',
+        'tooltip.hexOrientation': 'Orientação dos hexágonos\nClique: Girar hexágonos 90°',
         'tooltip.colorPicker': 'Cor atual\nClique: Abrir seletor de cor',
         'tooltip.hexColor': 'Hexágonos\nClique: Colorir hexágonos\nClique direito no mapa: Excluir',
         'tooltip.fill': 'Balde de tinta\nClique: Preencher área contígua\nClicar novamente: Desativar balde de tinta',
@@ -1264,6 +1283,8 @@ const TRANSLATIONS = {
         'settings.exportWidthDesc': 'Largura padrão em pixels ao exportar como imagem.',
         'settings.showCrosshair': 'Mostrar retículo',
         'settings.showCrosshairDesc': 'Exibe um retículo no centro do mapa.',
+        'settings.hideHexBorders': 'Ocultar bordas dos hexágonos',
+        'settings.hideHexBordersDesc': 'Oculta as linhas de borda cinzas entre os hexágonos.',
         'settings.donateText': 'Me pague um café. Fico feliz em disponibilizar o Hex Cartographer gratuitamente para vocês. No entanto, o desenvolvimento levou muito tempo. Se eu tiver novas ideias, haverá atualizações para vocês. Ficaria muito feliz se deixassem uma pequena doação por este trabalho.',
         'settings.donateButton': 'Pagar um café',
         'guide.title': 'Guia rápido',
@@ -1365,6 +1386,7 @@ const TRANSLATIONS = {
         'variant.cave': '동굴',
         'variant.oasis': '오아시스',
         'tooltip.editMode': '편집 모드\n클릭: 도구 표시/숨기기',
+        'tooltip.hexOrientation': '육각형 방향\n클릭: 육각형 90° 회전',
         'tooltip.colorPicker': '현재 색상\n클릭: 색상 선택기 열기',
         'tooltip.hexColor': '헥스 셀\n클릭: 헥스 셀 색칠하기\n지도에서 우클릭: 삭제',
         'tooltip.fill': '채우기 도구\n클릭: 인접한 영역 채우기\n다시 클릭: 채우기 도구 끄기',
@@ -1434,6 +1456,8 @@ const TRANSLATIONS = {
         'settings.exportWidthDesc': '이미지로 내보낼 때 기본 너비(픽셀)입니다.',
         'settings.showCrosshair': '십자선 표시',
         'settings.showCrosshairDesc': '지도 중심에 십자선을 표시합니다.',
+        'settings.hideHexBorders': '육각형 테두리 숨기기',
+        'settings.hideHexBordersDesc': '육각형 사이의 회색 테두리 선을 숨깁니다.',
         'settings.donateText': '커피 한 잔 사주세요. Hex Cartographer를 무료로 제공하게 되어 기쁩니다. 하지만 개발에 오랜 시간이 걸렸습니다. 새로운 아이디어가 떠오르면 업데이트를 제공하겠습니다. 이 작업에 대해 작은 기부를 남겨주시면 큰 기쁨이 되겠습니다.',
         'settings.donateButton': '커피 한 잔 기부하기',
         'guide.title': '빠른 가이드',
@@ -1535,6 +1559,7 @@ const TRANSLATIONS = {
         'variant.cave': 'Cueva',
         'variant.oasis': 'Oasis',
         'tooltip.editMode': 'Modo edición\nClic: Mostrar/ocultar herramientas',
+        'tooltip.hexOrientation': 'Orientación de hexágonos\nClic: Rotar hexágonos 90°',
         'tooltip.colorPicker': 'Color actual\nClic: Abrir selector de color',
         'tooltip.hexColor': 'Celdas\nClic: Colorear celdas\nClic derecho en mapa: Eliminar',
         'tooltip.fill': 'Cubo de relleno\nClic: Rellenar área contigua\nClic de nuevo: Desactivar cubo de relleno',
@@ -1604,6 +1629,8 @@ const TRANSLATIONS = {
         'settings.exportWidthDesc': 'Ancho predeterminado en píxeles al exportar como imagen.',
         'settings.showCrosshair': 'Mostrar retícula',
         'settings.showCrosshairDesc': 'Muestra una retícula en el centro del mapa.',
+        'settings.hideHexBorders': 'Ocultar bordes de hexágonos',
+        'settings.hideHexBordersDesc': 'Oculta las líneas grises entre los hexágonos.',
         'settings.donateText': 'Invítame a un café. Me alegra poner Hex Cartographer a vuestra disposición de forma gratuita. Sin embargo, el desarrollo requirió mucho tiempo. Si se me ocurre algo nuevo, habrá actualizaciones para vosotros. Me haríais muy feliz si dejáis una pequeña donación por este trabajo.',
         'settings.donateButton': 'Dona un café',
         'guide.title': 'Guía rápida',
@@ -1705,6 +1732,7 @@ const TRANSLATIONS = {
         'variant.cave': 'Jaskinia',
         'variant.oasis': 'Oaza',
         'tooltip.editMode': 'Tryb edycji\nKliknij: Pokaż/ukryj narzędzia',
+        'tooltip.hexOrientation': 'Orientacja sześciokątów\nKliknij: Obróć sześciokąty o 90°',
         'tooltip.colorPicker': 'Aktualny kolor\nKliknij: Otwórz wybór koloru',
         'tooltip.hexColor': 'Komórki\nKliknij: Pokoloruj komórki\nPrawy klik na mapie: Usuń',
         'tooltip.fill': 'Wiadro wypełnienia\nKliknij: Wypełnij przyległy obszar\nKliknij ponownie: Wyłącz wiadro wypełnienia',
@@ -1774,6 +1802,8 @@ const TRANSLATIONS = {
         'settings.exportWidthDesc': 'Domyślna szerokość w pikselach przy eksporcie jako obraz.',
         'settings.showCrosshair': 'Pokaż celownik',
         'settings.showCrosshairDesc': 'Wyświetla celownik w centrum mapy.',
+        'settings.hideHexBorders': 'Ukryj obramowania sześciokątów',
+        'settings.hideHexBordersDesc': 'Ukrywa szare linie obramowań między sześciokątami.',
         'settings.donateText': 'Postaw mi kawę. Cieszę się, że mogę udostępnić Wam Hex Cartographer za darmo. Jednak jego rozwój wymagał długiego czasu. Jeśli wpadnę na nowy pomysł, będą dla Was aktualizacje. Sprawiłoby mi ogromną radość, gdybyście zostawili drobną darowiznę za tę pracę.',
         'settings.donateButton': 'Postaw kawę',
         'guide.title': 'Skrócona instrukcja',
@@ -1875,6 +1905,7 @@ const TRANSLATIONS = {
         'variant.cave': 'Grotta',
         'variant.oasis': 'Oasi',
         'tooltip.editMode': 'Modalità modifica\nClic: Mostra/nascondi strumenti',
+        'tooltip.hexOrientation': 'Orientamento esagoni\nClic: Ruota esagoni di 90°',
         'tooltip.colorPicker': 'Colore attuale\nClic: Apri selettore colore',
         'tooltip.hexColor': 'Celle\nClic: Colora celle\nClic destro sulla mappa: Elimina',
         'tooltip.fill': 'Secchio di riempimento\nClic: Riempi area contigua\nClic di nuovo: Disattiva secchio di riempimento',
@@ -1944,6 +1975,8 @@ const TRANSLATIONS = {
         'settings.exportWidthDesc': 'Larghezza predefinita in pixel durante l\'esportazione come immagine.',
         'settings.showCrosshair': 'Mostra mirino',
         'settings.showCrosshairDesc': 'Mostra un mirino al centro della mappa.',
+        'settings.hideHexBorders': 'Nascondi bordi esagoni',
+        'settings.hideHexBordersDesc': 'Nasconde le linee grigie tra gli esagoni.',
         'settings.donateText': 'Offrimi un caffè. Sono felice di mettere Hex Cartographer a vostra disposizione gratuitamente. Tuttavia, lo sviluppo ha richiesto molto tempo. Se mi viene in mente qualcosa di nuovo, ci saranno aggiornamenti per voi. Mi farebbe molto piacere se lasciaste una piccola donazione per questo lavoro.',
         'settings.donateButton': 'Offri un caffè',
         'guide.title': 'Guida rapida',
@@ -2062,7 +2095,7 @@ function hsbToRgb(h, s, b) {
 function hsbToHex(h, s, b) { const rgb = hsbToRgb(h, s, b); return rgbToHex(rgb.r, rgb.g, rgb.b); }
 function hexToHsb(hex) { const rgb = hexToRgb(hex); return rgbToHsb(rgb.r, rgb.g, rgb.b); }
 
-const DEFAULT_SETTINGS = { exportWidth: 1024, showCrosshair: true };
+const DEFAULT_SETTINGS = { exportWidth: 1024, showCrosshair: true, hideHexBorders: false };
 
 // === Hauptklasse des Plugins ===
 class HexCartographerPlugin extends Plugin {
@@ -2406,6 +2439,7 @@ class HexCartographerView extends ItemView {
         this.initToolConfigs();
 
         this.editMode = false; // Edit-Modus: true = Werkzeuge sichtbar, false = nur Navigation
+        this.hexOrientation = false; // false = Spitze oben (Standard), true = Flache Seite oben (90° gedreht)
         this.drawMode = 'pen'; // pen, fill, eraser
         this.currentToolGroup = null; // grass, tree, mountain, building, oder null für Farbpalette
 
@@ -2748,6 +2782,7 @@ class HexCartographerView extends ItemView {
                     this.activeColorSlot = newData.settings.activeColorSlot;
                 }
                 this.editMode = newData.settings.editMode === true;
+                if (newData.settings.hexOrientation !== undefined) this.hexOrientation = newData.settings.hexOrientation === true;
                 const savedToolGroup = newData.settings.currentToolGroup || null;
                 const savedDrawMode = newData.settings.drawMode || 'pen';
                 if (this.editMode) {
@@ -3360,6 +3395,22 @@ class HexCartographerView extends ItemView {
 
         const fitBtn = this.createToolButton(toolbar, { icon: 'maximize-2', title: t('tooltip.fit') });
         fitBtn.onclick = () => this.fitMapToView();
+
+        const hexOrientationBtn = this.createToolButton(toolbar, { icon: 'rotate-cw', title: t('tooltip.hexOrientation') });
+        this.hexOrientationBtn = hexOrientationBtn;
+        hexOrientationBtn.classList.toggle('active', this.hexOrientation);
+        hexOrientationBtn.style.background = this.hexOrientation ? PICKER_ACTIVE_BG : BUTTON_BG_DEFAULT;
+        hexOrientationBtn.style.border = this.hexOrientation ? ACTIVE_BORDER : '';
+        hexOrientationBtn.style.boxShadow = this.hexOrientation ? ACTIVE_BOX_SHADOW : '';
+        hexOrientationBtn.onclick = () => {
+            this.hexOrientation = !this.hexOrientation;
+            hexOrientationBtn.classList.toggle('active', this.hexOrientation);
+            hexOrientationBtn.style.background = this.hexOrientation ? PICKER_ACTIVE_BG : BUTTON_BG_DEFAULT;
+            hexOrientationBtn.style.border = this.hexOrientation ? ACTIVE_BORDER : '';
+            hexOrientationBtn.style.boxShadow = this.hexOrientation ? ACTIVE_BOX_SHADOW : '';
+            this.render();
+            this.requestSave();
+        };
 
         const settingsBtn = this.createToolButton(toolbar, { icon: 'settings', title: t('tooltip.settings') });
         settingsBtn.onclick = () => {
@@ -6044,7 +6095,7 @@ class HexCartographerView extends ItemView {
 
             this.ctx.beginPath();
             for (let i = 0; i < 6; i++) {
-                const a = (Math.PI / 180) * (60 * i - 30);
+                const a = (Math.PI / 180) * (60 * i + (this.hexOrientation ? 0 : -30));
                 this.ctx.lineTo(pos.x + s * Math.cos(a), pos.y + s * Math.sin(a));
             }
             this.ctx.closePath();
@@ -6363,30 +6414,41 @@ class HexCartographerView extends ItemView {
 
     drawHexBase(h) {
         const pos = this.hexToPixel(h), s = this.data.gridSize;
-        this.ctx.beginPath();
-        for (let i=0; i<6; i++) {
-            const a = (Math.PI/180) * (60*i - 30);
-            this.ctx.lineTo(pos.x + s*Math.cos(a), pos.y + s*Math.sin(a));
-        }
-        this.ctx.closePath();
+        const angleOffset = this.hexOrientation ? 0 : -30;
 
         if (h.color) {
+            const sf = s + 0.5; // Kleiner Überstand, damit keine Lücken zwischen benachbarten Hexen entstehen
+            this.ctx.beginPath();
+            for (let i=0; i<6; i++) {
+                const a = (Math.PI/180) * (60*i + angleOffset);
+                this.ctx.lineTo(pos.x + sf*Math.cos(a), pos.y + sf*Math.sin(a));
+            }
+            this.ctx.closePath();
             this.ctx.fillStyle = h.color;
             this.ctx.fill();
         }
 
-        this.ctx.strokeStyle = 'rgba(128,128,128,0.3)';
-        this.ctx.lineWidth = 1;
-        this.ctx.stroke();
+        if (!this.plugin.settings.hideHexBorders) {
+            this.ctx.beginPath();
+            for (let i=0; i<6; i++) {
+                const a = (Math.PI/180) * (60*i + angleOffset);
+                this.ctx.lineTo(pos.x + s*Math.cos(a), pos.y + s*Math.sin(a));
+            }
+            this.ctx.closePath();
+            this.ctx.strokeStyle = 'rgba(128,128,128,0.3)';
+            this.ctx.lineWidth = 1;
+            this.ctx.stroke();
+        }
     }
 
     drawBorders() {
         if (!this.data.borders || this.data.borders.length === 0 || !this.borderSettings.visible) return;
 
         const s = this.data.gridSize;
+        const sf = s + 0.5;
         const lineWidth = 3;
-        const inset = lineWidth / 2 + 1;
-        const factor = (s - inset) / s;
+        const inset = lineWidth / 2 + 0.575; // 1px Abstand zu Hex-Kante + Hälfte der Linienbreite
+        const factor = (sf - inset) / sf;
 
         const neighbors = [
             { dq: 1, dr: 0 },   // Edge 0: Ost
@@ -6409,7 +6471,7 @@ class HexCartographerView extends ItemView {
 
             const dashes = region.dashes || 1;
             if (dashes > 1) {
-                const edgeLen = s * factor;
+                const edgeLen = sf * factor;
                 const unitLen = edgeLen / dashes;
                 this.ctx.setLineDash([unitLen, unitLen]);
                 this.ctx.lineDashOffset = (dashes % 2 === 0) ? unitLen / 2 : 0;
@@ -6420,10 +6482,10 @@ class HexCartographerView extends ItemView {
 
                 const corners = [];
                 for (let i = 0; i < 6; i++) {
-                    const a = (Math.PI / 180) * (60 * i - 30);
+                    const a = (Math.PI / 180) * (60 * i + (this.hexOrientation ? 0 : -30));
                     corners.push({
-                        x: pos.x + s * factor * Math.cos(a),
-                        y: pos.y + s * factor * Math.sin(a)
+                        x: pos.x + sf * factor * Math.cos(a),
+                        y: pos.y + sf * factor * Math.sin(a)
                     });
                 }
 
@@ -6453,12 +6515,12 @@ class HexCartographerView extends ItemView {
                 this.ctx.lineWidth = this.borderHighlightWidth;
                 this.ctx.setLineDash([4, 4]);
                 const pos = this.hexToPixel(ph);
-                const hlInset = (s - this.borderHighlightWidth / 2 - 1) / s;
+                const hlInset = (sf - this.borderHighlightWidth / 2 - 1) / sf;
                 this.ctx.beginPath();
                 for (let i = 0; i < 6; i++) {
-                    const a = (Math.PI / 180) * (60 * i - 30);
-                    const cx = pos.x + s * hlInset * Math.cos(a);
-                    const cy = pos.y + s * hlInset * Math.sin(a);
+                    const a = (Math.PI / 180) * (60 * i + (this.hexOrientation ? 0 : -30));
+                    const cx = pos.x + sf * hlInset * Math.cos(a);
+                    const cy = pos.y + sf * hlInset * Math.sin(a);
                     if (i === 0) this.ctx.moveTo(cx, cy);
                     else this.ctx.lineTo(cx, cy);
                 }
@@ -6965,7 +7027,8 @@ class HexCartographerView extends ItemView {
                     lastUsedTextShadow: this.lastUsedTextShadow,
                     lastUsedTextShadowDistance: this.lastUsedTextShadowDistance,
                     lastUsedTextShadowOpatown: this.lastUsedTextShadowOpatown,
-                    viewportSaved: true
+                    viewportSaved: true,
+                    hexOrientation: this.hexOrientation
                 };
 
                 const now = new Date().toISOString().split('T')[0];
@@ -7037,6 +7100,12 @@ class HexCartographerView extends ItemView {
 
     hexToPixel(h) {
         const s = this.data.gridSize;
+        if (this.hexOrientation) {
+            return {
+                x: s * (3/2 * h.q),
+                y: s * (Math.sqrt(3)/2 * h.q + Math.sqrt(3) * h.r)
+            };
+        }
         return {
             x: s * (Math.sqrt(3) * h.q + Math.sqrt(3)/2 * h.r),
             y: s * (3/2 * h.r)
@@ -7045,8 +7114,14 @@ class HexCartographerView extends ItemView {
 
     pixelToHex(x, y) {
         const s = this.data.gridSize;
-        const q = (Math.sqrt(3)/3 * x - 1/3 * y) / s;
-        const r = (2/3 * y) / s;
+        let q, r;
+        if (this.hexOrientation) {
+            q = (2/3 * x) / s;
+            r = (-1/3 * x + Math.sqrt(3)/3 * y) / s;
+        } else {
+            q = (Math.sqrt(3)/3 * x - 1/3 * y) / s;
+            r = (2/3 * y) / s;
+        }
 
         const cubeX = q;
         const cubeZ = r;
@@ -7637,6 +7712,20 @@ class HexCartographerSettingTab extends PluginSettingTab {
                 toggle.setValue(this.plugin.settings.showCrosshair)
                     .onChange(async (value) => {
                         this.plugin.settings.showCrosshair = value;
+                        await this.plugin.saveSettings();
+                        this.app.workspace.iterateAllLeaves(leaf => {
+                            if (leaf.view instanceof HexCartographerView) leaf.view.render();
+                        });
+                    });
+            });
+
+        new Setting(containerEl)
+            .setName(t('settings.hideHexBorders'))
+            .setDesc(t('settings.hideHexBordersDesc'))
+            .addToggle(toggle => {
+                toggle.setValue(this.plugin.settings.hideHexBorders)
+                    .onChange(async (value) => {
+                        this.plugin.settings.hideHexBorders = value;
                         await this.plugin.saveSettings();
                         this.app.workspace.iterateAllLeaves(leaf => {
                             if (leaf.view instanceof HexCartographerView) leaf.view.render();
