@@ -6,31 +6,20 @@ on:
       - "*"
 
 jobs:
-  build:
+  release:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      id-token: write
-      attestations: write
+      id-token: write      # Erforderlich für Attestation
+      attestations: write  # Erforderlich für Attestation
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Use Node.js 24
-        uses: actions/setup-node@v4
-        with:
-          node-version: "24"
-
-      - name: Install & Build
-        run: |
-          npm install
-          npm run build
-
       - name: Generate Attestation
-        uses: actions/attest-build-provenance@v1
+        uses: actions/attest-build-provenance@v2
         with:
-          # Nur EINE Datei ohne Zeilenumbruch angeben
           subject-path: "main.js"
 
       - name: Create Release
