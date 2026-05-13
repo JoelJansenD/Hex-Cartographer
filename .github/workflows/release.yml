@@ -10,8 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      id-token: write      # Erforderlich für Attestation
-      attestations: write  # Erforderlich für Attestation
+      id-token: write
+      attestations: write
 
     steps:
       - name: Checkout repository
@@ -20,7 +20,10 @@ jobs:
       - name: Generate Attestation
         uses: actions/attest-build-provenance@v2
         with:
-          subject-path: "main.js"
+          subject-path: |
+            main.js
+            styles.css
+            manifest.json
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
