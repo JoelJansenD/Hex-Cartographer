@@ -1,0 +1,43 @@
+name: Release Hex Cartographer Plugin
+
+on:
+  push:
+    tags:
+      - "*" # Startet, sobald du einen Versions-Tag pushst
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write      # Erforderlich für Attestation
+      attestations: write  # Erforderlich für Attestation
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 24
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          cache: 'npm' # Beschleunigt den Build bei mehrmaliger Nutzung
+
+      - name: Install & Build
+        run: |
+          npm install
+          npm run build
+
+      - name: Generate Attestation
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-path: |
+            main.js
+            styles.css
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            main.js
+            styles.css

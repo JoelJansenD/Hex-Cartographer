@@ -1,6 +1,6 @@
-.active-eraser {
-    background-color: var(--interactive-accent) !important;
-    color: white;
+.active-eraser.active-eraser {
+    background-color: var(--interactive-accent);
+    color: #ffffff;
 }
 
 .hex-cartographer-container {
@@ -17,14 +17,14 @@
     gap: 5px;
     padding: 10px;
     background-color: #ffffff;
-    border-bottom: 1px solid #ddd;
+    border-bottom: 1px solid #dddddd;
     flex-wrap: wrap;
 }
 
 .hex-tool-btn {
     padding: 8px 12px;
     background-color: #f0f0f0;
-    border: 1px solid #ccc;
+    border: 1px solid #cccccc;
     border-radius: 4px;
     cursor: pointer;
     font-size: 18px;
@@ -38,7 +38,7 @@
 
 .hex-tool-btn.active {
     background-color: #4a9eff;
-    color: white;
+    color: #ffffff;
     border-color: #3a8eef;
 }
 
@@ -58,7 +58,7 @@ input[type="color"][title="Werkzeugfarbe"]::-moz-color-swatch {
 .hex-color-picker {
     width: 50px;
     height: 35px;
-    border: 1px solid #ccc;
+    border: 1px solid #cccccc;
     border-radius: 4px;
     cursor: pointer;
     padding: 2px;
@@ -67,7 +67,7 @@ input[type="color"][title="Werkzeugfarbe"]::-moz-color-swatch {
 .hex-text-size {
     width: 60px;
     padding: 6px;
-    border: 1px solid #ccc;
+    border: 1px solid #cccccc;
     border-radius: 4px;
     font-size: 14px;
 }
@@ -75,7 +75,7 @@ input[type="color"][title="Werkzeugfarbe"]::-moz-color-swatch {
 .hex-save-btn {
     padding: 8px 16px;
     background-color: #4caf50;
-    color: white;
+    color: #ffffff;
     border: none;
     border-radius: 4px;
     cursor: pointer;
@@ -109,7 +109,7 @@ input[type="color"][title="Werkzeugfarbe"]::-moz-color-swatch {
 
 .hex-text-input {
     padding: 8px;
-    border: 1px solid #ccc;
+    border: 1px solid #cccccc;
     border-radius: 4px;
     font-size: 14px;
 }
@@ -127,7 +127,7 @@ input[type="color"][title="Werkzeugfarbe"]::-moz-color-swatch {
 .theme-dark .hex-tool-btn {
     background-color: #3d3d3d;
     border-color: #4d4d4d;
-    color: #ddd;
+    color: #dddddd;
 }
 
 .theme-dark .hex-tool-btn:hover {
@@ -136,7 +136,7 @@ input[type="color"][title="Werkzeugfarbe"]::-moz-color-swatch {
 
 .theme-dark .hex-tool-btn.active {
     background-color: #4a9eff;
-    color: white;
+    color: #ffffff;
 }
 
 .theme-dark .hex-canvas {
@@ -147,7 +147,7 @@ input[type="color"][title="Werkzeugfarbe"]::-moz-color-swatch {
 .theme-dark .hex-color-picker {
     background-color: #3d3d3d;
     border-color: #4d4d4d;
-    color: #ddd;
+    color: #dddddd;
 }
 
 /* Datei-Typ-Anzeige im File Explorer (wie CANVAS) */
@@ -184,6 +184,3 @@ input[type="color"][title="Werkzeugfarbe"]::-moz-color-swatch {
     vertical-align: middle;
     line-height: 1;
 }
-
-/* Verstecke ".hexcartographer" Extension im Dateinamen im File Explorer */
-/* Dies wird via JavaScript manipuliert */
