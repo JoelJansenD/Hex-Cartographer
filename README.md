@@ -28,6 +28,7 @@ Your finished maps can be printed or exported as high-resolution PNG/JPEG images
 - Color eyedropper to pick colors from the map
 - Fill tool for quick area painting
 - Pattern stamp tool to apply repeating tile layouts
+- Change map orientation to get flat top hexagons instead of pointy top
 
 #### Symbols & Terrain
 - 25+ hand-crafted SVG symbols across 4 groups: Extras, Vegetation, Mountains, Buildings
