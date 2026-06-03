@@ -288,6 +288,7 @@ const TRANSLATIONS = {
         'modal.exportFormat': 'Format',
         'modal.exportQuality': 'Qualität',
         'modal.exportExport': 'Exportieren',
+        'modal.exportCropless': 'Randlos exportieren',
     },
 
     en: {
@@ -490,6 +491,7 @@ const TRANSLATIONS = {
         'modal.exportFormat': 'Format',
         'modal.exportQuality': 'Quality',
         'modal.exportExport': 'Export',
+        'modal.exportCropless': 'Export without borders',
     },
 
     zh: {
@@ -664,6 +666,7 @@ const TRANSLATIONS = {
         'modal.exportFormat': '格式',
         'modal.exportQuality': '质量',
         'modal.exportExport': '导出',
+        'modal.exportCropless': '无边距导出',
     },
 
     ru: {
@@ -838,6 +841,7 @@ const TRANSLATIONS = {
         'modal.exportFormat': 'Формат',
         'modal.exportQuality': 'Качество',
         'modal.exportExport': 'Экспортировать',
+        'modal.exportCropless': 'Экспорт без полей',
     },
 
     ja: {
@@ -1012,6 +1016,7 @@ const TRANSLATIONS = {
         'modal.exportFormat': 'フォーマット',
         'modal.exportQuality': '品質',
         'modal.exportExport': 'エクスポート',
+        'modal.exportCropless': '余白なしでエクスポート',
     },
 
     fr: {
@@ -1186,6 +1191,7 @@ const TRANSLATIONS = {
         'modal.exportFormat': 'Format',
         'modal.exportQuality': 'Qualité',
         'modal.exportExport': 'Exporter',
+        'modal.exportCropless': 'Exporter sans marges',
     },
 
     pt: {
@@ -1360,6 +1366,7 @@ const TRANSLATIONS = {
         'modal.exportFormat': 'Formato',
         'modal.exportQuality': 'Qualidade',
         'modal.exportExport': 'Exportar',
+        'modal.exportCropless': 'Exportar sem margens',
     },
 
     ko: {
@@ -1534,6 +1541,7 @@ const TRANSLATIONS = {
         'modal.exportFormat': '형식',
         'modal.exportQuality': '품질',
         'modal.exportExport': '내보내기',
+        'modal.exportCropless': '여백 없이 내보내기',
     },
 
     es: {
@@ -1708,6 +1716,7 @@ const TRANSLATIONS = {
         'modal.exportFormat': 'Formato',
         'modal.exportQuality': 'Calidad',
         'modal.exportExport': 'Exportar',
+        'modal.exportCropless': 'Exportar sin márgenes',
     },
 
     pl: {
@@ -1882,6 +1891,7 @@ const TRANSLATIONS = {
         'modal.exportFormat': 'Format',
         'modal.exportQuality': 'Jakość',
         'modal.exportExport': 'Eksportuj',
+        'modal.exportCropless': 'Eksportuj bez marginesów',
     },
 
     it: {
@@ -2056,6 +2066,7 @@ const TRANSLATIONS = {
         'modal.exportFormat': 'Formato',
         'modal.exportQuality': 'Qualità',
         'modal.exportExport': 'Esporta',
+        'modal.exportCropless': 'Esporta senza margini',
     },
 };
 
@@ -2568,8 +2579,8 @@ class HexCartographerView extends ItemView {
                     .onClick(() => {
                         const mapSize = this.getMapWorldSize();
                         if (!mapSize) { new Notice(t('notice.noContentToPrint')); return; }
-                        new ExportMapModal(this.app, mapSize, this.plugin.settings.exportWidth, async (format, width, quality) => {
-                            const tmpCanvas = this.renderFullMap({ targetWidth: width });
+                        new ExportMapModal(this.app, mapSize, this.plugin.settings.exportWidth, async (format, width, quality, cropless) => {
+                            const tmpCanvas = this.renderFullMap({ targetWidth: width, cropless: cropless });
                             if (!tmpCanvas) { new Notice(t('notice.noContentToPrint')); return; }
                             const mimeType = format === 'jpeg' ? 'image/jpeg' : 'image/png';
                             const ext = format === 'jpeg' ? '.jpg' : '.png';
@@ -6186,11 +6197,19 @@ class HexCartographerView extends ItemView {
         }
         if (hexes.length === 0 && texts.length === 0 && borderOnlyHexes.length === 0) return null;
         let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+        const angleOffset = this.hexOrientation ? 0 : -30;
         const expandBounds = (hex) => {
             const pos = this.hexToPixel(hex);
             const s = this.data.gridSize;
-            minX = Math.min(minX, pos.x - s); maxX = Math.max(maxX, pos.x + s);
-            minY = Math.min(minY, pos.y - s); maxY = Math.max(maxY, pos.y + s);
+            for (let i = 0; i < 6; i++) {
+                const a = (Math.PI / 180) * (60 * i + angleOffset);
+                const cx = pos.x + s * Math.cos(a);
+                const cy = pos.y + s * Math.sin(a);
+                if (cx < minX) minX = cx;
+                if (cx > maxX) maxX = cx;
+                if (cy < minY) minY = cy;
+                if (cy > maxY) maxY = cy;
+            }
         };
         hexes.forEach(expandBounds);
         borderOnlyHexes.forEach(expandBounds);
@@ -6204,10 +6223,10 @@ class HexCartographerView extends ItemView {
         return { w: (maxX - minX) + padding * 2, h: (maxY - minY) + padding * 2 };
     }
 
-    renderFullMap({ targetWidth, scale: fixedScale } = {}) {
-        const size = this.getMapWorldSize();
-        if (!size) return null;
-        const scale = targetWidth ? targetWidth / size.w : (fixedScale || 2);
+    renderFullMap({ targetWidth, scale: fixedScale, cropless } = {}) {
+        if (!this.getMapWorldSize()) return null;
+        // Scale wird erst nach der Bounds-Berechnung gesetzt (siehe unten),
+        // damit targetWidth die tatsächliche Export-Breite inkl. Crop-Option trifft.
 
         const hexes = Object.values(this.data.hexes);
         const texts = this.data.texts || [];
@@ -6220,11 +6239,19 @@ class HexCartographerView extends ItemView {
             }
         }
         let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+        const angleOffset = this.hexOrientation ? 0 : -30;
         const expandBounds = (hex) => {
             const pos = this.hexToPixel(hex);
             const s = this.data.gridSize;
-            minX = Math.min(minX, pos.x - s); maxX = Math.max(maxX, pos.x + s);
-            minY = Math.min(minY, pos.y - s); maxY = Math.max(maxY, pos.y + s);
+            for (let i = 0; i < 6; i++) {
+                const a = (Math.PI / 180) * (60 * i + angleOffset);
+                const cx = pos.x + s * Math.cos(a);
+                const cy = pos.y + s * Math.sin(a);
+                if (cx < minX) minX = cx;
+                if (cx > maxX) maxX = cx;
+                if (cy < minY) minY = cy;
+                if (cy > maxY) maxY = cy;
+            }
         };
         hexes.forEach(expandBounds);
         borderOnlyHexes.forEach(expandBounds);
@@ -6235,12 +6262,16 @@ class HexCartographerView extends ItemView {
             minY = Math.min(minY, tx.y - textSize); maxY = Math.max(maxY, tx.y + textSize / 2);
         });
 
-        const padding = this.data.gridSize;
+        const padding = cropless ? 0 : this.data.gridSize;
         minX -= padding; minY -= padding;
         maxX += padding; maxY += padding;
 
         const w = maxX - minX;
         const h = maxY - minY;
+
+        // Scale auf Basis der tatsächlichen Export-Breite berechnen (nach Padding-Anpassung),
+        // damit targetWidth unabhängig von der Crop-Option exakt eingehalten wird.
+        const scale = targetWidth ? targetWidth / w : (fixedScale || 2);
 
         const tmpCanvas = document.createElement('canvas');
         tmpCanvas.width = Math.ceil(w * scale);
@@ -7604,6 +7635,7 @@ class ExportMapModal extends Modal {
         this.imgWidth = defaultWidth || 1024;
         this.imgHeight = Math.round(this.imgWidth / this.aspect);
         this._updating = false;
+        this.cropless = false;
     }
 
     onOpen() {
@@ -7666,12 +7698,19 @@ class ExportMapModal extends Modal {
         pngBtn.onclick = () => { this.format = 'png'; updateFormatUI(); };
         jpegBtn.onclick = () => { this.format = 'jpeg'; updateFormatUI(); };
 
+        // Randlos exportieren
+        const croplessRow = contentEl.createDiv({ attr: { style: 'display: flex; align-items: center; gap: 8px; margin-bottom: 12px;' } });
+        const croplessCheckbox = croplessRow.createEl('input', { attr: { type: 'checkbox', id: 'hc-export-cropless' } });
+        croplessCheckbox.checked = this.cropless;
+        croplessCheckbox.onchange = () => { this.cropless = croplessCheckbox.checked; };
+        const croplessLabel = croplessRow.createEl('label', { text: t('modal.exportCropless'), attr: { for: 'hc-export-cropless', style: 'cursor: pointer;' } });
+
         // Buttons
         const btnRow = contentEl.createDiv({ attr: { style: 'display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px;' } });
         const cancelBtn = btnRow.createEl('button', { text: t('modal.colorPickerCancel') });
         cancelBtn.onclick = () => this.close();
         const exportBtn = btnRow.createEl('button', { text: t('modal.exportExport'), cls: 'mod-cta' });
-        exportBtn.onclick = () => { this.onExport(this.format, this.imgWidth, this.quality); this.close(); };
+        exportBtn.onclick = () => { this.onExport(this.format, this.imgWidth, this.quality, this.cropless); this.close(); };
 
         updateFormatUI();
     }
