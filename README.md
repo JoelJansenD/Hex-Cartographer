@@ -23,10 +23,13 @@ Your finished maps can be printed or exported as high-resolution PNG/JPEG images
 ### Flexible Coordinate System
 
 ![Editor](readmedata/hc_coordinates1.jpg)
+Activate numbering to see hex locations
 
 ![Editor](readmedata/hc_coordinates2.jpg)
+Switch between numbering modes
 
 ![Editor](readmedata/hc_coordinates3.jpg)
+Choose a coordinate position for the hexes
 
 ## Features
 
