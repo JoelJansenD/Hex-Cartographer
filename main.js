@@ -213,6 +213,24 @@ const TRANSLATIONS = {
         'settings.showCrosshairDesc': 'Zeigt ein Fadenkreuz im Zentrum der Karte an.',
         'settings.hideHexBorders': 'Waben-Rahmen ausblenden',
         'settings.hideHexBordersDesc': 'Blendet die grauen Rahmenlinien zwischen den Waben aus.',
+        'settings.hexNumbering': 'Waben nummerieren',
+        'settings.hexNumberingDesc': 'Die Waben werden mit Zahlen versehen und nummeriert.',
+        'settings.hexNumberingHorizontal': 'Horizontale Zählung',
+        'settings.hexNumberingHorizontalDesc': 'Es wird oben links, bei der ersten Wabe begonnen und dann von links nach rechts gezählt. Am Ende jeder Wabenzeile wird in die nächste Zeile gewechselt und dort weiter gezählt.',
+        'settings.hexNumberingVertical': 'Vertikale Zählung',
+        'settings.hexNumberingVerticalDesc': 'Eingeschaltet: Zählung von oben nach unten (vertikal). Ausgeschaltet: Zählung von links nach rechts (horizontal, Standard).',
+        'settings.hexNumberingAlpha': 'Koordinaten Modus',
+        'settings.hexNumberingAlphaDesc': 'Jede Wabe erhält eine Koordinate aus Zeile und Position. Beispiel: 1-1, 1-2, 1-3 … Zeile 2: 2-1, 2-2 … Bei vertikaler Zählung entspricht die erste Zahl der Spalte.',
+        'settings.hexNumberingAlphaChess': 'Buchstabenkoordinaten',
+        'settings.hexNumberingAlphaChessDesc': 'Spalten werden mit Buchstaben bezeichnet (A, B, C … Z, AA, AB …), Zeilen mit Zahlen. Horizontal: A-1, B-1, C-1 … (erste Zeile), A-2, B-2 … (zweite Zeile). Vertikal: A-1, A-2, A-3 … (Spalte A), B-1, B-2 … (Spalte B).',
+        'settings.hexNumberingPosition': 'Textausrichtung',
+        'settings.hexNumberingPositionTop': 'Oben',
+        'settings.hexNumberingPositionBottom': 'Unten',
+        'settings.hexNumberingColor': 'Textfarbe',
+        'settings.hexNumberingFontSize': 'Textgröße',
+        'settings.hexNumberingFontSizeDesc': 'Schriftgröße der Wabennummern in Pixeln. Wird automatisch mit dem Kartenzoom skaliert.',
+        'settings.hexNumberingOutline': 'Outline einschalten',
+        'settings.hexNumberingOutlineDesc': 'Der Text wird mit einer schwarzen Outline versehen.',
         'settings.donateText': 'Spendiere mir einen Kaffee. Ich freue mich darüber, Euch den Hex Cartographer kostenlos zur Verfügung zu stellen. Allerdings bedurfte die Entwicklung lange Zeit. Wenn mir etwas neues einfällt, wird es für Euch Updates geben. Ihr würdet mir eine große Freude bereiten, wenn ihr mir für diese Arbeit eine kleine Spende hinterlasst.',
         'settings.donateButton': 'Spende einen Kaffee',
 
@@ -416,6 +434,24 @@ const TRANSLATIONS = {
         'settings.showCrosshairDesc': 'Displays a crosshair at the center of the map.',
         'settings.hideHexBorders': 'Hide hex borders',
         'settings.hideHexBordersDesc': 'Hides the gray border lines between hexes.',
+        'settings.hexNumbering': 'Number hexes',
+        'settings.hexNumberingDesc': 'Hexes are labeled with numbers.',
+        'settings.hexNumberingHorizontal': 'Horizontal counting',
+        'settings.hexNumberingHorizontalDesc': 'Counting starts at the top-left hex and proceeds left to right. At the end of each row, counting continues on the next row.',
+        'settings.hexNumberingVertical': 'Vertical counting',
+        'settings.hexNumberingVerticalDesc': 'On: count top to bottom (vertical). Off: count left to right (horizontal, default).',
+        'settings.hexNumberingAlpha': 'Coordinate mode',
+        'settings.hexNumberingAlphaDesc': 'Each hex gets a row-position coordinate. Example: 1-1, 1-2, 1-3 … Row 2: 2-1, 2-2 … With vertical counting, the first number indicates the column.',
+        'settings.hexNumberingAlphaChess': 'Letter coordinates',
+        'settings.hexNumberingAlphaChessDesc': 'Columns use letters (A, B, C … Z, AA, AB …), rows use numbers. Horizontal: A-1, B-1, C-1 … (row 1), A-2, B-2 … (row 2). Vertical: A-1, A-2, A-3 … (column A), B-1, B-2 … (column B).',
+        'settings.hexNumberingPosition': 'Text alignment',
+        'settings.hexNumberingPositionTop': 'Top',
+        'settings.hexNumberingPositionBottom': 'Bottom',
+        'settings.hexNumberingColor': 'Text color',
+        'settings.hexNumberingFontSize': 'Text size',
+        'settings.hexNumberingFontSizeDesc': 'Font size of hex numbers in pixels. Scales automatically with the map zoom.',
+        'settings.hexNumberingOutline': 'Enable outline',
+        'settings.hexNumberingOutlineDesc': 'The text is rendered with a black outline.',
         'settings.donateText': 'Buy me a coffee. I am happy to provide Hex Cartographer to you for free. However, the development took a long time. When I come up with something new, there will be updates. It would make me very happy if you leave a small donation for this work.',
         'settings.donateButton': 'Buy me a coffee',
 
@@ -597,6 +633,24 @@ const TRANSLATIONS = {
         'settings.showCrosshairDesc': '在地图中心显示十字准线。',
         'settings.hideHexBorders': '隐藏六边形边框',
         'settings.hideHexBordersDesc': '隐藏六边形之间的灰色边框线。',
+        'settings.hexNumbering': '六边形编号',
+        'settings.hexNumberingDesc': '六边形将标注数字。',
+        'settings.hexNumberingHorizontal': '水平计数',
+        'settings.hexNumberingHorizontalDesc': '从左上角开始，从左到右计数。每行结束后进入下一行继续。',
+        'settings.hexNumberingVertical': '垂直计数',
+        'settings.hexNumberingVerticalDesc': '开启：从上到下计数（垂直）。关闭：从左到右计数（水平，默认）。',
+        'settings.hexNumberingAlpha': '坐标模式',
+        'settings.hexNumberingAlphaDesc': '每个六边形获得行-位置坐标。示例：1-1, 1-2, 1-3 … 第2行：2-1, 2-2 … 垂直计数时，第一个数字表示列。',
+        'settings.hexNumberingAlphaChess': '字母坐标',
+        'settings.hexNumberingAlphaChessDesc': '列用字母表示（A, B … Z, AA, AB …），行用数字。水平：A-1, B-1, C-1 … 垂直：A-1, A-2, A-3 …',
+        'settings.hexNumberingPosition': '文本对齐',
+        'settings.hexNumberingPositionTop': '上',
+        'settings.hexNumberingPositionBottom': '下',
+        'settings.hexNumberingColor': '文本颜色',
+        'settings.hexNumberingFontSize': '文字大小',
+        'settings.hexNumberingFontSizeDesc': '六边形编号的字体大小（像素）。随地图缩放自动调整。',
+        'settings.hexNumberingOutline': '开启轮廓',
+        'settings.hexNumberingOutlineDesc': '文本将添加黑色轮廓。',
         'settings.donateText': '请我喝杯咖啡。我很高兴能为大家免费提供 Hex Cartographer。然而，开发花费了很长时间。如果我有了新的想法，会为大家提供更新。如果您能为这项工作留下一点捐赠，我会非常高兴。',
         'settings.donateButton': '请我喝杯咖啡',
         'guide.title': '快速指南',
@@ -772,6 +826,24 @@ const TRANSLATIONS = {
         'settings.showCrosshairDesc': 'Отображает перекрестие в центре карты.',
         'settings.hideHexBorders': 'Скрыть границы шестиугольников',
         'settings.hideHexBordersDesc': 'Скрывает серые линии границ между шестиугольниками.',
+        'settings.hexNumbering': 'Нумерация шестиугольников',
+        'settings.hexNumberingDesc': 'Шестиугольники помечаются цифрами.',
+        'settings.hexNumberingHorizontal': 'Горизонтальный счёт',
+        'settings.hexNumberingHorizontalDesc': 'Счёт начинается с левого верхнего шестиугольника и идёт слева направо. В конце строки переходит на следующую.',
+        'settings.hexNumberingVertical': 'Вертикальный счёт',
+        'settings.hexNumberingVerticalDesc': 'Вкл: счёт сверху вниз (вертикально). Выкл: счёт слева направо (горизонтально, по умолчанию).',
+        'settings.hexNumberingAlpha': 'Режим координат',
+        'settings.hexNumberingAlphaDesc': 'Каждый шестиугольник получает координату строка-позиция. Пример: 1-1, 1-2 … Строка 2: 2-1, 2-2 … При вертикальном счёте первое число — столбец.',
+        'settings.hexNumberingAlphaChess': 'Буквенные координаты',
+        'settings.hexNumberingAlphaChessDesc': 'Столбцы обозначаются буквами (A, B … Z, AA, AB …), строки — цифрами. По горизонтали: A-1, B-1, C-1 … По вертикали: A-1, A-2, A-3 …',
+        'settings.hexNumberingPosition': 'Выравнивание текста',
+        'settings.hexNumberingPositionTop': 'Вверх',
+        'settings.hexNumberingPositionBottom': 'Вниз',
+        'settings.hexNumberingColor': 'Цвет текста',
+        'settings.hexNumberingFontSize': 'Размер текста',
+        'settings.hexNumberingFontSizeDesc': 'Размер шрифта номеров шестиугольников в пикселях. Автоматически масштабируется с зумом карты.',
+        'settings.hexNumberingOutline': 'Включить обводку',
+        'settings.hexNumberingOutlineDesc': 'Текст будет отображаться с чёрной обводкой.',
         'settings.donateText': 'Угостите меня кофе. Я рад предоставлять Hex Cartographer бесплатно для всех. Тем не менее, разработка заняла много времени. Если мне придут новые идеи, вас ждут обновления. Я буду очень рад, если вы оставите небольшое пожертвование за эту работу.',
         'settings.donateButton': 'Угостить кофе',
         'guide.title': 'Краткое руководство',
@@ -947,6 +1019,24 @@ const TRANSLATIONS = {
         'settings.showCrosshairDesc': 'マップの中心に十字線を表示します。',
         'settings.hideHexBorders': '六角形の枠線を非表示',
         'settings.hideHexBordersDesc': '六角形間のグレーの枠線を非表示にします。',
+        'settings.hexNumbering': 'ヘクスに番号を付ける',
+        'settings.hexNumberingDesc': '各ヘクスに番号を表示します。',
+        'settings.hexNumberingHorizontal': '水平カウント',
+        'settings.hexNumberingHorizontalDesc': '左上から右へカウント。各行の末尾で次の行に続きます。',
+        'settings.hexNumberingVertical': '垂直カウント',
+        'settings.hexNumberingVerticalDesc': 'オン: 上から下にカウント（縦）。オフ: 左から右にカウント（横、デフォルト）。',
+        'settings.hexNumberingAlpha': '座標モード',
+        'settings.hexNumberingAlphaDesc': '各ヘクスに行-位置の座標を付けます。例: 1-1, 1-2 … 2行目: 2-1, 2-2 … 垂直カウント時は最初の数字が列を示します。',
+        'settings.hexNumberingAlphaChess': '文字座標',
+        'settings.hexNumberingAlphaChessDesc': '列は文字（A, B … Z, AA, AB …）、行は数字で表します。水平: A-1, B-1, C-1 … 垂直: A-1, A-2, A-3 …',
+        'settings.hexNumberingPosition': 'テキスト位置',
+        'settings.hexNumberingPositionTop': '上',
+        'settings.hexNumberingPositionBottom': '下',
+        'settings.hexNumberingColor': 'テキストカラー',
+        'settings.hexNumberingFontSize': 'テキストサイズ',
+        'settings.hexNumberingFontSizeDesc': 'ヘクス番号のフォントサイズ（ピクセル）。マップのズームに合わせて自動的にスケールします。',
+        'settings.hexNumberingOutline': 'アウトラインを有効にする',
+        'settings.hexNumberingOutlineDesc': 'テキストに黒いアウトラインを付けます。',
         'settings.donateText': 'コーヒーをおごってください。Hex Cartographer を無料で提供できることを嬉しく思っています。しかし、開発には長い時間がかかりました。新しいアイデアが浮かべば、アップデートを提供します。この作業に対して少額の寄付をいただけると大変嬉しいです。',
         'settings.donateButton': 'コーヒーをおごる',
         'guide.title': 'クイックガイド',
@@ -1122,6 +1212,24 @@ const TRANSLATIONS = {
         'settings.showCrosshairDesc': 'Affiche un réticule au centre de la carte.',
         'settings.hideHexBorders': 'Masquer les bordures des hexagones',
         'settings.hideHexBordersDesc': 'Masque les lignes grises entre les hexagones.',
+        'settings.hexNumbering': 'Numéroter les hexagones',
+        'settings.hexNumberingDesc': 'Les hexagones sont numérotés.',
+        'settings.hexNumberingHorizontal': 'Comptage horizontal',
+        'settings.hexNumberingHorizontalDesc': 'Commence en haut à gauche et compte de gauche à droite. À la fin de chaque rangée, continue sur la suivante.',
+        'settings.hexNumberingVertical': 'Comptage vertical',
+        'settings.hexNumberingVerticalDesc': 'Activé : comptage de haut en bas (vertical). Désactivé : de gauche à droite (horizontal, défaut).',
+        'settings.hexNumberingAlpha': 'Mode coordonnées',
+        'settings.hexNumberingAlphaDesc': 'Chaque hexagone reçoit une coordonnée ligne-position. Ex.: 1-1, 1-2 … Ligne 2: 2-1, 2-2 … En comptage vertical, le premier chiffre indique la colonne.',
+        'settings.hexNumberingAlphaChess': 'Coordonnées alphabétiques',
+        'settings.hexNumberingAlphaChessDesc': 'Les colonnes utilisent des lettres (A, B … Z, AA, AB …), les lignes des chiffres. Horizontal: A-1, B-1, C-1 … Vertical: A-1, A-2, A-3 …',
+        'settings.hexNumberingPosition': 'Position du texte',
+        'settings.hexNumberingPositionTop': 'Haut',
+        'settings.hexNumberingPositionBottom': 'Bas',
+        'settings.hexNumberingColor': 'Couleur du texte',
+        'settings.hexNumberingFontSize': 'Taille du texte',
+        'settings.hexNumberingFontSizeDesc': 'Taille de police des numéros en pixels. S\'adapte automatiquement au zoom de la carte.',
+        'settings.hexNumberingOutline': 'Activer le contour',
+        'settings.hexNumberingOutlineDesc': 'Le texte est rendu avec un contour noir.',
         'settings.donateText': 'Offrez-moi un café. Je suis heureux de mettre Hex Cartographer gratuitement à votre disposition. Cependant, le développement a nécessité beaucoup de temps. Si de nouvelles idées me viennent, vous recevrez des mises à jour. Vous me feriez très plaisir en laissant un petit don pour ce travail.',
         'settings.donateButton': 'Offrir un café',
         'guide.title': 'Guide rapide',
@@ -1297,6 +1405,24 @@ const TRANSLATIONS = {
         'settings.showCrosshairDesc': 'Exibe um retículo no centro do mapa.',
         'settings.hideHexBorders': 'Ocultar bordas dos hexágonos',
         'settings.hideHexBordersDesc': 'Oculta as linhas de borda cinzas entre os hexágonos.',
+        'settings.hexNumbering': 'Numerar hexágonos',
+        'settings.hexNumberingDesc': 'Os hexágonos são numerados.',
+        'settings.hexNumberingHorizontal': 'Contagem horizontal',
+        'settings.hexNumberingHorizontalDesc': 'Começa no canto superior esquerdo e conta da esquerda para a direita. Ao final de cada linha, continua na próxima.',
+        'settings.hexNumberingVertical': 'Contagem vertical',
+        'settings.hexNumberingVerticalDesc': 'Ativado: conta de cima para baixo (vertical). Desativado: da esquerda para a direita (horizontal, padrão).',
+        'settings.hexNumberingAlpha': 'Modo coordenadas',
+        'settings.hexNumberingAlphaDesc': 'Cada hexágono recebe uma coordenada linha-posição. Ex.: 1-1, 1-2 … Linha 2: 2-1, 2-2 … Na contagem vertical, o primeiro número indica a coluna.',
+        'settings.hexNumberingAlphaChess': 'Coordenadas alfabéticas',
+        'settings.hexNumberingAlphaChessDesc': 'Colunas usam letras (A, B … Z, AA, AB …), linhas usam números. Horizontal: A-1, B-1, C-1 … Vertical: A-1, A-2, A-3 …',
+        'settings.hexNumberingPosition': 'Alinhamento do texto',
+        'settings.hexNumberingPositionTop': 'Cima',
+        'settings.hexNumberingPositionBottom': 'Baixo',
+        'settings.hexNumberingColor': 'Cor do texto',
+        'settings.hexNumberingFontSize': 'Tamanho do texto',
+        'settings.hexNumberingFontSizeDesc': 'Tamanho da fonte dos números em pixels. Escala automaticamente com o zoom do mapa.',
+        'settings.hexNumberingOutline': 'Ativar contorno',
+        'settings.hexNumberingOutlineDesc': 'O texto é renderizado com contorno preto.',
         'settings.donateText': 'Me pague um café. Fico feliz em disponibilizar o Hex Cartographer gratuitamente para vocês. No entanto, o desenvolvimento levou muito tempo. Se eu tiver novas ideias, haverá atualizações para vocês. Ficaria muito feliz se deixassem uma pequena doação por este trabalho.',
         'settings.donateButton': 'Pagar um café',
         'guide.title': 'Guia rápido',
@@ -1472,6 +1598,24 @@ const TRANSLATIONS = {
         'settings.showCrosshairDesc': '지도 중심에 십자선을 표시합니다.',
         'settings.hideHexBorders': '육각형 테두리 숨기기',
         'settings.hideHexBordersDesc': '육각형 사이의 회색 테두리 선을 숨깁니다.',
+        'settings.hexNumbering': '헥스 번호 매기기',
+        'settings.hexNumberingDesc': '헥스에 번호를 표시합니다.',
+        'settings.hexNumberingHorizontal': '가로 카운트',
+        'settings.hexNumberingHorizontalDesc': '왼쪽 위에서 시작하여 왼쪽에서 오른쪽으로 카운트합니다.',
+        'settings.hexNumberingVertical': '세로 카운트',
+        'settings.hexNumberingVerticalDesc': '켜짐: 위에서 아래로 카운트(세로). 꺼짐: 왼쪽에서 오른쪽으로(가로, 기본값).',
+        'settings.hexNumberingAlpha': '좌표 모드',
+        'settings.hexNumberingAlphaDesc': '각 헥스에 행-위치 좌표를 표시합니다. 예: 1-1, 1-2 … 2행: 2-1, 2-2 … 세로 카운트 시 첫 번째 숫자는 열을 나타냅니다.',
+        'settings.hexNumberingAlphaChess': '문자 좌표',
+        'settings.hexNumberingAlphaChessDesc': '열은 문자(A, B … Z, AA, AB …), 행은 숫자로 표시합니다. 가로: A-1, B-1, C-1 … 세로: A-1, A-2, A-3 …',
+        'settings.hexNumberingPosition': '텍스트 정렬',
+        'settings.hexNumberingPositionTop': '위',
+        'settings.hexNumberingPositionBottom': '아래',
+        'settings.hexNumberingColor': '텍스트 색상',
+        'settings.hexNumberingFontSize': '텍스트 크기',
+        'settings.hexNumberingFontSizeDesc': '헥스 번호의 글꼴 크기(픽셀). 지도 줌에 따라 자동으로 조정됩니다.',
+        'settings.hexNumberingOutline': '아웃라인 켜기',
+        'settings.hexNumberingOutlineDesc': '텍스트에 검은 아웃라인을 추가합니다.',
         'settings.donateText': '커피 한 잔 사주세요. Hex Cartographer를 무료로 제공하게 되어 기쁩니다. 하지만 개발에 오랜 시간이 걸렸습니다. 새로운 아이디어가 떠오르면 업데이트를 제공하겠습니다. 이 작업에 대해 작은 기부를 남겨주시면 큰 기쁨이 되겠습니다.',
         'settings.donateButton': '커피 한 잔 기부하기',
         'guide.title': '빠른 가이드',
@@ -1647,6 +1791,24 @@ const TRANSLATIONS = {
         'settings.showCrosshairDesc': 'Muestra una retícula en el centro del mapa.',
         'settings.hideHexBorders': 'Ocultar bordes de hexágonos',
         'settings.hideHexBordersDesc': 'Oculta las líneas grises entre los hexágonos.',
+        'settings.hexNumbering': 'Numerar hexágonos',
+        'settings.hexNumberingDesc': 'Los hexágonos se numeran.',
+        'settings.hexNumberingHorizontal': 'Conteo horizontal',
+        'settings.hexNumberingHorizontalDesc': 'Comienza en la esquina superior izquierda y cuenta de izquierda a derecha. Al final de cada fila, continúa en la siguiente.',
+        'settings.hexNumberingVertical': 'Conteo vertical',
+        'settings.hexNumberingVerticalDesc': 'Activado: cuenta de arriba abajo (vertical). Desactivado: de izquierda a derecha (horizontal, predeterminado).',
+        'settings.hexNumberingAlpha': 'Modo coordenadas',
+        'settings.hexNumberingAlphaDesc': 'Cada hexágono recibe una coordenada fila-posición. Ej.: 1-1, 1-2 … Fila 2: 2-1, 2-2 … En conteo vertical, el primer número indica la columna.',
+        'settings.hexNumberingAlphaChess': 'Coordenadas alfabéticas',
+        'settings.hexNumberingAlphaChessDesc': 'Las columnas usan letras (A, B … Z, AA, AB …), las filas números. Horizontal: A-1, B-1, C-1 … Vertical: A-1, A-2, A-3 …',
+        'settings.hexNumberingPosition': 'Alineación del texto',
+        'settings.hexNumberingPositionTop': 'Arriba',
+        'settings.hexNumberingPositionBottom': 'Abajo',
+        'settings.hexNumberingColor': 'Color del texto',
+        'settings.hexNumberingFontSize': 'Tamaño del texto',
+        'settings.hexNumberingFontSizeDesc': 'Tamaño de fuente de los números en píxeles. Se escala automáticamente con el zoom del mapa.',
+        'settings.hexNumberingOutline': 'Activar contorno',
+        'settings.hexNumberingOutlineDesc': 'El texto se renderiza con un contorno negro.',
         'settings.donateText': 'Invítame a un café. Me alegra poner Hex Cartographer a vuestra disposición de forma gratuita. Sin embargo, el desarrollo requirió mucho tiempo. Si se me ocurre algo nuevo, habrá actualizaciones para vosotros. Me haríais muy feliz si dejáis una pequeña donación por este trabajo.',
         'settings.donateButton': 'Dona un café',
         'guide.title': 'Guía rápida',
@@ -1822,6 +1984,24 @@ const TRANSLATIONS = {
         'settings.showCrosshairDesc': 'Wyświetla celownik w centrum mapy.',
         'settings.hideHexBorders': 'Ukryj obramowania sześciokątów',
         'settings.hideHexBordersDesc': 'Ukrywa szare linie obramowań między sześciokątami.',
+        'settings.hexNumbering': 'Numeruj sześciokąty',
+        'settings.hexNumberingDesc': 'Sześciokąty są oznaczane numerami.',
+        'settings.hexNumberingHorizontal': 'Liczenie poziome',
+        'settings.hexNumberingHorizontalDesc': 'Zaczyna od lewego górnego rogu i liczy od lewej do prawej. Na końcu każdego rzędu przechodzi do następnego.',
+        'settings.hexNumberingVertical': 'Liczenie pionowe',
+        'settings.hexNumberingVerticalDesc': 'Włączone: liczenie od góry do dołu (pionowo). Wyłączone: od lewej do prawej (poziomo, domyślnie).',
+        'settings.hexNumberingAlpha': 'Tryb współrzędnych',
+        'settings.hexNumberingAlphaDesc': 'Każdy heks otrzymuje współrzędną wiersz-pozycja. Np.: 1-1, 1-2 … Wiersz 2: 2-1, 2-2 … Przy liczeniu pionowym pierwsza liczba oznacza kolumnę.',
+        'settings.hexNumberingAlphaChess': 'Współrzędne literowe',
+        'settings.hexNumberingAlphaChessDesc': 'Kolumny oznaczane są literami (A, B … Z, AA, AB …), wiersze cyframi. Poziomo: A-1, B-1, C-1 … Pionowo: A-1, A-2, A-3 …',
+        'settings.hexNumberingPosition': 'Wyrównanie tekstu',
+        'settings.hexNumberingPositionTop': 'Góra',
+        'settings.hexNumberingPositionBottom': 'Dół',
+        'settings.hexNumberingColor': 'Kolor tekstu',
+        'settings.hexNumberingFontSize': 'Rozmiar tekstu',
+        'settings.hexNumberingFontSizeDesc': 'Rozmiar czcionki numerów w pikselach. Skaluje się automatycznie z powiększeniem mapy.',
+        'settings.hexNumberingOutline': 'Włącz obrys',
+        'settings.hexNumberingOutlineDesc': 'Tekst jest renderowany z czarnym obrysem.',
         'settings.donateText': 'Postaw mi kawę. Cieszę się, że mogę udostępnić Wam Hex Cartographer za darmo. Jednak jego rozwój wymagał długiego czasu. Jeśli wpadnę na nowy pomysł, będą dla Was aktualizacje. Sprawiłoby mi ogromną radość, gdybyście zostawili drobną darowiznę za tę pracę.',
         'settings.donateButton': 'Postaw kawę',
         'guide.title': 'Skrócona instrukcja',
@@ -1997,6 +2177,24 @@ const TRANSLATIONS = {
         'settings.showCrosshairDesc': 'Mostra un mirino al centro della mappa.',
         'settings.hideHexBorders': 'Nascondi bordi esagoni',
         'settings.hideHexBordersDesc': 'Nasconde le linee grigie tra gli esagoni.',
+        'settings.hexNumbering': 'Numera esagoni',
+        'settings.hexNumberingDesc': 'Gli esagoni vengono numerati.',
+        'settings.hexNumberingHorizontal': 'Conteggio orizzontale',
+        'settings.hexNumberingHorizontalDesc': 'Inizia dall’angolo in alto a sinistra e conta da sinistra a destra. Alla fine di ogni riga continua sulla successiva.',
+        'settings.hexNumberingVertical': 'Conteggio verticale',
+        'settings.hexNumberingVerticalDesc': 'Attivo: conta dall’alto verso il basso (verticale). Disattivo: da sinistra a destra (orizzontale, predefinito).',
+        'settings.hexNumberingAlpha': 'Modalità coordinate',
+        'settings.hexNumberingAlphaDesc': 'Ogni esagono riceve una coordinata riga-posizione. Es.: 1-1, 1-2 … Riga 2: 2-1, 2-2 … Con conteggio verticale il primo numero indica la colonna.',
+        'settings.hexNumberingAlphaChess': 'Coordinate alfabetiche',
+        'settings.hexNumberingAlphaChessDesc': 'Le colonne usano lettere (A, B … Z, AA, AB …), le righe numeri. Orizzontale: A-1, B-1, C-1 … Verticale: A-1, A-2, A-3 …',
+        'settings.hexNumberingPosition': 'Allineamento testo',
+        'settings.hexNumberingPositionTop': 'Alto',
+        'settings.hexNumberingPositionBottom': 'Basso',
+        'settings.hexNumberingColor': 'Colore testo',
+        'settings.hexNumberingFontSize': 'Dimensione testo',
+        'settings.hexNumberingFontSizeDesc': 'Dimensione del carattere dei numeri in pixel. Si adatta automaticamente allo zoom della mappa.',
+        'settings.hexNumberingOutline': 'Attiva contorno',
+        'settings.hexNumberingOutlineDesc': 'Il testo viene renderizzato con un contorno nero.',
         'settings.donateText': 'Offrimi un caffè. Sono felice di mettere Hex Cartographer a vostra disposizione gratuitamente. Tuttavia, lo sviluppo ha richiesto molto tempo. Se mi viene in mente qualcosa di nuovo, ci saranno aggiornamenti per voi. Mi farebbe molto piacere se lasciaste una piccola donazione per questo lavoro.',
         'settings.donateButton': 'Offri un caffè',
         'guide.title': 'Guida rapida',
@@ -2117,7 +2315,19 @@ function hsbToRgb(h, s, b) {
 function hsbToHex(h, s, b) { const rgb = hsbToRgb(h, s, b); return rgbToHex(rgb.r, rgb.g, rgb.b); }
 function hexToHsb(hex) { const rgb = hexToRgb(hex); return rgbToHsb(rgb.r, rgb.g, rgb.b); }
 
-const DEFAULT_SETTINGS = { exportWidth: 1024, showCrosshair: true, hideHexBorders: false };
+const DEFAULT_SETTINGS = {
+    exportWidth: 1024,
+    showCrosshair: true,
+    hideHexBorders: false,
+    hexNumberingEnabled: false,
+    hexNumberingDirection: 'horizontal',  // 'horizontal' | 'vertical'
+    hexNumberingAlpha: false,
+    hexNumberingAlphaChess: false,
+    hexNumberingPosition: 'top',          // 'top' | 'bottom'
+    hexNumberingColor: '#ffffff',
+    hexNumberingOutline: true,
+    hexNumberingFontSize: 10,
+};
 
 // === Hauptklasse des Plugins ===
 class HexCartographerPlugin extends Plugin {
@@ -6130,6 +6340,7 @@ class HexCartographerView extends ItemView {
 
         this.renderCrosshair();
         this.renderTexts();
+        this.renderHexNumbering();
     }
 
     renderCrosshair() {
@@ -6182,6 +6393,221 @@ class HexCartographerView extends ItemView {
         });
 
         this.textCtx.restore();
+    }
+
+    // Berechnet für jede Wabe ein Label basierend auf den Settings
+    _buildHexNumberLabels() {
+        const settings = this.plugin.settings;
+        const hexes = Object.values(this.data.hexes);
+        if (hexes.length === 0) return [];
+
+        const horizontal = settings.hexNumberingDirection !== 'vertical';
+        const tol = this.data.gridSize * 0.6;
+
+        // Pixelposition jeder Wabe berechnen
+        const withPos = hexes.map(hex => {
+            const pos = this.hexToPixel(hex);
+            return { hex, px: pos.x, py: pos.y };
+        });
+
+        // Buchstabe aus Index: 0→A, 1→B … 25→Z, 26→AA, 27→AB …
+        const toAlpha = (n) => {
+            let s = '';
+            n += 1;
+            while (n > 0) {
+                n--;
+                s = String.fromCharCode(65 + (n % 26)) + s;
+                n = Math.floor(n / 26);
+            }
+            return s;
+        };
+
+        // Gruppen aus Pixelwerten bilden (sortiert, mit Toleranz)
+        const buildGroups = (values) => {
+            const sorted = [...new Set(values.map(v => Math.round(v)))].sort((a, b) => a - b);
+            const groups = [];
+            for (const v of sorted) {
+                if (groups.length === 0 || Math.abs(v - groups[groups.length - 1]) > tol) {
+                    groups.push(v);
+                }
+            }
+            return groups;
+        };
+
+        const colGroups = buildGroups(withPos.map(e => e.px)); // Spalten (links→rechts)
+        const rowGroups = buildGroups(withPos.map(e => e.py)); // Zeilen (oben→unten)
+
+        const colIndex = (px) => colGroups.findIndex(g => Math.abs(px - g) <= tol);
+        const rowIndex = (py) => rowGroups.findIndex(g => Math.abs(py - g) <= tol);
+
+        // ── Buchstabenkoordinaten-Modus ───────────────────────────
+        // Horizontal: Buchstabe = Zeilenindex (A=1.Zeile, B=2.Zeile …)
+        //             Zahl     = laufende Position in der Zeile (1, 2, 3 …)
+        // Vertikal:   Buchstabe = Spaltenindex (A=linkste Spalte, B=zweite …)
+        //             Zahl     = laufende Position in der Spalte (1, 2, 3 …)
+        if (settings.hexNumberingAlphaChess) {
+            if (horizontal) {
+                // Sortierung: erst Zeile (py), dann Spalte (px)
+                withPos.sort((a, b) => {
+                    if (Math.abs(a.py - b.py) > tol) return a.py - b.py;
+                    return a.px - b.px;
+                });
+                let currentRowPy = null;
+                let rowIdx = -1;
+                let posInRow = 0;
+                return withPos.map(({ hex, py }) => {
+                    if (currentRowPy === null || Math.abs(py - currentRowPy) > tol) {
+                        currentRowPy = py;
+                        rowIdx++;
+                        posInRow = 1;
+                    } else {
+                        posInRow++;
+                    }
+                    return { hex, label: `${toAlpha(rowIdx)}-${posInRow}` };
+                });
+            } else {
+                // Sortierung: erst Spalte (px), dann Zeile (py)
+                withPos.sort((a, b) => {
+                    if (Math.abs(a.px - b.px) > tol) return a.px - b.px;
+                    return a.py - b.py;
+                });
+                let currentColPx = null;
+                let colIdx = -1;
+                let posInCol = 0;
+                return withPos.map(({ hex, px }) => {
+                    if (currentColPx === null || Math.abs(px - currentColPx) > tol) {
+                        currentColPx = px;
+                        colIdx++;
+                        posInCol = 1;
+                    } else {
+                        posInCol++;
+                    }
+                    return { hex, label: `${toAlpha(colIdx)}-${posInCol}` };
+                });
+            }
+        }
+
+        // ── Koordinaten-Modus ─────────────────────────────────────
+        // Horizontal: erste Zahl = Zeilenindex, zweite Zahl = Position in Zeile
+        // Vertikal:   erste Zahl = Spaltenindex, zweite Zahl = Position in Spalte
+        if (settings.hexNumberingAlpha) {
+            if (horizontal) {
+                withPos.sort((a, b) => {
+                    if (Math.abs(a.py - b.py) > tol) return a.py - b.py;
+                    return a.px - b.px;
+                });
+                let currentRowPy = null;
+                let rowIdx = -1;
+                let posInRow = 0;
+                return withPos.map(({ hex, py }) => {
+                    if (currentRowPy === null || Math.abs(py - currentRowPy) > tol) {
+                        currentRowPy = py;
+                        rowIdx++;
+                        posInRow = 1;
+                    } else {
+                        posInRow++;
+                    }
+                    return { hex, label: `${rowIdx + 1}-${posInRow}` };
+                });
+            } else {
+                withPos.sort((a, b) => {
+                    if (Math.abs(a.px - b.px) > tol) return a.px - b.px;
+                    return a.py - b.py;
+                });
+                let currentColPx = null;
+                let colIdx = -1;
+                let posInCol = 0;
+                return withPos.map(({ hex, px }) => {
+                    if (currentColPx === null || Math.abs(px - currentColPx) > tol) {
+                        currentColPx = px;
+                        colIdx++;
+                        posInCol = 1;
+                    } else {
+                        posInCol++;
+                    }
+                    return { hex, label: `${colIdx + 1}-${posInCol}` };
+                });
+            }
+        }
+
+        // ── Einfache Durchnummerierung ────────────────────────────
+        // Horizontal: zeilenweise (py), dann spaltenweise (px)
+        // Vertikal:   spaltenweise (px), dann zeilenweise (py)
+        if (horizontal) {
+            withPos.sort((a, b) => {
+                if (Math.abs(a.py - b.py) > tol) return a.py - b.py;
+                return a.px - b.px;
+            });
+        } else {
+            withPos.sort((a, b) => {
+                if (Math.abs(a.px - b.px) > tol) return a.px - b.px;
+                return a.py - b.py;
+            });
+        }
+
+        return withPos.map(({ hex }, i) => ({ hex, label: String(i + 1) }));
+    }
+
+    // Zeichnet Nummerierung auf einen beliebigen 2D-Context
+    _renderHexNumberingToCtx(ctx, zoom, offX, offY) {
+        const settings = this.plugin.settings;
+        const labels = this._buildHexNumberLabels();
+        if (labels.length === 0) return;
+
+        const s = this.data.gridSize;
+        const fontSize = Math.max(1, (this.plugin.settings.hexNumberingFontSize || 10) * zoom);
+        const flatTop = this.hexOrientation; // true = flat-top
+
+        ctx.save();
+        ctx.font = `bold ${fontSize}px Verdana`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        for (const { hex, label } of labels) {
+            const pos = this.hexToPixel(hex);
+
+            // Y-Offset je nach Position (top/bottom) und Orientierung
+            // Bei pointy-top (flatTop=false) liegt die breiteste Stelle in der Mitte.
+            // Wir setzen den Text ins obere oder untere Drittel der Wabe.
+            let yOffset;
+            if (flatTop) {
+                // Flat-top: volle Höhe = s * sin(60°) * 2 ≈ s * 1.732
+                // Oberes/unteres Drittel innen
+                const halfH = s * Math.sin(Math.PI / 3); // ≈ 0.866 * s
+                yOffset = settings.hexNumberingPosition === 'top'
+                    ? -halfH * 0.55
+                    :  halfH * 0.55;
+            } else {
+                // Pointy-top: Spitze oben/unten, breit in der Mitte
+                // Von Mitte bis Spitze = s; wir setzen Text bei ~60% davon
+                yOffset = settings.hexNumberingPosition === 'top'
+                    ? -s * 0.52
+                    :  s * 0.52;
+            }
+
+            const px = pos.x * zoom + offX;
+            const py = (pos.y + yOffset) * zoom + offY;
+
+            ctx.save();
+            if (settings.hexNumberingOutline) {
+                ctx.strokeStyle = 'rgba(0,0,0,0.85)';
+                ctx.lineWidth = Math.max(2, fontSize * 0.25);
+                ctx.lineJoin = 'round';
+                ctx.strokeText(label, px, py);
+            }
+            ctx.fillStyle = settings.hexNumberingColor || '#ffffff';
+            ctx.fillText(label, px, py);
+            ctx.restore();
+        }
+
+        ctx.restore();
+    }
+
+    // Nummerierung auf den Live-Canvas zeichnen (kein zoom/translate nötig — direkt in Pixeln)
+    renderHexNumbering() {
+        if (!this.plugin.settings.hexNumberingEnabled) return;
+        if (!this.ctx) return;
+        this._renderHexNumberingToCtx(this.ctx, this.data.zoom, this.data.offX, this.data.offY);
     }
 
     getMapWorldSize() {
@@ -6353,6 +6779,15 @@ class HexCartographerView extends ItemView {
         this.data.zoom = origZoom;
         this.data.offX = origOffX;
         this.data.offY = origOffY;
+
+        // Nummerierung auf Print-Canvas rendern (mit temporärem ctx)
+        if (this.plugin.settings.hexNumberingEnabled) {
+            const printCtx = tmpCtx;
+            const printZoom = scale;
+            const printOffX = -minX * scale;
+            const printOffY = -minY * scale;
+            this._renderHexNumberingToCtx(printCtx, printZoom, printOffX, printOffY);
+        }
 
         return tmpCanvas;
     }
@@ -7782,6 +8217,153 @@ class HexCartographerSettingTab extends PluginSettingTab {
                         });
                     });
             });
+
+        // ── Waben nummerieren ─────────────────────────────────────
+        containerEl.createEl('h3', { text: t('settings.hexNumbering') });
+
+        const refreshAll = async () => {
+            await this.plugin.saveSettings();
+            this.app.workspace.iterateAllLeaves(leaf => {
+                if (leaf.view instanceof HexCartographerView) leaf.view.render();
+            });
+        };
+
+        // Master-Schalter
+        new Setting(containerEl)
+            .setName(t('settings.hexNumbering'))
+            .setDesc(t('settings.hexNumberingDesc'))
+            .addToggle(toggle => {
+                toggle.setValue(this.plugin.settings.hexNumberingEnabled)
+                    .onChange(async (value) => {
+                        this.plugin.settings.hexNumberingEnabled = value;
+                        // Unteroptionen ein-/ausblenden
+                        subOptions.forEach(el => el.settingEl.style.display = value ? '' : 'none');
+                        await refreshAll();
+                    });
+            });
+
+        const subOptions = [];
+        const hide = !this.plugin.settings.hexNumberingEnabled;
+
+        // Zähl-Ausrichtung: ein Schalter — aus=horizontal (Standard), ein=vertikal
+        const dirSetting = new Setting(containerEl)
+            .setName(t('settings.hexNumberingVertical'))
+            .setDesc(t('settings.hexNumberingVerticalDesc'))
+            .addToggle(toggle => {
+                toggle.setValue(this.plugin.settings.hexNumberingDirection === 'vertical')
+                    .onChange(async (value) => {
+                        this.plugin.settings.hexNumberingDirection = value ? 'vertical' : 'horizontal';
+                        await refreshAll();
+                    });
+            });
+        subOptions.push(dirSetting);
+
+        // Koordinaten Modus
+        // Gemerkter Chess-Zustand: wird beim Ausschalten des Koordinatenmodus gespeichert
+        // und beim Wiedereinschalten wiederhergestellt
+        let rememberedChessState = this.plugin.settings.hexNumberingAlphaChess;
+
+        const alphaSetting = new Setting(containerEl)
+            .setName(t('settings.hexNumberingAlpha'))
+            .setDesc(t('settings.hexNumberingAlphaDesc'))
+            .addToggle(toggle => {
+                toggle.setValue(this.plugin.settings.hexNumberingAlpha)
+                    .onChange(async (value) => {
+                        this.plugin.settings.hexNumberingAlpha = value;
+                        if (!value) {
+                            // Zustand merken, Chess deaktivieren und sperren
+                            rememberedChessState = this.plugin.settings.hexNumberingAlphaChess;
+                            this.plugin.settings.hexNumberingAlphaChess = false;
+                            chessToggle.setValue(false);
+                            chessToggle.setDisabled(true);
+                        } else {
+                            // Gespeicherten Zustand wiederherstellen
+                            chessToggle.setDisabled(false);
+                            this.plugin.settings.hexNumberingAlphaChess = rememberedChessState;
+                            chessToggle.setValue(rememberedChessState);
+                        }
+                        await refreshAll();
+                    });
+            });
+        subOptions.push(alphaSetting);
+
+        // Buchstabenkoordinaten
+        let chessToggle;
+        const chessModeSetting = new Setting(containerEl)
+            .setName(t('settings.hexNumberingAlphaChess'))
+            .setDesc(t('settings.hexNumberingAlphaChessDesc'))
+            .addToggle(toggle => {
+                chessToggle = toggle;
+                toggle.setValue(this.plugin.settings.hexNumberingAlphaChess);
+                // Initial sperren wenn Koordinatenmodus aus
+                if (!this.plugin.settings.hexNumberingAlpha) toggle.setDisabled(true);
+                toggle.onChange(async (value) => {
+                    this.plugin.settings.hexNumberingAlphaChess = value;
+                    rememberedChessState = value;
+                    await refreshAll();
+                });
+            });
+        subOptions.push(chessModeSetting);
+
+        // Textausrichtung (Pulldown)
+        const posSetting = new Setting(containerEl)
+            .setName(t('settings.hexNumberingPosition'))
+            .addDropdown(drop => {
+                drop.addOption('top', t('settings.hexNumberingPositionTop'));
+                drop.addOption('bottom', t('settings.hexNumberingPositionBottom'));
+                drop.setValue(this.plugin.settings.hexNumberingPosition)
+                    .onChange(async (value) => {
+                        this.plugin.settings.hexNumberingPosition = value;
+                        await refreshAll();
+                    });
+            });
+        subOptions.push(posSetting);
+
+        // Textfarbe
+        const colorSetting = new Setting(containerEl)
+            .setName(t('settings.hexNumberingColor'))
+            .addColorPicker(picker => {
+                picker.setValue(this.plugin.settings.hexNumberingColor)
+                    .onChange(async (value) => {
+                        this.plugin.settings.hexNumberingColor = value;
+                        await refreshAll();
+                    });
+            });
+        subOptions.push(colorSetting);
+
+        // Textgröße
+        const fontSizeSetting = new Setting(containerEl)
+            .setName(t('settings.hexNumberingFontSize'))
+            .setDesc(t('settings.hexNumberingFontSizeDesc'))
+            .addText(text => {
+                text.inputEl.type = 'number';
+                text.inputEl.min = '4';
+                text.inputEl.max = '40';
+                text.inputEl.style.width = '60px';
+                text.setValue(String(this.plugin.settings.hexNumberingFontSize))
+                    .onChange(async (value) => {
+                        const num = Math.min(40, Math.max(4, parseInt(value) || 10));
+                        this.plugin.settings.hexNumberingFontSize = num;
+                        await refreshAll();
+                    });
+            });
+        subOptions.push(fontSizeSetting);
+
+        // Outline
+        const outlineSetting = new Setting(containerEl)
+            .setName(t('settings.hexNumberingOutline'))
+            .setDesc(t('settings.hexNumberingOutlineDesc'))
+            .addToggle(toggle => {
+                toggle.setValue(this.plugin.settings.hexNumberingOutline)
+                    .onChange(async (value) => {
+                        this.plugin.settings.hexNumberingOutline = value;
+                        await refreshAll();
+                    });
+            });
+        subOptions.push(outlineSetting);
+
+        // Initial-Sichtbarkeit der Unteroptionen
+        subOptions.forEach(el => el.settingEl.style.display = hide ? 'none' : '');
 
         this.buildGuide(containerEl);
     }
