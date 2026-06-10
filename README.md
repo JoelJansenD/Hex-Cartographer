@@ -20,6 +20,14 @@ Your finished maps can be printed or exported as high-resolution PNG/JPEG images
 
 ![Editor](readmedata/hc-editor-001.png)
 
+### Flexible Coordinate System
+
+![Editor](readmedata/hc_coordinates1.jpg)
+
+![Editor](readmedata/hc_coordinates2.jpg)
+
+![Editor](readmedata/hc_coordinates3.jpg)
+
 ## Features
 
 #### Hex Grid Editor
@@ -29,6 +37,7 @@ Your finished maps can be printed or exported as high-resolution PNG/JPEG images
 - Fill tool for quick area painting
 - Pattern stamp tool to apply repeating tile layouts
 - Change map orientation to get flat top hexagons instead of pointy top
+- Flexible coordinate system with multiple modes
 
 #### Symbols & Terrain
 - 25+ hand-crafted SVG symbols across 4 groups: Extras, Vegetation, Mountains, Buildings
@@ -49,6 +58,7 @@ Your finished maps can be printed or exported as high-resolution PNG/JPEG images
 
 #### Export & Print
 - Export maps as high-resolution PNG or JPEG
+- Optionally crop bitmaps to map borders
 - Print directly from the three-dot menu
 - On mobile, exports are saved next to the map file
 
