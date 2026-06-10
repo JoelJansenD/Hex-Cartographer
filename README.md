@@ -29,7 +29,7 @@ Activate numbering to see hex locations
 Switch between numbering modes
 
 ![Editor](readmedata/hc_coordinates3.jpg)
-Choose a coordinate position for the hexes
+Choose a coordinate position for the hexes and color
 
 ## Features
 
