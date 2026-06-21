@@ -1,6 +1,6 @@
 import { ItemView, WorkspaceLeaf } from "obsidian";
 import HexCartographerToolbar from "./hex-cartographer-toolbar";
-import { isPaintingTool, ToolGroup } from "../toolgroup";
+import { isPaintingTool, ToolGroup } from "../types/tool-group";
 import HexCartographerContent from "./hex-cartographer-content";
 import HexCartographerSidepanel from "./hex-cartographer-sidepanel";
 

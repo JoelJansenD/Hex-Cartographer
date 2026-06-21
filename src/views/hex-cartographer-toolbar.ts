@@ -1,5 +1,5 @@
 import { ButtonComponent } from "obsidian";
-import { ToolGroup } from "../toolgroup";
+import { ToolGroup } from "../types/tool-group";
 
 interface HexCartographerToolbarConfig {
     /**

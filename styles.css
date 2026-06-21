@@ -8,6 +8,13 @@
     background-color: var(--color-base-20);
 }
 
+.hex-canvas {
+    height: 100%;
+    width: 100%;
+    background-color: transparent;
+    display: block;
+}
+
 .hex-sidepanel {
     background-color: var(--color-base-20);
     max-width: 15%;
