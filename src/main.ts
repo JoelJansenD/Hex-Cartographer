@@ -11,6 +11,7 @@ import {
 } from './services/map-document-service';
 import { HexCartographerViewLegacy } from './views/hex-cartographer-view-legacy';
 import HexCartographerSettingTab from './settings/hex-cartographer-setting-tab';
+import HexCartographerView from './views/hex-cartographer-view';
 
 
 const DEFAULT_SETTINGS: PluginSettings = {
@@ -37,7 +38,8 @@ class HexCartographerPlugin extends Plugin {
         // currentLanguage = getObsidianLanguage();
         this.addSettingTab(new HexCartographerSettingTab(this.app, this));
 
-        this.registerView('hex-cartographer', (leaf) => new HexCartographerViewLegacy(leaf, this));
+        this.registerView('hex-cartographer', (leaf) => new HexCartographerView(leaf));
+        // this.registerView('hex-cartographer', (leaf) => new HexCartographerViewLegacy(leaf, this));
 
         this.registerExtensions(['hexcartographer.md'], 'hex-cartographer');
 

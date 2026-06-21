@@ -177,7 +177,22 @@ export type DrawMode = 'pen' | 'eraser' | 'line' | string;
 /**
  * Available tool groups/categories
  */
-export type ToolGroup = 'hexcolor' | 'river' | 'road' | 'border' | 'text' | string;
+export type ToolGroupLegacy = 'hexcolor' | 'river' | 'road' | 'border' | 'text' | string;
+
+/**
+ * Available tool groups/categories:
+ * - 'hexcolor': Hex color fill tool
+ * - 'bucket': Hex color bucket fill tool
+ * - 'eraser': Eraser tool
+ * - 'text': Text annotation tool
+ * - 'pattern': Stamp pattern tool
+ * - 'pickPattern': Pick pattern tool
+ * - 'river': River drawing tool
+ * - 'road': Road drawing tool
+ * - 'border': Border drawing tool
+ * - 'selectPathAndBorder': Select path and border tool
+ */
+export type ToolGroup = 'hexcolor' | 'bucket' | 'eraser' | 'text' | 'pattern' | 'pickPattern' | 'river' | 'road' | 'border' | 'selectPathAndBorder';
 
 /**
  * Configuration for a tool group (grass, tree, mountain, building)
@@ -226,7 +241,7 @@ export interface RoadToolState {
 export interface ToolState {
     // Drawing mode and active tool
     drawMode: DrawMode;
-    currentToolGroup: ToolGroup;
+    currentToolGroup: ToolGroupLegacy;
     
     // Tool-specific states
     borderSettings: BorderToolState;
