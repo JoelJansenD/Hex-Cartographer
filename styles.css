@@ -10,6 +10,38 @@
 
 .hex-sidepanel {
     background-color: var(--color-base-20);
+    max-width: 15%;
+}
+
+.hex-sidepanel-icon-group {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.hex-sidepanel-icon-button {
+    height: 48px;
+    width: 48px;
+    border-radius: 50%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &.selected {
+        background-color: var(--interactive-accent);
+    }
+}
+
+.hex-sidepanel-icon {
+    &:hover {
+        cursor: pointer;
+    }
+
+    & path {
+        fill: var(--text-on-accent);
+    }
 }
 
 .hex-toolbar {

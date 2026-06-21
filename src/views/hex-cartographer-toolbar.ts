@@ -2,7 +2,7 @@ import { ButtonComponent } from "obsidian";
 import { ToolGroup } from "../types";
 
 interface HexCartographerToolbarConfig {
-    onToolChanged?: (tool: ToolGroup) => void;
+    onToolChanged?: (tool?: ToolGroup) => void;
 }
 
 export default class HexCartographerToolbar {
@@ -156,10 +156,11 @@ export default class HexCartographerToolbar {
         return [ this.riverActionButton, this.roadActionButton, this.borderActionButton, this.selectPathOrBorderActionButton ];
     }
 
-    private setTool(button: ButtonComponent, toolGroup: ToolGroup) {
+    public setTool(button?: ButtonComponent, toolGroup?: ToolGroup) {
         this.toolButtons.forEach(btn => btn = btn.removeCta());
-        button = button.setCta();
-
+        if(button) {
+            button = button.setCta();
+        }
         this.config.onToolChanged?.(toolGroup);
     }
 }

@@ -17,17 +17,24 @@ export default class HexCartographerView extends ItemView {
             style: 'display: flex; flex-direction: column; height: 100%; width: 100%'
         }});
         this._toolbar = new HexCartographerToolbar(toolbarWrapper, {
-            onToolChanged: this.onToolChanged
+            onToolChanged: this.onToolChanged.bind(this)
         });
 
         const contentWrapper = toolbarWrapper.createDiv({ attr: {
             style: 'display: flex; flex-direction: row; height: 100%; width: 100%'
         }});
         this._content = new HexCartographerContent(contentWrapper);
-        this._sidebar = new HexCartographerSidepanel(contentWrapper);
+        this._sidebar = new HexCartographerSidepanel(contentWrapper, {
+            onIconChanged: this.onIconChange.bind(this)
+        });
     }
 
-    private onToolChanged(tool: ToolGroup) {
+    private onIconChange(iconId: string) {
+        console.log(`Icon changed to: ${iconId}`);
+        this._toolbar.setTool();
+    }
+
+    private onToolChanged(tool?: ToolGroup) {
         console.log(`Tool changed to: ${tool}`);
     }
 

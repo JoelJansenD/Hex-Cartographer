@@ -1,10 +1,9 @@
-import { Plugin, PluginSettingTab, Setting, TFile, Notice, setIcon, TFolder } from 'obsidian';
+import { Plugin, Notice, TFolder } from 'obsidian';
 import {
     loadTranslations,
     localizeString,
 } from './functions/i18n';
 import { PluginSettings } from './types-legacy';
-import { SVG_SYMBOL_DATA } from './data/svg-symbol-data';
 import {
     createDefaultMapDocumentData,
     createNewMapFile,
