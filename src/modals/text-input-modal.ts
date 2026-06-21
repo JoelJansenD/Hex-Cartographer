@@ -9,6 +9,7 @@ import { localizeString } from '../functions/i18n';
 import { TextInputModalCallback } from '../types';
 import { ColorPickerModal } from './color-picker-modal';
 import { FileSelectorModal } from './file-selector-modal';
+import isTouchDevice from '../functions/is-touch-device';
 
 export class TextInputModal extends Modal {
     onSubmit: TextInputModalCallback;
@@ -196,7 +197,6 @@ export class TextInputModal extends Modal {
 }
 
 function createColorPickerElement(containerEl, app, initialColor, onChange) {
-    const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
     let currentColor = initialColor;
     const btn = containerEl.createEl('button', {
         attr: { style: 'width: 100%; height: 40px; border: 1px solid var(--divider-color); border-radius: 4px; cursor: pointer; padding: 0; box-sizing: border-box;' }
@@ -204,7 +204,7 @@ function createColorPickerElement(containerEl, app, initialColor, onChange) {
     btn.style.backgroundColor = initialColor;
 
     let hiddenInput: any = null;
-    if (isTouchDevice) {
+    if (isTouchDevice()) {
         btn.addEventListener('click', () => {
             new ColorPickerModal(app, currentColor, (color) => {
                 currentColor = color;
