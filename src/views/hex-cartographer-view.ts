@@ -21,13 +21,18 @@ export default class HexCartographerView extends ItemView {
             style: 'display: flex; flex-direction: column; height: 100%; width: 100%'
         }});
         this._toolbar = new HexCartographerToolbar(toolbarWrapper, {
-            onToolChanged: this.onToolChanged.bind(this)
+            onEditModeChanged: this.onEditModeChanged.bind(this),
+            onToolChanged: this.onToolChanged.bind(this),
         });
         this._content = new HexCartographerContent(toolbarWrapper);
         
         this._sidebar = new HexCartographerSidepanel(contentWrapper, {
             onIconChanged: this.onIconChange.bind(this)
         });
+    }
+
+    private onEditModeChanged(enabled: boolean) {
+        this._sidebar.setEditMode(enabled);
     }
 
     private onIconChange(iconId: string) {

@@ -2,6 +2,13 @@ import { ButtonComponent } from "obsidian";
 import { ToolGroup } from "../types";
 
 interface HexCartographerToolbarConfig {
+    /**
+     * Triggers whenever the edit mode is toggled. The callback will be provided with a boolean indicating whether edit mode is now enabled (true) or disabled (false).
+     */
+    onEditModeChanged?: (enabled: boolean) => void;
+    /**
+     * Triggers whenever a tool is selected. The callback will be provided with the identifier of the selected tool group, or undefined if no tool is currently active.
+     */
     onToolChanged?: (tool?: ToolGroup) => void;
 }
 
@@ -51,27 +58,39 @@ export default class HexCartographerToolbar {
         this.toolButtons.push(...this.initializePathAndBorderButtons());
         
         this.initializeActionButtons();
-        this.enterViewMode();
+        this.hideActions();
+    }
+
+    /**
+     * Set the currently active tool. When called, the onToolChanged callback will be triggered with the provided tool group identifier.
+     * @param button The button component associated with the tool (used for setting active state). If undefined, all buttons will be deativated.
+     * @param toolGroup The tool group identifier which will be passed to the onToolChanged callback. If undefined, the callback will be triggered with undefined, indicating no active tool.
+     */
+    public setTool(button?: ButtonComponent, toolGroup?: ToolGroup) {
+        this.toolButtons.forEach(btn => btn = btn.removeCta());
+        if(button) {
+            button = button.setCta();
+        }
+        this.config.onToolChanged?.(toolGroup);
     }
 
     private enterEditMode() {
-        this.paintActions.removeClass('hidden');
-        this.patternActions.removeClass('hidden');
-        this.pathAndBorderActions.removeClass('hidden');
-        this.undoActionButton.buttonEl.removeClass('hidden');
-        this.redoActionButton.buttonEl.removeClass('hidden');
-        this.editModeButton.buttonEl.addClass('hidden');
-
-        this.setTool(this.paintBrushButton, 'brush');
+        this.showActions();
+        this.config.onEditModeChanged?.(true);
     }
 
     private enterViewMode() {
+        this.hideActions();
+        this.config.onEditModeChanged?.(false);
+    }
+
+    private hideActions() {
         this.paintActions.addClass('hidden');
         this.patternActions.addClass('hidden');
         this.pathAndBorderActions.addClass('hidden');
         this.undoActionButton.buttonEl.addClass('hidden');
         this.redoActionButton.buttonEl.addClass('hidden');
-        this.editModeButton.buttonEl.removeClass('hidden');
+        this.editModeButton.buttonEl.removeClass('hidden');  
     }
 
     private initializeActionButtons() {
@@ -156,11 +175,14 @@ export default class HexCartographerToolbar {
         return [ this.riverActionButton, this.roadActionButton, this.borderActionButton, this.selectPathOrBorderActionButton ];
     }
 
-    public setTool(button?: ButtonComponent, toolGroup?: ToolGroup) {
-        this.toolButtons.forEach(btn => btn = btn.removeCta());
-        if(button) {
-            button = button.setCta();
-        }
-        this.config.onToolChanged?.(toolGroup);
+    private showActions() {
+        this.paintActions.removeClass('hidden');
+        this.patternActions.removeClass('hidden');
+        this.pathAndBorderActions.removeClass('hidden');
+        this.undoActionButton.buttonEl.removeClass('hidden');
+        this.redoActionButton.buttonEl.removeClass('hidden');
+        this.editModeButton.buttonEl.addClass('hidden');      
+
+        this.setTool(this.paintBrushButton, 'brush');
     }
 }

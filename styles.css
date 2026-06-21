@@ -48,6 +48,7 @@
     display: flex;
     flex-direction: row;
     background-color: var(--color-base-20);
+    padding: var(--p-spacing) 0 0 var(--p-spacing);
 
     & button:hover {
         cursor: pointer;
