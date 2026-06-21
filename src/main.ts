@@ -57,19 +57,28 @@ import {
     getHexBounds,
     isHexInPlausibleRange,
     createSegmentKey,
-    HexCoordinates,
 } from './functions/hex-math';
+import {
+    PluginSettings,
+    MapDocumentData,
+    TextInputModalCallback,
+    ColorPickerModalCallback,
+    FileSelectorModalCallback,
+    ExportMapModalCallback,
+    Waypoint,
+    HexCoordinates,
+} from './types';
 
 
-const DEFAULT_SETTINGS = {
+const DEFAULT_SETTINGS: PluginSettings = {
     exportWidth: 1024,
     showCrosshair: true,
     hideHexBorders: false,
     hexNumberingEnabled: false,
-    hexNumberingDirection: 'horizontal',  // 'horizontal' | 'vertical'
+    hexNumberingDirection: 'horizontal',
     hexNumberingAlpha: false,
     hexNumberingAlphaChess: false,
-    hexNumberingPosition: 'top',          // 'top' | 'bottom'
+    hexNumberingPosition: 'top',
     hexNumberingColor: '#ffffff',
     hexNumberingOutline: true,
     hexNumberingFontSize: 10,
@@ -77,6 +86,8 @@ const DEFAULT_SETTINGS = {
 
 // === Hauptklasse des Plugins ===
 class HexCartographerPlugin extends Plugin {
+    settings: PluginSettings = DEFAULT_SETTINGS;
+
     async onload() {
         await this.loadSettings();
         await loadTranslations();
@@ -277,7 +288,7 @@ class HexCartographerPlugin extends Plugin {
 
         const filePath = folderPath ? `${folderPath}/${fileName}` : fileName;
 
-        const initialData = {
+        const initialData: MapDocumentData = {
             hexes: {},
             rivers: [],
             roads: [],
@@ -287,14 +298,18 @@ class HexCartographerPlugin extends Plugin {
             zoom: 1,
             offX: 400,
             offY: 300,
+            centerWorldX: 0,
+            centerWorldY: 0,
             settings: {
+                drawMode: 'pen',
+                currentToolGroup: 'hexcolor',
+                borderSettings: { visible: true, dashes: DEFAULT_BORDER_DASHES },
+                riverSettings: { width: DEFAULT_RIVER_WIDTH, editMode: false },
+                roadSettings: { width: DEFAULT_ROAD_WIDTH, editMode: false },
+                masterColor: DEFAULT_MASTER_COLOR,
                 colorPalette: [...DEFAULT_PALETTE],
                 colorPalette2: [...DEFAULT_PALETTE2],
                 activeColorSlot: 0,
-                drawMode: 'pen',
-                currentToolGroup: 'hexcolor',
-                patternData: null,
-                patternSourceHex: null
             }
         };
 
@@ -381,11 +396,7 @@ class HexCartographerView extends ItemView {
     saveTimeout: any;
     isSaving: any;
     plugin: any;
-    data: {
-        centerWorldY: number;
-        centerWorldX: number;
-        settings: any; hexes: {}; rivers: any[]; roads: any[]; texts: any[]; borders: any[]; gridSize: number; zoom: number; offX: number; offY: number; 
-};
+    data: MapDocumentData;
     history: string[];
     redoStack: string[];
     maxHistory: number;
@@ -489,9 +500,19 @@ class HexCartographerView extends ItemView {
             zoom: 1, 
             offX: DEFAULT_OFF_X, 
             offY: DEFAULT_OFF_Y,
-            settings: {},
             centerWorldX: 0,
-            centerWorldY: 0
+            centerWorldY: 0,
+            settings: {
+                drawMode: 'pen',
+                currentToolGroup: 'hexcolor',
+                borderSettings: { visible: true, dashes: DEFAULT_BORDER_DASHES },
+                riverSettings: { width: DEFAULT_RIVER_WIDTH, editMode: false },
+                roadSettings: { width: DEFAULT_ROAD_WIDTH, editMode: false },
+                masterColor: DEFAULT_MASTER_COLOR,
+                colorPalette: [...DEFAULT_PALETTE],
+                colorPalette2: [...DEFAULT_PALETTE2],
+                activeColorSlot: 0,
+            }
         };
 
         this.history = [];
@@ -1830,7 +1851,7 @@ class HexCartographerView extends ItemView {
                 openPaletteColorPicker();
             };
 
-            let longPressTimer: number|null = null;
+            let longPressTimer: NodeJS.Timeout|null = null;
             btn.addEventListener('touchstart', (e) => {
                 longPressTimer = setTimeout(() => {
                     e.preventDefault();
@@ -2132,7 +2153,7 @@ class HexCartographerView extends ItemView {
                 const activeId = settings[activeIdKey];
                 if (activeId != null && arr) {
                     const idx = arr.findIndex(p => p.id === activeId);
-                    if (idx !== -1 && arr[idx].waypoints.length < 2) {
+                    if (idx !== -1 && arr[idx]!.waypoints.length < 2) {
                         arr.splice(idx, 1);
                     }
                 }
@@ -2595,13 +2616,13 @@ class HexCartographerView extends ItemView {
                     const road = this.data.roads && this.data.roads.find(r => r.id === this.roadSettings.activeRoadId);
                     if (road) {
                         const currentHex = pixelToHex(world.x, world.y, this.data.gridSize, this.hexOrientation);
-                        const curQ = road.waypoints[this.roadDragIndex.idx].q;
-                        const curR = road.waypoints[this.roadDragIndex.idx].r;
+                        const curQ = road.waypoints[this.roadDragIndex.idx]!.q;
+                        const curR = road.waypoints[this.roadDragIndex.idx]!.r;
                         if (curQ !== currentHex.q || curR !== currentHex.r) {
                             this.pushHistoryIfNeeded();
                             this.roadDragIndex.group.forEach(i => {
-                                road.waypoints[i].q = currentHex.q;
-                                road.waypoints[i].r = currentHex.r;
+                                road.waypoints[i]!.q = currentHex.q;
+                                road.waypoints[i]!.r = currentHex.r;
                             });
                             this.render();
                         }
@@ -2610,13 +2631,13 @@ class HexCartographerView extends ItemView {
                     const river = this.data.rivers && this.data.rivers.find(r => r.id === this.riverSettings.activeRiverId);
                     if (river) {
                         const currentHex = pixelToHex(world.x, world.y, this.data.gridSize, this.hexOrientation);
-                        const curQ = river.waypoints[this.riverDragIndex.idx].q;
-                        const curR = river.waypoints[this.riverDragIndex.idx].r;
+                        const curQ = river.waypoints[this.riverDragIndex.idx]!.q;
+                        const curR = river.waypoints[this.riverDragIndex.idx]!.r;
                         if (curQ !== currentHex.q || curR !== currentHex.r) {
                             this.pushHistoryIfNeeded();
                             this.riverDragIndex.group.forEach(i => {
-                                river.waypoints[i].q = currentHex.q;
-                                river.waypoints[i].r = currentHex.r;
+                                river.waypoints[i]!.q = currentHex.q;
+                                river.waypoints[i]!.r = currentHex.r;
                             });
                             this.render();
                         }
@@ -3028,13 +3049,13 @@ class HexCartographerView extends ItemView {
                         const road = this.data.roads && this.data.roads.find(r => r.id === this.roadSettings.activeRoadId);
                         if (road) {
                             const currentHex = pixelToHex(world.x, world.y, this.data.gridSize, this.hexOrientation);
-                            const curQ = road.waypoints[this.roadDragIndex.idx].q;
-                            const curR = road.waypoints[this.roadDragIndex.idx].r;
+                            const curQ = road.waypoints[this.roadDragIndex.idx]!.q;
+                            const curR = road.waypoints[this.roadDragIndex.idx]!.r;
                             if (curQ !== currentHex.q || curR !== currentHex.r) {
                                 this.pushHistoryIfNeeded();
                                 this.roadDragIndex.group.forEach(i => {
-                                    road.waypoints[i].q = currentHex.q;
-                                    road.waypoints[i].r = currentHex.r;
+                                    road.waypoints[i]!.q = currentHex.q;
+                                    road.waypoints[i]!.r = currentHex.r;
                                 });
                                 this.render();
                             }
@@ -3043,13 +3064,13 @@ class HexCartographerView extends ItemView {
                         const river = this.data.rivers && this.data.rivers.find(r => r.id === this.riverSettings.activeRiverId);
                         if (river) {
                             const currentHex = pixelToHex(world.x, world.y, this.data.gridSize, this.hexOrientation);
-                            const curQ = river.waypoints[this.riverDragIndex.idx].q;
-                            const curR = river.waypoints[this.riverDragIndex.idx].r;
+                            const curQ = river.waypoints[this.riverDragIndex.idx]!.q;
+                            const curR = river.waypoints[this.riverDragIndex.idx]!.r;
                             if (curQ !== currentHex.q || curR !== currentHex.r) {
                                 this.pushHistoryIfNeeded();
                                 this.riverDragIndex.group.forEach(i => {
-                                    river.waypoints[i].q = currentHex.q;
-                                    river.waypoints[i].r = currentHex.r;
+                                    river.waypoints[i]!.q = currentHex.q;
+                                    river.waypoints[i]!.r = currentHex.r;
                                 });
                                 this.render();
                             }
@@ -3409,7 +3430,7 @@ class HexCartographerView extends ItemView {
     }
 
     getHexBounds() {
-        const hexes = Object.keys(this.data.hexes).map(x => this.data.hexes[x]);
+        const hexes = Object.keys(this.data.hexes).map(x => this.data.hexes[x]!);
         return getHexBounds(hexes);
     }
 
@@ -3419,7 +3440,7 @@ class HexCartographerView extends ItemView {
             if (!road.waypoints || road.waypoints.length === 0) continue;
             if (road.waypoints.some(w => w.q === hex.q && w.r === hex.r)) return road;
             for (let i = 0; i < road.waypoints.length - 1; i++) {
-                const segs = calculateHexPath(road.waypoints[i], road.waypoints[i + 1], road.width);
+                const segs = calculateHexPath(road.waypoints[i]!, road.waypoints[i + 1]!, road.width);
                 for (const seg of segs) {
                     if (seg.to.q === hex.q && seg.to.r === hex.r) return road;
                     if (seg.from.q === hex.q && seg.from.r === hex.r) return road;
@@ -3459,9 +3480,9 @@ class HexCartographerView extends ItemView {
             }
 
             for (let i = 0; i < road.waypoints.length - 1; i++) {
-                const to = road.waypoints[i + 1];
+                const to = road.waypoints[i + 1]!;
                 if (to.break) continue;
-                const from = road.waypoints[i];
+                const from = road.waypoints[i]!;
                 const segs = calculateHexPath(from, to, road.width);
                 const onSegment = segs.some(s =>
                     (s.from.q === hex.q && s.from.r === hex.r) ||
@@ -3477,7 +3498,7 @@ class HexCartographerView extends ItemView {
 
         const insertIdx = this.roadSettings.insertAfter;
         if (insertIdx !== null && insertIdx < road.waypoints.length - 1) {
-            const bp = road.waypoints[insertIdx];
+            const bp = road.waypoints[insertIdx]!;
             road.waypoints.push({ q: bp.q, r: bp.r, break: true });
             road.waypoints.push({ q: hex.q, r: hex.r });
             this.roadSettings.insertAfter = road.waypoints.length - 1;
@@ -3493,7 +3514,7 @@ class HexCartographerView extends ItemView {
             if (!river.waypoints || river.waypoints.length === 0) continue;
             if (river.waypoints.some(w => w.q === hex.q && w.r === hex.r)) return river;
             for (let i = 0; i < river.waypoints.length - 1; i++) {
-                const segs = calculateHexPath(river.waypoints[i], river.waypoints[i + 1], river.width);
+                const segs = calculateHexPath(river.waypoints[i]!, river.waypoints[i + 1]!, river.width);
                 for (const seg of segs) {
                     if (seg.to.q === hex.q && seg.to.r === hex.r) return river;
                     if (seg.from.q === hex.q && seg.from.r === hex.r) return river;
@@ -3583,9 +3604,9 @@ class HexCartographerView extends ItemView {
             }
 
             for (let i = 0; i < river.waypoints.length - 1; i++) {
-                const to = river.waypoints[i + 1];
+                const to = river.waypoints[i + 1]!;
                 if (to.break) continue;
-                const from = river.waypoints[i];
+                const from = river.waypoints[i]!;
                 const segs = calculateHexPath(from, to, river.width);
                 const onSegment = segs.some(s =>
                     (s.from.q === hex.q && s.from.r === hex.r) ||
@@ -3601,7 +3622,7 @@ class HexCartographerView extends ItemView {
 
         const insertIdx = this.riverSettings.insertAfter;
         if (insertIdx !== null && insertIdx < river.waypoints.length - 1) {
-            const bp = river.waypoints[insertIdx];
+            const bp = river.waypoints[insertIdx]!;
             river.waypoints.push({ q: bp.q, r: bp.r, break: true });
             river.waypoints.push({ q: hex.q, r: hex.r });
             this.riverSettings.insertAfter = river.waypoints.length - 1;
@@ -3677,8 +3698,11 @@ class HexCartographerView extends ItemView {
                     if (p.waypoints && p.waypoints.length >= 2) {
                         let found = false;
                         for (let i = 0; i < p.waypoints.length - 1 && !found; i++) {
-                            if (p.waypoints[i + 1].break) continue;
-                            const segs = calculateHexPath(p.waypoints[i], p.waypoints[i + 1], p.width);
+                            const nextWaypoint = p.waypoints[i + 1]!;
+                            if (nextWaypoint.break) continue;
+                            
+                            const waypoint = p.waypoints[i]!;
+                            const segs = calculateHexPath(waypoint, nextWaypoint, p.width);
                             if (segs.some(s => (s.from.q === hex.q && s.from.r === hex.r) || (s.to.q === hex.q && s.to.r === hex.r))) {
                                 pathIds.push(p.id);
                                 found = true;
@@ -3799,7 +3823,7 @@ class HexCartographerView extends ItemView {
             if (visited.has(key)) continue;
             visited.add(key);
 
-            const hexData = this.data.hexes[key];
+            const hexData = this.data.hexes[key]!;
             const currentColor = hexData ? hexData.color : null;
             if (currentColor !== targetColor) continue;
 
@@ -4505,7 +4529,7 @@ class HexCartographerView extends ItemView {
         const hexes = Object.values(this.data.hexes);
         const texts = this.data.texts || [];
         const borders = this.data.borders || [];
-        const borderOnlyHexes: number[] = [];
+        const borderOnlyHexes: Waypoint[] = [];
         const hexKeySet = new Set(Object.keys(this.data.hexes));
         for (const region of borders) {
             for (const bh of region.hexes) {
@@ -5342,12 +5366,6 @@ class HexCartographerView extends ItemView {
                     masterColor: this.masterColor,
                     editMode: this.editMode,
                     hexColorColor: this.hexColorColor,
-                    lastUsedTextSize: this.lastUsedTextSize,
-                    lastUsedTextOutline: this.lastUsedTextOutline,
-                    lastUsedTextBold: this.lastUsedTextBold,
-                    lastUsedTextShadow: this.lastUsedTextShadow,
-                    lastUsedTextShadowDistance: this.lastUsedTextShadowDistance,
-                    lastUsedTextShadowOpatown: this.lastUsedTextShadowOpatown,
                     viewportSaved: true,
                     hexOrientation: this.hexOrientation
                 };
@@ -5412,9 +5430,9 @@ class HexCartographerView extends ItemView {
 }
 
 class FileSelectorModal extends Modal {
-    onSelect: any;
+    onSelect: FileSelectorModalCallback;
     currentLink: string;
-    constructor(app, onSelect, currentLink = '') {
+    constructor(app, onSelect: FileSelectorModalCallback, currentLink = '') {
         super(app);
         this.onSelect = onSelect;
         this.currentLink = currentLink;
@@ -5483,7 +5501,7 @@ class FileSelectorModal extends Modal {
 }
 
 class TextInputModal extends Modal {
-    onSubmit: any;
+    onSubmit: TextInputModalCallback;
     val: string;
     size: number;
     link: string;
@@ -5493,9 +5511,9 @@ class TextInputModal extends Modal {
     shadow: boolean;
     shadowDistance: number;
     shadowOpatown: number;
-    colorPalette: any;
-    colorPalette2: any;
-    constructor(app, onSubmit, val = '', size = DEFAULT_TEXT_SIZE, link = '', color = DEFAULT_TEXT_COLOR, outline = true, bold = false, shadow = false, shadowDistance = DEFAULT_SHADOW_DISTANCE, shadowOpatown = DEFAULT_SHADOW_OPACITY, colorPalette:any = null, colorPalette2:any = null) {
+    colorPalette: string[] | null;
+    colorPalette2: string[] | null;
+    constructor(app, onSubmit: TextInputModalCallback, val = '', size = DEFAULT_TEXT_SIZE, link = '', color = DEFAULT_TEXT_COLOR, outline = true, bold = false, shadow = false, shadowDistance = DEFAULT_SHADOW_DISTANCE, shadowOpatown = DEFAULT_SHADOW_OPACITY, colorPalette: string[] | null = null, colorPalette2: string[] | null = null) {
         super(app);
         this.onSubmit = onSubmit;
         this.val = val;
@@ -5668,8 +5686,8 @@ class TextInputModal extends Modal {
 
 
 class ColorPickerModal extends Modal {
-    onSelect: any;
-    initialColor: any;
+    onSelect: ColorPickerModalCallback;
+    initialColor: string;
     hue: number;
     sat: number;
     bri: number;
@@ -5681,7 +5699,7 @@ class ColorPickerModal extends Modal {
     hexInput?: HTMLInputElement;
     _sbDragging: boolean = false;
     _hueDragging: boolean = false;
-    constructor(app, initialColor, onSelect) {
+    constructor(app, initialColor: string, onSelect: ColorPickerModalCallback) {
         super(app);
         this.onSelect = onSelect;
         this.initialColor = initialColor || '#ff0000';
@@ -5870,15 +5888,15 @@ function createColorPickerElement(containerEl, app, initialColor, onChange) {
 }
 
 class ExportMapModal extends Modal {
-    onExport: any;
+    onExport: ExportMapModalCallback;
     aspect: number;
-    format: string;
+    format: 'png' | 'jpeg';
     quality: number;
-    imgWidth: any;
+    imgWidth: number;
     imgHeight: number;
     _updating: boolean;
     cropless: boolean;
-    constructor(app, mapSize, defaultWidth, onExport) {
+    constructor(app, mapSize: { w: number; h: number }, defaultWidth: number, onExport: ExportMapModalCallback) {
         super(app);
         this.onExport = onExport;
         this.aspect = mapSize.w / mapSize.h;
@@ -5930,7 +5948,7 @@ class ExportMapModal extends Modal {
             this._updating = true;
             this.imgHeight = parseInt(heightInput.value) || Math.round(1024 / this.aspect);
             this.imgWidth = Math.round(this.imgHeight * this.aspect);
-            widthInput.value = this.imgWidth;
+            widthInput.value = this.imgWidth.toString();
             this._updating = false;
         };
 
@@ -5969,8 +5987,8 @@ class ExportMapModal extends Modal {
 }
 
 class HexCartographerSettingTab extends PluginSettingTab {
-    plugin: any;
-    constructor(app, plugin) {
+    plugin: HexCartographerPlugin;
+    constructor(app, plugin: HexCartographerPlugin) {
         super(app, plugin);
         this.plugin = plugin;
     }
@@ -6131,6 +6149,7 @@ class HexCartographerSettingTab extends PluginSettingTab {
                 drop.addOption('bottom', localizeString('settings.hexNumberingPositionBottom'));
                 drop.setValue(this.plugin.settings.hexNumberingPosition)
                     .onChange(async (value) => {
+                        if(value !== 'top' && value !== 'bottom') throw new Error(`Invalid hex numbering position: ${value}`);
                         this.plugin.settings.hexNumberingPosition = value;
                         await refreshAll();
                     });
