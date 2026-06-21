@@ -46,42 +46,19 @@ import {
     hexToHsb,
 } from './functions/colors';
 import {
+    loadTranslations,
+    localizeString,
+} from './functions/i18n';
+import {
     hexToPixel,
     pixelToHex,
-    hexDistance,
-    hexLerp,
     getHexNeighbors,
     calculateHexPath,
     getHexBounds,
     isHexInPlausibleRange,
     createSegmentKey,
     HexCoordinates,
-    PixelCoordinates,
-    HexBounds,
 } from './functions/hex-math';
-
-// === Übersetzungen ===
-async function getLexicon() {
-    let lang = window.localStorage.getItem('language');
-    if(!lang) {
-        lang = 'en';
-    }
-
-    return (await import(`./resources/lang/lexicon.${lang}.json`)).default;
-}
-
-let translations: { [key: string]: string } = {};
-
-function t(key: string, params?: { [key: string]: any }) {
-    let str = translations?.[key]
-           ?? key;
-    if (params) {
-        for (const [k, v] of Object.entries(params)) {
-            str = str.replace(`{${k}}`, v);
-        }
-    }
-    return str;
-}
 
 
 const DEFAULT_SETTINGS = {
@@ -102,7 +79,7 @@ const DEFAULT_SETTINGS = {
 class HexCartographerPlugin extends Plugin {
     async onload() {
         await this.loadSettings();
-        translations = await getLexicon();
+        await loadTranslations();
         // currentLanguage = getObsidianLanguage();
         this.addSettingTab(new HexCartographerSettingTab(this.app, this));
 
@@ -168,7 +145,7 @@ class HexCartographerPlugin extends Plugin {
             this.app.workspace.on('file-menu', (menu, file) => {
                 menu.addItem((item) => {
                     item
-                        .setTitle(t('menu.createNew'))
+                        .setTitle(localizeString('menu.createNew'))
                         .setIcon('map')
                         .setSection('create')
                         .onClick(async () => {
@@ -335,7 +312,7 @@ class HexCartographerPlugin extends Plugin {
                 state: { file: file.path }
             });
         } catch (err) {
-            new Notice(t('notice.fileCreateError', { error: err }));
+            new Notice(localizeString('notice.fileCreateError', { error: err }));
         }
     }
 
@@ -586,14 +563,14 @@ class HexCartographerView extends ItemView {
         const ex = this.toolConfigs || {} as any;
         return {
             grass: {
-                name: t('tool.extras'),
+                name: localizeString('tool.extras'),
                 variants: [
-                    { id: 'question', label: t('variant.question'), icon: 'help-circle' },
-                    { id: 'exclamation', label: t('variant.exclamation'), icon: 'alert-circle' },
-                    { id: 'cross', label: t('variant.cross'), icon: 'x' },
-                    { id: 'dot', label: t('variant.dot'), icon: 'circle' },
-                    { id: 'shield', label: t('variant.shield'), icon: 'shield' },
-                    { id: 'pirateskull', label: t('variant.pirateskull'), icon: 'skull' }
+                    { id: 'question', label: localizeString('variant.question'), icon: 'help-circle' },
+                    { id: 'exclamation', label: localizeString('variant.exclamation'), icon: 'alert-circle' },
+                    { id: 'cross', label: localizeString('variant.cross'), icon: 'x' },
+                    { id: 'dot', label: localizeString('variant.dot'), icon: 'circle' },
+                    { id: 'shield', label: localizeString('variant.shield'), icon: 'shield' },
+                    { id: 'pirateskull', label: localizeString('variant.pirateskull'), icon: 'skull' }
                 ],
                 currentVariant: ex.grass?.currentVariant || 'question',
                 symbolColor: ex.grass?.symbolColor || DEFAULT_EXTRAS_SYMBOL_COLOR,
@@ -601,14 +578,14 @@ class HexCartographerView extends ItemView {
                 backgroundEnabled: ex.grass?.backgroundEnabled || false
             },
             tree: {
-                name: t('tool.vegetation'),
+                name: localizeString('tool.vegetation'),
                 variants: [
-                    { id: 'grass', label: t('variant.grass'), icon: 'sprout' },
-                    { id: 'swamp', label: t('variant.swamp'), icon: 'waves' },
-                    { id: 'bush', label: t('variant.bush'), icon: 'leaf' },
-                    { id: 'tree', label: t('variant.tree'), icon: 'trees' },
-                    { id: 'pine', label: t('variant.pine'), icon: 'triangle' },
-                    { id: 'palm', label: t('variant.palm'), icon: 'palmtree' }
+                    { id: 'grass', label: localizeString('variant.grass'), icon: 'sprout' },
+                    { id: 'swamp', label: localizeString('variant.swamp'), icon: 'waves' },
+                    { id: 'bush', label: localizeString('variant.bush'), icon: 'leaf' },
+                    { id: 'tree', label: localizeString('variant.tree'), icon: 'trees' },
+                    { id: 'pine', label: localizeString('variant.pine'), icon: 'triangle' },
+                    { id: 'palm', label: localizeString('variant.palm'), icon: 'palmtree' }
                 ],
                 currentVariant: ex.tree?.currentVariant || 'tree',
                 symbolColor: ex.tree?.symbolColor || DEFAULT_VEGETATION_SYMBOL_COLOR,
@@ -616,10 +593,10 @@ class HexCartographerView extends ItemView {
                 backgroundEnabled: ex.tree?.backgroundEnabled || false
             },
             mountain: {
-                name: t('tool.mountain'),
+                name: localizeString('tool.mountain'),
                 variants: [
-                    { id: 'hill', label: t('variant.hill'), icon: 'chevron-up' },
-                    { id: 'mountain', label: t('variant.mountain'), icon: 'mountain' }
+                    { id: 'hill', label: localizeString('variant.hill'), icon: 'chevron-up' },
+                    { id: 'mountain', label: localizeString('variant.mountain'), icon: 'mountain' }
                 ],
                 currentVariant: ex.mountain?.currentVariant || 'mountain',
                 symbolColor: ex.mountain?.symbolColor || DEFAULT_MOUNTAIN_SYMBOL_COLOR,
@@ -627,19 +604,19 @@ class HexCartographerView extends ItemView {
                 backgroundEnabled: ex.mountain?.backgroundEnabled || false
             },
             building: {
-                name: t('tool.building'),
+                name: localizeString('tool.building'),
                 variants: [
-                    { id: 'tent', label: t('variant.tent'), icon: 'tent' },
-                    { id: 'house', label: t('variant.house'), icon: 'home' },
-                    { id: 'village', label: t('variant.village'), icon: 'school' },
-                    { id: 'town', label: t('variant.town'), icon: 'castle' },
-                    { id: 'castle', label: t('variant.castle'), icon: 'shield' },
-                    { id: 'monastery', label: t('variant.monastery'), icon: 'church' },
-                    { id: 'harbor', label: t('variant.harbor'), icon: 'ship' },
-                    { id: 'tower', label: t('variant.tower'), icon: 'tower' },
-                    { id: 'ruins', label: t('variant.ruins'), icon: 'archive' },
-                    { id: 'cave', label: t('variant.cave'), icon: 'circle' },
-                    { id: 'oasis', label: t('variant.oasis'), icon: 'droplet' }
+                    { id: 'tent', label: localizeString('variant.tent'), icon: 'tent' },
+                    { id: 'house', label: localizeString('variant.house'), icon: 'home' },
+                    { id: 'village', label: localizeString('variant.village'), icon: 'school' },
+                    { id: 'town', label: localizeString('variant.town'), icon: 'castle' },
+                    { id: 'castle', label: localizeString('variant.castle'), icon: 'shield' },
+                    { id: 'monastery', label: localizeString('variant.monastery'), icon: 'church' },
+                    { id: 'harbor', label: localizeString('variant.harbor'), icon: 'ship' },
+                    { id: 'tower', label: localizeString('variant.tower'), icon: 'tower' },
+                    { id: 'ruins', label: localizeString('variant.ruins'), icon: 'archive' },
+                    { id: 'cave', label: localizeString('variant.cave'), icon: 'circle' },
+                    { id: 'oasis', label: localizeString('variant.oasis'), icon: 'droplet' }
                 ],
                 currentVariant: ex.building?.currentVariant || 'house',
                 symbolColor: ex.building?.symbolColor || DEFAULT_BUILDING_SYMBOL_COLOR,
@@ -672,14 +649,14 @@ class HexCartographerView extends ItemView {
     onPaneMenu(menu, source) {
         if (source === 'more-options') {
             menu.addItem((item) => {
-                item.setTitle(t('menu.exportMap'))
+                item.setTitle(localizeString('menu.exportMap'))
                     .setIcon('download')
                     .onClick(() => {
                         const mapSize = this.getMapWorldSize();
-                        if (!mapSize) { new Notice(t('notice.noContentToPrint')); return; }
+                        if (!mapSize) { new Notice(localizeString('notice.noContentToPrint')); return; }
                         new ExportMapModal(this.app, mapSize, this.plugin.settings.exportWidth, async (format, width, quality, cropless) => {
                             const tmpCanvas = this.renderFullMap({ targetWidth: width, cropless: cropless });
-                            if (!tmpCanvas) { new Notice(t('notice.noContentToPrint')); return; }
+                            if (!tmpCanvas) { new Notice(localizeString('notice.noContentToPrint')); return; }
                             const mimeType = format === 'jpeg' ? 'image/jpeg' : 'image/png';
                             const ext = format === 'jpeg' ? '.jpg' : '.png';
                             const baseName = this.file ? this.file.basename.replace('.hexcartographer', '') : 'hex-cartographer-map';
@@ -697,7 +674,7 @@ class HexCartographerView extends ItemView {
                                 const existing = this.app.vault.getFileByPath(filePath);
                                 if (existing) { await this.app.vault.modifyBinary(existing, buffer); }
                                 else { await this.app.vault.createBinary(filePath, buffer); }
-                                new Notice(`${t('notice.exportSaved')}: ${filePath}`);
+                                new Notice(`${localizeString('notice.exportSaved')}: ${filePath}`);
                             } else {
                                 const link = document.createElement('a');
                                 link.href = URL.createObjectURL(blob);
@@ -713,11 +690,11 @@ class HexCartographerView extends ItemView {
 
             if (!this.isTouchDevice) {
                 menu.addItem((item) => {
-                    item.setTitle(t('menu.printMap'))
+                    item.setTitle(localizeString('menu.printMap'))
                         .setIcon('printer')
                         .onClick(() => {
                             const tmpCanvas = this.renderFullMap();
-                            if (!tmpCanvas) { new Notice(t('notice.noContentToPrint')); return; }
+                            if (!tmpCanvas) { new Notice(localizeString('notice.noContentToPrint')); return; }
                             const dataUrl = tmpCanvas.toDataURL('image/png');
                             const title = this.file ? this.file.basename.replace('.hexcartographer', '') : 'Hex Cartographer Map';
                             const iframe = document.createElement('iframe');
@@ -1193,7 +1170,7 @@ class HexCartographerView extends ItemView {
             this.render();
             this.requestSave();
         } else {
-            new Notice(t('notice.nothingToUndo'));
+            new Notice(localizeString('notice.nothingToUndo'));
         }
     }
 
@@ -1219,7 +1196,7 @@ class HexCartographerView extends ItemView {
             this.render();
             this.requestSave();
         } else {
-            new Notice(t('notice.nothingToRedo'));
+            new Notice(localizeString('notice.nothingToRedo'));
         }
     }
 
@@ -1239,7 +1216,7 @@ class HexCartographerView extends ItemView {
         }
 
         if (hexes.length === 0 && texts.length === 0 && borderOnlyHexes.length === 0) {
-            new Notice(t('notice.noHexesToShow'));
+            new Notice(localizeString('notice.noHexesToShow'));
             return;
         }
 
@@ -1369,7 +1346,7 @@ class HexCartographerView extends ItemView {
     }
 
     createToolbar(toolbar) {
-        const editModeBtn = this.createToolButton(toolbar, { icon: 'wrench', title: t('tooltip.editMode') });
+        const editModeBtn = this.createToolButton(toolbar, { icon: 'wrench', title: localizeString('tooltip.editMode') });
         this.editModeBtn = editModeBtn;
         editModeBtn.onclick = () => {
             this.editMode = !this.editMode;
@@ -1404,7 +1381,7 @@ class HexCartographerView extends ItemView {
         this.editContent = editContent;
 
         const masterColorBtn = editContent.createEl('button', {
-            attr: { title: t('tooltip.colorPicker'), style: 'width: 50px; height: 50px; min-width: 50px; border: 1px solid var(--divider-color); border-radius: 4px; cursor: pointer; box-sizing: border-box; padding: 0;' }
+            attr: { title: localizeString('tooltip.colorPicker'), style: 'width: 50px; height: 50px; min-width: 50px; border: 1px solid var(--divider-color); border-radius: 4px; cursor: pointer; box-sizing: border-box; padding: 0;' }
         });
         masterColorBtn.style.backgroundColor = this.masterColor;
         this.masterColorBtn = masterColorBtn;
@@ -1439,7 +1416,7 @@ class HexCartographerView extends ItemView {
             this.requestSave();
         });
 
-        const colorEyedropperBtn = this.createToolButton(editContent, { icon: 'pipette', title: t('tooltip.colorEyedropper') });
+        const colorEyedropperBtn = this.createToolButton(editContent, { icon: 'pipette', title: localizeString('tooltip.colorEyedropper') });
         colorEyedropperBtn.style.background = BUTTON_BG_DEFAULT;
         this.colorEyedropperBtn = colorEyedropperBtn;
         colorEyedropperBtn.onclick = () => {
@@ -1448,7 +1425,7 @@ class HexCartographerView extends ItemView {
             this.colorPickMode = !wasActive;
             colorEyedropperBtn.style.background = this.colorPickMode ? PICKER_ACTIVE_BG : BUTTON_BG_DEFAULT;
             colorEyedropperBtn.style.color = this.colorPickMode ? 'var(--text-on-accent)' : '';
-            if (this.colorPickMode) new Notice(t('notice.tapToPickColor'));
+            if (this.colorPickMode) new Notice(localizeString('notice.tapToPickColor'));
         };
 
         editContent.createEl('span', { cls: 'hex-toolbar-sep', text: '\u200B' });
@@ -1457,7 +1434,7 @@ class HexCartographerView extends ItemView {
         
         editContent.createEl('span', { cls: 'hex-toolbar-sep', text: '\u200B' });
 
-        const hexColorBtn = this.createToolButton(editContent, { icon: 'hexagon', title: t('tooltip.hexColor'), dataset: { toolGroup: 'hexcolor' } });
+        const hexColorBtn = this.createToolButton(editContent, { icon: 'hexagon', title: localizeString('tooltip.hexColor'), dataset: { toolGroup: 'hexcolor' } });
         hexColorBtn.onclick = () => {
             const needsRender = this.currentToolGroup === 'pattern' || this.borderSettings.pickedHex;
             this.exitPathEditMode();
@@ -1481,9 +1458,9 @@ class HexCartographerView extends ItemView {
 
         editContent.createEl('span', { cls: 'hex-toolbar-sep', text: '\u200B' });
 
-        this.createDrawModeButton(editContent, 'fill', 'paint-bucket', t('tooltip.fill'));
+        this.createDrawModeButton(editContent, 'fill', 'paint-bucket', localizeString('tooltip.fill'));
 
-        const textBtn = this.createToolButton(editContent, { icon: 'type', title: t('tooltip.text'), dataset: { toolGroup: 'text' } });
+        const textBtn = this.createToolButton(editContent, { icon: 'type', title: localizeString('tooltip.text'), dataset: { toolGroup: 'text' } });
         textBtn.onclick = () => {
             const needsRender = this.currentToolGroup === 'pattern' || this.borderSettings.pickedHex;
             this.exitPathEditMode();
@@ -1494,7 +1471,7 @@ class HexCartographerView extends ItemView {
             this.requestSave();
         };
 
-        this.createDrawModeButton(editContent, 'eraser', 'eraser', t('tooltip.eraser'));
+        this.createDrawModeButton(editContent, 'eraser', 'eraser', localizeString('tooltip.eraser'));
 
         editContent.createEl('span', { cls: 'hex-toolbar-sep', text: '\u200B' });
 
@@ -1507,16 +1484,16 @@ class HexCartographerView extends ItemView {
 
         editContent.createEl('span', { cls: 'hex-toolbar-sep', text: '\u200B' });
 
-        const undoBtn = this.createToolButton(editContent, { icon: 'undo-2', title: t('tooltip.undo') });
+        const undoBtn = this.createToolButton(editContent, { icon: 'undo-2', title: localizeString('tooltip.undo') });
         undoBtn.onclick = () => this.undo();
 
-        const redoBtn = this.createToolButton(editContent, { icon: 'redo-2', title: t('tooltip.redo') });
+        const redoBtn = this.createToolButton(editContent, { icon: 'redo-2', title: localizeString('tooltip.redo') });
         redoBtn.onclick = () => this.redo();
 
-        const fitBtn = this.createToolButton(toolbar, { icon: 'maximize-2', title: t('tooltip.fit') });
+        const fitBtn = this.createToolButton(toolbar, { icon: 'maximize-2', title: localizeString('tooltip.fit') });
         fitBtn.onclick = () => this.fitMapToView();
 
-        const hexOrientationBtn = this.createToolButton(toolbar, { icon: 'rotate-cw', title: t('tooltip.hexOrientation') });
+        const hexOrientationBtn = this.createToolButton(toolbar, { icon: 'rotate-cw', title: localizeString('tooltip.hexOrientation') });
         this.hexOrientationBtn = hexOrientationBtn;
         hexOrientationBtn.classList.toggle('active', this.hexOrientation);
         hexOrientationBtn.style.background = this.hexOrientation ? PICKER_ACTIVE_BG : BUTTON_BG_DEFAULT;
@@ -1532,7 +1509,7 @@ class HexCartographerView extends ItemView {
             this.requestSave();
         };
 
-        const settingsBtn = this.createToolButton(toolbar, { icon: 'settings', title: t('tooltip.settings') });
+        const settingsBtn = this.createToolButton(toolbar, { icon: 'settings', title: localizeString('tooltip.settings') });
         settingsBtn.onclick = () => {
             (this.app as any).setting.open();
             (this.app as any).setting.openTabById('hex-cartographer');
@@ -1581,7 +1558,7 @@ class HexCartographerView extends ItemView {
 
         const btnWrapper = wrapper.createDiv({ style: 'position: relative; display: inline-block;' });
         const btn = this.createToolButton(btnWrapper, {
-            title: t('tooltip.toolGroup', { name: config.name }),
+            title: localizeString('tooltip.toolGroup', { name: config.name }),
             dataset: { toolGroup: groupId },
             style: `position: relative; background: ${config.backgroundEnabled ? config.backgroundColor : BUTTON_BG_DEFAULT};`
         });
@@ -1635,11 +1612,11 @@ class HexCartographerView extends ItemView {
     createPatternTool(toolbar) {
         const wrapper = toolbar.createDiv({ style: 'display: flex; align-items: center; gap: 4px;' });
 
-        const patternBtn = this.createToolButton(wrapper, { icon: 'copy', title: t('tooltip.pattern'), dataset: { toolGroup: 'pattern' } });
+        const patternBtn = this.createToolButton(wrapper, { icon: 'copy', title: localizeString('tooltip.pattern'), dataset: { toolGroup: 'pattern' } });
 
         patternBtn.onclick = () => {
             if (!this.patternData) {
-                new Notice(t('notice.noPattern'));
+                new Notice(localizeString('notice.noPattern'));
                 return;
             }
             this.exitPathEditMode();
@@ -1650,7 +1627,7 @@ class HexCartographerView extends ItemView {
             this.requestSave();
         };
 
-        const pickerBtn = this.createToolButton(wrapper, { icon: 'pipette', title: t('tooltip.patternPicker'), style: 'width: 24px; padding: 2px;' });
+        const pickerBtn = this.createToolButton(wrapper, { icon: 'pipette', title: localizeString('tooltip.patternPicker'), style: 'width: 24px; padding: 2px;' });
 
         pickerBtn.onclick = () => {
             const wasActive = this.patternPickMode;
@@ -1659,7 +1636,7 @@ class HexCartographerView extends ItemView {
             pickerBtn.style.background = this.patternPickMode ? PICKER_ACTIVE_BG : BUTTON_BG_DEFAULT;
             if (this.patternPickMode) {
                 this.currentToolGroup = null;
-                new Notice(t('notice.clickToPickPattern'));
+                new Notice(localizeString('notice.clickToPickPattern'));
             }
             this.updateToolbarState(toolbar);
         };
@@ -1804,7 +1781,7 @@ class HexCartographerView extends ItemView {
             const btn = row.createEl('button', {
                 cls: 'hex-color-slot',
                 attr: {
-                    title: t('tooltip.palette'),
+                    title: localizeString('tooltip.palette'),
                     style: 'width: 24px; height: 24px; min-width: 24px; border: none; border-radius: 3px; cursor: pointer; padding: 0;'
                 }
             });
@@ -1888,7 +1865,7 @@ class HexCartographerView extends ItemView {
 
         const topRow = wrapper.createDiv({ style: 'display: flex; gap: 2px; align-items: center;' });
 
-        const riverBtn = this.createToolButton(topRow, { icon: 'waves', title: t('tooltip.river'), dataset: { toolGroup: 'river' } });
+        const riverBtn = this.createToolButton(topRow, { icon: 'waves', title: localizeString('tooltip.river'), dataset: { toolGroup: 'river' } });
         this.riverBtn = riverBtn;
         riverBtn.onclick = () => {
             if (this.pathPickPending) {
@@ -1904,7 +1881,7 @@ class HexCartographerView extends ItemView {
             this.requestSave();
         };
 
-        const roadBtn = this.createToolButton(topRow, { icon: 'route', title: t('tooltip.road'), dataset: { toolGroup: 'road' } });
+        const roadBtn = this.createToolButton(topRow, { icon: 'route', title: localizeString('tooltip.road'), dataset: { toolGroup: 'road' } });
         this.roadBtn = roadBtn;
         roadBtn.onclick = () => {
             if (this.pathPickPending) {
@@ -1920,7 +1897,7 @@ class HexCartographerView extends ItemView {
             this.requestSave();
         };
 
-        const pickerBtn = this.createToolButton(topRow, { icon: 'mouse-pointer', title: t('tooltip.pathPicker') });
+        const pickerBtn = this.createToolButton(topRow, { icon: 'mouse-pointer', title: localizeString('tooltip.pathPicker') });
         this.pathPickerBtn = pickerBtn;
         pickerBtn.onclick = () => {
             if (this.pathPickPending) {
@@ -1958,7 +1935,7 @@ class HexCartographerView extends ItemView {
         const riverWidthInput = bottomRow.createEl('input', {
             type: 'number',
             value: this.riverSettings.width.toString(),
-            attr: { title: t('input.riverWidth'), min: '1', max: '999', style: `height: ${TOOLBAR_INPUT_HEIGHT}; font-size: ${TOOLBAR_INPUT_FONT_SIZE}; padding: 2px; box-sizing: border-box;` }
+            attr: { title: localizeString('input.riverWidth'), min: '1', max: '999', style: `height: ${TOOLBAR_INPUT_HEIGHT}; font-size: ${TOOLBAR_INPUT_FONT_SIZE}; padding: 2px; box-sizing: border-box;` }
         });
         this.makeInputInteractive(riverWidthInput);
         this.riverWidthInput = riverWidthInput;
@@ -1974,7 +1951,7 @@ class HexCartographerView extends ItemView {
         const roadWidthInput = bottomRow.createEl('input', {
             type: 'number',
             value: this.roadSettings.width.toString(),
-            attr: { title: t('input.roadWidth'), min: '1', max: '999', style: `height: ${TOOLBAR_INPUT_HEIGHT}; font-size: ${TOOLBAR_INPUT_FONT_SIZE}; padding: 2px; box-sizing: border-box;` }
+            attr: { title: localizeString('input.roadWidth'), min: '1', max: '999', style: `height: ${TOOLBAR_INPUT_HEIGHT}; font-size: ${TOOLBAR_INPUT_FONT_SIZE}; padding: 2px; box-sizing: border-box;` }
         });
         this.makeInputInteractive(roadWidthInput);
         this.roadWidthInput = roadWidthInput;
@@ -1990,7 +1967,7 @@ class HexCartographerView extends ItemView {
         const dashesInput = bottomRow.createEl('input', {
             type: 'number',
             value: (this.pathDashes || DEFAULT_PATH_DASHES).toString(),
-            attr: { title: t('input.pathDashes'), min: '1', max: '99', style: `height: ${TOOLBAR_INPUT_HEIGHT}; font-size: ${TOOLBAR_INPUT_FONT_SIZE}; padding: 2px; box-sizing: border-box;` }
+            attr: { title: localizeString('input.pathDashes'), min: '1', max: '99', style: `height: ${TOOLBAR_INPUT_HEIGHT}; font-size: ${TOOLBAR_INPUT_FONT_SIZE}; padding: 2px; box-sizing: border-box;` }
         });
         this.makeInputInteractive(dashesInput);
         this.pathDashesInput = dashesInput;
@@ -2057,7 +2034,7 @@ class HexCartographerView extends ItemView {
             if (this.riverWidthInput) this.riverWidthInput.value = path.width.toString();
             this.pathDashes = path.dashes || DEFAULT_PATH_DASHES;
             if (this.pathDashesInput) this.pathDashesInput.value = this.pathDashes.toString();
-            new Notice(t('notice.riverSelected', { id: path.id }));
+            new Notice(localizeString('notice.riverSelected', { id: path.id }));
         } else {
             this.currentToolGroup = 'road';
             this.roadSettings.activeRoadId = path.id;
@@ -2069,7 +2046,7 @@ class HexCartographerView extends ItemView {
             if (this.roadWidthInput) this.roadWidthInput.value = path.width.toString();
             this.pathDashes = path.dashes || DEFAULT_PATH_DASHES;
             if (this.pathDashesInput) this.pathDashesInput.value = this.pathDashes.toString();
-            new Notice(t('notice.roadSelected', { id: path.id }));
+            new Notice(localizeString('notice.roadSelected', { id: path.id }));
         }
         this.lastToolGroup = null;
         this.pathPickMode = false;
@@ -2091,7 +2068,7 @@ class HexCartographerView extends ItemView {
 
         if (foundRiver && foundRoad) {
             this.pathPickPending = { river: foundRiver, road: foundRoad };
-            new Notice(t('notice.chooseRiverOrRoad'));
+            new Notice(localizeString('notice.chooseRiverOrRoad'));
             const toolbar = this.containerEl.querySelector('.hex-toolbar');
             if (toolbar) this.updateToolbarState(toolbar);
             return;
@@ -2169,7 +2146,7 @@ class HexCartographerView extends ItemView {
             setIcon(this.pathPickerBtn, 'mouse-pointer');
             this.pathPickerBtn.style.background = BUTTON_BG_DEFAULT;
             this.pathPickerBtn.style.color = '';
-            this.pathPickerBtn.setAttribute('title', t('tooltip.pathPicker'));
+            this.pathPickerBtn.setAttribute('title', localizeString('tooltip.pathPicker'));
         }
         this.pathPickMode = false;
         this.patternPickMode = false;
@@ -2202,7 +2179,7 @@ class HexCartographerView extends ItemView {
 
         const topRow = wrapper.createDiv({ style: 'display: flex; gap: 2px; align-items: center;' });
 
-        const btn = this.createToolButton(topRow, { icon: 'shield', title: t('tooltip.border'), dataset: { toolGroup: 'border' } });
+        const btn = this.createToolButton(topRow, { icon: 'shield', title: localizeString('tooltip.border'), dataset: { toolGroup: 'border' } });
         this.borderBtn = btn;
 
         btn.onclick = () => {
@@ -2222,7 +2199,7 @@ class HexCartographerView extends ItemView {
             this.requestSave();
         };
 
-        const pickerBtn = this.createToolButton(topRow, { icon: 'mouse-pointer', title: t('tooltip.borderPicker') });
+        const pickerBtn = this.createToolButton(topRow, { icon: 'mouse-pointer', title: localizeString('tooltip.borderPicker') });
         this.borderPickerBtn = pickerBtn;
         pickerBtn.onclick = () => {
             if (this.borderSettings.activeRegionId !== null) {
@@ -2243,7 +2220,7 @@ class HexCartographerView extends ItemView {
             this.updateToolbarState(toolbar);
         };
 
-        const visBtn = this.createToolButton(topRow, { icon: this.borderSettings.visible ? 'eye' : 'eye-off', title: t('tooltip.borderVisibility') });
+        const visBtn = this.createToolButton(topRow, { icon: this.borderSettings.visible ? 'eye' : 'eye-off', title: localizeString('tooltip.borderVisibility') });
         visBtn.style.opacity = this.borderSettings.visible ? '1' : '0.4';
         visBtn.onclick = () => {
             this.borderSettings.visible = !this.borderSettings.visible;
@@ -2259,7 +2236,7 @@ class HexCartographerView extends ItemView {
         const dashesInput = inputRow.createEl('input', {
             type: 'number',
             value: (this.borderSettings.dashes || DEFAULT_BORDER_DASHES).toString(),
-            attr: { title: t('input.borderDashes'), min: '1', max: '99', style: `height: ${TOOLBAR_INPUT_HEIGHT}; font-size: ${TOOLBAR_INPUT_FONT_SIZE}; padding: 2px; box-sizing: border-box;` }
+            attr: { title: localizeString('input.borderDashes'), min: '1', max: '99', style: `height: ${TOOLBAR_INPUT_HEIGHT}; font-size: ${TOOLBAR_INPUT_FONT_SIZE}; padding: 2px; box-sizing: border-box;` }
         });
         this.makeInputInteractive(dashesInput);
         this.borderDashesInput = dashesInput;
@@ -2328,12 +2305,12 @@ class HexCartographerView extends ItemView {
                 setIcon(this.pathPickerBtn, 'check');
                 this.pathPickerBtn.style.background = PICKER_ACTIVE_BG;
                 this.pathPickerBtn.style.color = 'var(--text-on-accent)';
-                this.pathPickerBtn.setAttribute('title', t('tooltip.pathFinish'));
+                this.pathPickerBtn.setAttribute('title', localizeString('tooltip.pathFinish'));
             } else if (!this.pathPickMode) {
                 setIcon(this.pathPickerBtn, 'mouse-pointer');
                 this.pathPickerBtn.style.background = BUTTON_BG_DEFAULT;
                 this.pathPickerBtn.style.color = '';
-                this.pathPickerBtn.setAttribute('title', t('tooltip.pathPicker'));
+                this.pathPickerBtn.setAttribute('title', localizeString('tooltip.pathPicker'));
             }
         }
 
@@ -2342,12 +2319,12 @@ class HexCartographerView extends ItemView {
                 setIcon(this.borderPickerBtn, 'check');
                 this.borderPickerBtn.style.background = PICKER_ACTIVE_BG;
                 this.borderPickerBtn.style.color = 'var(--text-on-accent)';
-                this.borderPickerBtn.setAttribute('title', t('tooltip.borderFinish'));
+                this.borderPickerBtn.setAttribute('title', localizeString('tooltip.borderFinish'));
             } else if (!this.borderPickMode) {
                 setIcon(this.borderPickerBtn, 'mouse-pointer');
                 this.borderPickerBtn.style.background = BUTTON_BG_DEFAULT;
                 this.borderPickerBtn.style.color = '';
-                this.borderPickerBtn.setAttribute('title', t('tooltip.borderPicker'));
+                this.borderPickerBtn.setAttribute('title', localizeString('tooltip.borderPicker'));
             }
         }
 
@@ -2373,7 +2350,7 @@ class HexCartographerView extends ItemView {
 
             const currentVariant = config.variants.find(v => v.id === config.currentVariant);
             if (currentVariant) {
-                btn.setAttribute('title', t('tooltip.toolGroupVariant', { label: currentVariant.label }));
+                btn.setAttribute('title', localizeString('tooltip.toolGroupVariant', { label: currentVariant.label }));
             }
 
             btn.style.background = isActive ? PICKER_ACTIVE_BG : (config.backgroundEnabled ? config.backgroundColor : BUTTON_BG_DEFAULT);
@@ -2479,12 +2456,12 @@ class HexCartographerView extends ItemView {
                         this.masterColor = rgbToHex(pixel[0], pixel[1], pixel[2]);
                         if (this.masterColorInput) { this.masterColorInput.value = this.masterColor; if (this.masterColorBtn) this.masterColorBtn.style.backgroundColor = this.masterColor; }
                         this.updateActivePathColor();
-                        new Notice(t('notice.colorPicked'));
+                        new Notice(localizeString('notice.colorPicked'));
                     } else {
-                        new Notice(t('notice.noColorAtPosition'));
+                        new Notice(localizeString('notice.noColorAtPosition'));
                     }
                 } else {
-                    new Notice(t('notice.noColorAtPosition'));
+                    new Notice(localizeString('notice.noColorAtPosition'));
                 }
                 this.colorPickMode = false;
                 if (this.colorEyedropperBtn) { this.colorEyedropperBtn.style.background = BUTTON_BG_DEFAULT; this.colorEyedropperBtn.style.color = ''; }
@@ -2501,13 +2478,13 @@ class HexCartographerView extends ItemView {
                 if (hexData) {
                     this.patternData = JSON.parse(JSON.stringify(hexData));
                     this.patternSourceHex = { q: this.startHex.q, r: this.startHex.r };
-                    new Notice(t('notice.patternPicked'));
+                    new Notice(localizeString('notice.patternPicked'));
                     this.currentToolGroup = 'pattern';
                     this.drawMode = 'pen';
                 } else {
                     this.patternData = null;
                     this.patternSourceHex = null;
-                    new Notice(t('notice.noHexAtPosition'));
+                    new Notice(localizeString('notice.noHexAtPosition'));
                 }
                 this.patternPickMode = false;
                 if (this.patternPickerBtn) {
@@ -2540,9 +2517,9 @@ class HexCartographerView extends ItemView {
                     this.masterColor = foundRegion.color;
                     if (this.masterColorInput) { this.masterColorInput.value = this.masterColor; if (this.masterColorBtn) this.masterColorBtn.style.backgroundColor = this.masterColor; }
                     if (this.borderDashesInput) this.borderDashesInput.value = this.borderSettings.dashes.toString();
-                    new Notice(t('notice.borderSelected', { id: foundRegion.id }));
+                    new Notice(localizeString('notice.borderSelected', { id: foundRegion.id }));
                 } else {
-                    new Notice(t('notice.noBorderAtPosition'));
+                    new Notice(localizeString('notice.noBorderAtPosition'));
                 }
                 this.borderPickMode = false;
                 if (this.borderPickerBtn) {
@@ -2876,12 +2853,12 @@ class HexCartographerView extends ItemView {
                                     this.masterColor = rgbToHex(pixel[0], pixel[1], pixel[2]);
                                     if (this.masterColorInput) { this.masterColorInput.value = this.masterColor; if (this.masterColorBtn) this.masterColorBtn.style.backgroundColor = this.masterColor; }
                                     this.updateActivePathColor();
-                                    new Notice(t('notice.colorPicked'));
+                                    new Notice(localizeString('notice.colorPicked'));
                                 } else {
-                                    new Notice(t('notice.noColorAtPosition'));
+                                    new Notice(localizeString('notice.noColorAtPosition'));
                                 }
                             } else {
-                                new Notice(t('notice.noColorAtPosition'));
+                                new Notice(localizeString('notice.noColorAtPosition'));
                             }
                             this.colorPickMode = false;
                             if (this.colorEyedropperBtn) { this.colorEyedropperBtn.style.background = BUTTON_BG_DEFAULT; this.colorEyedropperBtn.style.color = ''; }
@@ -2899,13 +2876,13 @@ class HexCartographerView extends ItemView {
                             if (hexData) {
                                 this.patternData = JSON.parse(JSON.stringify(hexData));
                                 this.patternSourceHex = { q: this.startHex.q, r: this.startHex.r };
-                                new Notice(t('notice.patternPicked'));
+                                new Notice(localizeString('notice.patternPicked'));
                                 this.currentToolGroup = 'pattern';
                                 this.drawMode = 'pen';
                             } else {
                                 this.patternData = null;
                                 this.patternSourceHex = null;
-                                new Notice(t('notice.noHexAtPosition'));
+                                new Notice(localizeString('notice.noHexAtPosition'));
                             }
                             this.patternPickMode = false;
                             if (this.patternPickerBtn) {
@@ -2939,9 +2916,9 @@ class HexCartographerView extends ItemView {
                                 this.masterColor = foundRegion.color;
                                 if (this.masterColorInput) { this.masterColorInput.value = this.masterColor; if (this.masterColorBtn) this.masterColorBtn.style.backgroundColor = this.masterColor; }
                                 if (this.borderDashesInput) this.borderDashesInput.value = this.borderSettings.dashes.toString();
-                                new Notice(t('notice.borderSelected', { id: foundRegion.id }));
+                                new Notice(localizeString('notice.borderSelected', { id: foundRegion.id }));
                             } else {
-                                new Notice(t('notice.noBorderAtPosition'));
+                                new Notice(localizeString('notice.noBorderAtPosition'));
                             }
                             this.borderPickMode = false;
                             if (this.borderPickerBtn) { this.borderPickerBtn.style.background = BUTTON_BG_DEFAULT; this.borderPickerBtn.style.color = ''; }
@@ -3117,12 +3094,12 @@ class HexCartographerView extends ItemView {
                                 this.masterColor = rgbToHex(pixel[0], pixel[1], pixel[2]);
                                 if (this.masterColorInput) { this.masterColorInput.value = this.masterColor; if (this.masterColorBtn) this.masterColorBtn.style.backgroundColor = this.masterColor; }
                                 this.updateActivePathColor();
-                                new Notice(t('notice.colorPicked'));
+                                new Notice(localizeString('notice.colorPicked'));
                             } else {
-                                new Notice(t('notice.noColorAtPosition'));
+                                new Notice(localizeString('notice.noColorAtPosition'));
                             }
                         } else {
-                            new Notice(t('notice.noColorAtPosition'));
+                            new Notice(localizeString('notice.noColorAtPosition'));
                         }
                         this.colorPickMode = false;
                         if (this.colorEyedropperBtn) { this.colorEyedropperBtn.style.background = BUTTON_BG_DEFAULT; this.colorEyedropperBtn.style.color = ''; }
@@ -3140,13 +3117,13 @@ class HexCartographerView extends ItemView {
                         if (hexData) {
                             this.patternData = JSON.parse(JSON.stringify(hexData));
                             this.patternSourceHex = { q: this.startHex.q, r: this.startHex.r };
-                            new Notice(t('notice.patternPicked'));
+                            new Notice(localizeString('notice.patternPicked'));
                             this.currentToolGroup = 'pattern';
                             this.drawMode = 'pen';
                         } else {
                             this.patternData = null;
                             this.patternSourceHex = null;
-                            new Notice(t('notice.noHexAtPosition'));
+                            new Notice(localizeString('notice.noHexAtPosition'));
                         }
                         this.patternPickMode = false;
                         if (this.patternPickerBtn) {
@@ -3181,9 +3158,9 @@ class HexCartographerView extends ItemView {
                             this.masterColor = foundRegion.color;
                             if (this.masterColorInput) { this.masterColorInput.value = this.masterColor; if (this.masterColorBtn) this.masterColorBtn.style.backgroundColor = this.masterColor; }
                             if (this.borderDashesInput) this.borderDashesInput.value = this.borderSettings.dashes.toString();
-                            new Notice(t('notice.borderSelected', { id: foundRegion.id }));
+                            new Notice(localizeString('notice.borderSelected', { id: foundRegion.id }));
                         } else {
-                            new Notice(t('notice.noBorderAtPosition'));
+                            new Notice(localizeString('notice.noBorderAtPosition'));
                         }
                         this.borderPickMode = false;
                         if (this.borderPickerBtn) { this.borderPickerBtn.style.background = BUTTON_BG_DEFAULT; this.borderPickerBtn.style.color = ''; }
@@ -3468,7 +3445,7 @@ class HexCartographerView extends ItemView {
                 setIcon(this.pathPickerBtn, 'check');
                 this.pathPickerBtn.style.background = PICKER_ACTIVE_BG;
                 this.pathPickerBtn.style.color = 'var(--text-on-accent)';
-                this.pathPickerBtn.setAttribute('title', t('tooltip.roadFinish'));
+                this.pathPickerBtn.setAttribute('title', localizeString('tooltip.roadFinish'));
             }
         }
 
@@ -3592,7 +3569,7 @@ class HexCartographerView extends ItemView {
                 setIcon(this.pathPickerBtn, 'check');
                 this.pathPickerBtn.style.background = PICKER_ACTIVE_BG;
                 this.pathPickerBtn.style.color = 'var(--text-on-accent)';
-                this.pathPickerBtn.setAttribute('title', t('tooltip.riverFinish'));
+                this.pathPickerBtn.setAttribute('title', localizeString('tooltip.riverFinish'));
             }
         }
 
@@ -5445,9 +5422,9 @@ class FileSelectorModal extends Modal {
 
     onOpen() {
         const { contentEl } = this;
-        contentEl.createEl('h2', { text: t('modal.selectFile') });
+        contentEl.createEl('h2', { text: localizeString('modal.selectFile') });
 
-        const filter = contentEl.createEl('input', { value: this.currentLink, placeholder: t('modal.searchFile') });
+        const filter = contentEl.createEl('input', { value: this.currentLink, placeholder: localizeString('modal.searchFile') });
         filter.style.width = '100%';
         filter.style.marginBottom = '10px';
 
@@ -5463,7 +5440,7 @@ class FileSelectorModal extends Modal {
             );
 
             if (files.length === 0) {
-                listContainer.createDiv({ text: t('modal.noFilesFound'), attr: { style: 'padding: 10px; color: var(--text-muted); text-align: center;' } });
+                listContainer.createDiv({ text: localizeString('modal.noFilesFound'), attr: { style: 'padding: 10px; color: var(--text-muted); text-align: center;' } });
                 return;
             }
 
@@ -5487,7 +5464,7 @@ class FileSelectorModal extends Modal {
 
         const btnRow = contentEl.createDiv({ attr: { style: 'display: flex; gap: 10px; margin-top: 15px;' }});
 
-        const clearBtn = btnRow.createEl('button', { text: t('modal.removeLink'), attr: { style: 'flex: 1;' } });
+        const clearBtn = btnRow.createEl('button', { text: localizeString('modal.removeLink'), attr: { style: 'flex: 1;' } });
         clearBtn.onclick = () => {
             this.onSelect('');
             setTimeout(() => {
@@ -5498,7 +5475,7 @@ class FileSelectorModal extends Modal {
             }, 50);
         };
 
-        const cancelBtn = btnRow.createEl('button', { text: t('modal.cancel'), cls: 'mod-cta', attr: {style: 'flex: 1;'} });
+        const cancelBtn = btnRow.createEl('button', { text: localizeString('modal.cancel'), cls: 'mod-cta', attr: {style: 'flex: 1;'} });
         cancelBtn.onclick = () => this.close();
 
         filter.focus();
@@ -5536,28 +5513,28 @@ class TextInputModal extends Modal {
 
     onOpen() {
         const { contentEl } = this;
-        contentEl.createEl('h2', { text: t('modal.formatText') });
+        contentEl.createEl('h2', { text: localizeString('modal.formatText') });
 
-        contentEl.createEl('label', { text: t('modal.displayText'), attr: { style: 'display: block; margin-bottom: 5px; font-weight: 500;' } });
-        const mainInput = contentEl.createEl('input', { value: this.val, placeholder: t('modal.textPlaceholder') });
+        contentEl.createEl('label', { text: localizeString('modal.displayText'), attr: { style: 'display: block; margin-bottom: 5px; font-weight: 500;' } });
+        const mainInput = contentEl.createEl('input', { value: this.val, placeholder: localizeString('modal.textPlaceholder') });
         mainInput.style.width = '100%';
         mainInput.style.marginBottom = '20px';
         mainInput.style.padding = '8px';
 
-        contentEl.createEl('label', { text: t('modal.textSize'), attr: {style: 'display: block; margin-bottom: 5px; font-weight: 500;'} });
+        contentEl.createEl('label', { text: localizeString('modal.textSize'), attr: {style: 'display: block; margin-bottom: 5px; font-weight: 500;'} });
         const sInput = contentEl.createEl('input', { type: 'number', attr: { value: this.size } });
         sInput.style.width = '100%';
         sInput.style.marginBottom = '20px';
         sInput.style.padding = '8px';
 
         const colorSection = contentEl.createDiv({attr:{ style: 'margin-bottom: 20px;' }});
-        colorSection.createEl('label', { text: t('modal.textColor'), attr:{style: 'display: block; margin-bottom: 5px; font-weight: 500;'} });
+        colorSection.createEl('label', { text: localizeString('modal.textColor'), attr:{style: 'display: block; margin-bottom: 5px; font-weight: 500;'} });
         const colorPicker = createColorPickerElement(colorSection, this.app, this.color, (color) => {
             this.color = color;
         });
 
         const paletteContainer = colorSection.createDiv({attr:{ style: 'display: flex; flex-direction: column; gap: 3px; margin-top: 10px;' }});
-        paletteContainer.createEl('span', { text: t('modal.palette'), attr: { style: 'font-size: 11px; margin-bottom: 3px;' } });
+        paletteContainer.createEl('span', { text: localizeString('modal.palette'), attr: { style: 'font-size: 11px; margin-bottom: 3px;' } });
 
         [this.colorPalette, this.colorPalette2].forEach(palette => {
             if (!palette) return;
@@ -5576,7 +5553,7 @@ class TextInputModal extends Modal {
         });
 
         const formatSection = contentEl.createDiv({ attr:{ style: 'margin-bottom: 20px;'} });
-        formatSection.createEl('label', { text: t('modal.formatting'), attr:{style: 'display: block; margin-bottom: 8px; font-weight: 500;'} });
+        formatSection.createEl('label', { text: localizeString('modal.formatting'), attr:{style: 'display: block; margin-bottom: 8px; font-weight: 500;'} });
 
         const checkboxGrid = formatSection.createDiv({attr:{ style: 'display: grid; grid-template-columns: 1fr 1fr; gap: 12px;' }});
 
@@ -5585,29 +5562,29 @@ class TextInputModal extends Modal {
         outlineInput.checked = this.outline;
         outlineInput.style.cursor = 'pointer';
         outlineInput.style.marginLeft = '4px';
-        outlineLabel.appendText(t('modal.outline'));
+        outlineLabel.appendText(localizeString('modal.outline'));
 
         const boldLabel = checkboxGrid.createEl('label', {attr:{ style: 'display: flex; gap: 8px; align-items: center; cursor: pointer;' }});
         const boldInput = boldLabel.createEl('input', { type: 'checkbox' });
         boldInput.checked = this.bold;
         boldInput.style.cursor = 'pointer';
         boldInput.style.marginLeft = '4px';
-        boldLabel.appendText(t('modal.bold'));
+        boldLabel.appendText(localizeString('modal.bold'));
 
         const shadowSection = contentEl.createDiv({attr:{ style: 'margin-bottom: 20px; padding: 15px; background: var(--background-secondary); border-radius: 5px;' }});
-        shadowSection.createEl('label', { text: t('modal.shadowSettings'), attr:{style: 'display: block; margin-bottom: 10px; font-weight: 500;'} });
+        shadowSection.createEl('label', { text: localizeString('modal.shadowSettings'), attr:{style: 'display: block; margin-bottom: 10px; font-weight: 500;'} });
 
         const shadowLabel = shadowSection.createEl('label', {attr:{ style: 'display: flex; gap: 8px; align-items: center; cursor: pointer; margin-bottom: 12px;' }});
         const shadowInput = shadowLabel.createEl('input', { type: 'checkbox' });
         shadowInput.checked = this.shadow;
         shadowInput.style.cursor = 'pointer';
         shadowInput.style.marginLeft = '4px';
-        shadowLabel.appendText(t('modal.shadowEnable'));
+        shadowLabel.appendText(localizeString('modal.shadowEnable'));
 
         const shadowParams = shadowSection.createDiv({attr:{ style: 'display: grid; grid-template-columns: 1fr 1fr; gap: 12px;' }});
 
         const distanceDiv = shadowParams.createDiv();
-        distanceDiv.createEl('label', { text: t('modal.shadowDistance'), attr:{style: 'display: block; margin-bottom: 5px; font-size: 12px;'} });
+        distanceDiv.createEl('label', { text: localizeString('modal.shadowDistance'), attr:{style: 'display: block; margin-bottom: 5px; font-size: 12px;'} });
         const shadowDistanceInput = distanceDiv.createEl('input', {
             type: 'number',
             value: this.shadowDistance.toString()
@@ -5616,7 +5593,7 @@ class TextInputModal extends Modal {
         shadowDistanceInput.style.padding = '6px';
 
         const opatownDiv = shadowParams.createDiv();
-        opatownDiv.createEl('label', { text: t('modal.shadowOpacity'), attr:{style: 'display: block; margin-bottom: 5px; font-size: 12px;'} });
+        opatownDiv.createEl('label', { text: localizeString('modal.shadowOpacity'), attr:{style: 'display: block; margin-bottom: 5px; font-size: 12px;'} });
         const shadowOpatownInput = opatownDiv.createEl('input', {
             type: 'number',
             value: this.shadowOpatown.toString()
@@ -5627,12 +5604,12 @@ class TextInputModal extends Modal {
         shadowOpatownInput.max = '100';
 
         const linkSection = contentEl.createDiv({attr:{ style: 'margin-bottom: 20px;' }});
-        linkSection.createEl('label', { text: t('modal.linkToFile'), attr:{style: 'display: block; margin-bottom: 5px; font-weight: 500;'} });
+        linkSection.createEl('label', { text: localizeString('modal.linkToFile'), attr:{style: 'display: block; margin-bottom: 5px; font-weight: 500;'} });
 
         const linkDisplayRow = linkSection.createDiv({attr:{ style: 'display: flex; gap: 8px; align-items: stretch;' }});
         const linkDisplay = linkDisplayRow.createEl('input', {
             value: this.link,
-            placeholder: t('modal.noLinkSelected'),
+            placeholder: localizeString('modal.noLinkSelected'),
             attr: { readonly: 'true' }
         });
         linkDisplay.style.flex = '1';
@@ -5640,7 +5617,7 @@ class TextInputModal extends Modal {
         linkDisplay.style.cursor = 'default';
         linkDisplay.style.padding = '8px';
 
-        const selectLinkBtn = linkDisplayRow.createEl('button', { text: t('modal.selectFileBtn') });
+        const selectLinkBtn = linkDisplayRow.createEl('button', { text: localizeString('modal.selectFileBtn') });
         selectLinkBtn.style.padding = '8px 16px';
         selectLinkBtn.style.whiteSpace = 'nowrap';
         selectLinkBtn.onclick = () => {
@@ -5658,10 +5635,10 @@ class TextInputModal extends Modal {
 
         const btnRow = contentEl.createDiv();
         btnRow.style.cssText = 'display: grid; grid-template-columns: 1fr 1fr 1fr; width: 100%; margin-top: 25px; padding-top: 15px; border-top: 1px solid var(--background-modifier-border);';
-        const cancelBtn = btnRow.createEl('button', { text: t('modal.cancel') });
+        const cancelBtn = btnRow.createEl('button', { text: localizeString('modal.cancel') });
         cancelBtn.style.justifySelf = 'start';
         cancelBtn.onclick = () => this.close();
-        const deleteBtn = btnRow.createEl('button', { text: t('modal.deleteText') });
+        const deleteBtn = btnRow.createEl('button', { text: localizeString('modal.deleteText') });
         deleteBtn.style.cssText = 'justify-self: center; color: var(--text-error);';
         deleteBtn.onclick = () => { this.onSubmit('', 0, '', '', false, false, false, 0, 0); this.close(); };
         const okBtn = btnRow.createEl('button', { text: 'OK', cls: 'mod-cta' });
@@ -5716,7 +5693,7 @@ class ColorPickerModal extends Modal {
 
     onOpen() {
         const { contentEl } = this;
-        contentEl.createEl('h2', { text: t('modal.colorPickerTitle') });
+        contentEl.createEl('h2', { text: localizeString('modal.colorPickerTitle') });
 
         // Farbvorschau
         this.previewEl = contentEl.createDiv({
@@ -5754,7 +5731,7 @@ class ColorPickerModal extends Modal {
         const btnRow = contentEl.createDiv({ attr: { style: 'display: flex; gap: 10px; margin-top: 15px;' } });
         const okBtn = btnRow.createEl('button', { text: 'OK', cls: 'mod-cta', attr: { style: 'flex: 1;' } });
         okBtn.onclick = () => { this.onSelect(hsbToHex(this.hue, this.sat, this.bri)); this.close(); };
-        const cancelBtn = btnRow.createEl('button', { text: t('modal.colorPickerCancel'), attr: { style: 'flex: 1;' } });
+        const cancelBtn = btnRow.createEl('button', { text: localizeString('modal.colorPickerCancel'), attr: { style: 'flex: 1;' } });
         cancelBtn.onclick = () => this.close();
 
         // Pointer Events — SB-Quadrat
@@ -5916,11 +5893,11 @@ class ExportMapModal extends Modal {
     onOpen() {
         const { contentEl } = this;
         contentEl.empty();
-        contentEl.createEl('h2', { text: t('modal.exportTitle') });
+        contentEl.createEl('h2', { text: localizeString('modal.exportTitle') });
 
         // Format
         const formatRow = contentEl.createDiv({ attr: { style: 'display: flex; align-items: center; gap: 8px; margin-bottom: 12px;' } });
-        formatRow.createEl('span', { text: t('modal.exportFormat') + ':' });
+        formatRow.createEl('span', { text: localizeString('modal.exportFormat') + ':' });
         const pngBtn = formatRow.createEl('button', { text: 'PNG' });
         const jpegBtn = formatRow.createEl('button', { text: 'JPEG' });
 
@@ -5959,7 +5936,7 @@ class ExportMapModal extends Modal {
 
         // Qualität (nur JPEG)
         const qualityRow = contentEl.createDiv({ attr: { style: 'display: flex; align-items: center; gap: 8px; margin-bottom: 12px;' } });
-        qualityRow.createEl('span', { text: t('modal.exportQuality') + ':' });
+        qualityRow.createEl('span', { text: localizeString('modal.exportQuality') + ':' });
         const slider = qualityRow.createEl('input', { attr: { type: 'range', min: '10', max: '100', step: '5', value: this.quality, style: 'flex: 1;' } });
         const valueDisplay = qualityRow.createEl('span', { text: this.quality + '%', attr: { style: 'min-width: 40px; text-align: right;' } });
         slider.oninput = () => { this.quality = parseInt(slider.value); valueDisplay.textContent = this.quality + '%'; };
@@ -5978,13 +5955,13 @@ class ExportMapModal extends Modal {
         const croplessCheckbox = croplessRow.createEl('input', { attr: { type: 'checkbox', id: 'hc-export-cropless' } });
         croplessCheckbox.checked = this.cropless;
         croplessCheckbox.onchange = () => { this.cropless = croplessCheckbox.checked; };
-        const croplessLabel = croplessRow.createEl('label', { text: t('modal.exportCropless'), attr: { for: 'hc-export-cropless', style: 'cursor: pointer;' } });
+        const croplessLabel = croplessRow.createEl('label', { text: localizeString('modal.exportCropless'), attr: { for: 'hc-export-cropless', style: 'cursor: pointer;' } });
 
         // Buttons
         const btnRow = contentEl.createDiv({ attr: { style: 'display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px;' } });
-        const cancelBtn = btnRow.createEl('button', { text: t('modal.colorPickerCancel') });
+        const cancelBtn = btnRow.createEl('button', { text: localizeString('modal.colorPickerCancel') });
         cancelBtn.onclick = () => this.close();
-        const exportBtn = btnRow.createEl('button', { text: t('modal.exportExport'), cls: 'mod-cta' });
+        const exportBtn = btnRow.createEl('button', { text: localizeString('modal.exportExport'), cls: 'mod-cta' });
         exportBtn.onclick = () => { this.onExport(this.format, this.imgWidth, this.quality, this.cropless); this.close(); };
 
         updateFormatUI();
@@ -6004,9 +5981,9 @@ class HexCartographerSettingTab extends PluginSettingTab {
         containerEl.createEl('h2', { text: 'Hex Cartographer' });
 
         new Setting(containerEl)
-            .setDesc(t('settings.donateText'))
+            .setDesc(localizeString('settings.donateText'))
             .addButton(btn => {
-                btn.setButtonText(t('settings.donateButton'))
+                btn.setButtonText(localizeString('settings.donateButton'))
                     .setCta()
                     .onClick(() => {
                         window.open('https://ko-fi.com/christophwerner', '_blank');
@@ -6014,8 +5991,8 @@ class HexCartographerSettingTab extends PluginSettingTab {
             });
 
         new Setting(containerEl)
-            .setName(t('settings.exportWidth'))
-            .setDesc(t('settings.exportWidthDesc'))
+            .setName(localizeString('settings.exportWidth'))
+            .setDesc(localizeString('settings.exportWidthDesc'))
             .addText(text => {
                 text.inputEl.type = 'number';
                 text.inputEl.min = '64';
@@ -6032,8 +6009,8 @@ class HexCartographerSettingTab extends PluginSettingTab {
             });
 
         new Setting(containerEl)
-            .setName(t('settings.showCrosshair'))
-            .setDesc(t('settings.showCrosshairDesc'))
+            .setName(localizeString('settings.showCrosshair'))
+            .setDesc(localizeString('settings.showCrosshairDesc'))
             .addToggle(toggle => {
                 toggle.setValue(this.plugin.settings.showCrosshair)
                     .onChange(async (value) => {
@@ -6046,8 +6023,8 @@ class HexCartographerSettingTab extends PluginSettingTab {
             });
 
         new Setting(containerEl)
-            .setName(t('settings.hideHexBorders'))
-            .setDesc(t('settings.hideHexBordersDesc'))
+            .setName(localizeString('settings.hideHexBorders'))
+            .setDesc(localizeString('settings.hideHexBordersDesc'))
             .addToggle(toggle => {
                 toggle.setValue(this.plugin.settings.hideHexBorders)
                     .onChange(async (value) => {
@@ -6060,7 +6037,7 @@ class HexCartographerSettingTab extends PluginSettingTab {
             });
 
         // ── Waben nummerieren ─────────────────────────────────────
-        containerEl.createEl('h3', { text: t('settings.hexNumbering') });
+        containerEl.createEl('h3', { text: localizeString('settings.hexNumbering') });
 
         const refreshAll = async () => {
             await this.plugin.saveSettings();
@@ -6071,8 +6048,8 @@ class HexCartographerSettingTab extends PluginSettingTab {
 
         // Master-Schalter
         new Setting(containerEl)
-            .setName(t('settings.hexNumbering'))
-            .setDesc(t('settings.hexNumberingDesc'))
+            .setName(localizeString('settings.hexNumbering'))
+            .setDesc(localizeString('settings.hexNumberingDesc'))
             .addToggle(toggle => {
                 toggle.setValue(this.plugin.settings.hexNumberingEnabled)
                     .onChange(async (value) => {
@@ -6088,8 +6065,8 @@ class HexCartographerSettingTab extends PluginSettingTab {
 
         // Zähl-Ausrichtung: ein Schalter — aus=horizontal (Standard), ein=vertikal
         const dirSetting = new Setting(containerEl)
-            .setName(t('settings.hexNumberingVertical'))
-            .setDesc(t('settings.hexNumberingVerticalDesc'))
+            .setName(localizeString('settings.hexNumberingVertical'))
+            .setDesc(localizeString('settings.hexNumberingVerticalDesc'))
             .addToggle(toggle => {
                 toggle.setValue(this.plugin.settings.hexNumberingDirection === 'vertical')
                     .onChange(async (value) => {
@@ -6105,8 +6082,8 @@ class HexCartographerSettingTab extends PluginSettingTab {
         let rememberedChessState = this.plugin.settings.hexNumberingAlphaChess;
 
         const alphaSetting = new Setting(containerEl)
-            .setName(t('settings.hexNumberingAlpha'))
-            .setDesc(t('settings.hexNumberingAlphaDesc'))
+            .setName(localizeString('settings.hexNumberingAlpha'))
+            .setDesc(localizeString('settings.hexNumberingAlphaDesc'))
             .addToggle(toggle => {
                 toggle.setValue(this.plugin.settings.hexNumberingAlpha)
                     .onChange(async (value) => {
@@ -6131,8 +6108,8 @@ class HexCartographerSettingTab extends PluginSettingTab {
         // Buchstabenkoordinaten
         let chessToggle;
         const chessModeSetting = new Setting(containerEl)
-            .setName(t('settings.hexNumberingAlphaChess'))
-            .setDesc(t('settings.hexNumberingAlphaChessDesc'))
+            .setName(localizeString('settings.hexNumberingAlphaChess'))
+            .setDesc(localizeString('settings.hexNumberingAlphaChessDesc'))
             .addToggle(toggle => {
                 chessToggle = toggle;
                 toggle.setValue(this.plugin.settings.hexNumberingAlphaChess);
@@ -6148,10 +6125,10 @@ class HexCartographerSettingTab extends PluginSettingTab {
 
         // Textausrichtung (Pulldown)
         const posSetting = new Setting(containerEl)
-            .setName(t('settings.hexNumberingPosition'))
+            .setName(localizeString('settings.hexNumberingPosition'))
             .addDropdown(drop => {
-                drop.addOption('top', t('settings.hexNumberingPositionTop'));
-                drop.addOption('bottom', t('settings.hexNumberingPositionBottom'));
+                drop.addOption('top', localizeString('settings.hexNumberingPositionTop'));
+                drop.addOption('bottom', localizeString('settings.hexNumberingPositionBottom'));
                 drop.setValue(this.plugin.settings.hexNumberingPosition)
                     .onChange(async (value) => {
                         this.plugin.settings.hexNumberingPosition = value;
@@ -6162,7 +6139,7 @@ class HexCartographerSettingTab extends PluginSettingTab {
 
         // Textfarbe
         const colorSetting = new Setting(containerEl)
-            .setName(t('settings.hexNumberingColor'))
+            .setName(localizeString('settings.hexNumberingColor'))
             .addColorPicker(picker => {
                 picker.setValue(this.plugin.settings.hexNumberingColor)
                     .onChange(async (value) => {
@@ -6174,8 +6151,8 @@ class HexCartographerSettingTab extends PluginSettingTab {
 
         // Textgröße
         const fontSizeSetting = new Setting(containerEl)
-            .setName(t('settings.hexNumberingFontSize'))
-            .setDesc(t('settings.hexNumberingFontSizeDesc'))
+            .setName(localizeString('settings.hexNumberingFontSize'))
+            .setDesc(localizeString('settings.hexNumberingFontSizeDesc'))
             .addText(text => {
                 text.inputEl.type = 'number';
                 text.inputEl.min = '4';
@@ -6192,8 +6169,8 @@ class HexCartographerSettingTab extends PluginSettingTab {
 
         // Outline
         const outlineSetting = new Setting(containerEl)
-            .setName(t('settings.hexNumberingOutline'))
-            .setDesc(t('settings.hexNumberingOutlineDesc'))
+            .setName(localizeString('settings.hexNumberingOutline'))
+            .setDesc(localizeString('settings.hexNumberingOutlineDesc'))
             .addToggle(toggle => {
                 toggle.setValue(this.plugin.settings.hexNumberingOutline)
                     .onChange(async (value) => {
@@ -6210,7 +6187,7 @@ class HexCartographerSettingTab extends PluginSettingTab {
     }
 
     buildGuide(containerEl) {
-        containerEl.createEl('h3', { text: t('guide.title') });
+        containerEl.createEl('h3', { text: localizeString('guide.title') });
 
         const guide = [
             ['basics', [
@@ -6278,7 +6255,7 @@ class HexCartographerSettingTab extends PluginSettingTab {
 
         for (const [key, items] of guide) {
             const details = containerEl.createEl('details');
-            details.createEl('summary', { text: t(`guide.${key}`), cls: 'hex-guide-summary' });
+            details.createEl('summary', { text: localizeString(`guide.${key}`), cls: 'hex-guide-summary' });
             const content = details.createEl('div', { cls: 'hex-guide-content' });
             for (const [icon, textKey] of items!) {
                 const row = content.createEl('div', { cls: 'hex-guide-row' });
@@ -6293,7 +6270,7 @@ class HexCartographerSettingTab extends PluginSettingTab {
                     setIcon(iconEl, icon);
                 }
                 const textEl = row.createEl('span');
-                textEl.innerHTML = t(textKey!);
+                textEl.innerHTML = localizeString(textKey!);
             }
         }
 
