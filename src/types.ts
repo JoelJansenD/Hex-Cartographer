@@ -76,6 +76,11 @@ export interface HexCell extends HexCoordinates {
  */
 export type HexMap = Record<string, HexCell>;
 
+/**
+ * Orientation of the hex grid: 'vertical' for pointy-topped hexes, 'horizontal' for flat-topped hexes
+ */
+export type HexOrientation = 'vertical' | 'horizontal';
+
 // ============================================================================
 // PATH TYPES (RIVERS AND ROADS)
 // ============================================================================
