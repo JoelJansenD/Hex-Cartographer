@@ -1,6 +1,6 @@
 import { HexCoordinates } from "./hexagon";
 
-interface LinearFeature {
+export interface LinearFeature {
     id: number;
     color: string;
     width: number;

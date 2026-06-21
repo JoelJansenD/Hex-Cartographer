@@ -38,13 +38,15 @@ export interface MapSettings {
     editMode: boolean;
     hexColorColor: string;
     viewportSaved: boolean;
-    hexOrientation: boolean;
+    hexOrientation: HexagonOrientation;
 }
+
+export type HexagonOrientation = 'horizontal' | 'vertical';
 
 export interface BorderSettings {
     dashes: number;
     activeRegionId: number | null;
-    pickedHex: null;
+    pickedHex: HexCoordinates | null;
     visible: boolean;
 }
 

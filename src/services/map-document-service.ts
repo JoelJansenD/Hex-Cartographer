@@ -14,7 +14,7 @@ import {
     DEFAULT_ROAD_WIDTH,
     MAX_ZOOM,
     MIN_ZOOM,
-} from '../constants-legacy';
+} from '../constants';
 import { MapDocumentData } from '../types-legacy';
 
 const JSON_FENCE_REGEX = /```json\s*([\s\S]*?)\s*```/;

@@ -4,7 +4,7 @@ import {
     DEFAULT_SHADOW_OPACITY,
     DEFAULT_TEXT_COLOR,
     DEFAULT_TEXT_SIZE,
-} from '../constants-legacy';
+} from '../constants';
 import { localizeString } from '../functions/i18n';
 import { TextInputModalCallback } from '../types-legacy';
 import { ColorPickerModal } from './color-picker-modal';
