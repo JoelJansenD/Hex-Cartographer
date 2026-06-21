@@ -9,7 +9,7 @@ import {
     createDefaultMapDocumentData,
     createNewMapFile,
 } from './services/map-document-service';
-import { HexCartographerViewLegacy } from './views/hex-cartographer-view';
+import { HexCartographerViewLegacy } from './views/hex-cartographer-view-legacy';
 
 
 const DEFAULT_SETTINGS: PluginSettings = {
