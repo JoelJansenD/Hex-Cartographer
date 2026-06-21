@@ -2,7 +2,6 @@ import { Plugin, PluginSettingTab, Setting, TFile, Notice, Modal, ItemView, setI
 import {
     ACTIVE_BORDER,
     ACTIVE_BOX_SHADOW,
-    ACTIVE_COLOR,
     BUTTON_BG_DEFAULT,
     DEFAULT_BORDER_COLOR,
     DEFAULT_BORDER_DASHES,
