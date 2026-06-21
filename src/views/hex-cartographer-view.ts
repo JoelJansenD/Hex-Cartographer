@@ -40,6 +40,10 @@ export default class HexCartographerView extends ItemView {
         });
     }
 
+    onload(): void {
+        this._content.startRender();
+    }
+
     private onEditModeChanged(enabled: boolean) {
         console.log(`Edit mode changed: ${enabled}`);
         this._sidebar.setEditMode(enabled);

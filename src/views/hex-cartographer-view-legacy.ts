@@ -3674,7 +3674,7 @@ export class HexCartographerViewLegacy extends ItemView {
     renderTexts() {
         if (!this.textCtx || !this.textCanvas) return;
 
-        this.textCtx.clearRect(0, 0, this.textCanvas.width, this.textCanvas.height);
+        // this.textCtx.clearRect(0, 0, this.textCanvas.width, this.textCanvas.height);
 
         this.textCtx.save();
         this.textCtx.translate(this.data.offX, this.data.offY);

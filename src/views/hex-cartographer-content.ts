@@ -18,15 +18,46 @@ export default class HexCartographerContent {
     // Elements & Canvas
     // =============================================
     private contentEl: HTMLDivElement;
-    private canvas: HTMLCanvasElement;
-    private ctx: CanvasRenderingContext2D;
+    private canvas?: HTMLCanvasElement;
+    private ctx?: CanvasRenderingContext2D;
 
     constructor(parentEl: HTMLElement, plugin: HexCartographerPlugin, data: MapData) {
         this.contentEl = parentEl.createDiv({ cls: 'hex-content' });
         this.plugin = plugin;
         this.data = data;
+    }
 
-        this.canvas = this.contentEl.createEl('canvas', { cls: 'hex-canvas' });
+    public startRender() {   
+        const canvasContainer = this.contentEl.createDiv();
+        canvasContainer.style.position = 'relative';
+        canvasContainer.style.flexGrow = '1';
+        canvasContainer.style.overflow = 'hidden';
+        canvasContainer.style.height = '100%';
+        canvasContainer.style.width = '100%';
+
+        this.canvas = canvasContainer.createEl('canvas', { cls: 'hex-canvas' });
+        this.canvas.style.position = 'absolute';
+        this.canvas.style.top = '0';
+        this.canvas.style.left = '0';
+        this.canvas.style.width = '100%';
+        this.canvas.style.height = '100%';
+        this.canvas.style.cursor = 'crosshair';
+        this.canvas.tabIndex = 0;
+        this.canvas.style.outline = 'none';
+
+        this.canvas.onclick = (e) => {
+            console.log(e)
+        }
+
+        const resizeObserver = new ResizeObserver(() => {
+            if(!this.canvas) {
+                return;
+            }
+
+            this.canvas.width = canvasContainer.clientWidth;
+            this.canvas.height = canvasContainer.clientHeight;
+        });
+        resizeObserver.observe(canvasContainer);
 
         const renderingContext = this.canvas.getContext('2d');
         if(!renderingContext) {
@@ -38,7 +69,7 @@ export default class HexCartographerContent {
     }
 
     private render() {
-        if (!this.ctx) return;
+        if (!this.canvas || !this.ctx) throw new Error("Canvas or context not initialized");
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         this.ctx.save();
         this.ctx.translate(this.data.offX, this.data.offY);
@@ -91,9 +122,11 @@ export default class HexCartographerContent {
         this.renderCrosshair();
         this.renderTexts();
         this.renderHexNumbering();
+        requestAnimationFrame(() => this.render());
     }
 
     private highlightSelectedHex() {
+        if (!this.canvas || !this.ctx) throw new Error("Canvas or context not initialized");
         if (this.currentToolGroup === 'pattern' && this.patternSourceHex) {
             const pos = hexToPixel({  q: this.patternSourceHex.q, r: this.patternSourceHex.r }, this.data.gridSize, this.data.settings.hexOrientation === 'horizontal');
             const s = this.data.gridSize;
@@ -111,6 +144,7 @@ export default class HexCartographerContent {
     }
 
     private drawHexBase(h: Hexagon) {
+        if (!this.canvas || !this.ctx) throw new Error("Canvas or context not initialized");
         const pos = hexToPixel({ q: h.q, r: h.r }, this.data.gridSize, this.data.settings.hexOrientation === 'horizontal'), s = this.data.gridSize;
         const angleOffset = this.data.settings.hexOrientation === 'horizontal' ? 0 : -30;
 
@@ -140,6 +174,7 @@ export default class HexCartographerContent {
     }
 
     private drawSVGOnCanvas(symbol, pos, color) {
+        if (!this.canvas || !this.ctx) throw new Error("Canvas or context not initialized");
         const svgData = SVG_SYMBOL_DATA[symbol];
         if (!svgData) return;
 
@@ -172,6 +207,8 @@ export default class HexCartographerContent {
     }
 
     private drawCustomSymbol(type, x, y, size, color) {
+        if (!this.canvas || !this.ctx) throw new Error("Canvas or context not initialized");
+        
         this.ctx.save();
         this.ctx.translate(x, y);
         this.ctx.beginPath();
@@ -413,6 +450,7 @@ export default class HexCartographerContent {
 
     private drawBorders() {
         if (!this.data.borders || this.data.borders.length === 0 || !this.data.settings.borderSettings.visible) return;
+        if (!this.canvas || !this.ctx) throw new Error("Canvas or context not initialized");
 
         const s = this.data.gridSize;
         const sf = s + 0.5;
@@ -434,6 +472,7 @@ export default class HexCartographerContent {
         this.ctx.lineCap = 'round';
 
         this.data.borders.forEach(region => {
+        if (!this.canvas || !this.ctx) throw new Error("Canvas or context not initialized");
             if (!region.hexes || region.hexes.length === 0) return;
 
             const regionSet = new Set(region.hexes.map(b => `${b.q}_${b.r}`));
@@ -448,6 +487,7 @@ export default class HexCartographerContent {
             }
 
             region.hexes.forEach(b => {
+                if (!this.canvas || !this.ctx) throw new Error("Canvas or context not initialized");
                 const pos = hexToPixel({ q: b.q, r: b.r }, this.data.gridSize, this.data.settings.hexOrientation === 'horizontal');
 
                 const corners: any[] = [];
@@ -510,6 +550,7 @@ export default class HexCartographerContent {
                 const activeIdx = this.data.settings.riverSettings.insertAfter;
                 const activeWp = activeIdx !== null ? river.waypoints[activeIdx] : null;
                 river.waypoints.forEach((wp) => {
+                    if (!this.canvas || !this.ctx) throw new Error("Canvas or context not initialized");
                     const isActive = activeWp && wp.q === activeWp.q && wp.r === activeWp.r;
                     const pos = hexToPixel({ q: wp.q, r: wp.r }, this.data.gridSize, this.data.settings.hexOrientation === 'horizontal');
                     this.ctx.beginPath();
@@ -525,6 +566,7 @@ export default class HexCartographerContent {
                 const activeIdx = this.data.settings.roadSettings.insertAfter;
                 const activeWp = activeIdx !== null ? road.waypoints[activeIdx] : null;
                 road.waypoints.forEach((wp) => {
+                    if (!this.canvas || !this.ctx) throw new Error("Canvas or context not initialized");
                     const isActive = activeWp && wp.q === activeWp.q && wp.r === activeWp.r;
                     const pos = hexToPixel({ q: wp.q, r: wp.r }, this.data.gridSize, this.data.settings.hexOrientation === 'horizontal');
                     this.ctx.beginPath();
@@ -537,6 +579,7 @@ export default class HexCartographerContent {
     }
 
     private renderCrosshair() {
+        if (!this.canvas || !this.ctx) throw new Error("Canvas or context not initialized");
         if (!this.plugin.settings.showCrosshair) return;
 
         const origin = hexToPixel({ q: 0, r: 0 }, this.data.gridSize, this.data.settings.hexOrientation === 'horizontal');
@@ -558,14 +601,13 @@ export default class HexCartographerContent {
 
     private renderTexts() {
         if (!this.canvas || !this.ctx) throw new Error("Canvas or context not initialized");
-
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
+        
         this.ctx.save();
         this.ctx.translate(this.data.offX, this.data.offY);
         this.ctx.scale(this.data.zoom, this.data.zoom);
 
         if (this.data.texts) this.data.texts.forEach(t => {
+            if (!this.canvas || !this.ctx) throw new Error("Canvas or context not initialized");
             const weight = t.bold ? "bold " : "";
             this.ctx.font = `${weight}${t.size || 16}px Verdana`;
             this.ctx.textAlign = "center";
@@ -885,6 +927,7 @@ export default class HexCartographerContent {
 
     drawWavyLines(lines, color, defaultWidth, trimStart, trimEnd, dashCount, taper = false) {
         if (!lines || lines.length === 0) return;
+        if (!this.canvas || !this.ctx) throw new Error("Canvas or context not initialized");
         this.ctx.strokeStyle = color;
         this.ctx.lineCap = "round";
         this.ctx.lineJoin = "round";
