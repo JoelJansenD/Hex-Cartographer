@@ -62,6 +62,13 @@ import {
 } from './types';
 import { buildToolConfigs, SYMBOL_TOOL_GROUP_IDS } from './config/tool-config';
 import { SVG_SYMBOL_DATA } from './data/svg-symbol-data';
+import {
+    buildMapDocumentContent,
+    createDefaultMapDocumentData,
+    createNewMapFile,
+    MapDocumentSaveController,
+    normalizeLoadedMapData,
+} from './services/map-document-service';
 
 
 const DEFAULT_SETTINGS: PluginSettings = {
@@ -164,7 +171,7 @@ class HexCartographerPlugin extends Plugin {
             const leaves = this.app.workspace.getLeavesOfType('hex-cartographer');
             leaves.forEach(leaf => {
                 if (leaf.view instanceof HexCartographerView && leaf.view.file && leaf.view.file.path === file.path) {
-                    if (leaf.view.saveTimeout) clearTimeout(leaf.view.saveTimeout);
+                    leaf.view.cancelPendingSave();
                     leaf.detach();
                 }
             });
@@ -266,54 +273,8 @@ class HexCartographerPlugin extends Plugin {
     }
 
     async createNewHexMap(targetFile: TFolder | null = null) {
-        const now = new Date();
-        const pad = (n) => String(n).padStart(2, '0');
-        const fileName = `HexMap_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}-${pad(now.getDate())}${pad(now.getMonth() + 1)}${String(now.getFullYear()).slice(-2)}.hexcartographer.md`;
-
-        let folderPath = '';
-        if (targetFile) {
-            if (targetFile.children) {
-                folderPath = targetFile.path;
-            }
-            else if (targetFile.parent) {
-                folderPath = targetFile.parent.path;
-            }
-        }
-
-        const filePath = folderPath ? `${folderPath}/${fileName}` : fileName;
-
-        const initialData: MapDocumentData = {
-            hexes: {},
-            rivers: [],
-            roads: [],
-            texts: [],
-            borders: [],
-            gridSize: 30,
-            zoom: 1,
-            offX: 400,
-            offY: 300,
-            centerWorldX: 0,
-            centerWorldY: 0,
-            settings: {
-                drawMode: 'pen',
-                currentToolGroup: 'hexcolor',
-                borderSettings: { visible: true, dashes: DEFAULT_BORDER_DASHES },
-                riverSettings: { width: DEFAULT_RIVER_WIDTH, editMode: false },
-                roadSettings: { width: DEFAULT_ROAD_WIDTH, editMode: false },
-                masterColor: DEFAULT_MASTER_COLOR,
-                colorPalette: [...DEFAULT_PALETTE],
-                colorPalette2: [...DEFAULT_PALETTE2],
-                activeColorSlot: 0,
-            }
-        };
-
         try {
-            const now = new Date().toISOString().split('T')[0];
-            const frontmatter = `---\ntype: hexcartographer\ncreated: ${now}\n---\n\n`;
-            const jsonData = JSON.stringify(initialData, null, 2);
-            const content = `${frontmatter}# ${fileName.replace('.hexcartographer.md', '')}\n\n\`\`\`json\n${jsonData}\n\`\`\`\n`;
-
-            const file = await this.app.vault.create(filePath, content);
+            const file = await createNewMapFile(this.app, targetFile, createDefaultMapDocumentData());
             const leaf = this.app.workspace.getLeaf(false);
             await leaf.setViewState({
                 type: 'hex-cartographer',
@@ -388,6 +349,7 @@ class HexCartographerPlugin extends Plugin {
 class HexCartographerView extends ItemView {
     file: any;
     saveTimeout: any;
+    saveController: MapDocumentSaveController;
     isSaving: any;
     plugin: any;
     data: MapDocumentData;
@@ -514,6 +476,7 @@ class HexCartographerView extends ItemView {
         this.maxHistory = MAX_HISTORY;
 
         this.saveTimeout = null;
+        this.saveController = new MapDocumentSaveController(1000);
         this.isMouseDown = false;
         this.isDraggingMap = false;
         this.lastHex = null;
@@ -774,51 +737,7 @@ class HexCartographerView extends ItemView {
             }
 
             const content = await this.app.vault.read(this.file);
-
-            let jsonContent = content;
-
-            if (content.includes('```json')) {
-                const jsonMatch = content.match(/```json\s*([\s\S]*?)\s*```/);
-                if (jsonMatch) {
-                    jsonContent = jsonMatch[1]!;
-                }
-            }
-
-            const newData = JSON.parse(jsonContent);
-
-            // KRITISCH: Validiere gridSize und repariere falls nötig
-            if (!newData.gridSize || newData.gridSize < 1 || newData.gridSize > 1000 || !isFinite(newData.gridSize)) {
-                console.warn('Invalid gridSize detected:', newData.gridSize, '- resetting to 30');
-                newData.gridSize = 30;
-            }
-
-            if (!newData.zoom || newData.zoom < MIN_ZOOM || newData.zoom > MAX_ZOOM || !isFinite(newData.zoom)) {
-                console.warn('Invalid zoom detected:', newData.zoom, '- resetting to 1');
-                newData.zoom = 1;
-            }
-
-            if (Array.isArray(newData.hexes)) {
-                const migratedHexes = {};
-                newData.hexes.forEach(h => {
-                    const key = `${h.q}_${h.r}`;
-                    migratedHexes[key] = {
-                        q: h.q,
-                        r: h.r,
-                        color: h.backgroundColor || h.color, // backgroundColor hat Vorrang
-                        symbol: h.symbol,
-                        symbolColor: h.symbolColor
-                    };
-                });
-                newData.hexes = migratedHexes;
-            } else {
-                // Migration: backgroundColor -> color (falls backgroundColor existiert)
-                Object.values(newData.hexes).forEach((h: any) => {
-                    if (h.backgroundColor) {
-                        h.color = h.backgroundColor;
-                        delete h.backgroundColor;
-                    }
-                });
-            }
+            const newData: any = normalizeLoadedMapData(content);
 
             if (newData.settings) {
                 if (newData.settings.colorPalette) {
@@ -914,132 +833,6 @@ class HexCartographerView extends ItemView {
             } else {
                 this.updateToolConfigsWithAvailableSVGs();
                 this.updateToolGroupButtonIcons();
-            }
-
-            if (!newData.borders) newData.borders = [];
-            // Migration: altes Flat-Array [{q,r}] → neues Regionen-Format [{id, color, hexes}]
-            if (newData.borders.length > 0 && newData.borders[0].q !== undefined) {
-                newData.borders = [{ id: 1, color: DEFAULT_BORDER_COLOR, hexes: newData.borders }];
-            }
-
-            if (!newData.rivers) newData.rivers = [];
-            // Migration: altes Segment-Format [{from, to, width}] → neues Waypoint-Format
-            if (newData.rivers.length > 0 && newData.rivers[0].from !== undefined) {
-                const waypoints: any[] = [];
-                newData.rivers.forEach(seg => {
-                    if (waypoints.length === 0 || waypoints[waypoints.length - 1].q !== seg.from.q || waypoints[waypoints.length - 1].r !== seg.from.r) {
-                        waypoints.push({ q: seg.from.q, r: seg.from.r });
-                    }
-                    waypoints.push({ q: seg.to.q, r: seg.to.r });
-                });
-                newData.rivers = waypoints.length > 0 ? [{ id: 1, color: DEFAULT_RIVER_COLOR, width: DEFAULT_RIVER_WIDTH, waypoints }] : [];
-            }
-
-            if (!newData.roads) newData.roads = [];
-            // Migration: altes Segment-Format [{from, to, width}] → neues Waypoint-Format
-            if (newData.roads.length > 0 && newData.roads[0].from !== undefined) {
-                const waypoints: any[] = [];
-                newData.roads.forEach(seg => {
-                    if (waypoints.length === 0 || waypoints[waypoints.length - 1].q !== seg.from.q || waypoints[waypoints.length - 1].r !== seg.from.r) {
-                        waypoints.push({ q: seg.from.q, r: seg.from.r });
-                    }
-                    waypoints.push({ q: seg.to.q, r: seg.to.r });
-                });
-                newData.roads = waypoints.length > 0 ? [{ id: 1, color: DEFAULT_ROAD_COLOR, width: DEFAULT_ROAD_WIDTH, waypoints }] : [];
-            }
-
-            // Sanitize: remove viewport properties and corrupted coordinates
-            const VIEWPORT_KEYS = ['offX', 'offY', 'zoom', 'viewportSaved'];
-
-            // Compute bounding box from hex data for plausibility checks
-            let minQ = Infinity, maxQ = -Infinity, minR = Infinity, maxR = -Infinity;
-            if (newData.hexes) {
-                for (const key of Object.keys(newData.hexes)) {
-                    const h = newData.hexes[key];
-                    if (isFinite(h.q) && isFinite(h.r)) {
-                        if (h.q < minQ) minQ = h.q;
-                        if (h.q > maxQ) maxQ = h.q;
-                        if (h.r < minR) minR = h.r;
-                        if (h.r > maxR) maxR = h.r;
-                    }
-                }
-            }
-            const hasBounds = isFinite(minQ);
-            const margin = 50;
-            const boundsMinQ = hasBounds ? minQ - margin : -9999;
-            const boundsMaxQ = hasBounds ? maxQ + margin : 9999;
-            const boundsMinR = hasBounds ? minR - margin : -9999;
-            const boundsMaxR = hasBounds ? maxR + margin : 9999;
-
-            // Sanitize hex data (was missing before)
-            if (newData.hexes) {
-                for (const key of Object.keys(newData.hexes)) {
-                    const h = newData.hexes[key];
-                    if (!isFinite(h.q) || !isFinite(h.r)) {
-                        console.warn('Removed corrupted hex:', key, h);
-                        delete newData.hexes[key];
-                    }
-                }
-            }
-
-            if (newData.borders) {
-                for (const region of newData.borders) {
-                    if (region.hexes) {
-                        region.hexes = region.hexes.filter(h => {
-                            if (!isFinite(h.q) || !isFinite(h.r)) {
-                                console.warn('Removed corrupted border hex (non-finite):', h);
-                                return false;
-                            }
-                            const rq = Math.round(h.q);
-                            const rr = Math.round(h.r);
-                            if (rq < boundsMinQ || rq > boundsMaxQ || rr < boundsMinR || rr > boundsMaxR) {
-                                console.warn('Removed border hex outside map bounds:', h, { boundsMinQ, boundsMaxQ, boundsMinR, boundsMaxR });
-                                return false;
-                            }
-                            return true;
-                        });
-                        for (const h of region.hexes) {
-                            if (!Number.isInteger(h.q)) { console.warn('Rounded border hex q:', h.q); h.q = Math.round(h.q); }
-                            if (!Number.isInteger(h.r)) { console.warn('Rounded border hex r:', h.r); h.r = Math.round(h.r); }
-                            for (const key of VIEWPORT_KEYS) {
-                                if (key in h) { console.warn('Stripped', key, 'from border hex:', h); delete h[key]; }
-                            }
-                        }
-                    }
-                }
-            }
-            for (const pathArr of [newData.rivers, newData.roads]) {
-                if (pathArr) {
-                    for (const path of pathArr) {
-                        if (path.waypoints) {
-                            path.waypoints = path.waypoints.filter(w => {
-                                if (w.break) return true;
-                                if (!isFinite(w.q) || !isFinite(w.r)) {
-                                    console.warn('Removed corrupted waypoint (non-finite):', w);
-                                    return false;
-                                }
-                                const rq = Math.round(w.q);
-                                const rr = Math.round(w.r);
-                                if (rq < boundsMinQ || rq > boundsMaxQ || rr < boundsMinR || rr > boundsMaxR) {
-                                    console.warn('Removed waypoint outside map bounds:', w);
-                                    return false;
-                                }
-                                return true;
-                            });
-                            for (const w of path.waypoints) {
-                                if (!Number.isInteger(w.q)) { w.q = Math.round(w.q); }
-                                if (!Number.isInteger(w.r)) { w.r = Math.round(w.r); }
-                            }
-                        }
-                    }
-                }
-            }
-            if (newData.texts) {
-                for (const t of newData.texts) {
-                    for (const key of VIEWPORT_KEYS) {
-                        if (key in t) { console.warn('Stripped', key, 'from text:', t.text); delete t[key]; }
-                    }
-                }
             }
 
             if (JSON.stringify(this.data) !== JSON.stringify(newData)) {
@@ -5301,11 +5094,8 @@ class HexCartographerView extends ItemView {
                     hexOrientation: this.hexOrientation
                 };
 
-                const now = new Date().toISOString().split('T')[0];
-                const frontmatter = `---\ntype: hexcartographer\ncreated: ${now}\n---\n\n`;
-                const jsonData = JSON.stringify(this.data, null, 2);
                 const title = this.file.basename.replace('.hexcartographer', '');
-                const content = `${frontmatter}# ${title}\n\n\`\`\`json\n${jsonData}\n\`\`\`\n`;
+                const content = buildMapDocumentContent(this.data, title);
 
                 await this.app.vault.modify(this.file, content);
             }
@@ -5317,9 +5107,17 @@ class HexCartographerView extends ItemView {
         }
     }
 
+    cancelPendingSave() {
+        this.saveController.cancelPendingSave();
+        this.saveTimeout = this.saveController.timeoutHandle;
+    }
+
     requestSave() {
-        if (this.saveTimeout) clearTimeout(this.saveTimeout);
-        this.saveTimeout = setTimeout(() => this.saveData(), 1000);
+        this.saveController.requestSave(
+            () => this.saveData(),
+            () => this.pushHistoryIfNeeded(),
+        );
+        this.saveTimeout = this.saveController.timeoutHandle;
     }
 
     resizeCanvas() {
@@ -5356,7 +5154,11 @@ class HexCartographerView extends ItemView {
 
     async onClose() {
         if (this.resizeObserver) this.resizeObserver.disconnect();
-        await this.saveData();
+        await this.saveController.flushNow(
+            () => this.saveData(),
+            () => this.pushHistoryIfNeeded(),
+        );
+        this.saveTimeout = this.saveController.timeoutHandle;
     }
 }
 
