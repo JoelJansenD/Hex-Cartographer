@@ -4,6 +4,7 @@ import { isPaintingTool, ToolGroup } from "../types/tool-group";
 import HexCartographerContent from "./hex-cartographer-content";
 import HexCartographerSidepanel from "./hex-cartographer-sidepanel";
 import { MapData } from "../types/map-data";
+import HexCartographerPlugin from "../main";
 
 export default class HexCartographerView extends ItemView {
 
@@ -14,7 +15,7 @@ export default class HexCartographerView extends ItemView {
     private _activeTool?: ToolGroup;
     private _activeIcon?: string;
 
-    constructor(leaf: WorkspaceLeaf) {
+    constructor(plugin: HexCartographerPlugin, leaf: WorkspaceLeaf) {
         super(leaf);
 
         const contentWrapper = this.contentEl.createDiv({
@@ -32,7 +33,7 @@ export default class HexCartographerView extends ItemView {
             onEditModeChanged: this.onEditModeChanged.bind(this),
             onToolChanged: this.onToolChanged.bind(this),
         });
-        this._content = new HexCartographerContent(toolbarWrapper, TEST_DATA);
+        this._content = new HexCartographerContent(toolbarWrapper, plugin, TEST_DATA);
 
         this._sidebar = new HexCartographerSidepanel(contentWrapper, {
             onIconChanged: this.onIconChange.bind(this)
@@ -636,7 +637,7 @@ const TEST_DATA: MapData = {
         "editMode": true,
         "hexColorColor": "#CD6155",
         "viewportSaved": true,
-        "hexOrientation": false
+        "hexOrientation": 'vertical'
     },
     "centerWorldX": -12.841940641197926,
     "centerWorldY": -6.840280763157907

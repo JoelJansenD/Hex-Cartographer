@@ -28,7 +28,7 @@ import {
     TOOLBAR_INPUT_FONT_SIZE,
     TOOLBAR_INPUT_HEIGHT,
     VIEWPORT_PADDING,
-} from '../constants-legacy';
+} from '../constants';
 import { rgbToHex } from '../functions/colors';
 import { localizeString } from '../functions/i18n';
 import {
@@ -3856,6 +3856,13 @@ export class HexCartographerViewLegacy extends ItemView {
         return withPos.map(({ hex }, i) => ({ hex, label: String(i + 1) }));
     }
 
+    // // Nummerierung auf den Live-Canvas zeichnen (kein zoom/translate nötig — direkt in Pixeln)
+    renderHexNumbering() {
+        if (!this.plugin.settings.hexNumberingEnabled) return;
+        if (!this.ctx) return;
+        this._renderHexNumberingToCtx(this.ctx, this.data.zoom, this.data.offX, this.data.offY);
+    }
+
     // Zeichnet Nummerierung auf einen beliebigen 2D-Context
     _renderHexNumberingToCtx(ctx, zoom, offX, offY) {
         const settings = this.plugin.settings;
@@ -3909,13 +3916,6 @@ export class HexCartographerViewLegacy extends ItemView {
         }
 
         ctx.restore();
-    }
-
-    // Nummerierung auf den Live-Canvas zeichnen (kein zoom/translate nötig — direkt in Pixeln)
-    renderHexNumbering() {
-        if (!this.plugin.settings.hexNumberingEnabled) return;
-        if (!this.ctx) return;
-        this._renderHexNumberingToCtx(this.ctx, this.data.zoom, this.data.offX, this.data.offY);
     }
 
     getMapWorldSize() {
@@ -4098,71 +4098,6 @@ export class HexCartographerViewLegacy extends ItemView {
         }
 
         return tmpCanvas;
-    }
-
-    renderSVGSymbols(symbols) {
-        if (!this.svgLayer) return;
-
-        while (this.svgLayer.firstChild) {
-            this.svgLayer.removeChild(this.svgLayer.firstChild);
-        }
-
-        symbols.forEach(({ symbol, pos, color }) => {
-            if (this.svgSymbols[symbol]) {
-                const config = this.svgSymbolConfig[symbol] || { size: 0.30, align: 'center', marginX: 0, marginY: 0 };
-
-                const screenX = pos.x * this.data.zoom + this.data.offX;
-                const screenY = pos.y * this.data.zoom + this.data.offY;
-
-                const baseSize = this.data.gridSize * 2.0; // Basis-Größe
-                const size = baseSize * config.size * this.data.zoom;
-
-                const hexWidth = this.data.gridSize * Math.sqrt(3) * this.data.zoom;
-                const hexHeight = this.data.gridSize * 2 * this.data.zoom;
-
-                let offsetX = 0;
-                let offsetY = 0;
-
-                const alignParts = config.align.split('-');
-                alignParts.forEach(part => {
-                    switch(part) {
-                        case 'top':
-                            offsetY = -hexHeight / 4;
-                            break;
-                        case 'bottom':
-                            offsetY = hexHeight / 4;
-                            break;
-                        case 'left':
-                            offsetX = -hexWidth / 4;
-                            break;
-                        case 'right':
-                            offsetX = hexWidth / 4;
-                            break;
-                        case 'center':
-                            break;
-                    }
-                });
-
-                offsetX += (config.marginX / 100) * hexWidth;
-                offsetY += (config.marginY / 100) * hexHeight;
-
-                const svgData = this.svgSymbols[symbol];
-                const viewBoxSize = svgData.viewBoxWidth;
-
-                const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-                const scale = size / viewBoxSize;
-                const finalX = screenX - size/2 + offsetX;
-                const finalY = screenY - size/2 + offsetY;
-                g.setAttribute('transform', `translate(${finalX}, ${finalY}) scale(${scale})`);
-
-                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-                path.setAttribute('d', svgData.pathData);
-                path.setAttribute('fill', color || '#228B22');
-                g.appendChild(path);
-
-                this.svgLayer!.appendChild(g);
-            }
-        });
     }
 
     drawSVGOnCanvas(symbol, pos, color) {

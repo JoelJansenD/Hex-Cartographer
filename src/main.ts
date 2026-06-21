@@ -37,7 +37,7 @@ class HexCartographerPlugin extends Plugin {
         // currentLanguage = getObsidianLanguage();
         this.addSettingTab(new HexCartographerSettingTab(this.app, this));
 
-        this.registerView('hex-cartographer', (leaf) => new HexCartographerView(leaf));
+        this.registerView('hex-cartographer', (leaf) => new HexCartographerView(this, leaf));
         // this.registerView('hex-cartographer', (leaf) => new HexCartographerViewLegacy(leaf, this));
 
         this.registerExtensions(['hexcartographer.md'], 'hex-cartographer');
