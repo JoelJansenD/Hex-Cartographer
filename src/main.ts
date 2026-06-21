@@ -3,7 +3,7 @@ import {
     loadTranslations,
     localizeString,
 } from './functions/i18n';
-import { PluginSettings } from './types';
+import { PluginSettings } from './types-legacy';
 import { SVG_SYMBOL_DATA } from './data/svg-symbol-data';
 import {
     createDefaultMapDocumentData,

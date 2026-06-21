@@ -1,6 +1,6 @@
 import { Modal } from 'obsidian';
 import { localizeString } from '../functions/i18n';
-import { ExportMapModalCallback } from '../types';
+import { ExportMapModalCallback } from '../types-legacy';
 
 export class ExportMapModal extends Modal {
     onExport: ExportMapModalCallback;

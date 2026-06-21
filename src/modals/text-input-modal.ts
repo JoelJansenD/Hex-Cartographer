@@ -4,9 +4,9 @@ import {
     DEFAULT_SHADOW_OPACITY,
     DEFAULT_TEXT_COLOR,
     DEFAULT_TEXT_SIZE,
-} from '../constants';
+} from '../constants-legacy';
 import { localizeString } from '../functions/i18n';
-import { TextInputModalCallback } from '../types';
+import { TextInputModalCallback } from '../types-legacy';
 import { ColorPickerModal } from './color-picker-modal';
 import { FileSelectorModal } from './file-selector-modal';
 import isTouchDevice from '../functions/is-touch-device';

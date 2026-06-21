@@ -7,7 +7,7 @@ import {
     DEFAULT_MOUNTAIN_SYMBOL_COLOR,
     DEFAULT_VEGETATION_BG_COLOR,
     DEFAULT_VEGETATION_SYMBOL_COLOR,
-} from '../constants';
+} from '../constants-legacy';
 
 export const SYMBOL_TOOL_GROUP_IDS = ['grass', 'tree', 'mountain', 'building'] as const;
 

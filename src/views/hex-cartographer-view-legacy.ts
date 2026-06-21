@@ -28,7 +28,7 @@ import {
     TOOLBAR_INPUT_FONT_SIZE,
     TOOLBAR_INPUT_HEIGHT,
     VIEWPORT_PADDING,
-} from '../constants';
+} from '../constants-legacy';
 import { rgbToHex } from '../functions/colors';
 import { localizeString } from '../functions/i18n';
 import {
@@ -44,7 +44,7 @@ import {
     MapDocumentData,
     Waypoint,
     HexCoordinates,
-} from '../types';
+} from '../types-legacy';
 import { buildToolConfigs, SYMBOL_TOOL_GROUP_IDS } from '../config/tool-config';
 import { SVG_SYMBOL_DATA } from '../data/svg-symbol-data';
 import {
