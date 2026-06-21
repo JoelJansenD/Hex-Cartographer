@@ -8,7 +8,7 @@ export default class HexCartographerView extends ItemView {
 
     private _content: HexCartographerContent;
     private _toolbar: HexCartographerToolbar;
-    private _sidebar: any;
+    private _sidebar: HexCartographerSidepanel;
 
     private _activeTool?: ToolGroup;
 
@@ -37,7 +37,12 @@ export default class HexCartographerView extends ItemView {
         this._sidebar.setEditMode(enabled);
     }
 
-    private onIconChange(iconId: string) {
+    private onIconChange(iconId?: string) {
+        if(!iconId) {
+            console.log('No icon selected');
+            return;
+        }
+
         console.log(`Icon changed to: ${iconId}`);
         if(this._activeTool && isPaintingTool(this._activeTool)) {
             // Painting tools can be used with any selected icon, so we can just set the tool again to ensure the same tool is being used.
@@ -50,6 +55,10 @@ export default class HexCartographerView extends ItemView {
     }
 
     private onToolChanged(tool?: ToolGroup) {
+        if(tool && !isPaintingTool(tool)) {
+            this._sidebar.setIcon();
+        }
+
         console.log(`Tool changed to: ${tool}`);
         this._activeTool = tool;
     }

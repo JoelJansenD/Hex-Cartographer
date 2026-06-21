@@ -2,7 +2,10 @@ import { Setting, SettingTab } from "obsidian";
 import { SVG_SYMBOL_DATA } from "../data/svg-symbol-data";
 
 interface HexCartographerToolbarConfig {
-    onIconChanged?: (iconId: string) => void;
+    /**
+     * Triggers whenever the edit mode is toggled. The callback will be provided with the icon ID of the selected icon, or undefined if no icon is currently selected.
+     */
+    onIconChanged?: (iconId?: string) => void;
 }
 
 export default class HexCartographerSidepanel {
@@ -67,9 +70,9 @@ export default class HexCartographerSidepanel {
         return button;
     }
 
-    private setIcon(buttonEl: HTMLElement, iconId: string) {
+    public setIcon(buttonEl?: HTMLElement, iconId?: string) {
         this.iconButtons.forEach(btn => btn.removeClass('selected'));
-        buttonEl.addClass('selected');
+        buttonEl?.addClass('selected');
         this.config.onIconChanged?.(iconId);
     }
 
