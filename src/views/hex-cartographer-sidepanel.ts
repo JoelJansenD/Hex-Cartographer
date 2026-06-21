@@ -1,4 +1,3 @@
-import { Setting, SettingTab } from "obsidian";
 import { SVG_SYMBOL_DATA } from "../data/svg-symbol-data";
 
 interface HexCartographerToolbarConfig {
@@ -13,13 +12,43 @@ export default class HexCartographerSidepanel {
     private containerEl: HTMLDivElement;
     private config: HexCartographerToolbarConfig;
 
-    private iconButtons: HTMLElement[];
+    private iconButtons: Record<string, HTMLElement> = {} as Record<string, HTMLElement>;
     
     constructor(parentEl: HTMLElement, config: HexCartographerToolbarConfig = {}) {
         this.containerEl = parentEl.createDiv({ cls: 'hex-sidepanel hidden' });
         this.config = config;
+        this.initializeIconSelectionButtons();
+    }
 
-        this.iconButtons = this.initializeIconSelectionButtons();
+    /**
+     * Set the currently active icon.
+     * @param iconId The icon ID which was activated.
+     * @param propagateEvent If true, the onIconChanged callback will be triggered. If false, the callback will not be triggered. Defaults to true.
+     */
+    public setIcon(iconId?: string, propagateEvent = true) {
+        Object.values(this.iconButtons).forEach(btn => btn.removeClass('selected'));
+        if(iconId) {
+            this.iconButtons[iconId]?.addClass('selected');
+        }
+
+        if(propagateEvent) {
+            this.config.onIconChanged?.(iconId);
+        }
+    }
+
+    /**
+     * Set the edit mode state to reveal or hide the side panel. When edit mode is enabled, the side panel will be visible. When edit mode is disabled, the side panel will be hidden.
+     * @param enabled If true, edit mode is enabled. If false, edit mode is disabled.
+     */
+    public setEditMode(enabled: boolean) {
+        this.editMode = enabled;
+
+        if(this.editMode) {
+            this.containerEl.removeClass('hidden');
+        }
+        else {
+            this.containerEl.addClass('hidden');
+        }
     }
 
     private initializeIconSelectionButtons() {
@@ -28,7 +57,7 @@ export default class HexCartographerSidepanel {
 
         this.containerEl.createEl('h2', { text: 'Generic Icons' });
         const iconContainer = this.containerEl.createDiv({ cls: 'hex-sidepanel-icon-group' });
-        iconButtons.push(this.createIconButton(iconContainer, {...icons.circle, id: 'circle'}, true));
+        iconButtons.push(this.createIconButton(iconContainer, {...icons.hexagon, id: 'hexagon'}, true));
         iconButtons.push(this.createIconButton(iconContainer, {...icons.exclamation, id: 'exclamation'}));
         iconButtons.push(this.createIconButton(iconContainer, {...icons.cross, id: 'cross'}));
         iconButtons.push(this.createIconButton(iconContainer, {...icons.dot, id: 'dot'}));
@@ -61,29 +90,13 @@ export default class HexCartographerSidepanel {
         const button = parentEl.createEl('div', { cls: 'hex-sidepanel-icon-button' });
         const svg = `<svg class="hex-sidepanel-icon" viewBox="0 0 ${symbolInfo.viewBoxWidth} ${symbolInfo.viewBoxWidth}" width="32" height="32" style="vertical-align: middle;">`;
         button.innerHTML = `${svg}<path d="${symbolInfo.pathData}" /></svg>`;
-        button.onclick = () => this.setIcon(button, symbolInfo.id);
+        button.onclick = () => this.setIcon(symbolInfo.id);
+        this.iconButtons[symbolInfo.id] = button;
 
         if(selected) {
             button.addClass('selected');
         }
 
         return button;
-    }
-
-    public setIcon(buttonEl?: HTMLElement, iconId?: string) {
-        this.iconButtons.forEach(btn => btn.removeClass('selected'));
-        buttonEl?.addClass('selected');
-        this.config.onIconChanged?.(iconId);
-    }
-
-    public setEditMode(enabled: boolean) {
-        this.editMode = enabled;
-
-        if(this.editMode) {
-            this.containerEl.removeClass('hidden');
-        }
-        else {
-            this.containerEl.addClass('hidden');
-        }
     }
 }

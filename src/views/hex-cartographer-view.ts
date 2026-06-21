@@ -11,6 +11,7 @@ export default class HexCartographerView extends ItemView {
     private _sidebar: HexCartographerSidepanel;
 
     private _activeTool?: ToolGroup;
+    private _activeIcon?: string;
 
     constructor(leaf: WorkspaceLeaf) {
         super(leaf);
@@ -34,33 +35,40 @@ export default class HexCartographerView extends ItemView {
     }
 
     private onEditModeChanged(enabled: boolean) {
+        console.log(`Edit mode changed: ${enabled}`);
         this._sidebar.setEditMode(enabled);
     }
 
     private onIconChange(iconId?: string) {
-        if(!iconId) {
-            console.log('No icon selected');
-            return;
-        }
-
         console.log(`Icon changed to: ${iconId}`);
+        this._activeIcon = iconId;
+
         if(this._activeTool && isPaintingTool(this._activeTool)) {
             // Painting tools can be used with any selected icon, so we can just set the tool again to ensure the same tool is being used.
-            this._toolbar.setTool(this._activeTool);
+            this._toolbar.setTool(this._activeTool, false);
         }
         else {
             // Other tools may not be compatible with the selected icon, so we will default to the brush tool when the icon changes.
-            this._toolbar.setTool('brush');
+            this._toolbar.setTool('brush', false);
         }
     }
 
     private onToolChanged(tool?: ToolGroup) {
-        if(tool && !isPaintingTool(tool)) {
-            this._sidebar.setIcon();
+        if(tool && this.toolChangedToPaintingTool(tool)) { 
+            // If we're switching from a non-painting tool to a painting tool, we will set the icon in the sidebar to the default which is the hexagon.
+            this._sidebar.setIcon('hexagon', false);
         }
-
+        else {
+            this._sidebar.setIcon(undefined, false);
+        }
+        
         console.log(`Tool changed to: ${tool}`);
         this._activeTool = tool;
+    }
+
+    /** returns true if _activeTool is undefined or a non-painting tool and the given tool is a painting tool */
+    private toolChangedToPaintingTool(tool: ToolGroup) { 
+        return (!this._activeTool || !isPaintingTool(this._activeTool!)) && isPaintingTool(tool);
     }
 
     getViewType() { return 'hex-cartographer'; }

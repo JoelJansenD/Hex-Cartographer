@@ -63,10 +63,11 @@ export default class HexCartographerToolbar {
     }
 
     /**
-     * Set the currently active tool. When called, the onToolChanged callback will be triggered with the provided tool group identifier.
+     * Set the currently active tool.
      * @param toolGroup The tool group which was activated.
+     * @param propagateEvent If true, the onToolChanged callback will be triggered. If false, the callback will not be triggered. Defaults to true.
      */
-    public setTool(toolGroup?: ToolGroup) {
+    public setTool(toolGroup?: ToolGroup, propagateEvent = true) {
         const buttonKeys = Object.keys(this.toolButtons) as ToolGroup[];
         buttonKeys.forEach(key => {
             this.toolButtons[key].removeCta();
@@ -76,7 +77,9 @@ export default class HexCartographerToolbar {
             this.toolButtons[toolGroup]?.setCta();
         }
         
-        this.config.onToolChanged?.(toolGroup);
+        if(propagateEvent) {
+            this.config.onToolChanged?.(toolGroup);
+        }
     }
 
     private enterEditMode() {
