@@ -57,11 +57,11 @@ import { ExportMapModal } from '../modals/export-map-modal';
 import { TextInputModal } from '../modals/text-input-modal';
 
 // === View-Klasse für den Hex Cartographer ===
-export class HexCartographerView extends ItemView {
-    private file: any;
+export class HexCartographerViewLegacy extends ItemView {
+    file: any;
     private saveTimeout: any;
     private saveController: MapDocumentSaveController;
-    private isSaving: any;
+    isSaving: any;
     private plugin: any;
     private data: MapDocumentData;
     private history: string[];

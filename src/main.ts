@@ -9,7 +9,7 @@ import {
     createDefaultMapDocumentData,
     createNewMapFile,
 } from './services/map-document-service';
-import { HexCartographerView } from './views/hex-cartographer-view';
+import { HexCartographerViewLegacy } from './views/hex-cartographer-view';
 
 
 const DEFAULT_SETTINGS: PluginSettings = {
@@ -36,7 +36,7 @@ class HexCartographerPlugin extends Plugin {
         // currentLanguage = getObsidianLanguage();
         this.addSettingTab(new HexCartographerSettingTab(this.app, this));
 
-        this.registerView('hex-cartographer', (leaf) => new HexCartographerView(leaf, this));
+        this.registerView('hex-cartographer', (leaf) => new HexCartographerViewLegacy(leaf, this));
 
         this.registerExtensions(['hexcartographer.md'], 'hex-cartographer');
 
@@ -47,7 +47,7 @@ class HexCartographerPlugin extends Plugin {
                     await new Promise(resolve => setTimeout(resolve, 10));
                     const leaves = this.app.workspace.getLeavesOfType('markdown');
                     for (const leaf of leaves) {
-                        const hexCartographerView = leaf.view as HexCartographerView;
+                        const hexCartographerView = leaf.view as HexCartographerViewLegacy;
                         if(!hexCartographerView?.file) {
                             continue;
                         }
@@ -65,7 +65,7 @@ class HexCartographerPlugin extends Plugin {
 
         this.registerEvent(
             this.app.workspace.on('active-leaf-change', async (leaf) => {
-                const hexCartographerView = leaf?.view as HexCartographerView;
+                const hexCartographerView = leaf?.view as HexCartographerViewLegacy;
                 if (leaf && leaf.view && leaf.view.getViewType() === 'markdown' &&
                     hexCartographerView?.file && hexCartographerView.file.path.endsWith('.hexcartographer.md')) {
                     await leaf.setViewState({
@@ -111,7 +111,7 @@ class HexCartographerPlugin extends Plugin {
         this.registerEvent(this.app.vault.on('delete', (file) => {
             const leaves = this.app.workspace.getLeavesOfType('hex-cartographer');
             leaves.forEach(leaf => {
-                if (leaf.view instanceof HexCartographerView && leaf.view.file && leaf.view.file.path === file.path) {
+                if (leaf.view instanceof HexCartographerViewLegacy && leaf.view.file && leaf.view.file.path === file.path) {
                     leaf.view.cancelPendingSave();
                     leaf.detach();
                 }
@@ -122,7 +122,7 @@ class HexCartographerPlugin extends Plugin {
             const leaves = this.app.workspace.getLeavesOfType('hex-cartographer');
             leaves.forEach(leaf => {
                 const view = leaf.view;
-                if (view instanceof HexCartographerView && view.file && view.file.path === file.path) {
+                if (view instanceof HexCartographerViewLegacy && view.file && view.file.path === file.path) {
                     if (!view.isSaving) {
                         view.reloadFile();
                     }
@@ -134,7 +134,7 @@ class HexCartographerPlugin extends Plugin {
             const leaves = this.app.workspace.getLeavesOfType('hex-cartographer');
             leaves.forEach((leaf) => {
                 const view = leaf.view;
-                if (view instanceof HexCartographerView && view.file &&
+                if (view instanceof HexCartographerViewLegacy && view.file &&
                     (view.file.path === oldPath || view.file === file)) {
                     view.file = file;
                 }
@@ -143,7 +143,7 @@ class HexCartographerPlugin extends Plugin {
                 const allLeaves = this.app.workspace.getLeavesOfType('hex-cartographer');
                 allLeaves.forEach((leaf: any) => {
                     const view = leaf.view;
-                    if (view instanceof HexCartographerView && view.file) {
+                    if (view instanceof HexCartographerViewLegacy && view.file) {
                         leaf.updateHeader();
                         const titleEl = leaf.tabHeaderEl?.querySelector('.workspace-tab-header-inner-title');
                         if (titleEl) {
@@ -160,7 +160,7 @@ class HexCartographerPlugin extends Plugin {
             const leaves = this.app.workspace.getLeavesOfType('hex-cartographer');
             leaves.forEach((leaf) => {
                 const view = leaf.view;
-                if (view instanceof HexCartographerView && view.file && view.file.path === file.path) {
+                if (view instanceof HexCartographerViewLegacy && view.file && view.file.path === file.path) {
                     view.reloadFile();
                 }
             });
@@ -172,9 +172,9 @@ class HexCartographerPlugin extends Plugin {
                 el.classList.remove('hex-active');
             });
 
-            if (leaf?.view instanceof HexCartographerView && leaf.view.file) {
+            if (leaf?.view instanceof HexCartographerViewLegacy && leaf.view.file) {
                 setTimeout(() => {
-                    const hexCartographerView = leaf.view as HexCartographerView;
+                    const hexCartographerView = leaf.view as HexCartographerViewLegacy;
                     document.querySelectorAll('.nav-file-title.is-active').forEach(el => {
                         el.classList.remove('is-active');
                     });
@@ -201,7 +201,7 @@ class HexCartographerPlugin extends Plugin {
                 if (!activeLeaf) return;
                 const state = activeLeaf.getViewState();
                 const filePath = state?.state?.file ||
-                    (activeLeaf.view instanceof HexCartographerView && activeLeaf.view.file?.path);
+                    (activeLeaf.view instanceof HexCartographerViewLegacy && activeLeaf.view.file?.path);
                 if (state?.type === 'hex-cartographer' && filePath) {
                     const fileEl = document.querySelector(`.nav-file-title[data-path="${CSS.escape(filePath)}"]`);
                     if (fileEl) {
@@ -335,7 +335,7 @@ class HexCartographerSettingTab extends PluginSettingTab {
                         this.plugin.settings.showCrosshair = value;
                         await this.plugin.saveSettings();
                         this.app.workspace.iterateAllLeaves(leaf => {
-                            if (leaf.view instanceof HexCartographerView) leaf.view.render();
+                            if (leaf.view instanceof HexCartographerViewLegacy) leaf.view.render();
                         });
                     });
             });
@@ -349,7 +349,7 @@ class HexCartographerSettingTab extends PluginSettingTab {
                         this.plugin.settings.hideHexBorders = value;
                         await this.plugin.saveSettings();
                         this.app.workspace.iterateAllLeaves(leaf => {
-                            if (leaf.view instanceof HexCartographerView) leaf.view.render();
+                            if (leaf.view instanceof HexCartographerViewLegacy) leaf.view.render();
                         });
                     });
             });
@@ -360,7 +360,7 @@ class HexCartographerSettingTab extends PluginSettingTab {
         const refreshAll = async () => {
             await this.plugin.saveSettings();
             this.app.workspace.iterateAllLeaves(leaf => {
-                if (leaf.view instanceof HexCartographerView) leaf.view.render();
+                if (leaf.view instanceof HexCartographerViewLegacy) leaf.view.render();
             });
         };
 
