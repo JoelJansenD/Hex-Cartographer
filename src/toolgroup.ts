@@ -12,3 +12,10 @@
  * - 'selectPathAndBorder': Select path and border tool
  */
 export type ToolGroup = 'brush' | 'bucket' | 'eraser' | 'text' | 'pattern' | 'pickPattern' | 'river' | 'road' | 'border' | 'selectPathAndBorder';
+
+/**
+ * Returns true if the provided tool group is a painting tool (brush, bucket, or eraser).
+ */
+export function isPaintingTool(toolGroup: ToolGroup) {
+    return toolGroup === 'brush' || toolGroup === 'bucket' || toolGroup === 'eraser';
+}

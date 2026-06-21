@@ -1,5 +1,5 @@
 import { ButtonComponent } from "obsidian";
-import { ToolGroup } from "../types";
+import { ToolGroup } from "../toolgroup";
 
 interface HexCartographerToolbarConfig {
     /**
@@ -25,7 +25,9 @@ export default class HexCartographerToolbar {
     // ===================================================
     // Buttons
     // ===================================================
-    private toolButtons: ButtonComponent[];
+    // private paintButtons: ButtonComponent[];
+    // private toolButtons: ButtonComponent[];
+    private toolButtons: Record<ToolGroup, ButtonComponent> = {} as Record<ToolGroup, ButtonComponent>;
 
     private viewModeButton!: ButtonComponent;
     private paintBrushButton!: ButtonComponent;
@@ -52,10 +54,9 @@ export default class HexCartographerToolbar {
 
         this.actionsContainerEl = parentEl.createDiv({ cls: 'hex-toolbar' });
         
-        this.toolButtons = [];
-        this.toolButtons.push(...this.initializePaintButtons());
-        this.toolButtons.push(...this.initializePatternButtons());
-        this.toolButtons.push(...this.initializePathAndBorderButtons());
+        this.initializePaintButtons();
+        this.initializePatternButtons();
+        this.initializePathAndBorderButtons();
         
         this.initializeActionButtons();
         this.hideActions();
@@ -63,14 +64,18 @@ export default class HexCartographerToolbar {
 
     /**
      * Set the currently active tool. When called, the onToolChanged callback will be triggered with the provided tool group identifier.
-     * @param button The button component associated with the tool (used for setting active state). If undefined, all buttons will be deativated.
-     * @param toolGroup The tool group identifier which will be passed to the onToolChanged callback. If undefined, the callback will be triggered with undefined, indicating no active tool.
+     * @param toolGroup The tool group which was activated.
      */
-    public setTool(button?: ButtonComponent, toolGroup?: ToolGroup) {
-        this.toolButtons.forEach(btn => btn = btn.removeCta());
-        if(button) {
-            button = button.setCta();
+    public setTool(toolGroup?: ToolGroup) {
+        const buttonKeys = Object.keys(this.toolButtons) as ToolGroup[];
+        buttonKeys.forEach(key => {
+            this.toolButtons[key].removeCta();
+        });
+
+        if(toolGroup) {
+            this.toolButtons[toolGroup]?.setCta();
         }
+        
         this.config.onToolChanged?.(toolGroup);
     }
 
@@ -122,21 +127,23 @@ export default class HexCartographerToolbar {
 
         this.paintBrushButton = new ButtonComponent(this.paintActions)
             .setIcon('brush')
-            .onClick(() => this.setTool(this.paintBrushButton, 'brush'));
+            .onClick(() => this.setTool('brush'));
+        this.toolButtons['brush'] = this.paintBrushButton;
 
         this.paintBucketButton = new ButtonComponent(this.paintActions)
             .setIcon('paint-bucket')
-            .onClick(() => this.setTool(this.paintBucketButton, 'bucket'));
+            .onClick(() => this.setTool('bucket'));
+        this.toolButtons['bucket'] = this.paintBucketButton;
 
         this.eraserButton = new ButtonComponent(this.paintActions)
             .setIcon('eraser')
-            .onClick(() => this.setTool(this.eraserButton, 'eraser'));
+            .onClick(() => this.setTool('eraser'));
+        this.toolButtons['eraser'] = this.eraserButton;
 
         this.textButton = new ButtonComponent(this.paintActions)
             .setIcon('type')
-            .onClick(() => this.setTool(this.textButton, 'text'));
-
-        return [ this.paintBrushButton, this.paintBucketButton, this.eraserButton, this.textButton ];
+            .onClick(() => this.setTool('text'));
+        this.toolButtons['text'] = this.textButton;
     }
 
     private initializePatternButtons() {
@@ -144,13 +151,13 @@ export default class HexCartographerToolbar {
         
         this.stampPatternActionButton = new ButtonComponent(this.patternActions)
             .setIcon('copy')
-            .onClick(() => this.setTool(this.stampPatternActionButton, 'pattern'));
+            .onClick(() => this.setTool('pattern'));
+        this.toolButtons['pattern'] = this.stampPatternActionButton;
 
         this.pickPatternActionButton = new ButtonComponent(this.patternActions)
             .setIcon('pipette')
-            .onClick(() => this.setTool(this.pickPatternActionButton, 'pickPattern'));
-
-        return [ this.stampPatternActionButton, this.pickPatternActionButton ];
+            .onClick(() => this.setTool('pickPattern'));
+        this.toolButtons['pickPattern'] = this.pickPatternActionButton;
     }
 
     private initializePathAndBorderButtons() {
@@ -158,21 +165,23 @@ export default class HexCartographerToolbar {
         
         this.riverActionButton = new ButtonComponent(this.pathAndBorderActions)
             .setIcon('droplet')
-            .onClick(() => this.setTool(this.riverActionButton, 'river'));
+            .onClick(() => this.setTool('river'));
+        this.toolButtons['river'] = this.riverActionButton;
         
         this.roadActionButton = new ButtonComponent(this.pathAndBorderActions)
             .setIcon('waypoints')
-            .onClick(() => this.setTool(this.roadActionButton, 'road'));
+            .onClick(() => this.setTool('road'));
+        this.toolButtons['road'] = this.roadActionButton;
         
         this.borderActionButton = new ButtonComponent(this.pathAndBorderActions)
             .setIcon('shield')
-            .onClick(() => this.setTool(this.borderActionButton, 'border'));
+            .onClick(() => this.setTool('border'));
+        this.toolButtons['border'] = this.borderActionButton;
         
         this.selectPathOrBorderActionButton = new ButtonComponent(this.pathAndBorderActions)
             .setIcon('pointer')
-            .onClick(() => this.setTool(this.selectPathOrBorderActionButton, 'selectPathAndBorder'));
-
-        return [ this.riverActionButton, this.roadActionButton, this.borderActionButton, this.selectPathOrBorderActionButton ];
+            .onClick(() => this.setTool('selectPathAndBorder'));
+        this.toolButtons['selectPathAndBorder'] = this.selectPathOrBorderActionButton;
     }
 
     private showActions() {
@@ -183,6 +192,6 @@ export default class HexCartographerToolbar {
         this.redoActionButton.buttonEl.removeClass('hidden');
         this.editModeButton.buttonEl.addClass('hidden');      
 
-        this.setTool(this.paintBrushButton, 'brush');
+        this.setTool('brush');
     }
 }
