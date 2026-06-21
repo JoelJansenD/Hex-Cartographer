@@ -4,7 +4,7 @@ import { Label } from "./label";
 import { River, Road } from "./rivers-and-roads";
 
 export interface MapData {
-    hexes: Hexes;
+    hexes: { [key: string]: Hexagon};
     rivers: River[];
     roads: Road[];
     texts: Label[];
@@ -16,10 +16,6 @@ export interface MapData {
     settings: MapSettings;
     centerWorldX: number;
     centerWorldY: number;
-}
-
-export interface Hexes {
-    [key: string]: Hexagon;
 }
 
 export interface PatternData extends HexCoordinates {
@@ -37,7 +33,7 @@ export interface MapSettings {
     patternSourceHex: HexCoordinates;
     borderSettings: BorderSettings;
     riverSettings: RiverSettings;
-    roadSettings: RiverSettings;
+    roadSettings: RoadSettings;
     masterColor: string;
     editMode: boolean;
     hexColorColor: string;
@@ -47,21 +43,21 @@ export interface MapSettings {
 
 export interface BorderSettings {
     dashes: number;
-    activeRegionId: number;
+    activeRegionId: number | null;
     pickedHex: null;
     visible: boolean;
 }
 
 export interface RiverSettings {
     width: number;
-    activeRiverId?: number;
+    activeRiverId: number | null;
     editMode: boolean;
     insertAfter: null;
 }
 
 export interface RoadSettings {
     width: number;
-    activeRoadId?: number;
+    activeRoadId: number | null;
     editMode: boolean;
     insertAfter: null;
 }

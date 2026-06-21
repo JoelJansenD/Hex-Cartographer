@@ -5,6 +5,6 @@ export interface HexCoordinates {
 
 export interface Hexagon extends HexCoordinates {
     color?: string;
-    symbol: string;
-    symbolColor: string;
+    symbol?: string;
+    symbolColor?: string;
 }
