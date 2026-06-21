@@ -45,6 +45,20 @@ import {
     hsbToHex,
     hexToHsb,
 } from './functions/colors';
+import {
+    hexToPixel,
+    pixelToHex,
+    hexDistance,
+    hexLerp,
+    getHexNeighbors,
+    calculateHexPath,
+    getHexBounds,
+    isHexInPlausibleRange,
+    createSegmentKey,
+    HexCoordinates,
+    PixelCoordinates,
+    HexBounds,
+} from './functions/hex-math';
 
 // === Übersetzungen ===
 async function getLexicon() {
@@ -1233,7 +1247,7 @@ class HexCartographerView extends ItemView {
         let minY = Infinity, maxY = -Infinity;
 
         const expandBounds = (hex) => {
-            const pos = this.hexToPixel(hex);
+            const pos = hexToPixel({ q: hex.q, r: hex.r }, this.data.gridSize, this.hexOrientation);
             const s = this.data.gridSize;
             minX = Math.min(minX, pos.x - s);
             maxX = Math.max(maxX, pos.x + s);
@@ -2431,7 +2445,7 @@ class HexCartographerView extends ItemView {
             if (e.button === 2 && this.editMode) {
                 e.preventDefault();
                 const now = Date.now();
-                const hex = this.pixelToHex(world.x, world.y);
+                const hex = pixelToHex(world.x, world.y, this.data.gridSize, this.hexOrientation);
                 const key = `${hex.q}_${hex.r}`;
                 if (this._rightClickLast && now - this._rightClickLast.time < 400 && this._rightClickLast.key === key) {
                     this._rightClickLast = null;
@@ -2453,7 +2467,7 @@ class HexCartographerView extends ItemView {
             this.pendingHistory = true;
             this.isMouseDown = true;
             this.mouseDownPos = { x: world.x, y: world.y };
-            this.startHex = this.pixelToHex(world.x, world.y);
+            this.startHex = pixelToHex(world.x, world.y, this.data.gridSize, this.hexOrientation);
             this.lastHex = this.startHex;
 
             if (this.colorPickMode) {
@@ -2567,7 +2581,7 @@ class HexCartographerView extends ItemView {
             if (!this.editMode) return;
             if (e.button === 2 || this.drawMode === 'eraser') {
                 const world = this.getWorldCoords(e);
-                const hex = this.pixelToHex(world.x, world.y);
+                const hex = pixelToHex(world.x, world.y, this.data.gridSize, this.hexOrientation);
                 if (this.history.length > 0) this.history.pop();
                 this.handleEraserFlood(hex);
                 this.render();
@@ -2578,7 +2592,7 @@ class HexCartographerView extends ItemView {
         this.containerEl.addEventListener('mousemove', (e) => {
             const world = this.getWorldCoords(e);
             if (this.isRightMouseErasing) {
-                const hex = this.pixelToHex(world.x, world.y);
+                const hex = pixelToHex(world.x, world.y, this.data.gridSize, this.hexOrientation);
                 const key = `${hex.q}_${hex.r}`;
                 if (key !== this.rightEraseLastHex) {
                     this.handleEraser(hex, world.x, world.y);
@@ -2603,7 +2617,7 @@ class HexCartographerView extends ItemView {
                 } else if (this.roadDragIndex !== null && this.roadSettings.editMode) {
                     const road = this.data.roads && this.data.roads.find(r => r.id === this.roadSettings.activeRoadId);
                     if (road) {
-                        const currentHex = this.pixelToHex(world.x, world.y);
+                        const currentHex = pixelToHex(world.x, world.y, this.data.gridSize, this.hexOrientation);
                         const curQ = road.waypoints[this.roadDragIndex.idx].q;
                         const curR = road.waypoints[this.roadDragIndex.idx].r;
                         if (curQ !== currentHex.q || curR !== currentHex.r) {
@@ -2618,7 +2632,7 @@ class HexCartographerView extends ItemView {
                 } else if (this.riverDragIndex !== null && this.riverSettings.editMode) {
                     const river = this.data.rivers && this.data.rivers.find(r => r.id === this.riverSettings.activeRiverId);
                     if (river) {
-                        const currentHex = this.pixelToHex(world.x, world.y);
+                        const currentHex = pixelToHex(world.x, world.y, this.data.gridSize, this.hexOrientation);
                         const curQ = river.waypoints[this.riverDragIndex.idx].q;
                         const curR = river.waypoints[this.riverDragIndex.idx].r;
                         if (curQ !== currentHex.q || curR !== currentHex.r) {
@@ -2850,7 +2864,7 @@ class HexCartographerView extends ItemView {
                         this.pendingHistory = true;
                         this.isMouseDown = true;
                         this.mouseDownPos = { x: world.x, y: world.y };
-                        this.startHex = this.pixelToHex(world.x, world.y);
+                        this.startHex = pixelToHex(world.x, world.y, this.data.gridSize, this.hexOrientation);
                         this.lastHex = this.startHex;
 
                         if (this.colorPickMode) {
@@ -3036,7 +3050,7 @@ class HexCartographerView extends ItemView {
                     } else if (this.roadDragIndex !== null && this.roadSettings.editMode) {
                         const road = this.data.roads && this.data.roads.find(r => r.id === this.roadSettings.activeRoadId);
                         if (road) {
-                            const currentHex = this.pixelToHex(world.x, world.y);
+                            const currentHex = pixelToHex(world.x, world.y, this.data.gridSize, this.hexOrientation);
                             const curQ = road.waypoints[this.roadDragIndex.idx].q;
                             const curR = road.waypoints[this.roadDragIndex.idx].r;
                             if (curQ !== currentHex.q || curR !== currentHex.r) {
@@ -3051,7 +3065,7 @@ class HexCartographerView extends ItemView {
                     } else if (this.riverDragIndex !== null && this.riverSettings.editMode) {
                         const river = this.data.rivers && this.data.rivers.find(r => r.id === this.riverSettings.activeRiverId);
                         if (river) {
-                            const currentHex = this.pixelToHex(world.x, world.y);
+                            const currentHex = pixelToHex(world.x, world.y, this.data.gridSize, this.hexOrientation);
                             const curQ = river.waypoints[this.riverDragIndex.idx].q;
                             const curR = river.waypoints[this.riverDragIndex.idx].r;
                             if (curQ !== currentHex.q || curR !== currentHex.r) {
@@ -3091,7 +3105,7 @@ class HexCartographerView extends ItemView {
                     this.pendingHistory = true;
                     this.isMouseDown = true;
                     this.mouseDownPos = { x: world.x, y: world.y };
-                    this.startHex = this.pixelToHex(world.x, world.y);
+                    this.startHex = pixelToHex(world.x, world.y, this.data.gridSize, this.hexOrientation);
                     this.lastHex = this.startHex;
 
                     if (this.colorPickMode) {
@@ -3277,7 +3291,7 @@ class HexCartographerView extends ItemView {
                     const tapTouch = e.changedTouches[0];
                     const tapEvent = new MouseEvent('mouseup', { clientX: tapTouch.clientX, clientY: tapTouch.clientY, bubbles: true, cancelable: true });
                     const tapWorld = this.getWorldCoords(tapEvent);
-                    const tapHex = this.pixelToHex(tapWorld.x, tapWorld.y);
+                    const tapHex = pixelToHex(tapWorld.x, tapWorld.y, this.data.gridSize, this.hexOrientation);
                     const now = Date.now();
 
                     if (this.touchState.lastTapTime &&
@@ -3337,32 +3351,6 @@ class HexCartographerView extends ItemView {
         }, { passive: false });
     }
 
-    calculateHexPath(start, end, width) {
-        if (!start || !end) return [];
-        const path: any[] = [];
-        const n = this.hexDistance(start, end);
-        let prev = start;
-        for (let i = 1; i <= n; i++) {
-            const next = this.hexLerp(start, end, i / n);
-            path.push({ from: {q: prev.q, r: prev.r}, to: {q: next.q, r: next.r}, width: width });
-            prev = next;
-        }
-        return path;
-    }
-
-    hexDistance(a, b) {
-        return (Math.abs(a.q - b.q) + Math.abs(a.q + a.r - b.q - b.r) + Math.abs(a.r - b.r)) / 2;
-    }
-
-    hexLerp(a, b, t) {
-        const q = a.q + (b.q - a.q) * t, r = a.r + (b.r - a.r) * t;
-        let rq = Math.round(q), rr = Math.round(r), rs = Math.round(-q-r);
-        const qd = Math.abs(rq - q), rd = Math.abs(rr - r), sd = Math.abs(rs - (-q-r));
-        if (qd > rd && qd > sd) rq = -rr-rs;
-        else if (rd > sd) rr = -rq-rs;
-        return { q: rq, r: rr };
-    }
-
     processInput(e, isInitial) {
         this.pushHistoryIfNeeded();
         const world = this.getWorldCoords(e);
@@ -3370,7 +3358,7 @@ class HexCartographerView extends ItemView {
             console.warn('Rejected processInput: implausible world coords', world);
             return;
         }
-        const hex = this.pixelToHex(world.x, world.y);
+        const hex = pixelToHex(world.x, world.y, this.data.gridSize, this.hexOrientation);
 
         if (this.currentToolGroup === 'text' && this.drawMode === 'none' && isInitial) {
             const existingText = this.getTextAt(world.x, world.y);
@@ -3415,7 +3403,7 @@ class HexCartographerView extends ItemView {
         const hr = Math.round(hex.r);
 
         const bounds = this.getHexBounds();
-        if (bounds && (hq < bounds.minQ - 50 || hq > bounds.maxQ + 50 || hr < bounds.minR - 50 || hr > bounds.maxR + 50)) {
+        if (!isHexInPlausibleRange({ q: hq, r: hr }, bounds, 50)) {
             console.warn('Rejected border hex: outside plausible range', { q: hq, r: hr, bounds });
             return;
         }
@@ -3443,13 +3431,18 @@ class HexCartographerView extends ItemView {
         if (toolbar) this.updateToolbarState(toolbar);
     }
 
+    getHexBounds() {
+        const hexes = Object.keys(this.data.hexes).map(x => this.data.hexes[x]);
+        return getHexBounds(hexes);
+    }
+
     findRoadAtHex(hex) {
         if (!this.data.roads) return null;
         for (const road of this.data.roads) {
             if (!road.waypoints || road.waypoints.length === 0) continue;
             if (road.waypoints.some(w => w.q === hex.q && w.r === hex.r)) return road;
             for (let i = 0; i < road.waypoints.length - 1; i++) {
-                const segs = this.calculateHexPath(road.waypoints[i], road.waypoints[i + 1], road.width);
+                const segs = calculateHexPath(road.waypoints[i], road.waypoints[i + 1], road.width);
                 for (const seg of segs) {
                     if (seg.to.q === hex.q && seg.to.r === hex.r) return road;
                     if (seg.from.q === hex.q && seg.from.r === hex.r) return road;
@@ -3492,7 +3485,7 @@ class HexCartographerView extends ItemView {
                 const to = road.waypoints[i + 1];
                 if (to.break) continue;
                 const from = road.waypoints[i];
-                const segs = this.calculateHexPath(from, to, road.width);
+                const segs = calculateHexPath(from, to, road.width);
                 const onSegment = segs.some(s =>
                     (s.from.q === hex.q && s.from.r === hex.r) ||
                     (s.to.q === hex.q && s.to.r === hex.r)
@@ -3523,7 +3516,7 @@ class HexCartographerView extends ItemView {
             if (!river.waypoints || river.waypoints.length === 0) continue;
             if (river.waypoints.some(w => w.q === hex.q && w.r === hex.r)) return river;
             for (let i = 0; i < river.waypoints.length - 1; i++) {
-                const segs = this.calculateHexPath(river.waypoints[i], river.waypoints[i + 1], river.width);
+                const segs = calculateHexPath(river.waypoints[i], river.waypoints[i + 1], river.width);
                 for (const seg of segs) {
                     if (seg.to.q === hex.q && seg.to.r === hex.r) return river;
                     if (seg.from.q === hex.q && seg.from.r === hex.r) return river;
@@ -3549,7 +3542,7 @@ class HexCartographerView extends ItemView {
                     const to = path.waypoints[i + 1];
                     if (to.break) continue;
                     const from = path.waypoints[i];
-                    const segs = this.calculateHexPath(from, to, path.width);
+                    const segs = calculateHexPath(from, to, path.width);
                     const onSegment = segs.some(s =>
                         (s.from.q === hex.q && s.from.r === hex.r) ||
                         (s.to.q === hex.q && s.to.r === hex.r)
@@ -3616,7 +3609,7 @@ class HexCartographerView extends ItemView {
                 const to = river.waypoints[i + 1];
                 if (to.break) continue;
                 const from = river.waypoints[i];
-                const segs = this.calculateHexPath(from, to, river.width);
+                const segs = calculateHexPath(from, to, river.width);
                 const onSegment = segs.some(s =>
                     (s.from.q === hex.q && s.from.r === hex.r) ||
                     (s.to.q === hex.q && s.to.r === hex.r)
@@ -3708,7 +3701,7 @@ class HexCartographerView extends ItemView {
                         let found = false;
                         for (let i = 0; i < p.waypoints.length - 1 && !found; i++) {
                             if (p.waypoints[i + 1].break) continue;
-                            const segs = this.calculateHexPath(p.waypoints[i], p.waypoints[i + 1], p.width);
+                            const segs = calculateHexPath(p.waypoints[i], p.waypoints[i + 1], p.width);
                             if (segs.some(s => (s.from.q === hex.q && s.from.r === hex.r) || (s.to.q === hex.q && s.to.r === hex.r))) {
                                 pathIds.push(p.id);
                                 found = true;
@@ -3797,7 +3790,7 @@ class HexCartographerView extends ItemView {
 
     floodEraseSymbol(startHex, targetSymbol) {
         const visited = new Set();
-        const queue = this.getHexNeighbors(startHex);
+        const queue = getHexNeighbors(startHex);
 
         while (queue.length > 0) {
             const hex = queue.shift()!;
@@ -3814,14 +3807,14 @@ class HexCartographerView extends ItemView {
                 delete this.data.hexes[key];
             }
 
-            const neighbors = this.getHexNeighbors(hex);
+            const neighbors = getHexNeighbors(hex);
             neighbors.forEach(n => queue.push(n));
         }
     }
 
     floodEraseColor(startHex, targetColor) {
         const visited = new Set();
-        const queue = this.getHexNeighbors(startHex);
+        const queue = getHexNeighbors(startHex);
 
         while (queue.length > 0) {
             const hex = queue.shift()!;
@@ -3838,7 +3831,7 @@ class HexCartographerView extends ItemView {
                 delete this.data.hexes[key];
             }
 
-            const neighbors = this.getHexNeighbors(hex);
+            const neighbors = getHexNeighbors(hex);
             neighbors.forEach(n => queue.push(n));
         }
     }
@@ -3854,7 +3847,7 @@ class HexCartographerView extends ItemView {
 
     floodErasePattern(startHex, targetPattern) {
         const visited = new Set();
-        const queue = this.getHexNeighbors(startHex);
+        const queue = getHexNeighbors(startHex);
 
         while (queue.length > 0) {
             const hex = queue.shift()!;
@@ -3868,7 +3861,7 @@ class HexCartographerView extends ItemView {
 
             delete this.data.hexes[key];
 
-            const neighbors = this.getHexNeighbors(hex);
+            const neighbors = getHexNeighbors(hex);
             neighbors.forEach(n => queue.push(n));
         }
     }
@@ -3881,7 +3874,7 @@ class HexCartographerView extends ItemView {
         const toRemove = new Set();
         const visited = new Set();
 
-        const queue = [startHex, ...this.getHexNeighbors(startHex)];
+        const queue = [startHex, ...getHexNeighbors(startHex)];
 
         while (queue.length > 0) {
             const hex = queue.shift();
@@ -3892,7 +3885,7 @@ class HexCartographerView extends ItemView {
             if (!regionHexSet.has(key)) continue;
 
             toRemove.add(key);
-            const neighbors = this.getHexNeighbors(hex);
+            const neighbors = getHexNeighbors(hex);
             neighbors.forEach(n => queue.push(n));
         }
 
@@ -3969,7 +3962,7 @@ class HexCartographerView extends ItemView {
                 this.data.hexes[key] = { q: hex.q, r: hex.r, color: newColor };
             }
 
-            const neighbors = this.getHexNeighbors(hex);
+            const neighbors = getHexNeighbors(hex);
             neighbors.forEach(n => queue.push(n));
         }
     }
@@ -4018,7 +4011,7 @@ class HexCartographerView extends ItemView {
                 }
             }
 
-            const neighbors = this.getHexNeighbors(hex);
+            const neighbors = getHexNeighbors(hex);
             neighbors.forEach(n => queue.push(n));
         }
     }
@@ -4054,34 +4047,26 @@ class HexCartographerView extends ItemView {
                 hexData.symbolColor = this.patternData.symbolColor;
             }
 
-            const neighbors = this.getHexNeighbors(hex);
+            const neighbors = getHexNeighbors(hex);
             neighbors.forEach(n => queue.push(n));
         }
     }
 
-    getHexNeighbors(hex) {
-        const directions = [
-            {q: 1, r: 0}, {q: 1, r: -1}, {q: 0, r: -1},
-            {q: -1, r: 0}, {q: -1, r: 1}, {q: 0, r: 1}
-        ];
-        return directions.map(d => ({ q: hex.q + d.q, r: hex.r + d.r }));
-    }
-
-    isEnclosedByFrame(startHex) {
+    isEnclosedByFrame(startHex: HexCoordinates) {
         const visited = new Set();
         const queue = [startHex];
-        const maxDistance = 50; // Maximale Distanz zum Prüfen (verhindert endlose Suche)
+        const maxDistance = 50;
         let foundBoundary = false;
 
         while (queue.length > 0) {
-            const hex = queue.shift();
+            const hex = queue.shift()!;
             const key = `${hex.q}_${hex.r}`;
 
             if (visited.has(key)) continue;
 
             const distance = Math.abs(hex.q - startHex.q) + Math.abs(hex.r - startHex.r);
             if (distance > maxDistance) {
-                return false; // Zu weit = nicht umrahmt
+                return false;
             }
 
             visited.add(key);
@@ -4090,23 +4075,23 @@ class HexCartographerView extends ItemView {
 
             if (hexData) {
                 foundBoundary = true;
-                continue; // Nicht weiter in diese Richtung
+                continue;
             }
 
-            const neighbors = this.getHexNeighbors(hex);
+            const neighbors = getHexNeighbors(hex);
             neighbors.forEach(n => queue.push(n));
         }
 
         return foundBoundary && visited.size < (maxDistance * maxDistance);
     }
 
-    floodFillEmpty(startHex) {
+    floodFillEmpty(startHex: HexCoordinates) {
         const visited = new Set();
         const queue = [startHex];
         const maxDistance = 50;
 
         while (queue.length > 0) {
-            const hex = queue.shift();
+            const hex = queue.shift()!;
             const key = `${hex.q}_${hex.r}`;
 
             if (visited.has(key)) continue;
@@ -4154,7 +4139,7 @@ class HexCartographerView extends ItemView {
                 }
             }
 
-            const neighbors = this.getHexNeighbors(hex);
+            const neighbors = getHexNeighbors(hex);
             neighbors.forEach(n => queue.push(n));
         }
     }
@@ -4175,7 +4160,7 @@ class HexCartographerView extends ItemView {
         const drawSymbolLayer = (symbols) => {
             Object.values(this.data.hexes).forEach((h: any) => {
                 if (h.symbol && symbols.includes(h.symbol)) {
-                    const pos = this.hexToPixel(h);
+                    const pos = hexToPixel({  q: h.q, r: h.r }, this.data.gridSize, this.hexOrientation);
                     if (this.svgSymbols[h.symbol]) {
                         this.drawSVGOnCanvas(h.symbol, pos, h.symbolColor);
                     } else {
@@ -4208,7 +4193,7 @@ class HexCartographerView extends ItemView {
 
 
         if (this.currentToolGroup === 'pattern' && this.patternSourceHex) {
-            const pos = this.hexToPixel(this.patternSourceHex);
+            const pos = hexToPixel({  q: this.patternSourceHex.q, r: this.patternSourceHex.r }, this.data.gridSize, this.hexOrientation);
             const s = this.data.gridSize;
 
             this.ctx.beginPath();
@@ -4232,7 +4217,7 @@ class HexCartographerView extends ItemView {
     renderCrosshair() {
         if (!this.plugin.settings.showCrosshair) return;
 
-        const origin = this.hexToPixel({ q: 0, r: 0 });
+        const origin = hexToPixel({ q: 0, r: 0 }, this.data.gridSize, this.hexOrientation);
         const sx = origin.x * this.data.zoom + this.data.offX;
         const sy = origin.y * this.data.zoom + this.data.offY;
         const arm = 2 * this.data.gridSize * this.data.zoom;
@@ -4284,7 +4269,7 @@ class HexCartographerView extends ItemView {
     // Berechnet für jede Wabe ein Label basierend auf den Settings
     _buildHexNumberLabels() {
         const settings = this.plugin.settings;
-        const hexes = Object.values(this.data.hexes);
+        const hexes: any[] = Object.values(this.data.hexes);
         if (hexes.length === 0) return [];
 
         const horizontal = settings.hexNumberingDirection !== 'vertical';
@@ -4292,7 +4277,7 @@ class HexCartographerView extends ItemView {
 
         // Pixelposition jeder Wabe berechnen
         const withPos = hexes.map(hex => {
-            const pos = this.hexToPixel(hex);
+            const pos = hexToPixel({ q: hex.q, r: hex.r }, this.data.gridSize, this.hexOrientation);
             return { hex, px: pos.x, py: pos.y };
         });
 
@@ -4450,7 +4435,7 @@ class HexCartographerView extends ItemView {
         ctx.textBaseline = 'middle';
 
         for (const { hex, label } of labels) {
-            const pos = this.hexToPixel(hex);
+            const pos = hexToPixel({ q: hex.q, r: hex.r }, this.data.gridSize, this.hexOrientation);
 
             // Y-Offset je nach Position (top/bottom) und Orientierung
             // Bei pointy-top (flatTop=false) liegt die breiteste Stelle in der Mitte.
@@ -4511,7 +4496,7 @@ class HexCartographerView extends ItemView {
         let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
         const angleOffset = this.hexOrientation ? 0 : -30;
         const expandBounds = (hex) => {
-            const pos = this.hexToPixel(hex);
+            const pos = hexToPixel({ q: hex.q, r: hex.r }, this.data.gridSize, this.hexOrientation);
             const s = this.data.gridSize;
             for (let i = 0; i < 6; i++) {
                 const a = (Math.PI / 180) * (60 * i + angleOffset);
@@ -4553,7 +4538,7 @@ class HexCartographerView extends ItemView {
         let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
         const angleOffset = this.hexOrientation ? 0 : -30;
         const expandBounds = (hex) => {
-            const pos = this.hexToPixel(hex);
+            const pos = hexToPixel({ q: hex.q, r: hex.r }, this.data.gridSize, this.hexOrientation);
             const s = this.data.gridSize;
             for (let i = 0; i < 6; i++) {
                 const a = (Math.PI / 180) * (60 * i + angleOffset);
@@ -4615,7 +4600,7 @@ class HexCartographerView extends ItemView {
         const drawSymbolLayer = (symbols) => {
             Object.values(this.data.hexes).forEach((hex: any) => {
                 if (hex.symbol && symbols.includes(hex.symbol)) {
-                    const pos = this.hexToPixel(hex);
+                    const pos = hexToPixel({ q: hex.q, r: hex.r }, this.data.gridSize, this.hexOrientation);
                     if (this.svgSymbols[hex.symbol]) {
                         this.drawSVGOnCanvas(hex.symbol, pos, hex.symbolColor);
                     } else {
@@ -4776,7 +4761,7 @@ class HexCartographerView extends ItemView {
     }
 
     drawHexBase(h) {
-        const pos = this.hexToPixel(h), s = this.data.gridSize;
+        const pos = hexToPixel({ q: h.q, r: h.r }, this.data.gridSize, this.hexOrientation), s = this.data.gridSize;
         const angleOffset = this.hexOrientation ? 0 : -30;
 
         if (h.color) {
@@ -4841,7 +4826,7 @@ class HexCartographerView extends ItemView {
             }
 
             region.hexes.forEach(b => {
-                const pos = this.hexToPixel(b);
+                const pos = hexToPixel({ q: b.q, r: b.r }, this.data.gridSize, this.hexOrientation);
 
                 const corners: any[] = [];
                 for (let i = 0; i < 6; i++) {
@@ -4877,7 +4862,7 @@ class HexCartographerView extends ItemView {
                 this.ctx.strokeStyle = activeRegion.color || '#FF0000';
                 this.ctx.lineWidth = this.borderHighlightWidth;
                 this.ctx.setLineDash([4, 4]);
-                const pos = this.hexToPixel(ph);
+                const pos = hexToPixel({ q: ph.q, r: ph.r }, this.data.gridSize, this.hexOrientation);
                 const hlInset = (sf - this.borderHighlightWidth / 2 - 1) / sf;
                 this.ctx.beginPath();
                 for (let i = 0; i < 6; i++) {
@@ -5077,12 +5062,6 @@ class HexCartographerView extends ItemView {
         this.ctx.restore();
     }
 
-    _segKey(from, to) {
-        if (from.q < to.q || (from.q === to.q && from.r < to.r))
-            return `${from.q},${from.r}|${to.q},${to.r}`;
-        return `${to.q},${to.r}|${from.q},${from.r}`;
-    }
-
     buildOverlapMap() {
         this.overlapMap = {};
         const addSegments = (pathObj, type) => {
@@ -5103,11 +5082,11 @@ class HexCartographerView extends ItemView {
             }
             chains.forEach(chain => {
                 for (let i = 0; i < chain.length - 1; i++) {
-                    const pathSegs = this.calculateHexPath(chain[i], chain[i + 1], pathObj.width);
+                    const pathSegs = calculateHexPath(chain[i], chain[i + 1], pathObj.width);
                     pathSegs.forEach(seg => {
                         if(!this.overlapMap) return;
 
-                        const key = this._segKey(seg.from, seg.to);
+                        const key = createSegmentKey(seg.from, seg.to);
                         if (!this.overlapMap[key]) this.overlapMap[key] = { hasRiver: false, hasRoad: false, maxRiverWidth: 0, maxRoadWidth: 0 };
                         if (type === 'river') {
                             this.overlapMap[key].hasRiver = true;
@@ -5152,7 +5131,7 @@ class HexCartographerView extends ItemView {
                 const activeWp = activeIdx !== null ? river.waypoints[activeIdx] : null;
                 river.waypoints.forEach((wp) => {
                     const isActive = activeWp && wp.q === activeWp.q && wp.r === activeWp.r;
-                    const pos = this.hexToPixel(wp);
+                    const pos = hexToPixel({ q: wp.q, r: wp.r }, this.data.gridSize, this.hexOrientation);
                     this.ctx.beginPath();
                     this.ctx.arc(pos.x, pos.y, 4, 0, Math.PI * 2);
                     this.ctx.fillStyle = isActive ? '#FF0000' : '#000000';
@@ -5167,7 +5146,7 @@ class HexCartographerView extends ItemView {
                 const activeWp = activeIdx !== null ? road.waypoints[activeIdx] : null;
                 road.waypoints.forEach((wp) => {
                     const isActive = activeWp && wp.q === activeWp.q && wp.r === activeWp.r;
-                    const pos = this.hexToPixel(wp);
+                    const pos = hexToPixel({ q: wp.q, r: wp.r }, this.data.gridSize, this.hexOrientation);
                     this.ctx.beginPath();
                     this.ctx.arc(pos.x, pos.y, 4, 0, Math.PI * 2);
                     this.ctx.fillStyle = isActive ? '#FF0000' : '#000000';
@@ -5209,13 +5188,13 @@ class HexCartographerView extends ItemView {
             const pairCount = chain.length - 1;
             const pairSegCounts: any[] = [];
             for (let i = 0; i < pairCount; i++) {
-                const pathSegs = this.calculateHexPath(chain[i], chain[i + 1], path.width);
+                const pathSegs = calculateHexPath(chain[i], chain[i + 1], path.width);
                 pairSegCounts.push(pathSegs.length);
                 segments.push(...pathSegs);
             }
             if (pathType && this.overlapMap) {
                 segments.forEach(seg => {
-                    const key = this._segKey(seg.from, seg.to);
+                    const key = createSegmentKey(seg.from, seg.to);
                     const info = this.overlapMap![key];
                     if (info && info.hasRiver && info.hasRoad) {
                         const isCanonical = seg.from.q < seg.to.q || (seg.from.q === seg.to.q && seg.from.r < seg.to.r);
@@ -5266,7 +5245,7 @@ class HexCartographerView extends ItemView {
         this.ctx.lineWidth = defaultWidth;
 
         const computedLines = lines.map((l, idx) => {
-            const fullP1 = this.hexToPixel(l.from), fullP2 = this.hexToPixel(l.to);
+            const fullP1 = hexToPixel({ q: l.from.q, r: l.from.r }, this.data.gridSize, this.hexOrientation), fullP2 = hexToPixel({ q: l.to.q, r: l.to.r }, this.data.gridSize, this.hexOrientation);
             let p1 = { x: fullP1.x, y: fullP1.y }, p2 = { x: fullP2.x, y: fullP2.y };
             const inset = (1 - this.pathEndInset) * 0.5;
             if (trimStart && idx === 0) p1 = { x: p1.x + (p2.x - p1.x) * inset, y: p1.y + (p2.y - p1.y) * inset };
@@ -5447,68 +5426,6 @@ class HexCartographerView extends ItemView {
             x: (e.clientX - r.left - this.data.offX) / this.data.zoom,
             y: (e.clientY - r.top - this.data.offY) / this.data.zoom
         };
-    }
-
-    getHexBounds() {
-        const keys = Object.keys(this.data.hexes || {});
-        if (keys.length === 0) return null;
-        let minQ = Infinity, maxQ = -Infinity, minR = Infinity, maxR = -Infinity;
-        for (const key of keys) {
-            const h = this.data.hexes[key];
-            if (h.q < minQ) minQ = h.q;
-            if (h.q > maxQ) maxQ = h.q;
-            if (h.r < minR) minR = h.r;
-            if (h.r > maxR) maxR = h.r;
-        }
-        return { minQ, maxQ, minR, maxR };
-    }
-
-    hexToPixel(h) {
-        const s = this.data.gridSize;
-        if (this.hexOrientation) {
-            return {
-                x: s * (3/2 * h.q),
-                y: s * (Math.sqrt(3)/2 * h.q + Math.sqrt(3) * h.r)
-            };
-        }
-        return {
-            x: s * (Math.sqrt(3) * h.q + Math.sqrt(3)/2 * h.r),
-            y: s * (3/2 * h.r)
-        };
-    }
-
-    pixelToHex(x, y) {
-        const s = this.data.gridSize;
-        let q, r;
-        if (this.hexOrientation) {
-            q = (2/3 * x) / s;
-            r = (-1/3 * x + Math.sqrt(3)/3 * y) / s;
-        } else {
-            q = (Math.sqrt(3)/3 * x - 1/3 * y) / s;
-            r = (2/3 * y) / s;
-        }
-
-        const cubeX = q;
-        const cubeZ = r;
-        const cubeY = -cubeX - cubeZ;
-
-        let rx = Math.round(cubeX);
-        let ry = Math.round(cubeY);
-        let rz = Math.round(cubeZ);
-
-        const xDiff = Math.abs(rx - cubeX);
-        const yDiff = Math.abs(ry - cubeY);
-        const zDiff = Math.abs(rz - cubeZ);
-
-        if (xDiff > yDiff && xDiff > zDiff) {
-            rx = -ry - rz;
-        } else if (yDiff > zDiff) {
-            ry = -rx - rz;
-        } else {
-            rz = -rx - ry;
-        }
-
-        return { q: rx, r: rz };
     }
 
     async onClose() {
