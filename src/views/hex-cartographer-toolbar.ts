@@ -21,10 +21,10 @@ export default class HexCartographerToolbar {
     private toolButtons: ButtonComponent[];
 
     private viewModeButton!: ButtonComponent;
-    private paintActionButton!: ButtonComponent;
-    private bucketActionButton!: ButtonComponent;
-    private eraserActionButton!: ButtonComponent;
-    private textActionButton!: ButtonComponent;
+    private paintBrushButton!: ButtonComponent;
+    private paintBucketButton!: ButtonComponent;
+    private eraserButton!: ButtonComponent;
+    private textButton!: ButtonComponent;
     
     private stampPatternActionButton!: ButtonComponent;
     private pickPatternActionButton!: ButtonComponent;
@@ -62,7 +62,7 @@ export default class HexCartographerToolbar {
         this.redoActionButton.buttonEl.removeClass('hidden');
         this.editModeButton.buttonEl.addClass('hidden');
 
-        this.setTool(this.paintActionButton, 'hexcolor');
+        this.setTool(this.paintBrushButton, 'brush');
     }
 
     private enterViewMode() {
@@ -101,23 +101,23 @@ export default class HexCartographerToolbar {
             .setIcon('eye')
             .onClick(() => this.enterViewMode());
 
-        this.paintActionButton = new ButtonComponent(this.paintActions)
-            .setIcon('hexagon')
-            .onClick(() => this.setTool(this.paintActionButton, 'hexcolor'));
+        this.paintBrushButton = new ButtonComponent(this.paintActions)
+            .setIcon('brush')
+            .onClick(() => this.setTool(this.paintBrushButton, 'brush'));
 
-        this.bucketActionButton = new ButtonComponent(this.paintActions)
+        this.paintBucketButton = new ButtonComponent(this.paintActions)
             .setIcon('paint-bucket')
-            .onClick(() => this.setTool(this.bucketActionButton, 'bucket'));
+            .onClick(() => this.setTool(this.paintBucketButton, 'bucket'));
 
-        this.eraserActionButton = new ButtonComponent(this.paintActions)
+        this.eraserButton = new ButtonComponent(this.paintActions)
             .setIcon('eraser')
-            .onClick(() => this.setTool(this.eraserActionButton, 'eraser'));
+            .onClick(() => this.setTool(this.eraserButton, 'eraser'));
 
-        this.textActionButton = new ButtonComponent(this.paintActions)
+        this.textButton = new ButtonComponent(this.paintActions)
             .setIcon('type')
-            .onClick(() => this.setTool(this.textActionButton, 'text'));
+            .onClick(() => this.setTool(this.textButton, 'text'));
 
-        return [ this.paintActionButton, this.bucketActionButton, this.eraserActionButton, this.textActionButton ];
+        return [ this.paintBrushButton, this.paintBucketButton, this.eraserButton, this.textButton ];
     }
 
     private initializePatternButtons() {

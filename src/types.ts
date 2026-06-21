@@ -11,4 +11,4 @@
  * - 'border': Border drawing tool
  * - 'selectPathAndBorder': Select path and border tool
  */
-export type ToolGroup = 'hexcolor' | 'bucket' | 'eraser' | 'text' | 'pattern' | 'pickPattern' | 'river' | 'road' | 'border' | 'selectPathAndBorder';
+export type ToolGroup = 'brush' | 'bucket' | 'eraser' | 'text' | 'pattern' | 'pickPattern' | 'river' | 'road' | 'border' | 'selectPathAndBorder';
