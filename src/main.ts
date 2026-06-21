@@ -1,4 +1,4 @@
-const { Plugin, PluginSettingTab, Setting, TFile, Notice, Modal, ItemView, setIcon } = require('obsidian');
+import { Plugin, PluginSettingTab, Setting, TFile, Notice, Modal, ItemView, setIcon, TAbstractFile, TFolder } from 'obsidian';
 
 // === Farbpaletten ===
 const DEFAULT_PALETTE  = ['#3295D2', '#6CC261', '#DDC88D', '#9c9090', '#CD6155', '#FFD700', '#000000', '#FFFFFF'];
@@ -81,18 +81,28 @@ const SVG_SYMBOL_CONFIG = {
 };
 
 // === Übersetzungen ===
-function getLexicon() {
+async function getLexicon() {
     let lang = window.localStorage.getItem('language');
     if(!lang) {
         lang = 'en';
     }
 
-    return require(`./lexicon.${lang}.json`);
+    return (await import(`./resources/lang/lexicon.${lang}.json`)).default;
 }
 
-// Übersetzungsfunktion mit Fallback auf Englisch und Platzhalterersetzung
-function t(key, params) {
-    
+let translations: { [key: string]: string } = {};
+
+function t(key: string, params?: { [key: string]: any }) {
+    let str = translations?.[key]
+           ?? key;
+    if (params) {
+        for (const [k, v] of Object.entries(params)) {
+            str = str.replace(`{${k}}`, v);
+        }
+    }
+    return str;
+}
+
 
 // === HSB/RGB/Hex Konvertierung ===
 function hexToRgb(hex) {
@@ -146,7 +156,8 @@ const DEFAULT_SETTINGS = {
 class HexCartographerPlugin extends Plugin {
     async onload() {
         await this.loadSettings();
-        currentLanguage = getObsidianLanguage();
+        translations = await getLexicon();
+        // currentLanguage = getObsidianLanguage();
         this.addSettingTab(new HexCartographerSettingTab(this.app, this));
 
         this.registerView('hex-cartographer', (leaf) => new HexCartographerView(leaf, this));
@@ -160,7 +171,12 @@ class HexCartographerPlugin extends Plugin {
                     await new Promise(resolve => setTimeout(resolve, 10));
                     const leaves = this.app.workspace.getLeavesOfType('markdown');
                     for (const leaf of leaves) {
-                        if (leaf.view.file && leaf.view.file.path === file.path) {
+                        const hexCartographerView = leaf.view as HexCartographerView;
+                        if(!hexCartographerView?.file) {
+                            continue;
+                        }
+
+                        if (hexCartographerView.file.path === file.path) {
                             await leaf.setViewState({
                                 type: 'hex-cartographer',
                                 state: { file: file.path }
@@ -173,11 +189,12 @@ class HexCartographerPlugin extends Plugin {
 
         this.registerEvent(
             this.app.workspace.on('active-leaf-change', async (leaf) => {
+                const hexCartographerView = leaf?.view as HexCartographerView;
                 if (leaf && leaf.view && leaf.view.getViewType() === 'markdown' &&
-                    leaf.view.file && leaf.view.file.path.endsWith('.hexcartographer.md')) {
+                    hexCartographerView?.file && hexCartographerView.file.path.endsWith('.hexcartographer.md')) {
                     await leaf.setViewState({
                         type: 'hex-cartographer',
-                        state: { file: leaf.view.file.path }
+                        state: { file: hexCartographerView.file.path }
                     });
                 }
             })
@@ -209,7 +226,7 @@ class HexCartographerPlugin extends Plugin {
                         .setIcon('map')
                         .setSection('create')
                         .onClick(async () => {
-                            await this.createNewHexMap(file);
+                            await this.createNewHexMap(file as TFolder);
                         });
                 });
             })
@@ -248,7 +265,7 @@ class HexCartographerPlugin extends Plugin {
             });
             setTimeout(() => {
                 const allLeaves = this.app.workspace.getLeavesOfType('hex-cartographer');
-                allLeaves.forEach((leaf) => {
+                allLeaves.forEach((leaf: any) => {
                     const view = leaf.view;
                     if (view instanceof HexCartographerView && view.file) {
                         leaf.updateHeader();
@@ -281,18 +298,20 @@ class HexCartographerPlugin extends Plugin {
 
             if (leaf?.view instanceof HexCartographerView && leaf.view.file) {
                 setTimeout(() => {
+                    const hexCartographerView = leaf.view as HexCartographerView;
                     document.querySelectorAll('.nav-file-title.is-active').forEach(el => {
                         el.classList.remove('is-active');
                     });
-                    const fileEl = document.querySelector(`.nav-file-title[data-path="${CSS.escape(leaf.view.file.path)}"]`);
+                    const fileEl = document.querySelector(`.nav-file-title[data-path="${CSS.escape(hexCartographerView.file.path)}"]`);
                     if (fileEl) {
                         fileEl.classList.add('is-active');
                         fileEl.classList.add('hex-active');
                     }
                 }, 50);
-            } else if (leaf?.view?.file) {
+            } else if (leaf && (leaf.view as any).file) {
                 setTimeout(() => {
-                    const fileEl = document.querySelector(`.nav-file-title[data-path="${CSS.escape(leaf.view.file.path)}"]`);
+                    const view = leaf.view as any;
+                    const fileEl = document.querySelector(`.nav-file-title[data-path="${CSS.escape(view.file.path)}"]`);
                     if (fileEl && !fileEl.classList.contains('is-active')) {
                         fileEl.classList.add('is-active');
                     }
@@ -318,7 +337,7 @@ class HexCartographerPlugin extends Plugin {
         });
     }
 
-    async createNewHexMap(targetFile = null) {
+    async createNewHexMap(targetFile: TFolder | null = null) {
         const now = new Date();
         const pad = (n) => String(n).padStart(2, '0');
         const fileName = `HexMap_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}-${pad(now.getDate())}${pad(now.getMonth() + 1)}${String(now.getFullYear()).slice(-2)}.hexcartographer.md`;
@@ -435,12 +454,122 @@ class HexCartographerPlugin extends Plugin {
 
 // === View-Klasse für den Hex Cartographer ===
 class HexCartographerView extends ItemView {
+    file: any;
+    saveTimeout: any;
+    isSaving: any;
+    plugin: any;
+    data: {
+        centerWorldY: number;
+        centerWorldX: number;
+        settings: any; hexes: {}; rivers: any[]; roads: any[]; texts: any[]; borders: any[]; gridSize: number; zoom: number; offX: number; offY: number; 
+};
+    history: string[];
+    redoStack: string[];
+    maxHistory: number;
+    isMouseDown: boolean;
+    isDraggingMap: boolean;
+    lastHex: any;
+    lastErasedHex: any;
+    isReloading: boolean;
+    draggedText: any;
+    startHex: any;
+    borderSettings: { dashes: number; activeRegionId: any; pickedHex: any; visible: boolean; };
+    borderHighlightWidth: number;
+    borderPickMode: boolean;
+    riverSettings: { width: number; activeRiverId: any; editMode: boolean; insertAfter: number | null; };
+    roadSettings: { width: number; activeRoadId: any; editMode: boolean; insertAfter: number | null; };
+    pathDashes: number;
+    pathPickMode: boolean;
+    pathPickPending: any;
+    lastToolGroup: string | null;
+    pathEndInset: number;
+    riverDragIndex: any;
+    roadDragIndex: any;
+    lastWaypointClick: any;
+    pendingHistory: boolean;
+    masterColor: string;
+    hexColorColor: string | undefined;
+    colorPalette: string[];
+    colorPalette2: string[];
+    activeColorSlot: number;
+    isTouchDevice: boolean;
+    colorPickMode: boolean;
+    editMode: boolean;
+    hexOrientation: boolean;
+    drawMode: string;
+    currentToolGroup: string | null = null;
+    patternData: any;
+    patternPickMode: boolean;
+    patternSourceHex: any;
+    svgSymbols: {};
+    svgSymbolsLoaded: boolean;
+    svgLoadPromise: Promise<void>;
+    svgSymbolConfig: { question: { size: number; align: string; marginX: number; marginY: number; }; exclamation: { size: number; align: string; marginX: number; marginY: number; }; cross: { size: number; align: string; marginX: number; marginY: number; }; dot: { size: number; align: string; marginX: number; marginY: number; }; shield: { size: number; align: string; marginX: number; marginY: number; }; pirateskull: { size: number; align: string; marginX: number; marginY: number; }; grass: { size: number; align: string; marginX: number; marginY: number; }; swamp: { size: number; align: string; marginX: number; marginY: number; }; bush: { size: number; align: string; marginX: number; marginY: number; }; tree: { size: number; align: string; marginX: number; marginY: number; }; pine: { size: number; align: string; marginX: number; marginY: number; }; palm: { size: number; align: string; marginX: number; marginY: number; }; hill: { size: number; align: string; marginX: number; marginY: number; }; mountain: { size: number; align: string; marginX: number; marginY: number; }; tent: { size: number; align: string; marginX: number; marginY: number; }; house: { size: number; align: string; marginX: number; marginY: number; }; village: { size: number; align: string; marginX: number; marginY: number; }; town: { size: number; align: string; marginX: number; marginY: number; }; castle: { size: number; align: string; marginX: number; marginY: number; }; harbor: { size: number; align: string; marginX: number; marginY: number; }; monastery: { size: number; align: string; marginX: number; marginY: number; }; tower: { size: number; align: string; marginX: number; marginY: number; }; ruins: { size: number; align: string; marginX: number; marginY: number; }; cave: { size: number; align: string; marginX: number; marginY: number; }; oasis: { size: number; align: string; marginX: number; marginY: number; }; };
+    lastUsedTextSize: number;
+    lastUsedTextColor: string;
+    lastUsedTextOutline: boolean;
+    lastUsedTextBold: boolean;
+    lastUsedTextShadow: boolean;
+    lastUsedTextShadowDistance: number;
+    lastUsedTextShadowOpatown: number;
+    toolConfigs: {};
+    _savedToolGroup: any;
+    _savedDrawMode: any;
+    masterColorInput: any;
+    masterColorBtn: any;
+    canvas: any;
+    ctx: any;
+    svgLayer?: SVGSVGElement;
+    textCanvas?: HTMLCanvasElement;
+    textCtx: any;
+    resizeObserver?: ResizeObserver;
+    editModeBtn: any;
+    editContent: any;
+    colorEyedropperBtn: any;
+    hexOrientationBtn: any;
+    patternPickerBtn: any;
+    paletteOuter: any;
+    riverBtn: any;
+    roadBtn: any;
+    pathPickerBtn: any;
+    borderPickerBtn: any;
+    riverWidthInput: any;
+    roadWidthInput: any;
+    pathDashesInput: any;
+    borderBtn: any;
+    borderVisBtn: any;
+    borderDashesInput: any;
+    _rightClickLast?: any;
+    isRightMouseErasing?: boolean;
+    rightEraseLastHex: string | null = null;
+    mouseDownPos?: { x: number; y: number; };
+    touchState?: {
+        pivotY: number;
+        pivotX: number;
+        centerY: number;
+        centerX: number; touches: never[]; initialDistance: number; initialZoom: number; initialPanX: number; initialPanY: number; isTwoFingerGesture: boolean; touchStartTimeout: any; pendingTouchStart: any; hasMovedSinceStart: boolean; lastTapTime: number; lastTapHex: any; lastTouchX?: number; lastTouchY?: number; 
+};
+    overlapMap?: {};
+    _initialResizeDone: any;
     constructor(leaf, plugin) {
         super(leaf);
         this.navigation = true;
         this.plugin = plugin;
         this.file = null;
-        this.data = { hexes: {}, rivers: [], roads: [], texts: [], borders: [], gridSize: DEFAULT_GRID_SIZE, zoom: 1, offX: DEFAULT_OFF_X, offY: DEFAULT_OFF_Y };
+        this.data = { 
+            hexes: {}, 
+            rivers: [], 
+            roads: [], 
+            texts: [], 
+            borders: [], 
+            gridSize: DEFAULT_GRID_SIZE, 
+            zoom: 1, 
+            offX: DEFAULT_OFF_X, 
+            offY: DEFAULT_OFF_Y,
+            settings: {},
+            centerWorldX: 0,
+            centerWorldY: 0
+        };
 
         this.history = [];
         this.redoStack = [];
@@ -481,7 +610,7 @@ class HexCartographerView extends ItemView {
         this.isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
         this.colorPickMode = false;
 
-        this.initToolConfigs();
+        this.toolConfigs = this.initToolConfigs();
 
         this.editMode = false; // Edit-Modus: true = Werkzeuge sichtbar, false = nur Navigation
         this.hexOrientation = false; // false = Spitze oben (Standard), true = Flache Seite oben (90° gedreht)
@@ -508,8 +637,8 @@ class HexCartographerView extends ItemView {
     }
 
     initToolConfigs() {
-        const ex = this.toolConfigs || {};
-        this.toolConfigs = {
+        const ex = this.toolConfigs || {} as any;
+        return {
             grass: {
                 name: t('tool.extras'),
                 variants: [
@@ -608,7 +737,7 @@ class HexCartographerView extends ItemView {
                             const mimeType = format === 'jpeg' ? 'image/jpeg' : 'image/png';
                             const ext = format === 'jpeg' ? '.jpg' : '.png';
                             const baseName = this.file ? this.file.basename.replace('.hexcartographer', '') : 'hex-cartographer-map';
-                            const blob = await new Promise(resolve => tmpCanvas.toBlob(resolve, mimeType, format === 'jpeg' ? quality / 100 : undefined));
+                            const blob = (await new Promise(resolve => tmpCanvas.toBlob(resolve, mimeType, format === 'jpeg' ? quality / 100 : undefined))) as any;
                             if (this.isTouchDevice) {
                                 // Mobil: In Export-Unterordner neben der .hexcartographer-Datei speichern
                                 const parentFolder = this.file ? this.file.parent.path : '';
@@ -619,7 +748,7 @@ class HexCartographerView extends ItemView {
                                 const fileName = baseName + ext;
                                 const filePath = `${exportFolder}/${fileName}`;
                                 const buffer = await blob.arrayBuffer();
-                                const existing = this.app.vault.getAbstractFileByPath(filePath);
+                                const existing = this.app.vault.getFileByPath(filePath);
                                 if (existing) { await this.app.vault.modifyBinary(existing, buffer); }
                                 else { await this.app.vault.createBinary(filePath, buffer); }
                                 new Notice(`${t('notice.exportSaved')}: ${filePath}`);
@@ -651,12 +780,12 @@ class HexCartographerView extends ItemView {
                             iframe.style.width = '0';
                             iframe.style.height = '0';
                             document.body.appendChild(iframe);
-                            const doc = iframe.contentDocument || iframe.contentWindow.document;
+                            const doc = iframe.contentDocument || iframe.contentWindow!.document;
                             doc.open();
                             doc.write(`<html><head><title>${title}</title><style>@media print { @page { margin: 10mm; } body { margin: 0; } img { max-width: 100%; max-height: 100%; } } body { margin: 0; }</style></head><body><img src="${dataUrl}" /></body></html>`);
                             doc.close();
-                            iframe.contentWindow.onafterprint = () => { document.body.removeChild(iframe); };
-                            setTimeout(() => { iframe.contentWindow.print(); }, 200);
+                            iframe.contentWindow!.onafterprint = () => { document.body.removeChild(iframe); };
+                            setTimeout(() => { iframe.contentWindow!.print(); }, 200);
                         });
                 });
             }
@@ -675,7 +804,7 @@ class HexCartographerView extends ItemView {
             if (listing && listing.files && listing.files.length > 0) {
                 for (const filePath of listing.files) {
                     if (!filePath.endsWith('.svg')) continue;
-                    const filename = filePath.split('/').pop();
+                    const filename = filePath.split('/').pop()!;
                     const key = filename.replace(/-\d+\.svg$/, '');
                     try {
                         const svgContent = await this.app.vault.adapter.read(filePath);
@@ -688,7 +817,7 @@ class HexCartographerView extends ItemView {
                             const viewBox = svgElement.getAttribute('viewBox');
                             let viewBoxWidth = 100;
                             if (viewBox) {
-                                viewBoxWidth = parseFloat(viewBox.split(' ')[2]);
+                                viewBoxWidth = parseFloat(viewBox.split(' ')[2]!);
                             }
                             this.svgSymbols[key] = { pathData, viewBoxWidth };
                             console.log(`SVG from file: ${key}`);
@@ -730,7 +859,7 @@ class HexCartographerView extends ItemView {
             const wrapper = toolbar.querySelector(`[data-tool-group-wrapper="${groupId}"]`);
             if (!wrapper) return;
 
-            const btn = wrapper.querySelector('.hex-tool-btn');
+            const btn = wrapper.querySelector('.hex-tool-btn') as HTMLElement;
             if (!btn) return;
 
             const currentVariant = config.variants.find(v => v.id === config.currentVariant);
@@ -776,7 +905,7 @@ class HexCartographerView extends ItemView {
             if (content.includes('```json')) {
                 const jsonMatch = content.match(/```json\s*([\s\S]*?)\s*```/);
                 if (jsonMatch) {
-                    jsonContent = jsonMatch[1];
+                    jsonContent = jsonMatch[1]!;
                 }
             }
 
@@ -808,7 +937,7 @@ class HexCartographerView extends ItemView {
                 newData.hexes = migratedHexes;
             } else {
                 // Migration: backgroundColor -> color (falls backgroundColor existiert)
-                Object.values(newData.hexes).forEach(h => {
+                Object.values(newData.hexes).forEach((h: any) => {
                     if (h.backgroundColor) {
                         h.color = h.backgroundColor;
                         delete h.backgroundColor;
@@ -901,10 +1030,10 @@ class HexCartographerView extends ItemView {
                     if (this.masterColorInput) { this.masterColorInput.value = this.masterColor; if (this.masterColorBtn) this.masterColorBtn.style.backgroundColor = this.masterColor; }
                 }
                 if (this.currentToolGroup === 'hexcolor') {
-                    this.masterColor = this.hexColorColor;
+                    this.masterColor = this.hexColorColor!;
                     if (this.masterColorInput) { this.masterColorInput.value = this.masterColor; if (this.masterColorBtn) this.masterColorBtn.style.backgroundColor = this.masterColor; }
                 } else if (this.currentToolGroup && this.toolConfigs[this.currentToolGroup]) {
-                    this.masterColor = this.toolConfigs[this.currentToolGroup].symbolColor;
+                    this.masterColor = (this.toolConfigs[this.currentToolGroup] as any).symbolColor;
                     if (this.masterColorInput) { this.masterColorInput.value = this.masterColor; if (this.masterColorBtn) this.masterColorBtn.style.backgroundColor = this.masterColor; }
                 }
             } else {
@@ -921,7 +1050,7 @@ class HexCartographerView extends ItemView {
             if (!newData.rivers) newData.rivers = [];
             // Migration: altes Segment-Format [{from, to, width}] → neues Waypoint-Format
             if (newData.rivers.length > 0 && newData.rivers[0].from !== undefined) {
-                const waypoints = [];
+                const waypoints: any[] = [];
                 newData.rivers.forEach(seg => {
                     if (waypoints.length === 0 || waypoints[waypoints.length - 1].q !== seg.from.q || waypoints[waypoints.length - 1].r !== seg.from.r) {
                         waypoints.push({ q: seg.from.q, r: seg.from.r });
@@ -934,7 +1063,7 @@ class HexCartographerView extends ItemView {
             if (!newData.roads) newData.roads = [];
             // Migration: altes Segment-Format [{from, to, width}] → neues Waypoint-Format
             if (newData.roads.length > 0 && newData.roads[0].from !== undefined) {
-                const waypoints = [];
+                const waypoints: any[] = [];
                 newData.roads.forEach(seg => {
                     if (waypoints.length === 0 || waypoints[waypoints.length - 1].q !== seg.from.q || waypoints[waypoints.length - 1].r !== seg.from.r) {
                         waypoints.push({ q: seg.from.q, r: seg.from.r });
@@ -1107,7 +1236,7 @@ class HexCartographerView extends ItemView {
                 gridSize: this.data.gridSize
             };
             this.redoStack.push(JSON.stringify(dataToSave));
-            const previousState = this.history.pop();
+            const previousState = this.history.pop()!;
             const restored = JSON.parse(previousState);
             this.data.hexes = restored.hexes;
             this.data.rivers = restored.rivers;
@@ -1133,7 +1262,7 @@ class HexCartographerView extends ItemView {
                 gridSize: this.data.gridSize
             };
             this.history.push(JSON.stringify(dataToSave));
-            const nextState = this.redoStack.pop();
+            const nextState = this.redoStack.pop()!;
             const restored = JSON.parse(nextState);
             this.data.hexes = restored.hexes;
             this.data.rivers = restored.rivers;
@@ -1153,7 +1282,7 @@ class HexCartographerView extends ItemView {
         const texts = this.data.texts || [];
         const borders = this.data.borders || [];
 
-        const borderOnlyHexes = [];
+        const borderOnlyHexes: any[] = [];
         const hexKeySet = new Set(Object.keys(this.data.hexes));
         for (const region of borders) {
             for (const bh of region.hexes) {
@@ -1214,7 +1343,7 @@ class HexCartographerView extends ItemView {
     }
 
     async onOpen() {
-        const container = this.containerEl.children[1];
+        const container = this.containerEl.children[1]! as HTMLElement;
         container.empty();
         container.style.display = 'flex';
         container.style.flexDirection = 'column';
@@ -1310,9 +1439,9 @@ class HexCartographerView extends ItemView {
                 this.currentToolGroup = this._savedToolGroup !== undefined ? this._savedToolGroup : 'hexcolor';
                 this.drawMode = this._savedDrawMode || 'pen';
                 if (this.currentToolGroup === 'hexcolor') {
-                    this.masterColor = this.hexColorColor;
+                    this.masterColor = this.hexColorColor!;
                 } else if (this.currentToolGroup && this.toolConfigs[this.currentToolGroup]) {
-                    this.masterColor = this.toolConfigs[this.currentToolGroup].symbolColor;
+                    this.masterColor = (this.toolConfigs[this.currentToolGroup] as any).symbolColor;
                 }
             }
             this.editContent.style.display = this.editMode ? 'contents' : 'none';
@@ -1391,7 +1520,7 @@ class HexCartographerView extends ItemView {
             } else {
                 this.currentToolGroup = 'hexcolor';
                 this.drawMode = 'pen';
-                this.masterColor = this.hexColorColor;
+                this.masterColor = this.hexColorColor!;
                 if (this.masterColorInput) { this.masterColorInput.value = this.masterColor; if (this.masterColorBtn) this.masterColorBtn.style.backgroundColor = this.masterColor; }
             }
             this.updateToolbarState(toolbar);
@@ -1459,8 +1588,8 @@ class HexCartographerView extends ItemView {
 
         const settingsBtn = this.createToolButton(toolbar, { icon: 'settings', title: t('tooltip.settings') });
         settingsBtn.onclick = () => {
-            this.app.setting.open();
-            this.app.setting.openTabById('hex-cartographer');
+            (this.app as any).setting.open();
+            (this.app as any).setting.openTabById('hex-cartographer');
         };
 
         this.updateToolbarState(toolbar);
@@ -1615,7 +1744,7 @@ class HexCartographerView extends ItemView {
         config.variants.forEach(variant => {
             const item = menu.createDiv({
                 text: variant.label,
-                style: 'padding: 6px 12px; cursor: pointer; border-radius: 3px;'
+                attr: {style: 'padding: 6px 12px; cursor: pointer; border-radius: 3px;'}
             });
 
             if (variant.id === config.currentVariant) {
@@ -1676,13 +1805,13 @@ class HexCartographerView extends ItemView {
         const modal = new Modal(this.app);
         modal.contentEl.createEl('h3', { text: `${config.name} - Hintergrundfarbe` });
 
-        const bgSection = modal.contentEl.createDiv({ style: 'margin: 15px 0;' });
+        const bgSection = modal.contentEl.createDiv({attr:{ style: 'margin: 15px 0;' }});
 
-        const bgRow = bgSection.createDiv({ style: 'display: flex; gap: 10px; align-items: center; margin-bottom: 10px;' });
+        const bgRow = bgSection.createDiv({attr:{ style: 'display: flex; gap: 10px; align-items: center; margin-bottom: 10px;' }});
         bgRow.createEl('label', { text: 'Farbe:' });
         const bgPicker = bgRow.createEl('input', { type: 'color', value: config.backgroundColor || BUTTON_BG_DEFAULT });
 
-        const bgPaletteRow = bgSection.createDiv({ style: 'display: flex; gap: 5px; flex-wrap: wrap;' });
+        const bgPaletteRow = bgSection.createDiv({attr:{ style: 'display: flex; gap: 5px; flex-wrap: wrap;' }});
         bgPaletteRow.createEl('span', { text: 'Palette:', attr: { style: 'width: 100%; font-size: 11px; margin-bottom: 5px;' } });
         this.colorPalette.forEach(color => {
             const paletteBtn = bgPaletteRow.createEl('button', {
@@ -1695,7 +1824,7 @@ class HexCartographerView extends ItemView {
             };
         });
 
-        const btnRow = modal.contentEl.createDiv({ style: 'display: flex; gap: 10px; margin-top: 20px;' });
+        const btnRow = modal.contentEl.createDiv({attr:{ style: 'display: flex; gap: 10px; margin-top: 20px;' }});
 
         const okBtn = btnRow.createEl('button', { text: 'OK', cls: 'mod-cta' });
         okBtn.onclick = () => {
@@ -1778,7 +1907,7 @@ class HexCartographerView extends ItemView {
                 openPaletteColorPicker();
             };
 
-            let longPressTimer = null;
+            let longPressTimer: number|null = null;
             btn.addEventListener('touchstart', (e) => {
                 longPressTimer = setTimeout(() => {
                     e.preventDefault();
@@ -2029,7 +2158,7 @@ class HexCartographerView extends ItemView {
         } else {
             this.currentToolGroup = this.lastToolGroup;
             if (this.currentToolGroup === 'hexcolor') {
-                this.masterColor = this.hexColorColor;
+                this.masterColor = this.hexColorColor!;
             } else if (this.currentToolGroup && this.toolConfigs[this.currentToolGroup]) {
                 this.masterColor = this.toolConfigs[this.currentToolGroup].symbolColor;
             }
@@ -2208,7 +2337,7 @@ class HexCartographerView extends ItemView {
         input.addEventListener('pointerdown', (e) => e.stopPropagation());
     }
 
-    createToolButton(parent, { icon, title, dataset, style } = {}) {
+    createToolButton(parent, { icon, title, dataset, style }: any = {}) {
         const btn = parent.createEl('button', {
             cls: 'hex-tool-btn',
             attr: { title, ...(style ? { style } : {}) }
@@ -2449,7 +2578,7 @@ class HexCartographerView extends ItemView {
 
             if (this.borderPickMode) {
                 const clickedHex = this.startHex;
-                let foundRegion = null;
+                let foundRegion: any = null;
                 if (this.data.borders) {
                     for (const region of this.data.borders) {
                         if (region.hexes.some(b => b.q === clickedHex.q && b.r === clickedHex.r)) {
@@ -2704,11 +2833,17 @@ class HexCartographerView extends ItemView {
             lastTapTime: 0,
             lastTapHex: null,
             lastTouchX: undefined,
-            lastTouchY: undefined
+            lastTouchY: undefined,
+            centerX: 0,
+            centerY: 0,
+            pivotX: 0,
+            pivotY: 0
         };
 
         this.canvas.addEventListener('touchstart', (e) => {
             this.canvas.focus();
+            if(!this.touchState) return;
+            
             this.touchState.touches = Array.from(e.touches);
 
             if (this.touchState.touchStartTimeout) {
@@ -2772,6 +2907,8 @@ class HexCartographerView extends ItemView {
                 }
 
                 this.touchState.touchStartTimeout = setTimeout(() => {
+                    if(!this.touchState) throw new Error("No touch state found!");
+
                     if (this.touchState.pendingTouchStart && !this.touchState.isTwoFingerGesture) {
                         if (this.touchState.lastTouchX === undefined) {
                             this.touchState.lastTouchX = this.touchState.pendingTouchStart.touch.clientX;
@@ -2840,7 +2977,7 @@ class HexCartographerView extends ItemView {
 
                         if (this.borderPickMode) {
                             const clickedHex = this.startHex;
-                            let foundRegion = null;
+                            let foundRegion: any = null;
                             if (this.data.borders) {
                                 for (const region of this.data.borders) {
                                     if (region.hexes.some(b => b.q === clickedHex.q && b.r === clickedHex.r)) {
@@ -2892,7 +3029,7 @@ class HexCartographerView extends ItemView {
         }, { passive: false });
 
         this.canvas.addEventListener('touchmove', (e) => {
-            if (e.touches.length === 2 && this.touchState.isTwoFingerGesture) {
+            if (e.touches.length === 2 && this.touchState?.isTwoFingerGesture) {
                 e.preventDefault();
 
                 const touch1 = e.touches[0];
@@ -2920,7 +3057,7 @@ class HexCartographerView extends ItemView {
                 this.data.offY = newOffY + deltaY;
 
                 this.render();
-            } else if (e.touches.length === 1 && !this.touchState.isTwoFingerGesture) {
+            } else if (e.touches.length === 1&& this.touchState && !this.touchState.isTwoFingerGesture) {
                 if (!this.isMouseDown && this.touchState.pendingTouchStart) {
                     if (!this.editMode) {
                         e.preventDefault();
@@ -2928,7 +3065,7 @@ class HexCartographerView extends ItemView {
                         const touch = e.touches[0];
                         if (this.touchState.lastTouchX !== undefined) {
                             this.data.offX += touch.clientX - this.touchState.lastTouchX;
-                            this.data.offY += touch.clientY - this.touchState.lastTouchY;
+                            this.data.offY += touch.clientY - this.touchState.lastTouchY!;
                             this.render();
                         }
                         this.touchState.lastTouchX = touch.clientX;
@@ -2959,7 +3096,7 @@ class HexCartographerView extends ItemView {
                         const touch = e.touches[0];
                         if (this.touchState.lastTouchX !== undefined) {
                             this.data.offX += touch.clientX - this.touchState.lastTouchX;
-                            this.data.offY += touch.clientY - this.touchState.lastTouchY;
+                            this.data.offY += touch.clientY - this.touchState.lastTouchY!;
                             this.render();
                         }
                         this.touchState.lastTouchX = touch.clientX;
@@ -3003,6 +3140,8 @@ class HexCartographerView extends ItemView {
         }, { passive: false });
 
         this.canvas.addEventListener('touchend', (e) => {
+            if(!this.touchState) return;
+
             if (this.touchState.touchStartTimeout) {
                 clearTimeout(this.touchState.touchStartTimeout);
                 this.touchState.touchStartTimeout = null;
@@ -3080,7 +3219,7 @@ class HexCartographerView extends ItemView {
 
                     if (this.borderPickMode) {
                         const clickedHex = this.startHex;
-                        let foundRegion = null;
+                        let foundRegion: any = null;
                         if (this.data.borders) {
                             for (const region of this.data.borders) {
                                 if (region.hexes.some(b => b.q === clickedHex.q && b.r === clickedHex.r)) {
@@ -3244,6 +3383,8 @@ class HexCartographerView extends ItemView {
         this.canvas.addEventListener('touchcancel', (e) => {
             e.preventDefault();
 
+            if(!this.touchState) return;
+
             if (this.touchState.touchStartTimeout) {
                 clearTimeout(this.touchState.touchStartTimeout);
                 this.touchState.touchStartTimeout = null;
@@ -3266,7 +3407,7 @@ class HexCartographerView extends ItemView {
 
     calculateHexPath(start, end, width) {
         if (!start || !end) return [];
-        const path = [];
+        const path: any[] = [];
         const n = this.hexDistance(start, end);
         let prev = start;
         for (let i = 1; i <= n; i++) {
@@ -3329,7 +3470,7 @@ class HexCartographerView extends ItemView {
                 this.addRoadWaypoint(hex);
             } else if (this.currentToolGroup === 'river' && isInitial) {
                 this.addRiverWaypoint(hex);
-            } else if (!['river', 'road', 'text'].includes(this.currentToolGroup)) {
+            } else if (!['river', 'road', 'text'].includes(this.currentToolGroup!)) {
                 this.paintHex(hex);
             }
         }
@@ -3409,7 +3550,7 @@ class HexCartographerView extends ItemView {
         if (this.roadSettings.editMode) {
             const existingIdx = road.waypoints.findIndex(w => w.q === hex.q && w.r === hex.r);
             if (existingIdx !== -1) {
-                const dragGroup = [];
+                const dragGroup: number[] = [];
                 road.waypoints.forEach((wp, i) => { if (wp.q === hex.q && wp.r === hex.r) dragGroup.push(i); });
                 this.roadDragIndex = { idx: existingIdx, origQ: hex.q, origR: hex.r, group: dragGroup };
                 return;
@@ -3533,7 +3674,7 @@ class HexCartographerView extends ItemView {
         if (this.riverSettings.editMode) {
             const existingIdx = river.waypoints.findIndex(w => w.q === hex.q && w.r === hex.r);
             if (existingIdx !== -1) {
-                const dragGroup = [];
+                const dragGroup: number[] = [];
                 river.waypoints.forEach((wp, i) => { if (wp.q === hex.q && wp.r === hex.r) dragGroup.push(i); });
                 this.riverDragIndex = { idx: existingIdx, origQ: hex.q, origR: hex.r, group: dragGroup };
                 return;
@@ -3625,7 +3766,7 @@ class HexCartographerView extends ItemView {
                 this.lastErasedHex = { q: hex.q, r: hex.r, type: 'color', color: preData.color, toolGroup: tg, timestamp: Date.now() };
             } else if (tg === 'river' || tg === 'road') {
                 const paths = tg === 'river' ? (this.data.rivers || []) : (this.data.roads || []);
-                const pathIds = [];
+                const pathIds: number[] = [];
                 for (const p of paths) {
                     if (p.waypoints && p.waypoints.some(w => w.q === hex.q && w.r === hex.r)) {
                         pathIds.push(p.id);
@@ -3727,7 +3868,7 @@ class HexCartographerView extends ItemView {
         const queue = this.getHexNeighbors(startHex);
 
         while (queue.length > 0) {
-            const hex = queue.shift();
+            const hex = queue.shift()!;
             const key = `${hex.q}_${hex.r}`;
             if (visited.has(key)) continue;
             visited.add(key);
@@ -3751,7 +3892,7 @@ class HexCartographerView extends ItemView {
         const queue = this.getHexNeighbors(startHex);
 
         while (queue.length > 0) {
-            const hex = queue.shift();
+            const hex = queue.shift()!;
             const key = `${hex.q}_${hex.r}`;
             if (visited.has(key)) continue;
             visited.add(key);
@@ -3784,7 +3925,7 @@ class HexCartographerView extends ItemView {
         const queue = this.getHexNeighbors(startHex);
 
         while (queue.length > 0) {
-            const hex = queue.shift();
+            const hex = queue.shift()!;
             const key = `${hex.q}_${hex.r}`;
             if (visited.has(key)) continue;
             visited.add(key);
@@ -3902,7 +4043,7 @@ class HexCartographerView extends ItemView {
     }
 
     floodFillSymbol(startHex, targetSymbol, targetColor, applyBackground) {
-        const config = this.toolConfigs[this.currentToolGroup];
+        const config = this.toolConfigs[this.currentToolGroup!];
         const newSymbol = config.currentVariant;
         const newSymbolColor = config.symbolColor;
         const newBgColor = config.backgroundColor;
@@ -4100,7 +4241,7 @@ class HexCartographerView extends ItemView {
         // Zeichenreihenfolge (unten → oben):
 
         const drawSymbolLayer = (symbols) => {
-            Object.values(this.data.hexes).forEach(h => {
+            Object.values(this.data.hexes).forEach((h: any) => {
                 if (h.symbol && symbols.includes(h.symbol)) {
                     const pos = this.hexToPixel(h);
                     if (this.svgSymbols[h.symbol]) {
@@ -4236,9 +4377,9 @@ class HexCartographerView extends ItemView {
         };
 
         // Gruppen aus Pixelwerten bilden (sortiert, mit Toleranz)
-        const buildGroups = (values) => {
+        const buildGroups = (values: any[]) => {
             const sorted = [...new Set(values.map(v => Math.round(v)))].sort((a, b) => a - b);
-            const groups = [];
+            const groups: any[] = [];
             for (const v of sorted) {
                 if (groups.length === 0 || Math.abs(v - groups[groups.length - 1]) > tol) {
                     groups.push(v);
@@ -4265,7 +4406,7 @@ class HexCartographerView extends ItemView {
                     if (Math.abs(a.py - b.py) > tol) return a.py - b.py;
                     return a.px - b.px;
                 });
-                let currentRowPy = null;
+                let currentRowPy: number | null = null;
                 let rowIdx = -1;
                 let posInRow = 0;
                 return withPos.map(({ hex, py }) => {
@@ -4284,7 +4425,7 @@ class HexCartographerView extends ItemView {
                     if (Math.abs(a.px - b.px) > tol) return a.px - b.px;
                     return a.py - b.py;
                 });
-                let currentColPx = null;
+                let currentColPx: number | null = null;
                 let colIdx = -1;
                 let posInCol = 0;
                 return withPos.map(({ hex, px }) => {
@@ -4309,7 +4450,7 @@ class HexCartographerView extends ItemView {
                     if (Math.abs(a.py - b.py) > tol) return a.py - b.py;
                     return a.px - b.px;
                 });
-                let currentRowPy = null;
+                let currentRowPy: number | null = null;
                 let rowIdx = -1;
                 let posInRow = 0;
                 return withPos.map(({ hex, py }) => {
@@ -4327,7 +4468,7 @@ class HexCartographerView extends ItemView {
                     if (Math.abs(a.px - b.px) > tol) return a.px - b.px;
                     return a.py - b.py;
                 });
-                let currentColPx = null;
+                let currentColPx : number | null = null;
                 let colIdx = -1;
                 let posInCol = 0;
                 return withPos.map(({ hex, px }) => {
@@ -4427,7 +4568,7 @@ class HexCartographerView extends ItemView {
         const hexes = Object.values(this.data.hexes);
         const texts = this.data.texts || [];
         const borders = this.data.borders || [];
-        const borderOnlyHexes = [];
+        const borderOnlyHexes: any[] = [];
         const hexKeySet = new Set(Object.keys(this.data.hexes));
         for (const region of borders) {
             for (const bh of region.hexes) {
@@ -4462,7 +4603,7 @@ class HexCartographerView extends ItemView {
         return { w: (maxX - minX) + padding * 2, h: (maxY - minY) + padding * 2 };
     }
 
-    renderFullMap({ targetWidth, scale: fixedScale, cropless } = {}) {
+    renderFullMap({ targetWidth, scale: fixedScale, cropless }: any = {}) {
         if (!this.getMapWorldSize()) return null;
         // Scale wird erst nach der Bounds-Berechnung gesetzt (siehe unten),
         // damit targetWidth die tatsächliche Export-Breite inkl. Crop-Option trifft.
@@ -4470,7 +4611,7 @@ class HexCartographerView extends ItemView {
         const hexes = Object.values(this.data.hexes);
         const texts = this.data.texts || [];
         const borders = this.data.borders || [];
-        const borderOnlyHexes = [];
+        const borderOnlyHexes: number[] = [];
         const hexKeySet = new Set(Object.keys(this.data.hexes));
         for (const region of borders) {
             for (const bh of region.hexes) {
@@ -4515,7 +4656,7 @@ class HexCartographerView extends ItemView {
         const tmpCanvas = document.createElement('canvas');
         tmpCanvas.width = Math.ceil(w * scale);
         tmpCanvas.height = Math.ceil(h * scale);
-        const tmpCtx = tmpCanvas.getContext('2d');
+        const tmpCtx = tmpCanvas.getContext('2d')!;
         tmpCtx.fillStyle = '#ffffff';
         tmpCtx.fillRect(0, 0, tmpCanvas.width, tmpCanvas.height);
 
@@ -4540,7 +4681,7 @@ class HexCartographerView extends ItemView {
         Object.values(this.data.hexes).forEach(hex => this.drawHexBase(hex));
 
         const drawSymbolLayer = (symbols) => {
-            Object.values(this.data.hexes).forEach(hex => {
+            Object.values(this.data.hexes).forEach((hex: any) => {
                 if (hex.symbol && symbols.includes(hex.symbol)) {
                     const pos = this.hexToPixel(hex);
                     if (this.svgSymbols[hex.symbol]) {
@@ -4665,7 +4806,7 @@ class HexCartographerView extends ItemView {
                 path.setAttribute('fill', color || '#228B22');
                 g.appendChild(path);
 
-                this.svgLayer.appendChild(g);
+                this.svgLayer!.appendChild(g);
             }
         });
     }
@@ -4770,7 +4911,7 @@ class HexCartographerView extends ItemView {
             region.hexes.forEach(b => {
                 const pos = this.hexToPixel(b);
 
-                const corners = [];
+                const corners: any[] = [];
                 for (let i = 0; i < 6; i++) {
                     const a = (Math.PI / 180) * (60 * i + (this.hexOrientation ? 0 : -30));
                     corners.push({
@@ -4780,7 +4921,7 @@ class HexCartographerView extends ItemView {
                 }
 
                 for (let i = 0; i < 6; i++) {
-                    const nb = neighbors[i];
+                    const nb = neighbors[i]!;
                     const neighborKey = `${b.q + nb.dq}_${b.r + nb.dr}`;
 
                     if (!regionSet.has(neighborKey)) {
@@ -5015,8 +5156,8 @@ class HexCartographerView extends ItemView {
         const addSegments = (pathObj, type) => {
             if (!pathObj.waypoints || pathObj.waypoints.length < 2) return;
             const wps = pathObj.waypoints;
-            const chains = [];
-            let currentChain = [];
+            const chains: any[] = [];
+            let currentChain: any[] = [];
             for (let i = 0; i < wps.length; i++) {
                 if (wps[i].break) {
                     currentChain = [wps[i]];
@@ -5032,6 +5173,8 @@ class HexCartographerView extends ItemView {
                 for (let i = 0; i < chain.length - 1; i++) {
                     const pathSegs = this.calculateHexPath(chain[i], chain[i + 1], pathObj.width);
                     pathSegs.forEach(seg => {
+                        if(!this.overlapMap) return;
+
                         const key = this._segKey(seg.from, seg.to);
                         if (!this.overlapMap[key]) this.overlapMap[key] = { hasRiver: false, hasRoad: false, maxRiverWidth: 0, maxRoadWidth: 0 };
                         if (type === 'river') {
@@ -5102,10 +5245,10 @@ class HexCartographerView extends ItemView {
         }
     }
 
-    drawPathChains(path, taper = false, pathType = null) {
+    drawPathChains(path, taper = false, pathType: string | null = null) {
         const wps = path.waypoints;
-        const chains = [];
-        let currentChain = [];
+        const chains: any[] = [];
+        let currentChain: any[] = [];
         for (let i = 0; i < wps.length; i++) {
             if (wps[i].break) {
                 currentChain = [wps[i]];
@@ -5130,9 +5273,9 @@ class HexCartographerView extends ItemView {
         });
 
         chains.forEach(chain => {
-            const segments = [];
+            const segments: any[] = [];
             const pairCount = chain.length - 1;
-            const pairSegCounts = [];
+            const pairSegCounts: any[] = [];
             for (let i = 0; i < pairCount; i++) {
                 const pathSegs = this.calculateHexPath(chain[i], chain[i + 1], path.width);
                 pairSegCounts.push(pathSegs.length);
@@ -5141,7 +5284,7 @@ class HexCartographerView extends ItemView {
             if (pathType && this.overlapMap) {
                 segments.forEach(seg => {
                     const key = this._segKey(seg.from, seg.to);
-                    const info = this.overlapMap[key];
+                    const info = this.overlapMap![key];
                     if (info && info.hasRiver && info.hasRoad) {
                         const isCanonical = seg.from.q < seg.to.q || (seg.from.q === seg.to.q && seg.from.r < seg.to.r);
                         const typeSign = pathType === 'river' ? 1 : -1;
@@ -5206,7 +5349,7 @@ class HexCartographerView extends ItemView {
             return { p1, p2, from: l.from, to: l.to, fullDist, width: l.width };
         });
 
-        const allPts = [];
+        const allPts: any[] = [];
         computedLines.forEach((cl, segIdx) => {
             const { p1, p2, from, to, width } = cl;
             const dx = p2.x - p1.x, dy = p2.y - p1.y;
@@ -5443,6 +5586,8 @@ class HexCartographerView extends ItemView {
 }
 
 class FileSelectorModal extends Modal {
+    onSelect: any;
+    currentLink: string;
     constructor(app, onSelect, currentLink = '') {
         super(app);
         this.onSelect = onSelect;
@@ -5458,7 +5603,7 @@ class FileSelectorModal extends Modal {
         filter.style.marginBottom = '10px';
 
         const listContainer = contentEl.createDiv({
-            style: 'max-height: 400px; overflow-y: auto; overflow-x: hidden; border: 1px solid var(--divider-color); background: var(--background-primary); border-radius: 4px;'
+            attr: {style: 'max-height: 400px; overflow-y: auto; overflow-x: hidden; border: 1px solid var(--divider-color); background: var(--background-primary); border-radius: 4px;'}
         });
 
         const renderList = (searchTerm = '') => {
@@ -5469,7 +5614,7 @@ class FileSelectorModal extends Modal {
             );
 
             if (files.length === 0) {
-                listContainer.createDiv({ text: t('modal.noFilesFound'), style: 'padding: 10px; color: var(--text-muted); text-align: center;' });
+                listContainer.createDiv({ text: t('modal.noFilesFound'), attr: { style: 'padding: 10px; color: var(--text-muted); text-align: center;' } });
                 return;
             }
 
@@ -5477,7 +5622,7 @@ class FileSelectorModal extends Modal {
                 const item = listContainer.createDiv({
                     text: f.path,
                     cls: 'suggestion-item',
-                    style: 'padding: 8px; cursor: pointer; border-bottom: 1px solid var(--divider-color); font-size: 0.95em;'
+                    attr: { style: 'padding: 8px; cursor: pointer; border-bottom: 1px solid var(--divider-color); font-size: 0.95em;' }
                 });
                 item.onmouseover = () => item.style.background = 'var(--background-modifier-hover)';
                 item.onmouseout = () => item.style.background = '';
@@ -5491,9 +5636,9 @@ class FileSelectorModal extends Modal {
         filter.oninput = () => renderList(filter.value);
         renderList(this.currentLink);
 
-        const btnRow = contentEl.createDiv({ style: 'display: flex; gap: 10px; margin-top: 15px;' });
+        const btnRow = contentEl.createDiv({ attr: { style: 'display: flex; gap: 10px; margin-top: 15px;' }});
 
-        const clearBtn = btnRow.createEl('button', { text: t('modal.removeLink'), style: 'flex: 1;' });
+        const clearBtn = btnRow.createEl('button', { text: t('modal.removeLink'), attr: { style: 'flex: 1;' } });
         clearBtn.onclick = () => {
             this.onSelect('');
             setTimeout(() => {
@@ -5504,7 +5649,7 @@ class FileSelectorModal extends Modal {
             }, 50);
         };
 
-        const cancelBtn = btnRow.createEl('button', { text: t('modal.cancel'), cls: 'mod-cta', style: 'flex: 1;' });
+        const cancelBtn = btnRow.createEl('button', { text: t('modal.cancel'), cls: 'mod-cta', attr: {style: 'flex: 1;'} });
         cancelBtn.onclick = () => this.close();
 
         filter.focus();
@@ -5512,7 +5657,19 @@ class FileSelectorModal extends Modal {
 }
 
 class TextInputModal extends Modal {
-    constructor(app, onSubmit, val = '', size = DEFAULT_TEXT_SIZE, link = '', color = DEFAULT_TEXT_COLOR, outline = true, bold = false, shadow = false, shadowDistance = DEFAULT_SHADOW_DISTANCE, shadowOpatown = DEFAULT_SHADOW_OPACITY, colorPalette = null, colorPalette2 = null) {
+    onSubmit: any;
+    val: string;
+    size: number;
+    link: string;
+    color: string;
+    outline: boolean;
+    bold: boolean;
+    shadow: boolean;
+    shadowDistance: number;
+    shadowOpatown: number;
+    colorPalette: any;
+    colorPalette2: any;
+    constructor(app, onSubmit, val = '', size = DEFAULT_TEXT_SIZE, link = '', color = DEFAULT_TEXT_COLOR, outline = true, bold = false, shadow = false, shadowDistance = DEFAULT_SHADOW_DISTANCE, shadowOpatown = DEFAULT_SHADOW_OPACITY, colorPalette:any = null, colorPalette2:any = null) {
         super(app);
         this.onSubmit = onSubmit;
         this.val = val;
@@ -5532,30 +5689,30 @@ class TextInputModal extends Modal {
         const { contentEl } = this;
         contentEl.createEl('h2', { text: t('modal.formatText') });
 
-        contentEl.createEl('label', { text: t('modal.displayText'), style: 'display: block; margin-bottom: 5px; font-weight: 500;' });
+        contentEl.createEl('label', { text: t('modal.displayText'), attr: { style: 'display: block; margin-bottom: 5px; font-weight: 500;' } });
         const mainInput = contentEl.createEl('input', { value: this.val, placeholder: t('modal.textPlaceholder') });
         mainInput.style.width = '100%';
         mainInput.style.marginBottom = '20px';
         mainInput.style.padding = '8px';
 
-        contentEl.createEl('label', { text: t('modal.textSize'), style: 'display: block; margin-bottom: 5px; font-weight: 500;' });
-        const sInput = contentEl.createEl('input', { type: 'number', value: this.size });
+        contentEl.createEl('label', { text: t('modal.textSize'), attr: {style: 'display: block; margin-bottom: 5px; font-weight: 500;'} });
+        const sInput = contentEl.createEl('input', { type: 'number', attr: { value: this.size } });
         sInput.style.width = '100%';
         sInput.style.marginBottom = '20px';
         sInput.style.padding = '8px';
 
-        const colorSection = contentEl.createDiv({ style: 'margin-bottom: 20px;' });
-        colorSection.createEl('label', { text: t('modal.textColor'), style: 'display: block; margin-bottom: 5px; font-weight: 500;' });
+        const colorSection = contentEl.createDiv({attr:{ style: 'margin-bottom: 20px;' }});
+        colorSection.createEl('label', { text: t('modal.textColor'), attr:{style: 'display: block; margin-bottom: 5px; font-weight: 500;'} });
         const colorPicker = createColorPickerElement(colorSection, this.app, this.color, (color) => {
             this.color = color;
         });
 
-        const paletteContainer = colorSection.createDiv({ style: 'display: flex; flex-direction: column; gap: 3px; margin-top: 10px;' });
+        const paletteContainer = colorSection.createDiv({attr:{ style: 'display: flex; flex-direction: column; gap: 3px; margin-top: 10px;' }});
         paletteContainer.createEl('span', { text: t('modal.palette'), attr: { style: 'font-size: 11px; margin-bottom: 3px;' } });
 
         [this.colorPalette, this.colorPalette2].forEach(palette => {
             if (!palette) return;
-            const row = paletteContainer.createDiv({ style: 'display: flex; gap: 5px;' });
+            const row = paletteContainer.createDiv({attr:{ style: 'display: flex; gap: 5px;' }});
             palette.forEach(color => {
                 const paletteBtn = row.createEl('button', {
                     attr: {
@@ -5569,39 +5726,39 @@ class TextInputModal extends Modal {
             });
         });
 
-        const formatSection = contentEl.createDiv({ style: 'margin-bottom: 20px;' });
-        formatSection.createEl('label', { text: t('modal.formatting'), style: 'display: block; margin-bottom: 8px; font-weight: 500;' });
+        const formatSection = contentEl.createDiv({ attr:{ style: 'margin-bottom: 20px;'} });
+        formatSection.createEl('label', { text: t('modal.formatting'), attr:{style: 'display: block; margin-bottom: 8px; font-weight: 500;'} });
 
-        const checkboxGrid = formatSection.createDiv({ style: 'display: grid; grid-template-columns: 1fr 1fr; gap: 12px;' });
+        const checkboxGrid = formatSection.createDiv({attr:{ style: 'display: grid; grid-template-columns: 1fr 1fr; gap: 12px;' }});
 
-        const outlineLabel = checkboxGrid.createEl('label', { style: 'display: flex; gap: 8px; align-items: center; cursor: pointer;' });
+        const outlineLabel = checkboxGrid.createEl('label', {attr:{ style: 'display: flex; gap: 8px; align-items: center; cursor: pointer;' }});
         const outlineInput = outlineLabel.createEl('input', { type: 'checkbox' });
         outlineInput.checked = this.outline;
         outlineInput.style.cursor = 'pointer';
         outlineInput.style.marginLeft = '4px';
         outlineLabel.appendText(t('modal.outline'));
 
-        const boldLabel = checkboxGrid.createEl('label', { style: 'display: flex; gap: 8px; align-items: center; cursor: pointer;' });
+        const boldLabel = checkboxGrid.createEl('label', {attr:{ style: 'display: flex; gap: 8px; align-items: center; cursor: pointer;' }});
         const boldInput = boldLabel.createEl('input', { type: 'checkbox' });
         boldInput.checked = this.bold;
         boldInput.style.cursor = 'pointer';
         boldInput.style.marginLeft = '4px';
         boldLabel.appendText(t('modal.bold'));
 
-        const shadowSection = contentEl.createDiv({ style: 'margin-bottom: 20px; padding: 15px; background: var(--background-secondary); border-radius: 5px;' });
-        shadowSection.createEl('label', { text: t('modal.shadowSettings'), style: 'display: block; margin-bottom: 10px; font-weight: 500;' });
+        const shadowSection = contentEl.createDiv({attr:{ style: 'margin-bottom: 20px; padding: 15px; background: var(--background-secondary); border-radius: 5px;' }});
+        shadowSection.createEl('label', { text: t('modal.shadowSettings'), attr:{style: 'display: block; margin-bottom: 10px; font-weight: 500;'} });
 
-        const shadowLabel = shadowSection.createEl('label', { style: 'display: flex; gap: 8px; align-items: center; cursor: pointer; margin-bottom: 12px;' });
+        const shadowLabel = shadowSection.createEl('label', {attr:{ style: 'display: flex; gap: 8px; align-items: center; cursor: pointer; margin-bottom: 12px;' }});
         const shadowInput = shadowLabel.createEl('input', { type: 'checkbox' });
         shadowInput.checked = this.shadow;
         shadowInput.style.cursor = 'pointer';
         shadowInput.style.marginLeft = '4px';
         shadowLabel.appendText(t('modal.shadowEnable'));
 
-        const shadowParams = shadowSection.createDiv({ style: 'display: grid; grid-template-columns: 1fr 1fr; gap: 12px;' });
+        const shadowParams = shadowSection.createDiv({attr:{ style: 'display: grid; grid-template-columns: 1fr 1fr; gap: 12px;' }});
 
         const distanceDiv = shadowParams.createDiv();
-        distanceDiv.createEl('label', { text: t('modal.shadowDistance'), style: 'display: block; margin-bottom: 5px; font-size: 12px;' });
+        distanceDiv.createEl('label', { text: t('modal.shadowDistance'), attr:{style: 'display: block; margin-bottom: 5px; font-size: 12px;'} });
         const shadowDistanceInput = distanceDiv.createEl('input', {
             type: 'number',
             value: this.shadowDistance.toString()
@@ -5610,7 +5767,7 @@ class TextInputModal extends Modal {
         shadowDistanceInput.style.padding = '6px';
 
         const opatownDiv = shadowParams.createDiv();
-        opatownDiv.createEl('label', { text: t('modal.shadowOpacity'), style: 'display: block; margin-bottom: 5px; font-size: 12px;' });
+        opatownDiv.createEl('label', { text: t('modal.shadowOpacity'), attr:{style: 'display: block; margin-bottom: 5px; font-size: 12px;'} });
         const shadowOpatownInput = opatownDiv.createEl('input', {
             type: 'number',
             value: this.shadowOpatown.toString()
@@ -5620,10 +5777,10 @@ class TextInputModal extends Modal {
         shadowOpatownInput.min = '0';
         shadowOpatownInput.max = '100';
 
-        const linkSection = contentEl.createDiv({ style: 'margin-bottom: 20px;' });
-        linkSection.createEl('label', { text: t('modal.linkToFile'), style: 'display: block; margin-bottom: 5px; font-weight: 500;' });
+        const linkSection = contentEl.createDiv({attr:{ style: 'margin-bottom: 20px;' }});
+        linkSection.createEl('label', { text: t('modal.linkToFile'), attr:{style: 'display: block; margin-bottom: 5px; font-weight: 500;'} });
 
-        const linkDisplayRow = linkSection.createDiv({ style: 'display: flex; gap: 8px; align-items: stretch;' });
+        const linkDisplayRow = linkSection.createDiv({attr:{ style: 'display: flex; gap: 8px; align-items: stretch;' }});
         const linkDisplay = linkDisplayRow.createEl('input', {
             value: this.link,
             placeholder: t('modal.noLinkSelected'),
@@ -5685,6 +5842,19 @@ class TextInputModal extends Modal {
 
 
 class ColorPickerModal extends Modal {
+    onSelect: any;
+    initialColor: any;
+    hue: number;
+    sat: number;
+    bri: number;
+    previewEl?: HTMLDivElement;
+    sbCanvas?: HTMLCanvasElement;
+    sbCtx: any;
+    hueCanvas?: HTMLCanvasElement;
+    hueCtx: any;
+    hexInput?: HTMLInputElement;
+    _sbDragging: boolean = false;
+    _hueDragging: boolean = false;
     constructor(app, initialColor, onSelect) {
         super(app);
         this.onSelect = onSelect;
@@ -5723,7 +5893,7 @@ class ColorPickerModal extends Modal {
         hexRow.createEl('label', { text: 'Hex:',  attr: { style: 'font-weight: 500;' } });
         this.hexInput = hexRow.createEl('input', { value: this.initialColor, attr: { style: 'flex: 1; padding: 6px; font-family: monospace;' } });
         this.hexInput.addEventListener('input', () => {
-            const val = this.hexInput.value.trim();
+            const val = this.hexInput!.value.trim();
             if (/^#[0-9a-fA-F]{6}$/.test(val)) {
                 const hsb = hexToHsb(val);
                 this.hue = hsb.h; this.sat = hsb.s; this.bri = hsb.b;
@@ -5742,7 +5912,7 @@ class ColorPickerModal extends Modal {
         this._sbDragging = false;
         this.sbCanvas.addEventListener('pointerdown', (e) => {
             e.preventDefault();
-            this.sbCanvas.setPointerCapture(e.pointerId);
+            this.sbCanvas!.setPointerCapture(e.pointerId);
             this._sbDragging = true;
             this._updateSB(e);
         });
@@ -5753,7 +5923,7 @@ class ColorPickerModal extends Modal {
         this._hueDragging = false;
         this.hueCanvas.addEventListener('pointerdown', (e) => {
             e.preventDefault();
-            this.hueCanvas.setPointerCapture(e.pointerId);
+            this.hueCanvas!.setPointerCapture(e.pointerId);
             this._hueDragging = true;
             this._updateHue(e);
         });
@@ -5764,29 +5934,29 @@ class ColorPickerModal extends Modal {
     }
 
     _updateSB(e) {
-        const rect = this.sbCanvas.getBoundingClientRect();
+        const rect = this.sbCanvas!.getBoundingClientRect();
         this.sat = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
         this.bri = Math.max(0, Math.min(100, (1 - (e.clientY - rect.top) / rect.height) * 100));
         this.renderAll();
     }
 
     _updateHue(e) {
-        const rect = this.hueCanvas.getBoundingClientRect();
+        const rect = this.hueCanvas!.getBoundingClientRect();
         this.hue = Math.max(0, Math.min(360, ((e.clientX - rect.left) / rect.width) * 360));
         this.renderAll();
     }
 
     renderAll() {
         const hex = hsbToHex(this.hue, this.sat, this.bri);
-        this.previewEl.style.backgroundColor = hex;
-        this.hexInput.value = hex;
+        this.previewEl!.style.backgroundColor = hex;
+        this.hexInput!.value = hex;
         this.renderSB();
         this.renderHue();
     }
 
     renderSB() {
         const ctx = this.sbCtx;
-        const w = this.sbCanvas.width, h = this.sbCanvas.height;
+        const w = this.sbCanvas!.width, h = this.sbCanvas!.height;
         // Hue-Füllung
         ctx.fillStyle = hsbToHex(this.hue, 100, 100);
         ctx.fillRect(0, 0, w, h);
@@ -5814,7 +5984,7 @@ class ColorPickerModal extends Modal {
 
     renderHue() {
         const ctx = this.hueCtx;
-        const w = this.hueCanvas.width, h = this.hueCanvas.height;
+        const w = this.hueCanvas!.width, h = this.hueCanvas!.height;
         const grad = ctx.createLinearGradient(0, 0, w, 0);
         const stops = [0, 60, 120, 180, 240, 300, 360];
         stops.forEach(deg => grad.addColorStop(deg / 360, `hsl(${deg}, 100%, 50%)`));
@@ -5840,7 +6010,7 @@ function createColorPickerElement(containerEl, app, initialColor, onChange) {
         attr: { style: 'width: 100%; height: 40px; border: 1px solid var(--divider-color); border-radius: 4px; cursor: pointer; padding: 0; box-sizing: border-box;' }
     });
     btn.style.backgroundColor = initialColor;
-    let hiddenInput = null;
+    let hiddenInput: any = null;
     if (isTouchDevice) {
         btn.addEventListener('click', () => {
             new ColorPickerModal(app, currentColor, (color) => {
@@ -5874,6 +6044,14 @@ function createColorPickerElement(containerEl, app, initialColor, onChange) {
 }
 
 class ExportMapModal extends Modal {
+    onExport: any;
+    aspect: number;
+    format: string;
+    quality: number;
+    imgWidth: any;
+    imgHeight: number;
+    _updating: boolean;
+    cropless: boolean;
     constructor(app, mapSize, defaultWidth, onExport) {
         super(app);
         this.onExport = onExport;
@@ -5918,7 +6096,7 @@ class ExportMapModal extends Modal {
             this._updating = true;
             this.imgWidth = parseInt(widthInput.value) || 1024;
             this.imgHeight = Math.round(this.imgWidth / this.aspect);
-            heightInput.value = this.imgHeight;
+            heightInput.value = this.imgHeight.toString();
             this._updating = false;
         };
         heightInput.oninput = () => {
@@ -5965,6 +6143,7 @@ class ExportMapModal extends Modal {
 }
 
 class HexCartographerSettingTab extends PluginSettingTab {
+    plugin: any;
     constructor(app, plugin) {
         super(app, plugin);
         this.plugin = plugin;
@@ -6050,12 +6229,12 @@ class HexCartographerSettingTab extends PluginSettingTab {
                     .onChange(async (value) => {
                         this.plugin.settings.hexNumberingEnabled = value;
                         // Unteroptionen ein-/ausblenden
-                        subOptions.forEach(el => el.settingEl.style.display = value ? '' : 'none');
+                        subOptions.forEach((el:any) => el.settingEl.style.display = value ? '' : 'none');
                         await refreshAll();
                     });
             });
 
-        const subOptions = [];
+        const subOptions: Setting[] = [];
         const hide = !this.plugin.settings.hexNumberingEnabled;
 
         // Zähl-Ausrichtung: ein Schalter — aus=horizontal (Standard), ein=vertikal
@@ -6252,7 +6431,7 @@ class HexCartographerSettingTab extends PluginSettingTab {
             const details = containerEl.createEl('details');
             details.createEl('summary', { text: t(`guide.${key}`), cls: 'hex-guide-summary' });
             const content = details.createEl('div', { cls: 'hex-guide-content' });
-            for (const [icon, textKey] of items) {
+            for (const [icon, textKey] of items!) {
                 const row = content.createEl('div', { cls: 'hex-guide-row' });
                 const iconEl = row.createEl('span', { cls: 'hex-guide-icon' });
                 if (icon && icon.startsWith('input:')) {
@@ -6265,7 +6444,7 @@ class HexCartographerSettingTab extends PluginSettingTab {
                     setIcon(iconEl, icon);
                 }
                 const textEl = row.createEl('span');
-                textEl.innerHTML = t(textKey);
+                textEl.innerHTML = t(textKey!);
             }
         }
 
@@ -6310,4 +6489,4 @@ const SVG_SYMBOL_DATA = {
     'pirateskull': { pathData: 'M386.81,335.03c15.73-10.98,31.95-21.68,45.12-35.76-12.17-8.59-20.43-19.26-18.12-35.12,7.08-6.18,12.66-12.55,15.3-21.85.58-2.05.54-6.54,1.52-7.92,1.93-2.7,17.47-13.15,21.03-14.86,9.23-4.42,29.15-8.99,38.81-5.85s28.94,22.39,30.17,32.79c2.03,17.14-10.42,20.93-17.84,32.38-4.56,7.04,3.4,8.81,7.24,12.85,2.77,2.91,2.11,5.93,7.06,5.24,17.06-2.4,21.5-14.11,42.78-9.11,31.55,7.41,29.45,48.85,5.1,63.9-20.5,12.67-47.89,18.06-69.86,5.9-4.96-2.74-9.15-6.86-14.11-9.27-2.52,1.25-4.71,3.49-7.06,4.88-29.29,17.25-61.35,31.47-91.73,46.76-17.18,8.65-33.87,18.57-51.37,26.69-31.5,14.62-63.23,25.17-94.45,41.52-18.92,9.91-48.18,25.53-63.8,39.44-1.33,1.19-5.13,4.13-3.74,5.64,2.15,2.33,4.9,3.78,7.04,6.81,10.65,15.09.79,31.67-11.54,41.63-18.9,15.27-72.44,39.59-91.2,15.16-10.96-14.28,1.82-28.61,8.8-40.29.39-.66,1.04-.39,0-1.23-4.93-3.93-11.14-6.08-17.26-7.24-15.82,9.57-35.76,19.05-50.41,1.88-28.58-33.48,30.31-81.98,61.23-87.35,21.96-3.81,35.61,12.05,42.4,30.93l1.39.93c12.99-6.15,25.64-13.18,38.6-19.35,52.73-25.1,103.83-46.58,154.88-75.52,7.14-4.05,18.44-12.31,25.24-15.05,16.96-6.83,41.61-9.5,48.81-29.56ZM525.75,314.07l4.98,6.06c.13.76-.93,1.83-1.6,1.96-3.51.71-18.23-5.3-22.72-6.01-7.47-6-13.4-14.8-20.31-21.24-3.8-3.54-8.03-.96-11.98-6.28-7.34-9.86,7.9-16.97,13.85-22.02,3.29-2.79,13.08-12.38,13.26-16.39s-11.15-16.03-14.69-17.45c-4.74-1.9-16.16.81-21.24,2.36-11.25,3.42-30.26,15.99-31.95,28.49-1.91,14.11,2.05,13.94,11.47,20.94.96.71,2.06,2.46,2.87,2.83,2.35,1.08,4.82-1.91,9.73,1.56,13.87,9.8-4.68,17.61-11.04,23.58-40.48,38.02-93.38,66.39-142.04,93.4-49.75,27.61-102.3,49.53-153.26,74.63-11.69,5.76-23.54,11.22-35.16,17.14-13.83.23-13.23-11.4-17.2-20.66-4.84-11.3-9.04-17.39-22.39-14.56-17.07,3.62-44.98,25.02-49.65,42.26-1.51,5.58-.29,14.81,6.6,15.75,10.75,1.46,31.11-17.88,42.82-20.52,2.86.67,4.83-1.21,7.69-.47,3.88,1,7.77,6.73,7.52,10.7-.12,1.82-2.15,3.52-2.24,4.44-.34,3.58,8.53,8.42,11.06,11.35,10.09,11.68-1.11,18.34-6.79,27.17-1.38,2.14-6.55,10.61-4.39,12.64.81.76,5.82,1.82,7.18,1.96,14.16,1.47,44.16-10.37,55.31-19.45,4.45-3.63,13.03-13.2,7.57-18.87-3.76-3.91-8.75-1.14-13.22-4.41-4.91-3.6-6.25-9.35-2.49-14.44,16.52-22.35,59.61-46.56,84.63-59.53,37.28-19.34,76.89-33.03,114.36-51.84,39.37-19.77,79.85-39.2,118.37-60.41,4.26-2.35,14.06-9.54,17.82-10.51,9.99-2.58,17.21,8.86,25.59,12.84,9.99,4.75,25.48,4.67,35.99,1.53,3.43-1.03,15.37-6.89,17.97-9.1,5.57-4.74,9.39-22.52,1.04-26.03-2-.84-7.34-1.48-9.57-1.46-7.14.05-16,7.69-23.79,8.08ZM546.96,471.57c6.67-2.87,12.24-8.4,18-11.59,3.04-1.68,7.12-2.12,10.48-4,13.77-7.66,17.12-29.24,8.37-41.66-16.45-23.31-58.07-20.63-81.68-11.52-13.85,5.35-31.87,17.42-24.22,34.64-6.7.62-13.68-.98-20.14-2.83-22.74-6.51-44.19-16.03-67.36-22.66-3.96-1.13-10.95-4.64-14.64-3.96-1.58.29-17.68,8.72-19.57,10.04-1.51,1.06-2.4,1.56-.75,3.06,2.33,2.12,14.23,4.21,17.96,5.34,11.64,3.51,23.62,6.94,35.12,10.83,24.68,8.37,51.02,21.72,77.86,20.98,3.88-.11,10.75-5.53,12.41-9.05,3.73-7.88.05-13.28-3.19-20.13,1.13-4.46,17.47-9.89,21.84-10.96,11.08-2.71,43.11-5.07,50.15,6.14,1.51,2.4,1.7,12.53-.57,14.49-1.44,1.25-8.1,2.68-10.86,4.25s-5.48,4.56-8.17,6.31c-14.17,9.2-26.93,5-41.55,11.33-8.8,3.8-20.72,13-21.6,23.1-.87,10.11,3.84,21.02,11.57,27.35,4.58-3.49.43-7.53.33-11.62-.02-.74.23-3.9,1.56-3.4,5.03,4.33,12.32,6.12,16.77,10.94,6.12,6.65,8.88,17.38,5.85,26.02-1.96,5.59-11.49,10.09-16.96,11.37-11.09,2.59-19.18,1.57-29.42-3.16-13.91-6.42-17.15-13.21-14.7-28.37,1.77-10.91,8.16-17.5-2.76-26.57-2.79-2.32-10.57-6.75-13.98-8.06-17.37-6.66-38.83-11.61-56.96-17.33-9.66-3.04-19.31-5.79-28.96-8.81-14.76-4.63-29.25-10.07-44.07-14.54-1.77-.23-11.32,3.92-13.6,5-1.41.67-9.04,4.6-9.17,5.34-.24,1.4,2.76,2.62,3.76,3.07,12.99,5.78,29.17,10.09,42.78,14.5,28.4,9.21,57.04,17.51,85.48,26.57,6.42,2.05,12.75,4.31,19,6.81,2.49,1.66-.1,5.49-.52,8.23-4.25,27.51,5.96,44.65,32.04,54.68,23.71,9.12,63.5-.64,67.89-29.03,3.01-19.44-6.42-37.87-23-47.96-2.57-1.56-6.17-1.74-7.76-4.51,11.45-6.61,24.75-3.45,36.95-8.7ZM65.72,284.94c14.63-4.58,30.78-5.92,45.66-1.89,3.04.82,14.14,4.72,15.57,7.09,3.29,5.46-8.24,17.12-10.62,22.11-11.88,24.96,24.23,37.78,40.95,45.76,19.92,9.51,38.74,17.92,60.01,24.34,16.98,5.13,34.51,8.9,51.55,13.86,1.36.04,5.88-2.55,7.41-3.36,2-1.05,14.39-7.83,14.62-8.72.31-1.22-.59-2.21-1.66-2.57-6.85-.42-13.56-4.03-20.16-5.02-3.8-.57-7.46-.12-11.5-1.09-7.65-1.83-24.97-11.84-32.23-10.92-14.2,1.8-22.56,1.92-34.42-7.41-2.53-1.99-5.42-6.47-7.37-7.74-2.19-1.42-6.7-2.64-9.28-3.94-9.8-4.94-23.36-10.2-32.07-15.77-2.11-1.35-8.65-6.01-8.68-8.36-.03-2.54,7.38-10.89,9.19-14.17,11.66-21.08-1.81-33.84-20.88-41.47-21.57-8.63-67.36-5.52-82.05,14.72-13.35,18.39-4.56,37.17,13.79,46.96l-7.82,25.1c-5.68,1.74-11.47,1.7-17.17,3.61-22.39,7.51-28.44,34.07-7.4,48.03,21.87,14.52,50.51,10.77,70.51-5.07,6.5-5.15,11.71-11.88,18.13-16.83,39.28,5.04,73.96,24.35,110.37,38.24l3.23-.48c2.52-2.62,19.22-8.15,19.63-10.61l-1.25-1.76c-39.46-13.2-74.72-33.39-115.78-42.23-9.97-2.14-20.73-5.93-28.99,1.88s-14.77,17.82-26.43,22.67c-11.29,4.69-30.86,5.46-40.75-2.66-3.82-3.14-2.3-8.9,1.52-11.39,10.88-7.1,25.3,3.48,31.85-14.73,2.49-6.91,3.59-14.35,6.13-21.25,3.72.41,8.15,15.24,10.56,6.47,1.44-5.24,1.89-18.15-.63-23.01-3-5.78-19.45-11.93-24.05-18.12-3.3-4.44-2.68-11.54,1.13-15.47,2.41-2.49,6.13-3.79,9.37-4.8ZM263.87,352.46c.76-9.75,1.77-20.09-1.3-29.57-8.36.9-17.03.82-25.49.63-1.85-.04-3.64-1.09-5.5-.54-3.1.91-9.53,18.25-15.4,19.3-2.78.49-8.41-2.49-10.54-4.33-1.95-1.69-2.75-2.15-1.73-4.84s6.11-8.51,7.96-11.56c8.75-14.45,17.46-31.84,18.1-48.95,10.04-4.79,20.11-10.48,28.79-17.47,2.29-1.85,5.13-2.78,1.14-4.79-1.11-.56-2.67-.78-3.91-1-21.58,8.3-75.59,14.19-86.43-12.53-4.28-10.55,3.62-14.74,8.57-22.64,7.45-11.89,18.71-44.7,15.58-58.16-.21-.91-2.41-5.37-3.5-4.36-2.96,11.67-7.82,22.99-14.6,32.93-4.7,6.89-7.02,10.52-11.11,17.85-8.05,14.45-18.62,20.86-11.29,40.03,8.74,22.84,37.4,31.09,59.65,31.95-2.23,12.87-8.31,25.78-15,36.93-5.68,9.48-14.86,16.85-11.11,29.15s20.38,20.4,32.55,18.74c7.44-1.02,12.85-6.77,17.09-12.5,1.5-2.03,7.8-14.4,10.45-12.52,3.41,10.03-5.43,20.34,1.91,29.26s33.92,8.53,42.74,1.85c5.79-4.39,10.13-16.18,10.13-23.24v-10.39c1.59.3,3.53-1.34,4.73-.02,1.57,1.71,4.44,11.93,5.86,14.93,9.21,19.49,35.4,9.76,50.08,2.64,16.02-7.76,21.34-12.86,16.3-31.25-4.54-16.57-12.69-32.46-14.64-49.88,28.06,2.35,69.3-10.59,57.76-46.75-6.26-19.62-23.42-39.96-30.87-60.42-1-2.76-2.21-9.39-3.29-11.19-.62-1.05-.79-.31-1.37-.11-3.44,1.17-5.25,5.81-5.3,9.25-.17,11.47,3.19,25.27,7.7,35.79,4.68,10.92,19.01,29.25,17.48,40.33-2.08,15.11-32.74,16.97-44.26,15.41-4.29-.58-8.55-3.59-12.94-.85-.79.49-3,2.77-3.33,3.59-1.78,4.39,2.31,23.87,3.61,29.43,3.68,15.8,10.7,30.61,14.06,46.46-8.19,4.08-18.26,10.11-27.44,11.28-2.01.26-6.47.81-7.65-.84-1.83-2.55-3.92-10.91-5.61-14.53-1.89-4.04-3.66-7.53-7.44-10.18-8.98,3.56-18.5,5.46-28.13,6.3-1.26.43-2.7,4.56-2.88,5.93-.99,7.17,1.28,13.39-1.35,21.32-.53,1.6-1.61,3.74-3.43,4.12-4.1.87-10.98-.65-15.42,0ZM214.61,24.01c-48.71,18.98-74.35,64.38-67.03,116.45,1.4,9.95,9.15,31.41,17.77,37,6.59,4.28,15.53-1.92,12.22-10.33-1.88-4.78-7.2-10.8-9.49-16.32-11.16-26.82-1.17-67.84,18.68-88.57,26.45-27.63,79.61-35.86,116.44-37.16,44.44-1.57,92.88,23.33,109.79,65.9,5.22,13.14.02,36.44-4.15,49.81-1.55,4.97-7.61,17.8-7.07,21.81.87,6.41,9.6,8.89,13.83,3.84,3.79-4.53,8.2-19.29,9.89-25.37,6.85-24.66,9.24-49.19-4.6-71.85-27.13-44.45-74.62-63.85-125.67-60.93-25.17,1.44-57.16,6.57-80.61,15.71ZM188.05,134.06c-4.22,6.36-1.34,14.47,6.79,13.9l.94.95c3.01,13.98.57,27.75,5.11,41.48,6.37,19.26,31.11,36.44,50.59,24.1,18.83-11.92,31.42-42.21,18.7-62.54-2.63-4.2-7.89-4.6-12.2-6.68-12.85-6.21-33.28-20.58-47.12-19.87-7.57.39-18.27,1.83-22.8,8.67ZM371.88,127.78c-6.29.79-22.45,8.67-29.63,11.29-6.2,2.27-16.66,4.44-21.9,7.05-8.06,4.01-18.72,23.48-20.69,32.19-10.55,46.7,52.19,64.2,70.07,24.75,8.97-19.79,4.3-32.18,4.24-52.36,0-2.53,1.09-5.13.75-7.81,11.2-1.79,8.94-16.58-2.84-15.11ZM277.85,209.38c-.9,4,.89,11.27.49,16.22-.74,9.01-5.09,17.16-6.25,24.6-.36,2.34-.17,10.27,2.87,10.86.93.18,7.71-2.92,9.66-3.37,4.36-.99,9.71-1.25,14.18-.91,2.37.18,9.7,2.24,11.02,1.59,6.09-6.52.33-10.77-2.62-16.29-1.89-3.53-4.11-7.69-5.67-11.33-2.67-6.26-4.37-16.14-7.1-21.23-2.04-3.81-7.11-5.69-11.22-4.86-2.01.41-4.9,2.63-5.37,4.71Z', viewBoxWidth: 595.28 }
 };
 
-module.exports = HexCartographerPlugin;
+export default HexCartographerPlugin;

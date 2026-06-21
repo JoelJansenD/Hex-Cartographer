@@ -2,13 +2,14 @@
 	"compilerOptions": {
 		"inlineSourceMap": true,
 		"inlineSources": true,
-		"module": "ESNext",
+		"module": "node20",
 		"target": "ES2021",
 		"strict": true,
+		"noImplicitAny": false, // TODO: remove
 		"noImplicitReturns": true,
 		"noFallthroughCasesInSwitch": true,
 		"noUncheckedIndexedAccess": true,
-		"moduleResolution": "node",
+		"moduleResolution": "node16",
 		"isolatedModules": true,
 		"skipLibCheck": true,
 		"forceConsistentCasingInFileNames": true,
