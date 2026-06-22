@@ -1,4 +1,4 @@
-import { SVG_SYMBOL_DATA } from "../data/svg-symbol-data";
+import { SVG_SYMBOL_DATA } from "../../data/svg-symbol-data";
 
 interface HexCartographerToolbarConfig {
     /**
