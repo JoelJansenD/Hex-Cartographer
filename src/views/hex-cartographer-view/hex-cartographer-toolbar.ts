@@ -1,5 +1,5 @@
 import { ButtonComponent } from "obsidian";
-import { ToolGroup } from "../types/tool-group";
+import { ToolGroup } from "../../types/tool-group";
 
 interface HexCartographerToolbarConfig {
     /**
@@ -70,7 +70,7 @@ export default class HexCartographerToolbar {
     public setTool(toolGroup?: ToolGroup, propagateEvent = true) {
         const buttonKeys = Object.keys(this.toolButtons) as ToolGroup[];
         buttonKeys.forEach(key => {
-            this.toolButtons[key].removeCta();
+            this.toolButtons[key]!.removeCta();
         });
 
         if(toolGroup) {
