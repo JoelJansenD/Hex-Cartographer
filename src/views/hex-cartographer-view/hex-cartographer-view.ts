@@ -51,9 +51,6 @@ export default class HexCartographerView extends ItemView {
     }
 
     private onIconChange(iconId?: string) {
-        console.log(`Icon changed to: ${iconId}`);
-        this._activeIcon = iconId;
-
         if (this._activeTool && isPaintingTool(this._activeTool)) {
             // Painting tools can be used with any selected icon, so we can just set the tool again to ensure the same tool is being used.
             this._toolbar.setTool(this._activeTool, false);
@@ -62,6 +59,8 @@ export default class HexCartographerView extends ItemView {
             // Other tools may not be compatible with the selected icon, so we will default to the brush tool when the icon changes.
             this._toolbar.setTool('brush', false);
         }
+        
+        this._activeIcon = iconId;
     }
 
     private onToolChanged(tool?: ToolGroup) {
@@ -69,11 +68,10 @@ export default class HexCartographerView extends ItemView {
             // If we're switching from a non-painting tool to a painting tool, we will set the icon in the sidebar to the default which is the hexagon.
             this._sidebar.setIcon('hexagon', false);
         }
-        else {
+        else if(!tool || !isPaintingTool(tool)) {
             this._sidebar.setIcon(undefined, false);
         }
-
-        console.log(`Tool changed to: ${tool}`);
+        
         this._activeTool = tool;
         this._content.setTool(this._activeTool);
     }
