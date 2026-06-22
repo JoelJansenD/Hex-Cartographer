@@ -1,5 +1,5 @@
 // src/views/hex-cartographer-view/interactions/right-click-interaction.ts
-import { pixelToHex } from "../../../functions/hex-math";
+import { getHexNeighbors, pixelToHex } from "../../../functions/hex-math";
 import { PixelCoordinates } from "../../../types-legacy";
 import { Hexagon, HexCoordinates } from "../../../types/hexagon";
 import { HexagonSet, MapData } from "../../../types/map-data";
@@ -26,7 +26,7 @@ export function createRightClickInteraction(ctx: RightClickInteractionContext) {
             const now = Date.now();
 
             if(ctx.editMode()) {
-                removeHex(ctx, key);
+                deleteHex(ctx, key);
                 ctx.pushHistory(ctx.data);
             }
             else {
@@ -62,22 +62,26 @@ export function createRightClickInteraction(ctx: RightClickInteractionContext) {
     };
 }
 
-function removeHex(ctx: RightClickInteractionContext, key: string) {
+function deleteHex(ctx: RightClickInteractionContext, key: string) {
     const activeTool = ctx.activeTool();
     const activeSymbol = ctx.activeSymbol();
+    const shouldTargetSymbol = activeSymbol !== undefined && activeSymbol !== 'hexagon';
 
     if(activeTool === 'brush' || activeTool === 'eraser') {
-        if(!activeSymbol && activeSymbol !== 'hexagon') {
+        if(shouldTargetSymbol) {
             deleteHexSymbol(ctx.data.hexes, key);
         }
         else {
             deleteHexColor(ctx.data.hexes, key);
         }
     }
+    else if(activeTool === 'bucket') {
+        floodDeleteHexes(ctx.data.hexes, key, shouldTargetSymbol);
+    }
 }
 
 function deleteHexColor(hexes: HexagonSet, key: string) {
-    if(!hexes[key]) throw new Error(`Hex with key ${key} does not exist.`);
+    if(!hexes[key]) throw new Error('Attempting to delete color of a hex that does not exist');
 
     if(hexes[key].symbol) {
         delete hexes[key].color;
@@ -88,12 +92,36 @@ function deleteHexColor(hexes: HexagonSet, key: string) {
 }
 
 function deleteHexSymbol(hexes: HexagonSet, key: string) {
-    if(!hexes[key]) throw new Error(`Hex with key ${key} does not exist.`);
+    if(!hexes[key]) throw new Error('Attempting to delete symbol of a hex that does not exist');
 
     if(hexes[key].color) {
         delete hexes[key].symbol;
     }
     else {
         delete hexes[key];
+    }
+}
+
+function floodDeleteHexes(hexes: HexagonSet, targetKey: string, shouldTargetSymbol: boolean) {
+    const targetData = {... hexes[targetKey]!};
+    const targetHexes: HexCoordinates[] = [ hexes[targetKey]! ];
+
+    while(targetHexes.length > 0) {
+        const currentHexData = targetHexes.pop()!;
+        const currentKey = `${currentHexData.q}_${currentHexData.r}`;
+        const currentData = hexes[currentKey];
+
+        if(!currentData) continue;
+
+        if(shouldTargetSymbol) {
+            if(currentData.symbol !== targetData.symbol || currentData.symbolColor !== targetData.symbolColor) continue;
+            deleteHexSymbol(hexes, currentKey);
+        }
+        else {
+            if(currentData.color !== targetData.color) continue;
+            deleteHexColor(hexes, currentKey);
+        }
+
+        targetHexes.push(...getHexNeighbors(currentHexData));
     }
 }
