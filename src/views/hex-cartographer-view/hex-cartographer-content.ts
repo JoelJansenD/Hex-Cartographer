@@ -7,6 +7,8 @@ import { Hexagon, HexCoordinates } from "../../types/hexagon";
 import { MapData } from "../../types/map-data";
 import { LinearFeature } from "../../types/rivers-and-roads";
 import { ToolGroup } from "../../types/tool-group";
+import { registerRightClickListeners } from "./event-listeners/right-click-listener";
+import { createRightClickInteraction } from "./interactions/right-click-interaction";
 
 export default class HexCartographerContent {
     
@@ -15,6 +17,7 @@ export default class HexCartographerContent {
     private patternSourceHex?: HexCoordinates;
     private plugin: HexCartographerPlugin;
     private historyService = new HistoryService();
+    private editMode = false;
     
     // =============================================
     // Elements & Canvas
@@ -27,6 +30,14 @@ export default class HexCartographerContent {
         this.contentEl = parentEl.createDiv({ cls: 'hex-content' });
         this.plugin = plugin;
         this.data = data;
+    }
+
+    public setTool(toolGroup?: ToolGroup) {
+        this.currentToolGroup = toolGroup;
+    }
+
+    public setEditMode(enabled: boolean) {
+        this.editMode = enabled;
     }
 
     public startRender() {   
@@ -1023,16 +1034,56 @@ export default class HexCartographerContent {
         if (dashCount > 1) { this.ctx.setLineDash([]); this.ctx.lineDashOffset = 0; }
     }
 
-    private registerEventListeners() {
-        this.contentEl.addEventListener('keydown', (e) => {
-            e.preventDefault();
+    // private undo() {
+    //     const previousState = this.historyService.undo(this.data);
+    //     console.log(previousState)
+    //     if (previousState) {
+    //         this.data = previousState;
+    //     }
+    // }
 
-            if(e.ctrlKey || e.metaKey) {
-                const key = e.key.toLowerCase();
-                if((key === 'z' && e.shiftKey) || key === 'y') this.historyService.redo(this.data);
-                else if(key === 'z') this.historyService.undo(this.data);
-            }
+    // private redo() {
+    //     const nextState = this.historyService.redo(this.data);
+    //     if (nextState) {
+    //         this.data = nextState;
+    //     }
+    // }
+
+    // ==============================
+    // Event Listeners
+    // ==============================
+    private registerRightClickListeners() {
+        const rightClick = createRightClickInteraction({
+            activeTool: () => this.currentToolGroup,
+            editMode: () => this.editMode,
+            data: this.data,
+            pushHistory: data => this.historyService.push(data)
         });
+
+        return registerRightClickListeners({
+            canvas: this.canvas!,
+            data: this.data,
+            getWorldCoordinates: (e) => this.getWorldCoords(e),
+            onRightClickStart: rightClick.start,
+        });
+    }
+
+    private registerEventListeners() {
+        if(!this.canvas) throw new Error("Canvas not initialized");
+
+        const rightClickUnregister = this.registerRightClickListeners();
+
+        // this.contentEl.addEventListener('keydown', (e) => {
+        //     e.preventDefault();
+
+        //     if(e.ctrlKey || e.metaKey) {
+        //         const key = e.key.toLowerCase();
+        //         if((key === 'z' && e.shiftKey) || key === 'y') this.redo();
+        //         else if(key === 'z') this.undo();
+        //     }
+        // });
+
+        
 
         // this.canvas.addEventListener('mousedown', (e) => {
         //     this.canvas.focus();
@@ -1950,5 +2001,13 @@ export default class HexCartographerContent {
         //     this.touchState.touches = [];
         //     this.render();
         // }, { passive: false });
+    }
+
+    private getWorldCoords(e) {
+        const r = this.canvas!.getBoundingClientRect();
+        return {
+            x: (e.clientX - r.left - this.data.offX) / this.data.zoom,
+            y: (e.clientY - r.top - this.data.offY) / this.data.zoom
+        };
     }
 }

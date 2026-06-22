@@ -47,6 +47,7 @@ export default class HexCartographerView extends ItemView {
     private onEditModeChanged(enabled: boolean) {
         console.log(`Edit mode changed: ${enabled}`);
         this._sidebar.setEditMode(enabled);
+        this._content.setEditMode(enabled);
     }
 
     private onIconChange(iconId?: string) {
@@ -74,6 +75,7 @@ export default class HexCartographerView extends ItemView {
 
         console.log(`Tool changed to: ${tool}`);
         this._activeTool = tool;
+        this._content.setTool(this._activeTool);
     }
 
     /** returns true if _activeTool is undefined or a non-painting tool and the given tool is a painting tool */

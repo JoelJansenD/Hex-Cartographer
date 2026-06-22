@@ -1,0 +1,1 @@
+- Removed double right click to delete everything of similar colour

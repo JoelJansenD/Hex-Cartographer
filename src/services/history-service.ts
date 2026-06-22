@@ -5,13 +5,13 @@ export default class HistoryService {
     private redoStack: MapData[] = [];
 
     public push(state: MapData) {
-        console.log('Pushing new state to history');
+        console.log('Pushing new state to history', state);
         this.undoStack.push(state);
         this.redoStack = [];
     }
 
     public undo(currentState: MapData) : MapData | null {
-        console.log('Undoing');
+        console.log('Undoing', this.undoStack);
 
         if(this.undoStack.length === 0) {
             return null;
