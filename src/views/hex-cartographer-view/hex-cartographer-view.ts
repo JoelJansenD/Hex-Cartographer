@@ -61,6 +61,7 @@ export default class HexCartographerView extends ItemView {
         }
         
         this._activeIcon = iconId;
+        this._content.setSymbol(iconId);
     }
 
     private onToolChanged(tool?: ToolGroup) {

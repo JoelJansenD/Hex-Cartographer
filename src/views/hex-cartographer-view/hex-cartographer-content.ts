@@ -13,6 +13,7 @@ import { createRightClickInteraction } from "./interactions/right-click-interact
 export default class HexCartographerContent {
     
     private data: MapData;
+    private currentSymbol?: string;
     private currentToolGroup?: ToolGroup;
     private patternSourceHex?: HexCoordinates;
     private plugin: HexCartographerPlugin;
@@ -32,12 +33,16 @@ export default class HexCartographerContent {
         this.data = data;
     }
 
-    public setTool(toolGroup?: ToolGroup) {
-        this.currentToolGroup = toolGroup;
-    }
-
     public setEditMode(enabled: boolean) {
         this.editMode = enabled;
+    }
+
+    public setSymbol(symbolId?: string) {
+        this.currentSymbol = symbolId;
+    }
+
+    public setTool(toolGroup?: ToolGroup) {
+        this.currentToolGroup = toolGroup;
     }
 
     public startRender() {   
@@ -1054,6 +1059,7 @@ export default class HexCartographerContent {
     // ==============================
     private registerRightClickListeners() {
         const rightClick = createRightClickInteraction({
+            activeSymbol: () => this.currentSymbol,
             activeTool: () => this.currentToolGroup,
             editMode: () => this.editMode,
             data: this.data,

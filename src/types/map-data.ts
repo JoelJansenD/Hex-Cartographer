@@ -4,7 +4,7 @@ import { Label } from "./label";
 import { River, Road } from "./rivers-and-roads";
 
 export interface MapData {
-    hexes: { [key: string]: Hexagon};
+    hexes: HexagonSet;
     rivers: River[];
     roads: Road[];
     texts: Label[];
@@ -17,6 +17,8 @@ export interface MapData {
     centerWorldX: number;
     centerWorldY: number;
 }
+
+export type HexagonSet = { [key: string]: Hexagon };
 
 export interface PatternData extends HexCoordinates {
     color: string;

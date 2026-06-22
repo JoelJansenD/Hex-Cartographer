@@ -1,8 +1,8 @@
 // src/views/hex-cartographer-view/interactions/right-click-interaction.ts
 import { pixelToHex } from "../../../functions/hex-math";
 import { PixelCoordinates } from "../../../types-legacy";
-import { HexCoordinates } from "../../../types/hexagon";
-import { MapData } from "../../../types/map-data";
+import { Hexagon, HexCoordinates } from "../../../types/hexagon";
+import { HexagonSet, MapData } from "../../../types/map-data";
 import { ToolGroup } from "../../../types/tool-group";
 
 export interface RightClickInteractionState {
@@ -13,6 +13,7 @@ export interface RightClickInteractionState {
 
 export interface RightClickInteractionContext {
     data: MapData;
+    activeSymbol: () => string | undefined;
     activeTool: () => ToolGroup | undefined;
     editMode: () => boolean;
     pushHistory(data: MapData): void;
@@ -20,7 +21,7 @@ export interface RightClickInteractionContext {
 
 export function createRightClickInteraction(ctx: RightClickInteractionContext) {
     return {
-        start(hex: HexCoordinates, world: PixelCoordinates) {
+        start(hex: HexCoordinates) {
             const key = `${hex.q}_${hex.r}`;
             const now = Date.now();
 
@@ -63,9 +64,36 @@ export function createRightClickInteraction(ctx: RightClickInteractionContext) {
 
 function removeHex(ctx: RightClickInteractionContext, key: string) {
     const activeTool = ctx.activeTool();
-    console.log(activeTool);
+    const activeSymbol = ctx.activeSymbol();
 
     if(activeTool === 'brush' || activeTool === 'eraser') {
-        delete ctx.data.hexes[key];
+        if(!activeSymbol && activeSymbol !== 'hexagon') {
+            deleteHexSymbol(ctx.data.hexes, key);
+        }
+        else {
+            deleteHexColor(ctx.data.hexes, key);
+        }
+    }
+}
+
+function deleteHexColor(hexes: HexagonSet, key: string) {
+    if(!hexes[key]) throw new Error(`Hex with key ${key} does not exist.`);
+
+    if(hexes[key].symbol) {
+        delete hexes[key].color;
+    }
+    else {
+        delete hexes[key];
+    }
+}
+
+function deleteHexSymbol(hexes: HexagonSet, key: string) {
+    if(!hexes[key]) throw new Error(`Hex with key ${key} does not exist.`);
+
+    if(hexes[key].color) {
+        delete hexes[key].symbol;
+    }
+    else {
+        delete hexes[key];
     }
 }

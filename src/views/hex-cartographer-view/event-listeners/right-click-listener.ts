@@ -1,11 +1,12 @@
 import { PixelCoordinates, pixelToHex } from "../../../functions/hex-math";
+import { HexCoordinates } from "../../../types-legacy";
 import { MapData } from "../../../types/map-data";
 
 export interface RightClickContext {
     canvas: HTMLCanvasElement;
     data: MapData;
     getWorldCoordinates: (e: MouseEvent) => PixelCoordinates;
-    onRightClickStart(hex: { q: number; r: number }, world: { x: number; y: number }): void;
+    onRightClickStart(hex: HexCoordinates): void;
     // onRightClickMove(hex: { q: number; r: number }, world: { x: number; y: number }): void;
     // onRightClickEnd(): void;
     // onDoubleRightClick(hex: { q: number; r: number }): void;
@@ -18,7 +19,7 @@ export function registerRightClickListeners(ctx: RightClickContext) {
 
         const world = ctx.getWorldCoordinates(e);
         const hex = pixelToHex(world.x, world.y, ctx.data.gridSize, ctx.data.settings.hexOrientation === 'horizontal');
-        ctx.onRightClickStart(hex, world);
+        ctx.onRightClickStart(hex);
     };
 
     // const onMouseMove = (e: MouseEvent) => {
