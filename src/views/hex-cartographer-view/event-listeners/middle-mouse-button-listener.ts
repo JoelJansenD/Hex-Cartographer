@@ -1,16 +1,16 @@
 const MIDDLE_CLICK_BUTTON = 1;
 
-export interface MiddleClickContext {
+export interface MiddleMouseButtonContext {
     canvas: HTMLCanvasElement;
-    onMiddleClickStart(e: MouseEvent): void;
+    down(e: MouseEvent): void;
 }
 
-export function registerMiddleClickListeners(ctx: MiddleClickContext) {
+export function registerMiddleMouseButtonListeners(ctx: MiddleMouseButtonContext) {
     const onMouseDown = (e: MouseEvent) => {
         if (e.button !== MIDDLE_CLICK_BUTTON) return;
         e.preventDefault();
 
-        ctx.onMiddleClickStart(e);
+        ctx.down(e);
     };
 
     ctx.canvas.addEventListener("mousedown", onMouseDown);

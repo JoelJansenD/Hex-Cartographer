@@ -8,10 +8,10 @@ import { MapData } from "../../types/map-data";
 import { LinearFeature } from "../../types/rivers-and-roads";
 import { ToolGroup } from "../../types/tool-group";
 import { registerLeftMouseButtonListeners } from "./event-listeners/left-mouse-button-listener";
-import { registerMiddleClickListeners } from "./event-listeners/middle-click-listener";
+import { registerMiddleMouseButtonListeners } from "./event-listeners/middle-mouse-button-listener";
 import { registerRightClickListeners } from "./event-listeners/right-click-listener";
 import { createLeftMouseButtonInteraction } from "./interactions/left-mouse-button-interaction";
-import { createMiddleClickInteraction } from "./interactions/middle-click-interaction";
+import { createMiddleMouseButtonInteraction } from "./interactions/middle-mouse-button-interaction";
 import { createRightClickInteraction } from "./interactions/right-click-interaction";
 
 export default class HexCartographerContent {
@@ -1057,7 +1057,7 @@ export default class HexCartographerContent {
     // ==============================
     // Event Listeners
     // ==============================
-    private registerLeftClickListeners() {
+    private registerLeftMouseButtonListeners() {
         const leftClick = createLeftMouseButtonInteraction({
             state: {
                 isPanning: false
@@ -1070,16 +1070,16 @@ export default class HexCartographerContent {
         });
     }
 
-    private registerMiddleClickListeners() {
-        const middleClick = createMiddleClickInteraction({
+    private registerMiddleMouseButtonListeners() {
+        const middleClick = createMiddleMouseButtonInteraction({
             state: {
                 isPanning: false
             }
         });
 
-        return registerMiddleClickListeners({
+        return registerMiddleMouseButtonListeners({
             canvas: this.canvas!,
-            onMiddleClickStart: middleClick.start,
+            down: middleClick.down,
         });
     }
 
@@ -1103,8 +1103,8 @@ export default class HexCartographerContent {
     private registerEventListeners() {
         if(!this.canvas) throw new Error("Canvas not initialized");
 
-        const leftClickUnregister = this.registerLeftClickListeners();
-        const middleClickUnregister = this.registerMiddleClickListeners();
+        const leftClickUnregister = this.registerLeftMouseButtonListeners();
+        const middleClickUnregister = this.registerMiddleMouseButtonListeners();
         const rightClickUnregister = this.registerRightClickListeners();
 
         // this.contentEl.addEventListener('keydown', (e) => {
