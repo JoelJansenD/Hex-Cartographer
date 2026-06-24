@@ -60,23 +60,4 @@ function down_PatternPicker(e: MouseEvent, ctx: LeftMouseButtonInteractionContex
         state.selectedPattern = null;
         new Notice(localizeString('notice.noHexAtPosition'));
     }
-
-//     this.pendingHistory = true;
-//     this.isMouseDown = true;
-//     this.mouseDownPos = { x: world.x, y: world.y };
-//     this.startHex = pixelToHex(world.x, world.y, this.data.gridSize, this.hexOrientation);
-//     this.lastHex = this.startHex;
-
-
-//     this.patternPickMode = false;
-//     if (this.patternPickerBtn) {
-//         this.patternPickerBtn.style.background = BUTTON_BG_DEFAULT;
-//     }
-//     const toolbar = this.contentEl.querySelector('.hex-toolbar');
-//     if (toolbar) {
-//         this.updateToolbarState(toolbar);
-//     }
-//     this.render();
-//     this.requestSave(); // Speichere Muster sofort
-//     return;
 }

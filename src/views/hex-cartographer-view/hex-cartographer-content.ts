@@ -1145,33 +1145,6 @@ export default class HexCartographerContent {
         //         return;
         //     }
 
-        //     if (this.patternPickMode) {
-        //         const key = `${this.startHex.q}_${this.startHex.r}`;
-        //         const hexData = this.data.hexes[key];
-        //         if (hexData) {
-        //             this.patternData = JSON.parse(JSON.stringify(hexData));
-        //             this.patternSourceHex = { q: this.startHex.q, r: this.startHex.r };
-        //             new Notice(localizeString('notice.patternPicked'));
-        //             this.currentToolGroup = 'pattern';
-        //             this.drawMode = 'pen';
-        //         } else {
-        //             this.patternData = null;
-        //             this.patternSourceHex = null;
-        //             new Notice(localizeString('notice.noHexAtPosition'));
-        //         }
-        //         this.patternPickMode = false;
-        //         if (this.patternPickerBtn) {
-        //             this.patternPickerBtn.style.background = BUTTON_BG_DEFAULT;
-        //         }
-        //         const toolbar = this.contentEl.querySelector('.hex-toolbar');
-        //         if (toolbar) {
-        //             this.updateToolbarState(toolbar);
-        //         }
-        //         this.render();
-        //         this.requestSave(); // Speichere Muster sofort
-        //         return;
-        //     }
-
         //     if (this.borderPickMode) {
         //         const clickedHex = this.startHex;
         //         let foundRegion: any = null;
