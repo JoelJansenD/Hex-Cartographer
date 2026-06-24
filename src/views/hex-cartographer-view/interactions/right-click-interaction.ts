@@ -1,7 +1,6 @@
 // src/views/hex-cartographer-view/interactions/right-click-interaction.ts
-import { getHexNeighbors, pixelToHex } from "../../../functions/hex-math";
-import { PixelCoordinates } from "../../../types-legacy";
-import { Hexagon, HexCoordinates } from "../../../types/hexagon";
+import { getHexNeighbors } from "../../../functions/hex-math";
+import { HexCoordinates } from "../../../types/hexagon";
 import { HexagonSet, MapData } from "../../../types/map-data";
 import { ToolGroup } from "../../../types/tool-group";
 
@@ -23,23 +22,11 @@ export function createRightClickInteraction(ctx: RightClickInteractionContext) {
     return {
         start(hex: HexCoordinates) {
             const key = `${hex.q}_${hex.r}`;
-            const now = Date.now();
 
             if(ctx.editMode()) {
                 deleteHex(ctx, key);
                 ctx.pushHistory(ctx.data);
             }
-            else {
-                console.log('Right click in view mode', key)
-            }
-
-            // ctx.state.lastRightClick = { time: now, key };
-            // ctx.state.isRightErasing = true;
-            // ctx.state.rightEraseLastHex = null;
-            // ctx.pushHistory();
-            // ctx.handleEraser(hex, world.x, world.y);
-            // ctx.state.rightEraseLastHex = key;
-            // ctx.render();
         },
 
         // move(hex: HexCoordinates, world: PixelCoordinates) {
