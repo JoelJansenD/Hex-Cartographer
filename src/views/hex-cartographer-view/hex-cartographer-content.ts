@@ -1100,28 +1100,6 @@ export default class HexCartographerContent {
         //         return;
         //     }
 
-        //     if (e.button === 2 && this.editMode) {
-        //         e.preventDefault();
-        //         const now = Date.now();
-        //         const hex = pixelToHex(world.x, world.y, this.data.gridSize, this.hexOrientation);
-        //         const key = `${hex.q}_${hex.r}`;
-        //         if (this._rightClickLast && now - this._rightClickLast.time < 400 && this._rightClickLast.key === key) {
-        //             this._rightClickLast = null;
-        //             this.handleEraserFlood(hex);
-        //             this.render();
-        //             this.requestSave();
-        //             return;
-        //         }
-        //         this._rightClickLast = { time: now, key };
-        //         this.isRightMouseErasing = true;
-        //         this.rightEraseLastHex = null;
-        //         this.pushHistory();
-        //         this.handleEraser(hex, world.x, world.y);
-        //         this.rightEraseLastHex = key;
-        //         this.render();
-        //         return;
-        //     }
-
         //     this.pendingHistory = true;
         //     this.isMouseDown = true;
         //     this.mouseDownPos = { x: world.x, y: world.y };
