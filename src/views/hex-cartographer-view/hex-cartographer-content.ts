@@ -1061,7 +1061,8 @@ export default class HexCartographerContent {
         const leftClick = createLeftMouseButtonInteraction({
             state: {
                 isPanning: false
-            }
+            },
+            selectedToolGroup: () => this.currentToolGroup || 'brush',
         });
 
         return registerLeftMouseButtonListeners({
