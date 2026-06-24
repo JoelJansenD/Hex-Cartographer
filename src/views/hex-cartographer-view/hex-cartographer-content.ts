@@ -8,8 +8,10 @@ import { MapData } from "../../types/map-data";
 import { LinearFeature } from "../../types/rivers-and-roads";
 import { ToolGroup } from "../../types/tool-group";
 import { registerLeftClickListeners } from "./event-listeners/left-click-listener";
+import { registerMiddleClickListeners } from "./event-listeners/middle-click-listener";
 import { registerRightClickListeners } from "./event-listeners/right-click-listener";
 import { createLeftClickInteraction } from "./interactions/left-click-interaction";
+import { createMiddleClickInteraction } from "./interactions/middle-click-interaction";
 import { createRightClickInteraction } from "./interactions/right-click-interaction";
 
 export default class HexCartographerContent {
@@ -1068,6 +1070,19 @@ export default class HexCartographerContent {
         });
     }
 
+    private registerMiddleClickListeners() {
+        const middleClick = createMiddleClickInteraction({
+            state: {
+                isPanning: false
+            }
+        });
+
+        return registerMiddleClickListeners({
+            canvas: this.canvas!,
+            onMiddleClickStart: middleClick.start,
+        });
+    }
+
     private registerRightClickListeners() {
         const rightClick = createRightClickInteraction({
             activeSymbol: () => this.currentSymbol,
@@ -1089,6 +1104,7 @@ export default class HexCartographerContent {
         if(!this.canvas) throw new Error("Canvas not initialized");
 
         const leftClickUnregister = this.registerLeftClickListeners();
+        const middleClickUnregister = this.registerMiddleClickListeners();
         const rightClickUnregister = this.registerRightClickListeners();
 
         // this.contentEl.addEventListener('keydown', (e) => {
@@ -1106,11 +1122,6 @@ export default class HexCartographerContent {
         // this.canvas.addEventListener('mousedown', (e) => {
         //     this.canvas.focus();
         //     const world = this.getWorldCoords(e);
-
-        //     if (e.button === 1 || e.shiftKey) {
-        //         this.isDraggingMap = true;
-        //         return;
-        //     }
 
         //     this.pendingHistory = true;
         //     this.isMouseDown = true;
