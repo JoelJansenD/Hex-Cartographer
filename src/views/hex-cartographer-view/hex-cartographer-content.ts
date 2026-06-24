@@ -7,10 +7,10 @@ import { Hexagon, HexCoordinates } from "../../types/hexagon";
 import { MapData } from "../../types/map-data";
 import { LinearFeature } from "../../types/rivers-and-roads";
 import { ToolGroup } from "../../types/tool-group";
-import { registerLeftClickListeners } from "./event-listeners/left-click-listener";
+import { registerLeftMouseButtonListeners } from "./event-listeners/left-mouse-button-listener";
 import { registerMiddleClickListeners } from "./event-listeners/middle-click-listener";
 import { registerRightClickListeners } from "./event-listeners/right-click-listener";
-import { createLeftClickInteraction } from "./interactions/left-click-interaction";
+import { createLeftMouseButtonInteraction } from "./interactions/left-mouse-button-interaction";
 import { createMiddleClickInteraction } from "./interactions/middle-click-interaction";
 import { createRightClickInteraction } from "./interactions/right-click-interaction";
 
@@ -1058,15 +1058,15 @@ export default class HexCartographerContent {
     // Event Listeners
     // ==============================
     private registerLeftClickListeners() {
-        const leftClick = createLeftClickInteraction({
+        const leftClick = createLeftMouseButtonInteraction({
             state: {
                 isPanning: false
             }
         });
 
-        return registerLeftClickListeners({
+        return registerLeftMouseButtonListeners({
             canvas: this.canvas!,
-            onLeftClickStart: leftClick.start,
+            down: leftClick.down,
         });
     }
 

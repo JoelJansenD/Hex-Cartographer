@@ -1,16 +1,16 @@
 const LEFT_CLICK_BUTTON = 0;
 
-export interface LeftClickContext {
+export interface LeftMouseButtonContext {
     canvas: HTMLCanvasElement;
-    onLeftClickStart(e: MouseEvent): void;
+    down: (e: MouseEvent) => void;
 }
 
-export function registerLeftClickListeners(ctx: LeftClickContext) {
+export function registerLeftMouseButtonListeners(ctx: LeftMouseButtonContext) {
     const onMouseDown = (e: MouseEvent) => {
         if (e.button !== LEFT_CLICK_BUTTON) return;
         e.preventDefault();
 
-        ctx.onLeftClickStart(e);
+        ctx.down(e);
     };
 
     ctx.canvas.addEventListener("mousedown", onMouseDown);
