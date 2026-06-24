@@ -1145,42 +1145,7 @@ export default class HexCartographerContent {
         //         return;
         //     }
 
-        //     if (this.borderPickMode) {
-        //         const clickedHex = this.startHex;
-        //         let foundRegion: any = null;
-        //         if (this.data.borders) {
-        //             for (const region of this.data.borders) {
-        //                 if (region.hexes.some(b => b.q === clickedHex.q && b.r === clickedHex.r)) {
-        //                     foundRegion = region;
-        //                     break;
-        //                 }
-        //             }
-        //         }
-        //         if (foundRegion) {
-        //             this.borderSettings.activeRegionId = foundRegion.id;
-        //             this.borderSettings.pickedHex = { q: clickedHex.q, r: clickedHex.r };
-        //             this.borderSettings.dashes = foundRegion.dashes || DEFAULT_BORDER_DASHES;
-        //             this.masterColor = foundRegion.color;
-        //             if (this.masterColorInput) { this.masterColorInput.value = this.masterColor; if (this.masterColorBtn) this.masterColorBtn.style.backgroundColor = this.masterColor; }
-        //             if (this.borderDashesInput) this.borderDashesInput.value = this.borderSettings.dashes.toString();
-        //             new Notice(localizeString('notice.borderSelected', { id: foundRegion.id }));
-        //         } else {
-        //             new Notice(localizeString('notice.noBorderAtPosition'));
-        //         }
-        //         this.borderPickMode = false;
-        //         if (this.borderPickerBtn) {
-        //             this.borderPickerBtn.style.background = BUTTON_BG_DEFAULT;
-        //             this.borderPickerBtn.style.color = '';
-        //         }
-        //         this.currentToolGroup = 'border';
-        //         this.drawMode = 'pen';
-        //         const toolbar = this.contentEl.querySelector('.hex-toolbar');
-        //         if (toolbar) {
-        //             this.updateToolbarState(toolbar);
-        //         }
-        //         this.render();
-        //         return;
-        //     }
+        //     
 
         //     if (this.pathPickMode) {
         //         this.pickPathAtHex(this.startHex);
