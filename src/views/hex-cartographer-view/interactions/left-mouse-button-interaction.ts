@@ -1,10 +1,11 @@
 import { Notice } from "obsidian";
 import { PixelCoordinates, pixelToHex } from "../../../functions/hex-math";
-import { MapData } from "../../../types/map-data";
-import { ToolGroup } from "../../../types/tool-group";
+import { HexagonSet, MapData } from "../../../types/map-data";
 import { MouseButtonInteraction } from "./mouse-button-interaction";
 import { localizeString } from "../../../functions/i18n";
 import { EditorInteractionState } from "./editor-interaction-state";
+import { Border } from "../../../types/border";
+import { Hexagon, HexCoordinates } from "../../../types/hexagon";
 
 export interface LeftMouseButtonInteractionContext {
     getState: () => EditorInteractionState;
@@ -30,8 +31,8 @@ export function createLeftMouseButtonInteraction(ctx: LeftMouseButtonInteraction
                 case 'pattern-picker':
                     down_PatternPicker(e, ctx, state);
                     break;
-                case 'selectPathAndBorder':
-                    down_PathAndBorderPicker(e, ctx, state);
+                case 'select-border':
+                    down_SelectBorder(e, ctx, state);
                     break;
                 default:
                     throw new Error(`Unhandled tool group: ${selectedToolGroup}`);
@@ -43,15 +44,10 @@ export function createLeftMouseButtonInteraction(ctx: LeftMouseButtonInteraction
 }
 
 function down_PatternPicker(e: MouseEvent, ctx: LeftMouseButtonInteractionContext, state: EditorInteractionState) {
-    const canvas = ctx.getCanvas();
-    canvas.focus();
-
+    ctx.getCanvas().focus();
+    const hex = getHexagonCoordinatesAtMousePosition(ctx, e);
     const data = ctx.getData();
-    const world = ctx.getWorldCoordinates(e);
-    const hex = pixelToHex(world.x, world.y, data.gridSize, data.settings.hexOrientation === 'horizontal');
-    
-    const key = `${hex.q}_${hex.r}`;
-    const hexData = data.hexes[key];
+    const hexData = getHexagonAtCoordinates(data.hexes, hex);
 
     if (hexData) {
         state.selectedPattern = {...hexData};
@@ -65,41 +61,39 @@ function down_PatternPicker(e: MouseEvent, ctx: LeftMouseButtonInteractionContex
     }
 }
 
-function down_PathAndBorderPicker(e: MouseEvent, ctx: LeftMouseButtonInteractionContext, state: EditorInteractionState) {
-//     if (this.borderPickMode) {
-//         const clickedHex = this.startHex;
-//         let foundRegion: any = null;
-//         if (this.data.borders) {
-//             for (const region of this.data.borders) {
-//                 if (region.hexes.some(b => b.q === clickedHex.q && b.r === clickedHex.r)) {
-//                     foundRegion = region;
-//                     break;
-//                 }
-//             }
-//         }
-//         if (foundRegion) {
-//             this.borderSettings.activeRegionId = foundRegion.id;
-//             this.borderSettings.pickedHex = { q: clickedHex.q, r: clickedHex.r };
-//             this.borderSettings.dashes = foundRegion.dashes || DEFAULT_BORDER_DASHES;
-//             this.masterColor = foundRegion.color;
-//             if (this.masterColorInput) { this.masterColorInput.value = this.masterColor; if (this.masterColorBtn) this.masterColorBtn.style.backgroundColor = this.masterColor; }
-//             if (this.borderDashesInput) this.borderDashesInput.value = this.borderSettings.dashes.toString();
-//             new Notice(localizeString('notice.borderSelected', { id: foundRegion.id }));
-//         } else {
-//             new Notice(localizeString('notice.noBorderAtPosition'));
-//         }
-//         this.borderPickMode = false;
-//         if (this.borderPickerBtn) {
-//             this.borderPickerBtn.style.background = BUTTON_BG_DEFAULT;
-//             this.borderPickerBtn.style.color = '';
-//         }
-//         this.currentToolGroup = 'border';
-//         this.drawMode = 'pen';
-//         const toolbar = this.contentEl.querySelector('.hex-toolbar');
-//         if (toolbar) {
-//             this.updateToolbarState(toolbar);
-//         }
-//         this.render();
-//         return;
-//     }
+function down_SelectBorder(e: MouseEvent, ctx: LeftMouseButtonInteractionContext, state: EditorInteractionState) {
+    const hex = getHexagonCoordinatesAtMousePosition(ctx, e);
+    const data = ctx.getData();
+    
+    let foundRegion: Border | null = null;
+    for(const region of data.borders) {
+        if(region.hexes.some(b => b.q === hex.q && b.r === hex.r)) {
+            foundRegion = region;
+            break;
+        }
+    }
+
+    if(!foundRegion) {
+        new Notice(localizeString('notice.noBorderAtPosition'));
+        return;
+    }
+
+    state.selectedRegion = {
+        border: foundRegion,
+        hexagon: hex
+    };
+
+    new Notice(localizeString('notice.borderSelected', { id: foundRegion.id }));
+}
+
+function getHexagonCoordinatesAtMousePosition(ctx: LeftMouseButtonInteractionContext, e: MouseEvent) {
+    const data = ctx.getData();
+    const world = ctx.getWorldCoordinates(e);
+    const hex = pixelToHex(world.x, world.y, data.gridSize, data.settings.hexOrientation === 'horizontal');
+    return hex;
+}
+
+function getHexagonAtCoordinates(hexes: HexagonSet, hex: HexCoordinates) {
+    const key = `${hex.q}_${hex.r}`;
+    return hexes[key] || null;
 }

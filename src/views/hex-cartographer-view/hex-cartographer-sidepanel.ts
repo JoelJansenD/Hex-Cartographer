@@ -21,8 +21,8 @@ export default class HexCartographerSidepanel {
 
     public updateState(state: EditorInteractionState) {
         Object.values(this.iconButtons).forEach(btn => btn.removeClass('selected'));
-        if(state.currentSymbol) {
-            this.iconButtons[state.currentSymbol]?.addClass('selected');
+        if(state.selectedSymbol) {
+            this.iconButtons[state.selectedSymbol]?.addClass('selected');
         }
 
         if(state.editMode) {
@@ -36,7 +36,7 @@ export default class HexCartographerSidepanel {
     private setIcon(iconId?: string) {
         this.config.setState({
             ...this.config.getState(),
-            currentSymbol: iconId || null,
+            selectedSymbol: iconId || null,
         });
     }
 

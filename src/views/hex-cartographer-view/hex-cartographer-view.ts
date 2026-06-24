@@ -15,12 +15,13 @@ export default class HexCartographerView extends ItemView {
 
     
     private _editorState: EditorInteractionState = {
-        isPanning: false,
         editMode: false,
-        currentSymbol: null,
-        selectedToolGroup: null,
+        isPanning: false,
         selectedPaintMode: null,
-        selectedPattern: null
+        selectedPattern: null,
+        selectedRegion: null,
+        selectedSymbol: null,
+        selectedToolGroup: null,
     }
     private getEditorState() {
         return this._editorState;

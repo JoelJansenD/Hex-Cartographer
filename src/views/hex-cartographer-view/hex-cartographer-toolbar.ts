@@ -15,7 +15,8 @@ export default class HexCartographerToolbar {
     private actionsContainerEl: HTMLElement;
     private paintActions!: HTMLDivElement;
     private patternActions!: HTMLDivElement;
-    private pathAndBorderActions!: HTMLDivElement;
+    private pathActions!: HTMLDivElement;
+    private borderActions!: HTMLDivElement;
 
     // ===================================================
     // Buttons
@@ -35,8 +36,9 @@ export default class HexCartographerToolbar {
     
     private riverActionButton!: ButtonComponent;
     private roadActionButton!: ButtonComponent;
+    private selectPathActionButton!: ButtonComponent;
     private borderActionButton!: ButtonComponent;
-    private selectPathOrBorderActionButton!: ButtonComponent;
+    private selectBorderActionButton!: ButtonComponent;
     
     private editModeButton!: ButtonComponent;
     private undoActionButton!: ButtonComponent;
@@ -99,7 +101,8 @@ export default class HexCartographerToolbar {
     private hideActions() {
         this.paintActions.addClass('hidden');
         this.patternActions.addClass('hidden');
-        this.pathAndBorderActions.addClass('hidden');
+        this.pathActions.addClass('hidden');
+        this.borderActions.addClass('hidden');
         this.undoActionButton.buttonEl.addClass('hidden');
         this.redoActionButton.buttonEl.addClass('hidden');
         this.editModeButton.buttonEl.removeClass('hidden');  
@@ -168,33 +171,40 @@ export default class HexCartographerToolbar {
     }
 
     private initializePathAndBorderButtons() {
-        this.pathAndBorderActions = this.actionsContainerEl.createDiv({ cls: 'hex-toolbar-group' });
+        this.pathActions = this.actionsContainerEl.createDiv({ cls: 'hex-toolbar-group' });
         
-        this.riverActionButton = new ButtonComponent(this.pathAndBorderActions)
+        this.riverActionButton = new ButtonComponent(this.pathActions)
             .setIcon('droplet')
             .onClick(() => this.setTool('river'));
         this.toolButtons['river'] = this.riverActionButton;
         
-        this.roadActionButton = new ButtonComponent(this.pathAndBorderActions)
+        this.roadActionButton = new ButtonComponent(this.pathActions)
             .setIcon('waypoints')
             .onClick(() => this.setTool('road'));
         this.toolButtons['road'] = this.roadActionButton;
         
-        this.borderActionButton = new ButtonComponent(this.pathAndBorderActions)
+        this.selectPathActionButton = new ButtonComponent(this.pathActions)
+            .setIcon('pointer')
+            .onClick(() => this.setTool('select-path'));
+        this.toolButtons['select-path'] = this.selectPathActionButton;
+        
+        this.borderActions = this.actionsContainerEl.createDiv({ cls: 'hex-toolbar-group' });
+        this.borderActionButton = new ButtonComponent(this.borderActions)
             .setIcon('shield')
             .onClick(() => this.setTool('border'));
         this.toolButtons['border'] = this.borderActionButton;
         
-        this.selectPathOrBorderActionButton = new ButtonComponent(this.pathAndBorderActions)
+        this.selectBorderActionButton = new ButtonComponent(this.borderActions)
             .setIcon('pointer')
-            .onClick(() => this.setTool('selectPathAndBorder'));
-        this.toolButtons['selectPathAndBorder'] = this.selectPathOrBorderActionButton;
+            .onClick(() => this.setTool('select-border'));
+        this.toolButtons['select-border'] = this.selectBorderActionButton;
     }
 
     private showActions() {
         this.paintActions.removeClass('hidden');
         this.patternActions.removeClass('hidden');
-        this.pathAndBorderActions.removeClass('hidden');
+        this.pathActions.removeClass('hidden');
+        this.borderActions.removeClass('hidden');
         this.undoActionButton.buttonEl.removeClass('hidden');
         this.redoActionButton.buttonEl.removeClass('hidden');
         this.editModeButton.buttonEl.addClass('hidden');

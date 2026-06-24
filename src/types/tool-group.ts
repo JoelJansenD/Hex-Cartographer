@@ -6,10 +6,11 @@
  * - 'pattern-picker': Pick pattern tool
  * - 'river': River drawing tool
  * - 'road': Road drawing tool
+ * - 'select-path': Select path tool
  * - 'border': Border drawing tool
- * - 'selectPathAndBorder': Select path and border tool
+ * - 'select-border': Select border tool
  */
-export type ToolGroup = PaintMode | 'text' | 'colour-picker' | 'pattern' | 'pattern-picker' | 'river' | 'road' | 'border' | 'selectPathAndBorder';
+export type ToolGroup = PaintMode | 'text' | 'colour-picker' | 'pattern' | 'pattern-picker' | 'river' | 'road' | 'select-path' | 'border' | 'select-border';
 
 /**
  * Available tool groups/categories:

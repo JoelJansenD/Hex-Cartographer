@@ -51,7 +51,7 @@ export function createRightMouseButtonInteraction(ctx: RightMouseButtonInteracti
 
 function deleteHex(state: EditorInteractionState, hexes: HexagonSet, key: string) {
     const activeTool = state.selectedPaintMode;
-    const activeSymbol = state.currentSymbol;
+    const activeSymbol = state.selectedSymbol;
     const shouldTargetSymbol = activeSymbol !== undefined && activeSymbol !== 'hexagon';
 
     if(activeTool === 'brush' || activeTool === 'eraser') {
