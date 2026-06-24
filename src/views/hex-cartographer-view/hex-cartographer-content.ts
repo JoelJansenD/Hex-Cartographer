@@ -1085,18 +1085,18 @@ export default class HexCartographerContent {
 
     private registerRightClickListeners() {
         const rightClick = createRightClickInteraction({
+            data: this.data,
             activeSymbol: () => this.currentSymbol,
             activeTool: () => this.currentToolGroup,
             editMode: () => this.editMode,
-            data: this.data,
+            getWorldCoordinates: (e) => this.getWorldCoords(e),
             pushHistory: data => this.historyService.push(data)
         });
 
         return registerRightClickListeners({
             canvas: this.canvas!,
             data: this.data,
-            getWorldCoordinates: (e) => this.getWorldCoords(e),
-            onRightClickStart: rightClick.start,
+            down: rightClick.down,
         });
     }
 

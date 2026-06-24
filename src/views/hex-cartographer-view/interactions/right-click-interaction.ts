@@ -1,8 +1,8 @@
-// src/views/hex-cartographer-view/interactions/right-click-interaction.ts
-import { getHexNeighbors } from "../../../functions/hex-math";
+import { getHexNeighbors, PixelCoordinates, pixelToHex } from "../../../functions/hex-math";
 import { HexCoordinates } from "../../../types/hexagon";
 import { HexagonSet, MapData } from "../../../types/map-data";
 import { ToolGroup } from "../../../types/tool-group";
+import { MouseButtonInteraction } from "./mouse-button-interaction";
 
 export interface RightClickInteractionState {
     lastRightClick?: { time: number; key: string } | null;
@@ -15,12 +15,16 @@ export interface RightClickInteractionContext {
     activeSymbol: () => string | undefined;
     activeTool: () => ToolGroup | undefined;
     editMode: () => boolean;
+    getWorldCoordinates: (e: MouseEvent) => PixelCoordinates;
     pushHistory(data: MapData): void;
 }
 
-export function createRightClickInteraction(ctx: RightClickInteractionContext) {
+export function createRightClickInteraction(ctx: RightClickInteractionContext) : MouseButtonInteraction {
     return {
-        start(hex: HexCoordinates) {
+        down(e: MouseEvent) {
+            const world = ctx.getWorldCoordinates(e);
+            const hex = pixelToHex(world.x, world.y, ctx.data.gridSize, ctx.data.settings.hexOrientation === 'horizontal');
+
             const key = `${hex.q}_${hex.r}`;
 
             if(ctx.editMode()) {

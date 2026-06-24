@@ -5,8 +5,7 @@ import { MapData } from "../../../types/map-data";
 export interface RightClickContext {
     canvas: HTMLCanvasElement;
     data: MapData;
-    getWorldCoordinates: (e: MouseEvent) => PixelCoordinates;
-    onRightClickStart(hex: HexCoordinates): void;
+    down(e: MouseEvent): void;
     // onRightClickMove(hex: { q: number; r: number }, world: { x: number; y: number }): void;
     // onRightClickEnd(): void;
     // onDoubleRightClick(hex: { q: number; r: number }): void;
@@ -17,9 +16,7 @@ export function registerRightClickListeners(ctx: RightClickContext) {
         if (e.button !== 2) return;
         e.preventDefault();
 
-        const world = ctx.getWorldCoordinates(e);
-        const hex = pixelToHex(world.x, world.y, ctx.data.gridSize, ctx.data.settings.hexOrientation === 'horizontal');
-        ctx.onRightClickStart(hex);
+        ctx.down(e);
     };
 
     // const onMouseMove = (e: MouseEvent) => {
