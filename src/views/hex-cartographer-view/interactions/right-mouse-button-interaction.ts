@@ -4,13 +4,13 @@ import { HexagonSet, MapData } from "../../../types/map-data";
 import { ToolGroup } from "../../../types/tool-group";
 import { MouseButtonInteraction } from "./mouse-button-interaction";
 
-export interface RightClickInteractionState {
+export interface RightMouseButtonInteractionState {
     lastRightClick?: { time: number; key: string } | null;
     isRightErasing: boolean;
     rightEraseLastHex: string | null;
 }
 
-export interface RightClickInteractionContext {
+export interface RightMouseButtonInteractionContext {
     data: MapData;
     activeSymbol: () => string | undefined;
     activeTool: () => ToolGroup | undefined;
@@ -19,7 +19,7 @@ export interface RightClickInteractionContext {
     pushHistory(data: MapData): void;
 }
 
-export function createRightClickInteraction(ctx: RightClickInteractionContext) : MouseButtonInteraction {
+export function createRightMouseButtonInteraction(ctx: RightMouseButtonInteractionContext) : MouseButtonInteraction {
     return {
         down(e: MouseEvent) {
             const world = ctx.getWorldCoordinates(e);
@@ -53,7 +53,7 @@ export function createRightClickInteraction(ctx: RightClickInteractionContext) :
     };
 }
 
-function deleteHex(ctx: RightClickInteractionContext, key: string) {
+function deleteHex(ctx: RightMouseButtonInteractionContext, key: string) {
     const activeTool = ctx.activeTool();
     const activeSymbol = ctx.activeSymbol();
     const shouldTargetSymbol = activeSymbol !== undefined && activeSymbol !== 'hexagon';

@@ -1,8 +1,6 @@
-import { PixelCoordinates, pixelToHex } from "../../../functions/hex-math";
-import { HexCoordinates } from "../../../types-legacy";
 import { MapData } from "../../../types/map-data";
 
-export interface RightClickContext {
+export interface RightMouseButtonContext {
     canvas: HTMLCanvasElement;
     data: MapData;
     down(e: MouseEvent): void;
@@ -11,7 +9,7 @@ export interface RightClickContext {
     // onDoubleRightClick(hex: { q: number; r: number }): void;
 }
 
-export function registerRightClickListeners(ctx: RightClickContext) {
+export function registerRightMouseButtonListeners(ctx: RightMouseButtonContext) {
     const onMouseDown = (e: MouseEvent) => {
         if (e.button !== 2) return;
         e.preventDefault();

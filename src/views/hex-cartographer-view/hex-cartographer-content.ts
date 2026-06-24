@@ -9,10 +9,10 @@ import { LinearFeature } from "../../types/rivers-and-roads";
 import { ToolGroup } from "../../types/tool-group";
 import { registerLeftMouseButtonListeners } from "./event-listeners/left-mouse-button-listener";
 import { registerMiddleMouseButtonListeners } from "./event-listeners/middle-mouse-button-listener";
-import { registerRightClickListeners } from "./event-listeners/right-click-listener";
+import { registerRightMouseButtonListeners } from "./event-listeners/right-mouse-button-listener";
 import { createLeftMouseButtonInteraction } from "./interactions/left-mouse-button-interaction";
 import { createMiddleMouseButtonInteraction } from "./interactions/middle-mouse-button-interaction";
-import { createRightClickInteraction } from "./interactions/right-click-interaction";
+import { createRightMouseButtonInteraction } from "./interactions/right-mouse-button-interaction";
 
 export default class HexCartographerContent {
     
@@ -1083,8 +1083,8 @@ export default class HexCartographerContent {
         });
     }
 
-    private registerRightClickListeners() {
-        const rightClick = createRightClickInteraction({
+    private registerRightMouseButtonListeners() {
+        const rightClick = createRightMouseButtonInteraction({
             data: this.data,
             activeSymbol: () => this.currentSymbol,
             activeTool: () => this.currentToolGroup,
@@ -1093,7 +1093,7 @@ export default class HexCartographerContent {
             pushHistory: data => this.historyService.push(data)
         });
 
-        return registerRightClickListeners({
+        return registerRightMouseButtonListeners({
             canvas: this.canvas!,
             data: this.data,
             down: rightClick.down,
@@ -1105,7 +1105,7 @@ export default class HexCartographerContent {
 
         const leftClickUnregister = this.registerLeftMouseButtonListeners();
         const middleClickUnregister = this.registerMiddleMouseButtonListeners();
-        const rightClickUnregister = this.registerRightClickListeners();
+        const rightClickUnregister = this.registerRightMouseButtonListeners();
 
         // this.contentEl.addEventListener('keydown', (e) => {
         //     e.preventDefault();
