@@ -7,7 +7,9 @@ import { Hexagon, HexCoordinates } from "../../types/hexagon";
 import { MapData } from "../../types/map-data";
 import { LinearFeature } from "../../types/rivers-and-roads";
 import { ToolGroup } from "../../types/tool-group";
+import { registerLeftClickListeners } from "./event-listeners/left-click-listener";
 import { registerRightClickListeners } from "./event-listeners/right-click-listener";
+import { createLeftClickInteraction } from "./interactions/left-click-interaction";
 import { createRightClickInteraction } from "./interactions/right-click-interaction";
 
 export default class HexCartographerContent {
@@ -62,10 +64,6 @@ export default class HexCartographerContent {
         this.canvas.style.cursor = 'crosshair';
         this.canvas.tabIndex = 0;
         this.canvas.style.outline = 'none';
-
-        this.canvas.onclick = (e) => {
-            console.log(e)
-        }
 
         const resizeObserver = new ResizeObserver(() => {
             if(!this.canvas) {
@@ -1057,6 +1055,19 @@ export default class HexCartographerContent {
     // ==============================
     // Event Listeners
     // ==============================
+    private registerLeftClickListeners() {
+        const leftClick = createLeftClickInteraction({
+            state: {
+                isPanning: false
+            }
+        });
+
+        return registerLeftClickListeners({
+            canvas: this.canvas!,
+            onLeftClickStart: leftClick.start,
+        });
+    }
+
     private registerRightClickListeners() {
         const rightClick = createRightClickInteraction({
             activeSymbol: () => this.currentSymbol,
@@ -1077,6 +1088,7 @@ export default class HexCartographerContent {
     private registerEventListeners() {
         if(!this.canvas) throw new Error("Canvas not initialized");
 
+        const leftClickUnregister = this.registerLeftClickListeners();
         const rightClickUnregister = this.registerRightClickListeners();
 
         // this.contentEl.addEventListener('keydown', (e) => {
