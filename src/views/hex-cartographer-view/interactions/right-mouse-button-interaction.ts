@@ -1,36 +1,32 @@
 import { getHexNeighbors, PixelCoordinates, pixelToHex } from "../../../functions/hex-math";
 import { HexCoordinates } from "../../../types/hexagon";
 import { HexagonSet, MapData } from "../../../types/map-data";
-import { ToolGroup } from "../../../types/tool-group";
+import { EditorInteractionState } from "./editor-interaction-state";
 import { MouseButtonInteraction } from "./mouse-button-interaction";
-
-export interface RightMouseButtonInteractionState {
-    lastRightClick?: { time: number; key: string } | null;
-    isRightErasing: boolean;
-    rightEraseLastHex: string | null;
-}
 
 export interface RightMouseButtonInteractionContext {
     data: MapData;
-    activeSymbol: () => string | undefined;
-    activeTool: () => ToolGroup | undefined;
-    editMode: () => boolean;
     getWorldCoordinates: (e: MouseEvent) => PixelCoordinates;
     pushHistory(data: MapData): void;
+    getState: () => EditorInteractionState;
+    setState: (newState: EditorInteractionState) => void;
 }
 
 export function createRightMouseButtonInteraction(ctx: RightMouseButtonInteractionContext) : MouseButtonInteraction {
     return {
         down(e: MouseEvent) {
+            const state = ctx.getState();
+            if(!state.editMode) {
+                return;
+            }
+
             const world = ctx.getWorldCoordinates(e);
             const hex = pixelToHex(world.x, world.y, ctx.data.gridSize, ctx.data.settings.hexOrientation === 'horizontal');
 
             const key = `${hex.q}_${hex.r}`;
 
-            if(ctx.editMode()) {
-                deleteHex(ctx, key);
-                ctx.pushHistory(ctx.data);
-            }
+            deleteHex(state, ctx.data.hexes, key);
+            ctx.pushHistory(ctx.data);
         },
 
         // move(hex: HexCoordinates, world: PixelCoordinates) {
@@ -53,21 +49,21 @@ export function createRightMouseButtonInteraction(ctx: RightMouseButtonInteracti
     };
 }
 
-function deleteHex(ctx: RightMouseButtonInteractionContext, key: string) {
-    const activeTool = ctx.activeTool();
-    const activeSymbol = ctx.activeSymbol();
+function deleteHex(state: EditorInteractionState, hexes: HexagonSet, key: string) {
+    const activeTool = state.selectedPaintMode;
+    const activeSymbol = state.currentSymbol;
     const shouldTargetSymbol = activeSymbol !== undefined && activeSymbol !== 'hexagon';
 
     if(activeTool === 'brush' || activeTool === 'eraser') {
         if(shouldTargetSymbol) {
-            deleteHexSymbol(ctx.data.hexes, key);
+            deleteHexSymbol(hexes, key);
         }
         else {
-            deleteHexColor(ctx.data.hexes, key);
+            deleteHexColor(hexes, key);
         }
     }
     else if(activeTool === 'bucket') {
-        floodDeleteHexes(ctx.data.hexes, key, shouldTargetSymbol);
+        floodDeleteHexes(hexes, key, shouldTargetSymbol);
     }
 }
 

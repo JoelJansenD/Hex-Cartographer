@@ -159,8 +159,8 @@ export default class HexCartographerToolbar {
 
         this.pickPatternActionButton = new ButtonComponent(this.patternActions)
             .setIcon('pipette')
-            .onClick(() => this.setTool('pickPattern'));
-        this.toolButtons['pickPattern'] = this.pickPatternActionButton;
+            .onClick(() => this.setTool('pattern-picker'));
+        this.toolButtons['pattern-picker'] = this.pickPatternActionButton;
     }
 
     private initializePathAndBorderButtons() {
