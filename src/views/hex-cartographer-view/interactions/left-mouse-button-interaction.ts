@@ -50,8 +50,6 @@ function down_PatternPicker(e: MouseEvent, ctx: LeftMouseButtonInteractionContex
     const key = `${hex.q}_${hex.r}`;
     const hexData = data.hexes[key];
 
-    console.log('Pattern picker down event:', { hex, key, hexData });
-
     if (hexData) {
         state.selectedPattern = {...hexData};
         state.selectedToolGroup = 'pattern';
@@ -59,8 +57,7 @@ function down_PatternPicker(e: MouseEvent, ctx: LeftMouseButtonInteractionContex
         new Notice(localizeString('notice.patternPicked'));
     }
     else {
-        const patternData = null;
-        const patternSourceHex = null;
+        state.selectedPattern = null;
         new Notice(localizeString('notice.noHexAtPosition'));
     }
 

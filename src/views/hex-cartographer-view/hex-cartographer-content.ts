@@ -6,7 +6,6 @@ import HistoryService from "../../services/history-service";
 import { Hexagon, HexCoordinates } from "../../types/hexagon";
 import { MapData } from "../../types/map-data";
 import { LinearFeature } from "../../types/rivers-and-roads";
-import { ToolGroup } from "../../types/tool-group";
 import { registerLeftMouseButtonListeners } from "./event-listeners/left-mouse-button-listener";
 import { registerMiddleMouseButtonListeners } from "./event-listeners/middle-mouse-button-listener";
 import { registerRightMouseButtonListeners } from "./event-listeners/right-mouse-button-listener";
@@ -15,8 +14,12 @@ import { createLeftMouseButtonInteraction } from "./interactions/left-mouse-butt
 import { createMiddleMouseButtonInteraction } from "./interactions/middle-mouse-button-interaction";
 import { createRightMouseButtonInteraction } from "./interactions/right-mouse-button-interaction";
 
+interface HexCartographerContentConfig {
+    getState: () => EditorInteractionState;
+    setState: (newState: EditorInteractionState) => void;
+}
+
 export default class HexCartographerContent {
-    
     private data: MapData;
     private patternSourceHex?: HexCoordinates;
     private plugin: HexCartographerPlugin;
@@ -28,23 +31,13 @@ export default class HexCartographerContent {
     private contentEl: HTMLDivElement;
     private canvas?: HTMLCanvasElement;
     private ctx?: CanvasRenderingContext2D;
+    private config: HexCartographerContentConfig;
 
-    constructor(parentEl: HTMLElement, plugin: HexCartographerPlugin, data: MapData) {
+    constructor(parentEl: HTMLElement, plugin: HexCartographerPlugin, config: HexCartographerContentConfig, data: MapData) {
         this.contentEl = parentEl.createDiv({ cls: 'hex-content' });
         this.plugin = plugin;
+        this.config = config;
         this.data = data;
-    }
-
-    public setEditMode(enabled: boolean) {
-        this._editorState.editMode = enabled;
-    }
-
-    public setSymbol(symbolId?: string) {
-        this._editorState.currentSymbol = symbolId || null;
-    }
-
-    public setTool(toolGroup?: ToolGroup) {
-        this._editorState.selectedToolGroup = toolGroup || null;
     }
 
     public startRender() {   
@@ -144,7 +137,7 @@ export default class HexCartographerContent {
 
     private highlightSelectedHex() {
         if (!this.canvas || !this.ctx) throw new Error("Canvas or context not initialized");
-        if (this._editorState.selectedToolGroup === 'pattern' && this.patternSourceHex) {
+        if (this.config.getState().selectedToolGroup === 'pattern' && this.patternSourceHex) {
             const pos = hexToPixel({  q: this.patternSourceHex.q, r: this.patternSourceHex.r }, this.data.gridSize, this.data.settings.hexOrientation === 'horizontal');
             const s = this.data.gridSize;
 
@@ -535,7 +528,7 @@ export default class HexCartographerContent {
         });
 
         const ph = this.data.settings.borderSettings.pickedHex;
-        if (ph && this._editorState.selectedToolGroup === 'border') {
+        if (ph && this.config.getState().selectedToolGroup === 'border') {
             const activeRegion = this.data.borders.find(r => r.id === this.data.settings.borderSettings.activeRegionId);
             if (activeRegion) {
                 this.ctx.strokeStyle = activeRegion.color || '#FF0000';
@@ -1052,21 +1045,6 @@ export default class HexCartographerContent {
     //     }
     // }
 
-    private _editorState: EditorInteractionState = {
-        isPanning: false,
-        editMode: false,
-        currentSymbol: null,
-        selectedToolGroup: null,
-        selectedPaintMode: null,
-        selectedPattern: null
-    }
-    private getEditorState() {
-        return this._editorState;
-    }
-    private setEditorState(newState: EditorInteractionState) {
-        this._editorState = newState;
-    }
-
     // ==============================
     // Event Listeners
     // ==============================
@@ -1075,8 +1053,8 @@ export default class HexCartographerContent {
             getCanvas: () => this.canvas!,
             getData: () => this.data,
             getWorldCoordinates: this.getWorldCoords.bind(this),
-            getState: this.getEditorState.bind(this),
-            setState: this.setEditorState.bind(this),
+            getState: this.config.getState,
+            setState: this.config.setState,
         });
 
         return registerLeftMouseButtonListeners({
@@ -1087,8 +1065,8 @@ export default class HexCartographerContent {
 
     private registerMiddleMouseButtonListeners() {
         const middleClick = createMiddleMouseButtonInteraction({
-            getState: this.getEditorState.bind(this),
-            setState: this.setEditorState.bind(this),
+            getState: this.config.getState,
+            setState: this.config.setState,
         });
 
         return registerMiddleMouseButtonListeners({
@@ -1102,8 +1080,8 @@ export default class HexCartographerContent {
             data: this.data,
             getWorldCoordinates: (e) => this.getWorldCoords(e),
             pushHistory: data => this.historyService.push(data),
-            getState: this.getEditorState.bind(this),
-            setState: this.setEditorState.bind(this),
+            getState: this.config.getState,
+            setState: this.config.setState,
         });
 
         return registerRightMouseButtonListeners({

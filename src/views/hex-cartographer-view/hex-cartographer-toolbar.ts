@@ -1,15 +1,10 @@
 import { ButtonComponent } from "obsidian";
 import { ToolGroup } from "../../types/tool-group";
+import { EditorInteractionState } from "./interactions/editor-interaction-state";
 
 interface HexCartographerToolbarConfig {
-    /**
-     * Triggers whenever the edit mode is toggled. The callback will be provided with a boolean indicating whether edit mode is now enabled (true) or disabled (false).
-     */
-    onEditModeChanged?: (enabled: boolean) => void;
-    /**
-     * Triggers whenever a tool is selected. The callback will be provided with the identifier of the selected tool group, or undefined if no tool is currently active.
-     */
-    onToolChanged?: (tool?: ToolGroup) => void;
+    getState: () => EditorInteractionState;
+    setState: (newState: EditorInteractionState) => void;
 }
 
 export default class HexCartographerToolbar {
@@ -49,9 +44,7 @@ export default class HexCartographerToolbar {
     private resizeActionButton!: ButtonComponent;
     private settingsActionButton!: ButtonComponent;
 
-    constructor(parentEl: HTMLElement, private config: HexCartographerToolbarConfig = {}) {
-        console.log('Initializing toolbar with');
-
+    constructor(parentEl: HTMLElement, private config: HexCartographerToolbarConfig) {
         this.actionsContainerEl = parentEl.createDiv({ cls: 'hex-toolbar' });
         
         this.initializePaintButtons();
@@ -62,34 +55,45 @@ export default class HexCartographerToolbar {
         this.hideActions();
     }
 
-    /**
-     * Set the currently active tool.
-     * @param toolGroup The tool group which was activated.
-     * @param propagateEvent If true, the onToolChanged callback will be triggered. If false, the callback will not be triggered. Defaults to true.
-     */
-    public setTool(toolGroup?: ToolGroup, propagateEvent = true) {
+    public updateState(state: EditorInteractionState) {
+        // Enable correct buttons based on the current state
         const buttonKeys = Object.keys(this.toolButtons) as ToolGroup[];
         buttonKeys.forEach(key => {
             this.toolButtons[key]!.removeCta();
         });
 
-        if(toolGroup) {
-            this.toolButtons[toolGroup]?.setCta();
+        if(state.selectedToolGroup) {
+            this.toolButtons[state.selectedToolGroup]?.setCta();
         }
-        
-        if(propagateEvent) {
-            this.config.onToolChanged?.(toolGroup);
+
+        // Update displayed buttons based on edit mode
+        if(state.editMode) {
+            this.showActions();
         }
+        else {
+            this.hideActions();
+        }
+    }
+
+    private setTool(toolGroup?: ToolGroup) {
+        this.config.setState({
+            ...this.config.getState(),
+            selectedToolGroup: toolGroup || null,
+        });
     }
 
     private enterEditMode() {
-        this.showActions();
-        this.config.onEditModeChanged?.(true);
+        this.config.setState({
+            ...this.config.getState(),
+            editMode: true,
+        });
     }
 
     private enterViewMode() {
-        this.hideActions();
-        this.config.onEditModeChanged?.(false);
+        this.config.setState({
+            ...this.config.getState(),
+            editMode: false,
+        });
     }
 
     private hideActions() {
@@ -193,8 +197,10 @@ export default class HexCartographerToolbar {
         this.pathAndBorderActions.removeClass('hidden');
         this.undoActionButton.buttonEl.removeClass('hidden');
         this.redoActionButton.buttonEl.removeClass('hidden');
-        this.editModeButton.buttonEl.addClass('hidden');      
+        this.editModeButton.buttonEl.addClass('hidden');
 
-        this.setTool('brush');
+        if(this.config.getState().selectedToolGroup === null) {
+            this.setTool('brush');
+        }
     }
 }

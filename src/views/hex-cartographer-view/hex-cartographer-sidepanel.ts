@@ -1,10 +1,9 @@
 import { SVG_SYMBOL_DATA } from "../../data/svg-symbol-data";
+import { EditorInteractionState } from "./interactions/editor-interaction-state";
 
 interface HexCartographerToolbarConfig {
-    /**
-     * Triggers whenever the edit mode is toggled. The callback will be provided with the icon ID of the selected icon, or undefined if no icon is currently selected.
-     */
-    onIconChanged?: (iconId?: string) => void;
+    getState: () => EditorInteractionState;
+    setState: (newState: EditorInteractionState) => void;
 }
 
 export default class HexCartographerSidepanel {
@@ -14,41 +13,31 @@ export default class HexCartographerSidepanel {
 
     private iconButtons: Record<string, HTMLElement> = {} as Record<string, HTMLElement>;
     
-    constructor(parentEl: HTMLElement, config: HexCartographerToolbarConfig = {}) {
+    constructor(parentEl: HTMLElement, config: HexCartographerToolbarConfig) {
         this.containerEl = parentEl.createDiv({ cls: 'hex-sidepanel hidden' });
         this.config = config;
         this.initializeIconSelectionButtons();
     }
 
-    /**
-     * Set the currently active icon.
-     * @param iconId The icon ID which was activated.
-     * @param propagateEvent If true, the onIconChanged callback will be triggered. If false, the callback will not be triggered. Defaults to true.
-     */
-    public setIcon(iconId?: string, propagateEvent = true) {
+    public updateState(state: EditorInteractionState) {
         Object.values(this.iconButtons).forEach(btn => btn.removeClass('selected'));
-        if(iconId) {
-            this.iconButtons[iconId]?.addClass('selected');
+        if(state.currentSymbol) {
+            this.iconButtons[state.currentSymbol]?.addClass('selected');
         }
 
-        if(propagateEvent) {
-            this.config.onIconChanged?.(iconId);
-        }
-    }
-
-    /**
-     * Set the edit mode state to reveal or hide the side panel. When edit mode is enabled, the side panel will be visible. When edit mode is disabled, the side panel will be hidden.
-     * @param enabled If true, edit mode is enabled. If false, edit mode is disabled.
-     */
-    public setEditMode(enabled: boolean) {
-        this.editMode = enabled;
-
-        if(this.editMode) {
+        if(state.editMode) {
             this.containerEl.removeClass('hidden');
         }
         else {
             this.containerEl.addClass('hidden');
         }
+    }
+
+    private setIcon(iconId?: string) {
+        this.config.setState({
+            ...this.config.getState(),
+            currentSymbol: iconId || null,
+        });
     }
 
     private initializeIconSelectionButtons() {

@@ -5,6 +5,7 @@ import HexCartographerContent from "./hex-cartographer-content";
 import HexCartographerSidepanel from "./hex-cartographer-sidepanel";
 import { MapData } from "../../types/map-data";
 import HexCartographerPlugin from "../../main";
+import { EditorInteractionState } from "./interactions/editor-interaction-state";
 
 export default class HexCartographerView extends ItemView {
 
@@ -12,8 +13,23 @@ export default class HexCartographerView extends ItemView {
     private _toolbar: HexCartographerToolbar;
     private _sidebar: HexCartographerSidepanel;
 
-    private _activeTool?: ToolGroup;
-    private _activeIcon?: string;
+    
+    private _editorState: EditorInteractionState = {
+        isPanning: false,
+        editMode: false,
+        currentSymbol: null,
+        selectedToolGroup: null,
+        selectedPaintMode: null,
+        selectedPattern: null
+    }
+    private getEditorState() {
+        return this._editorState;
+    }
+    private setEditorState(newState: EditorInteractionState) {
+        this._editorState = newState;
+        this._toolbar.updateState(newState);
+        this._sidebar.updateState(newState);
+    }
 
     constructor(plugin: HexCartographerPlugin, leaf: WorkspaceLeaf) {
         super(leaf);
@@ -30,13 +46,17 @@ export default class HexCartographerView extends ItemView {
             }
         });
         this._toolbar = new HexCartographerToolbar(toolbarWrapper, {
-            onEditModeChanged: this.onEditModeChanged.bind(this),
-            onToolChanged: this.onToolChanged.bind(this),
+            getState: this.getEditorState.bind(this),
+            setState: this.setEditorState.bind(this)
         });
-        this._content = new HexCartographerContent(toolbarWrapper, plugin, TEST_DATA);
+        this._content = new HexCartographerContent(toolbarWrapper, plugin, {
+            getState: this.getEditorState.bind(this),
+            setState: this.setEditorState.bind(this)
+        }, TEST_DATA);
 
         this._sidebar = new HexCartographerSidepanel(contentWrapper, {
-            onIconChanged: this.onIconChange.bind(this)
+            getState: this.getEditorState.bind(this),
+            setState: this.setEditorState.bind(this)
         });
     }
 
@@ -44,43 +64,43 @@ export default class HexCartographerView extends ItemView {
         this._content.startRender();
     }
 
-    private onEditModeChanged(enabled: boolean) {
-        console.log(`Edit mode changed: ${enabled}`);
-        this._sidebar.setEditMode(enabled);
-        this._content.setEditMode(enabled);
-    }
+    // private onEditModeChanged(enabled: boolean) {
+    //     console.log(`Edit mode changed: ${enabled}`);
+    //     // this._sidebar.setEditMode(enabled);
+    //     // this._content.setEditMode(enabled);
+    // }
 
-    private onIconChange(iconId?: string) {
-        if (this._activeTool && isPaintingTool(this._activeTool)) {
-            // Painting tools can be used with any selected icon, so we can just set the tool again to ensure the same tool is being used.
-            this._toolbar.setTool(this._activeTool, false);
-        }
-        else {
-            // Other tools may not be compatible with the selected icon, so we will default to the brush tool when the icon changes.
-            this._toolbar.setTool('brush', false);
-        }
+    // private onIconChange(iconId?: string) {
+    //     if (this._activeTool && isPaintingTool(this._activeTool)) {
+    //         // Painting tools can be used with any selected icon, so we can just set the tool again to ensure the same tool is being used.
+    //         this._toolbar.setTool(this._activeTool, false);
+    //     }
+    //     else {
+    //         // Other tools may not be compatible with the selected icon, so we will default to the brush tool when the icon changes.
+    //         this._toolbar.setTool('brush', false);
+    //     }
         
-        this._activeIcon = iconId;
-        this._content.setSymbol(iconId);
-    }
+    //     this._activeIcon = iconId;
+    //     this._content.setSymbol(iconId);
+    // }
 
-    private onToolChanged(tool?: ToolGroup) {
-        if (tool && this.toolChangedToPaintingTool(tool)) {
-            // If we're switching from a non-painting tool to a painting tool, we will set the icon in the sidebar to the default which is the hexagon.
-            this._sidebar.setIcon('hexagon', false);
-        }
-        else if(!tool || !isPaintingTool(tool)) {
-            this._sidebar.setIcon(undefined, false);
-        }
+    // private onToolChanged(tool?: ToolGroup) {
+    //     if (tool && this.toolChangedToPaintingTool(tool)) {
+    //         // If we're switching from a non-painting tool to a painting tool, we will set the icon in the sidebar to the default which is the hexagon.
+    //         this._sidebar.setIcon('hexagon', false);
+    //     }
+    //     else if(!tool || !isPaintingTool(tool)) {
+    //         this._sidebar.setIcon(undefined, false);
+    //     }
         
-        this._activeTool = tool;
-        this._content.setTool(this._activeTool);
-    }
+    //     this._activeTool = tool;
+    //     this._content.setTool(this._activeTool);
+    // }
 
-    /** returns true if _activeTool is undefined or a non-painting tool and the given tool is a painting tool */
-    private toolChangedToPaintingTool(tool: ToolGroup) {
-        return (!this._activeTool || !isPaintingTool(this._activeTool!)) && isPaintingTool(tool);
-    }
+    // /** returns true if _activeTool is undefined or a non-painting tool and the given tool is a painting tool */
+    // private toolChangedToPaintingTool(tool: ToolGroup) {
+    //     return (!this._activeTool || !isPaintingTool(this._activeTool!)) && isPaintingTool(tool);
+    // }
 
     getViewType() { return 'hex-cartographer'; }
     getDisplayText() {
