@@ -33,7 +33,7 @@ export default class HexCartographerContent {
     private ctx?: CanvasRenderingContext2D;
     private config: HexCartographerContentConfig;
 
-    constructor(parentEl: HTMLElement, plugin: HexCartographerPlugin, config: HexCartographerContentConfig, data: MapData) {
+    constructor(plugin: HexCartographerPlugin, parentEl: HTMLElement, config: HexCartographerContentConfig, data: MapData) {
         this.contentEl = parentEl.createDiv({ cls: 'hex-content' });
         this.plugin = plugin;
         this.config = config;
@@ -1050,6 +1050,7 @@ export default class HexCartographerContent {
     // ==============================
     private registerLeftMouseButtonListeners() {
         const leftClick = createLeftMouseButtonInteraction({
+            getApp: () => this.plugin.app,
             getCanvas: () => this.canvas!,
             getData: () => this.data,
             getWorldCoordinates: this.getWorldCoords.bind(this),

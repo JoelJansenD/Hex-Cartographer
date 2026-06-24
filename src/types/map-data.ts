@@ -56,14 +56,14 @@ export interface RiverSettings {
     width: number;
     activeRiverId: number | null;
     editMode: boolean;
-    insertAfter: null;
+    insertAfter: number | null;
 }
 
 export interface RoadSettings {
     width: number;
     activeRoadId: number | null;
     editMode: boolean;
-    insertAfter: null;
+    insertAfter: number | null;
 }
 
 export interface ToolConfigs {

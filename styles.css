@@ -75,3 +75,9 @@
         margin-right: 8px;
     }
 }
+
+.hex-path-picker-modal-actions {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+}

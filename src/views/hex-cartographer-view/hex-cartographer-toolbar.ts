@@ -58,6 +58,14 @@ export default class HexCartographerToolbar {
     }
 
     public updateState(state: EditorInteractionState) {
+        // Update displayed buttons based on edit mode
+        if(state.editMode) {
+            this.showActions();
+        }
+        else {
+            this.hideActions();
+        }
+
         // Enable correct buttons based on the current state
         const buttonKeys = Object.keys(this.toolButtons) as ToolGroup[];
         buttonKeys.forEach(key => {
@@ -66,14 +74,6 @@ export default class HexCartographerToolbar {
 
         if(state.selectedToolGroup) {
             this.toolButtons[state.selectedToolGroup]?.setCta();
-        }
-
-        // Update displayed buttons based on edit mode
-        if(state.editMode) {
-            this.showActions();
-        }
-        else {
-            this.hideActions();
         }
     }
 

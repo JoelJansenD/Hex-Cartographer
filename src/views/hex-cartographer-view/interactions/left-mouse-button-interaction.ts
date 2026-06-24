@@ -1,13 +1,16 @@
-import { Notice } from "obsidian";
-import { PixelCoordinates, pixelToHex } from "../../../functions/hex-math";
+import { App, Notice } from "obsidian";
+import { calculateHexPath, PixelCoordinates, pixelToHex } from "../../../functions/hex-math";
 import { HexagonSet, MapData } from "../../../types/map-data";
 import { MouseButtonInteraction } from "./mouse-button-interaction";
 import { localizeString } from "../../../functions/i18n";
 import { EditorInteractionState } from "./editor-interaction-state";
 import { Border } from "../../../types/border";
 import { Hexagon, HexCoordinates } from "../../../types/hexagon";
+import { LinearFeature, River, Road } from "../../../types/rivers-and-roads";
+import PathPickerModal from "../../../modals/path-picker-modal";
 
 export interface LeftMouseButtonInteractionContext {
+    getApp: () => App;
     getState: () => EditorInteractionState;
     getCanvas: () => HTMLCanvasElement;
     getData: () => MapData;
@@ -33,6 +36,9 @@ export function createLeftMouseButtonInteraction(ctx: LeftMouseButtonInteraction
                     break;
                 case 'select-border':
                     down_SelectBorder(e, ctx, state);
+                    break;
+                case 'select-path':
+                    down_SelectPath(e, ctx, state);
                     break;
                 default:
                     throw new Error(`Unhandled tool group: ${selectedToolGroup}`);
@@ -84,6 +90,59 @@ function down_SelectBorder(e: MouseEvent, ctx: LeftMouseButtonInteractionContext
     };
 
     new Notice(localizeString('notice.borderSelected', { id: foundRegion.id }));
+}
+
+function down_SelectPath(e: MouseEvent, ctx: LeftMouseButtonInteractionContext, state: EditorInteractionState) {
+    const foundRiver = findLinearFeatureAtHex(ctx.getData().rivers, getHexagonCoordinatesAtMousePosition(ctx, e)) as River | null;
+    const foundRoad = findLinearFeatureAtHex(ctx.getData().roads, getHexagonCoordinatesAtMousePosition(ctx, e)) as Road | null;
+
+    console.log(foundRiver, foundRoad);
+
+    if(foundRiver && foundRoad) {
+        const modal = new PathPickerModal(ctx.getApp(), foundRiver, foundRoad, (river, road) => {
+            const newState = {...ctx.getState()};
+            newState.selectedRiver = river;
+            newState.selectedRoad = road;
+            newState.selectedToolGroup = river !== null ? 'river' : 'road';
+
+            // Because this is a callback from a modal, we need to set the state here instead of relying on the outer function to do it.
+            ctx.setState(newState);
+        });
+        modal.open();
+        return;
+    }
+
+    if(foundRiver) {
+        state.selectedRiver = foundRiver;
+        state.selectedRoad = null;
+        state.selectedToolGroup = 'river';
+    }
+
+    if(foundRoad) {
+        state.selectedRoad = foundRoad;
+        state.selectedRiver = null;
+        state.selectedToolGroup = 'road';
+    }
+}
+
+function findLinearFeatureAtHex(features: LinearFeature[], hex: HexCoordinates) {
+    for (const feature of features) {
+        if (!feature.waypoints || feature.waypoints.length === 0) continue;
+        if (feature.waypoints.some(w => w.q === hex.q && w.r === hex.r)) return feature;
+
+        for (let i = 0; i < feature.waypoints.length - 1; i++) {
+            const waypoint1 = feature.waypoints[i]!;
+            const waypoint2 = feature.waypoints[i + 1]!;
+
+            const segs = calculateHexPath(waypoint1, waypoint2, feature.width);
+            for(const seg of segs) {
+                if (seg.to.q === hex.q && seg.to.r === hex.r) return feature;
+                if (seg.from.q === hex.q && seg.from.r === hex.r) return feature;
+            }
+        }
+    }
+
+    return null;
 }
 
 function getHexagonCoordinatesAtMousePosition(ctx: LeftMouseButtonInteractionContext, e: MouseEvent) {
