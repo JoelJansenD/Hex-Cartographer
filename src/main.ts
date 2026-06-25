@@ -3,12 +3,12 @@ import {
     loadTranslations,
     localizeString,
 } from './functions/i18n';
-import { PluginSettings } from './types-legacy';
+import { PluginSettings } from './legacy/types-legacy';
 import {
     createDefaultMapDocumentData,
     createNewMapFile,
 } from './services/map-document-service';
-import { HexCartographerViewLegacy } from './views/hex-cartographer-view-legacy';
+import { HexCartographerViewLegacy } from './legacy/hex-cartographer-view-legacy';
 import HexCartographerSettingTab from './settings/hex-cartographer-setting-tab';
 import HexCartographerView from './views/hex-cartographer-view/hex-cartographer-view';
 

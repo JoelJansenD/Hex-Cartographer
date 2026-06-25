@@ -3,7 +3,7 @@
  * Implements axial coordinate system (q, r) for hexagonal grids
  */
 
-import { HexCoordinates } from "../types-legacy";
+import { HexCoordinates } from "../types/hexagon";
 
 export interface PixelCoordinates {
     x: number;

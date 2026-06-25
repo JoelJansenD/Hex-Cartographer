@@ -1,7 +1,7 @@
 import { Modal } from 'obsidian';
 import { hsbToHex, hexToHsb } from '../functions/colors';
 import { localizeString } from '../functions/i18n';
-import { ColorPickerModalCallback } from '../types-legacy';
+import { ColorPickerModalCallback } from '../legacy/types-legacy';
 
 export class ColorPickerModal extends Modal {
     onSelect: ColorPickerModalCallback;

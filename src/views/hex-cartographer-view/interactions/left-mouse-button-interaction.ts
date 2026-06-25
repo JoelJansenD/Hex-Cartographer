@@ -5,9 +5,11 @@ import { MouseButtonInteraction } from "./mouse-button-interaction";
 import { localizeString } from "../../../functions/i18n";
 import { EditorInteractionState } from "./editor-interaction-state";
 import { Border } from "../../../types/border";
-import { Hexagon, HexCoordinates } from "../../../types/hexagon";
+import { HexCoordinates } from "../../../types/hexagon";
 import { LinearFeature, River, Road } from "../../../types/rivers-and-roads";
 import PathPickerModal from "../../../modals/path-picker-modal";
+import { Label } from "../../../types/label";
+import { TextInputModal, TextInputModalParams } from "../../../modals/text-input-modal";
 
 export interface LeftMouseButtonInteractionContext {
     getApp: () => App;
@@ -39,6 +41,9 @@ export function createLeftMouseButtonInteraction(ctx: LeftMouseButtonInteraction
                     break;
                 case 'select-path':
                     down_SelectPath(e, ctx, state);
+                    break;
+                case 'text':
+                    down_SelectText(e, ctx, state);
                     break;
                 default:
                     throw new Error(`Unhandled tool group: ${selectedToolGroup}`);
@@ -96,8 +101,6 @@ function down_SelectPath(e: MouseEvent, ctx: LeftMouseButtonInteractionContext, 
     const foundRiver = findLinearFeatureAtHex(ctx.getData().rivers, getHexagonCoordinatesAtMousePosition(ctx, e)) as River | null;
     const foundRoad = findLinearFeatureAtHex(ctx.getData().roads, getHexagonCoordinatesAtMousePosition(ctx, e)) as Road | null;
 
-    console.log(foundRiver, foundRoad);
-
     if(foundRiver && foundRoad) {
         const modal = new PathPickerModal(ctx.getApp(), foundRiver, foundRoad, (river, road) => {
             const newState = {...ctx.getState()};
@@ -123,6 +126,50 @@ function down_SelectPath(e: MouseEvent, ctx: LeftMouseButtonInteractionContext, 
         state.selectedRiver = null;
         state.selectedToolGroup = 'road';
     }
+}
+
+function down_SelectText(e: MouseEvent, ctx: LeftMouseButtonInteractionContext, state: EditorInteractionState) {
+    const location = ctx.getWorldCoordinates(e);
+    const textIdx = getTextIndexAtClick(location, ctx);
+
+    let inputParams: TextInputModalParams = {
+        location: location,
+        onSubmit: label => {
+            if(label === 'delete') {
+                if(textIdx !== -1) {
+                    ctx.getData().texts.splice(textIdx, 1);
+                }
+            }
+            else if(label) {
+                if(textIdx !== -1) {
+                    ctx.getData().texts[textIdx] = label;
+                }
+                else {
+                    ctx.getData().texts.push(label);
+                }
+            }
+        }
+    }
+
+    const foundText = textIdx !== -1 ? ctx.getData().texts[textIdx] : null;
+    if(foundText) {
+        inputParams = {
+            ...inputParams,
+            value: foundText.text,
+            size: foundText.size,
+            link: foundText.link,
+            bold: foundText.bold,
+            color: foundText.color,
+            outline: foundText.outline,
+            shadow: foundText.shadow,
+            shadowDistance: foundText.shadowDistance,
+            shadowOpacity: foundText.shadowOpatown,
+            colorPalette: ctx.getData().settings.colorPalette,
+            colorPalette2: ctx.getData().settings.colorPalette2
+        };
+    }
+
+    new TextInputModal(ctx.getApp(), inputParams).open();
 }
 
 function findLinearFeatureAtHex(features: LinearFeature[], hex: HexCoordinates) {
@@ -155,4 +202,25 @@ function getHexagonCoordinatesAtMousePosition(ctx: LeftMouseButtonInteractionCon
 function getHexagonAtCoordinates(hexes: HexagonSet, hex: HexCoordinates) {
     const key = `${hex.q}_${hex.r}`;
     return hexes[key] || null;
+}
+
+function getTextIndexAtClick(world: PixelCoordinates, ctx: LeftMouseButtonInteractionContext) {
+    const data = ctx.getData();
+    if(!data.texts) return -1;
+
+    const canvas = ctx.getCanvas();
+    return data.texts.findIndex((t: Label) => {
+        const weight = t.bold ? "bold " : "";
+        const context = canvas.getContext("2d")!;
+
+        const height = t.size || 16;
+        context.font = `${weight}${height}px Verdana`;
+
+        const size = context.measureText(t.text);
+        const halfWidth = size.width / 2;
+        return world.x >= t.x - halfWidth - 5 
+            && world.x <= t.x + halfWidth + 5 
+            && world.y >= t.y - height 
+            && world.y <= t.y + 5;
+    });
 }

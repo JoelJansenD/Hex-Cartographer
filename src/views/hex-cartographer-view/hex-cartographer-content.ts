@@ -616,8 +616,9 @@ export default class HexCartographerContent {
         this.ctx.translate(this.data.offX, this.data.offY);
         this.ctx.scale(this.data.zoom, this.data.zoom);
 
-        if (this.data.texts) this.data.texts.forEach(t => {
+        this.data.texts.forEach(t => {
             if (!this.canvas || !this.ctx) throw new Error("Canvas or context not initialized");
+
             const weight = t.bold ? "bold " : "";
             this.ctx.font = `${weight}${t.size || 16}px Verdana`;
             this.ctx.textAlign = "center";
@@ -631,7 +632,10 @@ export default class HexCartographerContent {
 
             this.ctx.strokeStyle = "black";
             this.ctx.lineWidth = 2;
-            if (t.outline !== false) this.ctx.strokeText(t.text, t.x, t.y);
+            
+            if (t.outline !== false) {
+                this.ctx.strokeText(t.text, t.x, t.y);
+            }
 
             this.ctx.fillStyle = t.color || "white";
             this.ctx.fillText(t.text, t.x, t.y);
@@ -1145,22 +1149,6 @@ export default class HexCartographerContent {
         //         this.render();
         //         return;
         //     }
-
-        //     
-
-        //     if (this.pathPickMode) {
-        //         this.pickPathAtHex(this.startHex);
-        //         return;
-        //     }
-
-        //     let hitText = this.getTextAt(world.x, world.y);
-        //     if (hitText && this.currentToolGroup === 'text' && this.drawMode === 'none') {
-        //         this.pushHistoryIfNeeded();
-        //         this.draggedText = hitText;
-        //     } else {
-        //         this.processInput(e, true);
-        //     }
-        // });
 
         // this.canvas.addEventListener('contextmenu', (e) => {
         //     if (this.editMode) e.preventDefault();

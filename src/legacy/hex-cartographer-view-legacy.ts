@@ -44,7 +44,7 @@ import {
     MapDocumentData,
     Waypoint,
     HexCoordinates,
-} from '../types-legacy';
+} from './types-legacy';
 import { buildToolConfigs, SYMBOL_TOOL_GROUP_IDS } from '../config/tool-config';
 import { SVG_SYMBOL_DATA } from '../data/svg-symbol-data';
 import {
@@ -54,7 +54,7 @@ import {
 } from '../services/map-document-service';
 import { ColorPickerModal } from '../modals/color-picker-modal';
 import { ExportMapModal } from '../modals/export-map-modal';
-import { TextInputModal } from '../modals/text-input-modal';
+import { TextInputModalLegacy } from './text-input-modal-legacy';
 
 // === View-Klasse für den Hex Cartographer ===
 export class HexCartographerViewLegacy extends ItemView {
@@ -1850,8 +1850,10 @@ export class HexCartographerViewLegacy extends ItemView {
             const metrics = this.ctx.measureText(t.text);
             const halfWidth = metrics.width / 2;
             const height = t.size || 16;
-            return worldX >= t.x - halfWidth - 5 && worldX <= t.x + halfWidth + 5 &&
-                   worldY >= t.y - height && worldY <= t.y + 5;
+            return worldX >= t.x - halfWidth - 5 
+                && worldX <= t.x + halfWidth + 5 
+                && worldY >= t.y - height 
+                && worldY <= t.y + 5;
         });
     }
 
@@ -2146,7 +2148,7 @@ export class HexCartographerViewLegacy extends ItemView {
                     if (hitText) {
                         if (this.currentToolGroup === 'text') {
                             const hitX = hitText.x, hitY = hitText.y;
-                            new TextInputModal(this.app, (v, s, l, c, o, b, sh, shd, sho) => {
+                            new TextInputModalLegacy(this.app, (v, s, l, c, o, b, sh, shd, sho) => {
                                 const target = this.data.texts.find(t => t.x === hitX && t.y === hitY);
                                 if (v && target) {
                                     target.text = v; target.size = s; target.link = l;
@@ -2701,7 +2703,7 @@ export class HexCartographerViewLegacy extends ItemView {
                         if (hitText) {
                             if (this.currentToolGroup === 'text') {
                                 const hitX = hitText.x, hitY = hitText.y;
-                                new TextInputModal(this.app, (v, s, l, c, o, b, sh, shd, sho) => {
+                                new TextInputModalLegacy(this.app, (v, s, l, c, o, b, sh, shd, sho) => {
                                     const target = this.data.texts.find(t => t.x === hitX && t.y === hitY);
                                     if (v && target) {
                                         target.text = v; target.size = s; target.link = l;
@@ -2797,7 +2799,7 @@ export class HexCartographerViewLegacy extends ItemView {
         if (this.currentToolGroup === 'text' && this.drawMode === 'none' && isInitial) {
             const existingText = this.getTextAt(world.x, world.y);
             if (!existingText) {
-                new TextInputModal(this.app, (v, s, l, c, o, b, sh, shd, sho) => {
+                new TextInputModalLegacy(this.app, (v, s, l, c, o, b, sh, shd, sho) => {
                     if(v) {
                         this.data.texts.push({text: v, x: world.x, y: world.y, size: s, link: l, color: c, outline: o, bold: b, shadow: sh, shadowDistance: shd, shadowOpatown: sho});
                         this.lastUsedTextSize = s; this.lastUsedTextColor = c; this.lastUsedTextOutline = o; this.lastUsedTextBold = b;

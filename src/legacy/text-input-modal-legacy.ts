@@ -1,4 +1,4 @@
-import { App, Modal } from 'obsidian';
+import { Modal } from 'obsidian';
 import {
     DEFAULT_SHADOW_DISTANCE,
     DEFAULT_SHADOW_OPACITY,
@@ -6,31 +6,13 @@ import {
     DEFAULT_TEXT_SIZE,
 } from '../constants';
 import { localizeString } from '../functions/i18n';
-import { ColorPickerModal } from './color-picker-modal';
-import { FileSelectorModal } from './file-selector-modal';
+import { TextInputModalCallback } from './types-legacy';
+import { ColorPickerModal } from '../modals/color-picker-modal';
+import { FileSelectorModal } from '../modals/file-selector-modal';
 import isTouchDevice from '../functions/is-touch-device';
-import { Label } from '../types/label';
-import { PixelCoordinates } from '../functions/hex-math';
 
-export interface TextInputModalParams {
-    location: PixelCoordinates;
-    onSubmit?: (label: Label | 'delete' | null) => void;
-    value?: string;
-    size?: number;
-    link?: string;
-    color?: string;
-    outline?: boolean;
-    bold?: boolean;
-    shadow?: boolean;
-    shadowDistance?: number;
-    shadowOpacity?: number;
-    colorPalette?: string[];
-    colorPalette2?: string[];
-}
-
-export class TextInputModal extends Modal {
-    onSubmit?: (label: Label | 'delete' | null) => void;
-    location: PixelCoordinates;
+export class TextInputModalLegacy extends Modal {
+    onSubmit: TextInputModalCallback;
     val: string;
     size: number;
     link: string;
@@ -43,21 +25,20 @@ export class TextInputModal extends Modal {
     colorPalette: string[] | null;
     colorPalette2: string[] | null;
 
-    constructor(app: App, params: TextInputModalParams) {
+    constructor(app, onSubmit: TextInputModalCallback, val = '', size = DEFAULT_TEXT_SIZE, link = '', color = DEFAULT_TEXT_COLOR, outline = true, bold = false, shadow = false, shadowDistance = DEFAULT_SHADOW_DISTANCE, shadowOpatown = DEFAULT_SHADOW_OPACITY, colorPalette: string[] | null = null, colorPalette2: string[] | null = null) {
         super(app);
-        this.onSubmit = params.onSubmit;
-        this.location = params.location;
-        this.val = params?.value ?? '';
-        this.size = params?.size ?? DEFAULT_TEXT_SIZE;
-        this.link = params?.link ?? '';
-        this.color = params?.color ?? DEFAULT_TEXT_COLOR;
-        this.outline = params?.outline ?? false ;
-        this.bold = params?.bold ?? false;
-        this.shadow = params?.shadow ?? false;
-        this.shadowDistance = params?.shadowDistance ?? DEFAULT_SHADOW_DISTANCE;
-        this.shadowOpatown = params?.shadowOpacity ?? DEFAULT_SHADOW_OPACITY;
-        this.colorPalette = params?.colorPalette ?? null;
-        this.colorPalette2 = params?.colorPalette2 ?? null;
+        this.onSubmit = onSubmit;
+        this.val = val;
+        this.size = size;
+        this.link = link;
+        this.color = color;
+        this.outline = outline;
+        this.bold = bold;
+        this.shadow = shadow;
+        this.shadowDistance = shadowDistance;
+        this.shadowOpatown = shadowOpatown;
+        this.colorPalette = colorPalette;
+        this.colorPalette2 = colorPalette2;
     }
 
     onOpen() {
@@ -189,7 +170,7 @@ export class TextInputModal extends Modal {
         cancelBtn.onclick = () => this.close();
         const deleteBtn = btnRow.createEl('button', { text: localizeString('modal.deleteText') });
         deleteBtn.style.cssText = 'justify-self: center; color: var(--text-error);';
-        deleteBtn.onclick = () => { this.onSubmit?.('delete'); this.close(); };
+        deleteBtn.onclick = () => { this.onSubmit('', 0, '', '', false, false, false, 0, 0); this.close(); };
         const okBtn = btnRow.createEl('button', { text: 'OK', cls: 'mod-cta' });
         okBtn.style.justifySelf = 'end';
         okBtn.onclick = () => {
@@ -197,20 +178,17 @@ export class TextInputModal extends Modal {
             const clampedOpatown = Math.max(0, Math.min(100, opatownValue));
             const shadowEnabled = clampedOpatown === 0 ? false : shadowInput.checked;
 
-            const label: Label = {
-                bold: boldInput.checked,
-                color: this.color,
-                link: linkDisplay.value,
-                outline: outlineInput.checked,
-                shadow: shadowEnabled,
-                shadowDistance: parseInt(shadowDistanceInput.value) || DEFAULT_SHADOW_DISTANCE,
-                shadowOpatown: clampedOpatown,
-                size: parseInt(sInput.value),
-                text: mainInput.value,
-                x: this.location.x,
-                y: this.location.y
-            };
-            this.onSubmit?.(label);
+            this.onSubmit(
+                mainInput.value,
+                parseInt(sInput.value),
+                linkDisplay.value,
+                this.color,
+                outlineInput.checked,
+                boldInput.checked,
+                shadowEnabled,
+                parseInt(shadowDistanceInput.value) || DEFAULT_SHADOW_DISTANCE,
+                clampedOpatown
+            );
             this.close();
         };
 

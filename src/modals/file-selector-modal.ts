@@ -1,6 +1,6 @@
 import { Modal } from 'obsidian';
 import { localizeString } from '../functions/i18n';
-import { FileSelectorModalCallback } from '../types-legacy';
+import { FileSelectorModalCallback } from '../legacy/types-legacy';
 
 export class FileSelectorModal extends Modal {
     onSelect: FileSelectorModalCallback;

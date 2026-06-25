@@ -1,7 +1,7 @@
 import { PluginSettingTab, setIcon, Setting } from "obsidian";
 import HexCartographerPlugin from "../main";
 import { localizeString } from "../functions/i18n";
-import { HexCartographerViewLegacy } from "../views/hex-cartographer-view-legacy";
+import { HexCartographerViewLegacy } from "../legacy/hex-cartographer-view-legacy";
 import { SVG_SYMBOL_DATA } from "../data/svg-symbol-data";
 
 export default class HexCartographerSettingTab extends PluginSettingTab {
