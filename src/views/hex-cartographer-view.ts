@@ -13,7 +13,6 @@ export default class HexCartographerView extends ItemView {
     private _toolbar: HexCartographerToolbar;
     private _sidebar: HexCartographerSidepanel;
 
-    
     private _editorState: EditorInteractionState = {
         editMode: false,
         isPanning: false,

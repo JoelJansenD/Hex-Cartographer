@@ -5,6 +5,9 @@ import { PaintMode, ToolGroup } from "../../../types/tool-group";
 
 type SelectedRegion = { border: Border, hexagon: HexCoordinates };
 
+/**
+ * @deprecated This interface is no longer used and will be removed in a future version. Use the `HexCartographerViewState` interface instead.
+ */
 export interface EditorInteractionState {
     editMode: boolean;
     isPanning: boolean;
