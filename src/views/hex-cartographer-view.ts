@@ -6,57 +6,45 @@ import HexCartographerSidepanel from "./components/hex-cartographer-sidepanel";
 import { MapData } from "../types/map-data";
 import HexCartographerPlugin from "../main";
 import { EditorInteractionState } from "./components/interactions/editor-interaction-state";
+import HexCartographerViewState from "./hex-cartographer-view-state";
 
 export default class HexCartographerView extends ItemView {
+
+    private _state: HexCartographerViewState = {
+        editMode: false,
+        selectedToolGroup: 'brush'
+    };
 
     private _content: HexCartographerContent;
     private _toolbar: HexCartographerToolbar;
     private _sidebar: HexCartographerSidepanel;
 
-    private _editorState: EditorInteractionState = {
-        editMode: false,
-        isPanning: false,
-        selectedPaintMode: null,
-        selectedPattern: null,
-        selectedRegion: null,
-        selectedRiver: null,
-        selectedRoad: null,
-        selectedSymbol: null,
-        selectedToolGroup: null,
-    }
-    private getEditorState() {
-        return this._editorState;
-    }
-    private setEditorState(newState: EditorInteractionState) {
-        this._editorState = newState;
-        this._toolbar.updateState(newState);
-        this._sidebar.updateState(newState);
-    }
-
     constructor(plugin: HexCartographerPlugin, leaf: WorkspaceLeaf) {
         super(leaf);
 
-        const contentWrapper = this.contentEl.createDiv({
+        const container = this.contentEl.createDiv({
             attr: {
                 style: 'display: flex; flex-direction: row; height: 100%; width: 100%'
             }
         });
 
-        const toolbarWrapper = contentWrapper.createDiv({
+        const mainViewContainer = container.createDiv({
             attr: {
                 style: 'display: flex; flex-direction: column; height: 100%; width: 100%'
             }
         });
-        this._toolbar = new HexCartographerToolbar(toolbarWrapper, {
-            getState: this.getEditorState.bind(this),
-            setState: this.setEditorState.bind(this)
+        
+        this._toolbar = new HexCartographerToolbar(mainViewContainer, {
+            getState: this.getViewState.bind(this),
+            setState: this.setViewState.bind(this)
         });
-        this._content = new HexCartographerContent(plugin, toolbarWrapper, {
+
+        this._content = new HexCartographerContent(plugin, mainViewContainer, {
             getState: this.getEditorState.bind(this),
             setState: this.setEditorState.bind(this)
         }, TEST_DATA);
 
-        this._sidebar = new HexCartographerSidepanel(contentWrapper, {
+        this._sidebar = new HexCartographerSidepanel(container, {
             getState: this.getEditorState.bind(this),
             setState: this.setEditorState.bind(this)
         });
@@ -64,6 +52,16 @@ export default class HexCartographerView extends ItemView {
 
     onload(): void {
         this._content.startRender();
+    }
+
+    private getViewState() {
+      return this._state;
+    }
+
+    private setViewState(newState: HexCartographerViewState) {
+      console.log('updating state:', newState);
+      this._state = newState;
+      this._toolbar.updateState(this._state);
     }
 
     // private onEditModeChanged(enabled: boolean) {
@@ -107,6 +105,26 @@ export default class HexCartographerView extends ItemView {
     getViewType() { return 'hex-cartographer'; }
     getDisplayText() {
         return 'Hex Cartographer';
+    }
+
+    private _editorState: EditorInteractionState = {
+        editMode: false,
+        isPanning: false,
+        selectedPaintMode: null,
+        selectedPattern: null,
+        selectedRegion: null,
+        selectedRiver: null,
+        selectedRoad: null,
+        selectedSymbol: null,
+        selectedToolGroup: null,
+    }
+    private getEditorState() {
+        return this._editorState;
+    }
+    private setEditorState(newState: EditorInteractionState) {
+        this._editorState = newState;
+        // this._toolbar.updateState(newState);
+        this._sidebar.updateState(newState);
     }
 }
 

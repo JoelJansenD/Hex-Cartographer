@@ -1,13 +1,11 @@
 import { ButtonComponent } from "obsidian";
 import { ToolGroup } from "../../types/tool-group";
-import { EditorInteractionState } from "./interactions/editor-interaction-state";
-
-interface HexCartographerToolbarConfig {
-    getState: () => EditorInteractionState;
-    setState: (newState: EditorInteractionState) => void;
-}
+import HexCartographerComponentConfig from "./hex-cartographer-component-config";
+import HexCartographerViewState from "../hex-cartographer-view-state";
 
 export default class HexCartographerToolbar {
+
+    private config: HexCartographerComponentConfig;
 
     // ===================================================
     // Containers
@@ -21,8 +19,6 @@ export default class HexCartographerToolbar {
     // ===================================================
     // Buttons
     // ===================================================
-    // private paintButtons: ButtonComponent[];
-    // private toolButtons: ButtonComponent[];
     private toolButtons: Record<ToolGroup, ButtonComponent> = {} as Record<ToolGroup, ButtonComponent>;
 
     private viewModeButton!: ButtonComponent;
@@ -46,7 +42,8 @@ export default class HexCartographerToolbar {
     private resizeActionButton!: ButtonComponent;
     private settingsActionButton!: ButtonComponent;
 
-    constructor(parentEl: HTMLElement, private config: HexCartographerToolbarConfig) {
+    constructor(parentEl: HTMLElement, config: HexCartographerComponentConfig) {
+        this.config = config;
         this.actionsContainerEl = parentEl.createDiv({ cls: 'hex-toolbar' });
         
         this.initializePaintButtons();
@@ -57,7 +54,8 @@ export default class HexCartographerToolbar {
         this.hideActions();
     }
 
-    public updateState(state: EditorInteractionState) {
+    public updateState(state: HexCartographerViewState) {
+        console.log('updating')
         // Update displayed buttons based on edit mode
         if(state.editMode) {
             this.showActions();
@@ -72,15 +70,16 @@ export default class HexCartographerToolbar {
             this.toolButtons[key]!.removeCta();
         });
 
+        console.log(state.selectedToolGroup, Object.keys(this.toolButtons), state.selectedToolGroup);
         if(state.selectedToolGroup) {
             this.toolButtons[state.selectedToolGroup]?.setCta();
         }
     }
 
-    private setTool(toolGroup?: ToolGroup) {
+    private setTool(toolGroup: ToolGroup) {
         this.config.setState({
             ...this.config.getState(),
-            selectedToolGroup: toolGroup || null,
+            selectedToolGroup: toolGroup,
         });
     }
 
@@ -208,9 +207,5 @@ export default class HexCartographerToolbar {
         this.undoActionButton.buttonEl.removeClass('hidden');
         this.redoActionButton.buttonEl.removeClass('hidden');
         this.editModeButton.buttonEl.addClass('hidden');
-
-        if(this.config.getState().selectedToolGroup === null) {
-            this.setTool('brush');
-        }
     }
 }
