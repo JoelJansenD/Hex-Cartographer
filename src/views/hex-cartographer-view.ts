@@ -10,9 +10,16 @@ import HexCartographerViewState from "./hex-cartographer-view-state";
 export default class HexCartographerView extends ItemView {
 
     private _state: HexCartographerViewState = {
+        data: TEST_DATA,
         editMode: false,
+        isPanning: false,
+        selectedPaintMode: 'brush',
+        selectedPattern: null,
+        selectedRegion: null,
+        selectedRiver: null,
+        selectedRoad: null,
         selectedSymbol: 'hexagon',
-        selectedToolGroup: 'brush',
+        selectedToolGroup: null,
     };
 
     private _content: HexCartographerContent;
@@ -40,8 +47,10 @@ export default class HexCartographerView extends ItemView {
         });
 
         this._content = new HexCartographerContent(plugin, mainViewContainer, {
-            getState: this.getEditorState.bind(this),
-            setState: this.setEditorState.bind(this)
+            getState: this.getViewState.bind(this),
+            setState: this.setViewState.bind(this),
+            getStateDep: this.getEditorState.bind(this),
+            setStateDep: this.setEditorState.bind(this)
         }, TEST_DATA);
 
         this._sidebar = new HexCartographerSidepanel(container, {

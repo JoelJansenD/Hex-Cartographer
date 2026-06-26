@@ -1,12 +1,12 @@
 import { EditorInteractionState } from "./editor-interaction-state";
-import { MouseButtonInteraction } from "./mouse-button-interaction";
+import { MouseButtonInteraction, MouseButtonInteractionDep } from "./mouse-button-interaction";
 
 export interface MiddleMouseButtonInteractionContext {
     getState: () => EditorInteractionState;
     setState: (newState: EditorInteractionState) => void;
 }
 
-export function createMiddleMouseButtonInteraction(ctx: MiddleMouseButtonInteractionContext) : MouseButtonInteraction {
+export function createMiddleMouseButtonInteraction(ctx: MiddleMouseButtonInteractionContext) : MouseButtonInteractionDep {
     return {
         down(_: MouseEvent) {
             const state = ctx.getState();

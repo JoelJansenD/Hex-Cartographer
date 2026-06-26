@@ -6,6 +6,7 @@ import HistoryService from "../../services/history-service";
 import { Hexagon, HexCoordinates } from "../../types/hexagon";
 import { MapData } from "../../types/map-data";
 import { LinearFeature } from "../../types/rivers-and-roads";
+import HexCartographerViewState from "../hex-cartographer-view-state";
 import { registerLeftMouseButtonListeners } from "./event-listeners/left-mouse-button-listener";
 import { registerMiddleMouseButtonListeners } from "./event-listeners/middle-mouse-button-listener";
 import { registerRightMouseButtonListeners } from "./event-listeners/right-mouse-button-listener";
@@ -15,8 +16,10 @@ import { createMiddleMouseButtonInteraction } from "./interactions/middle-mouse-
 import { createRightMouseButtonInteraction } from "./interactions/right-mouse-button-interaction";
 
 interface HexCartographerContentConfig {
-    getState: () => EditorInteractionState;
-    setState: (newState: EditorInteractionState) => void;
+    getState: () => HexCartographerViewState;
+    setState: (newState: HexCartographerViewState) => void;
+    getStateDep: () => EditorInteractionState;
+    setStateDep: (newState: EditorInteractionState) => void;
 }
 
 export default class HexCartographerContent {
@@ -137,7 +140,7 @@ export default class HexCartographerContent {
 
     private highlightSelectedHex() {
         if (!this.canvas || !this.ctx) throw new Error("Canvas or context not initialized");
-        if (this.config.getState().selectedToolGroup === 'pattern' && this.patternSourceHex) {
+        if (this.config.getStateDep().selectedToolGroup === 'pattern' && this.patternSourceHex) {
             const pos = hexToPixel({  q: this.patternSourceHex.q, r: this.patternSourceHex.r }, this.data.gridSize, this.data.settings.hexOrientation === 'horizontal');
             const s = this.data.gridSize;
 
@@ -528,7 +531,7 @@ export default class HexCartographerContent {
         });
 
         const ph = this.data.settings.borderSettings.pickedHex;
-        if (ph && this.config.getState().selectedToolGroup === 'border') {
+        if (ph && this.config.getStateDep().selectedToolGroup === 'border') {
             const activeRegion = this.data.borders.find(r => r.id === this.data.settings.borderSettings.activeRegionId);
             if (activeRegion) {
                 this.ctx.strokeStyle = activeRegion.color || '#FF0000';
@@ -1057,12 +1060,12 @@ export default class HexCartographerContent {
             getApp: () => this.plugin.app,
             getCanvas: () => this.canvas!,
             getData: () => this.data,
-            getWorldCoordinates: this.getWorldCoords.bind(this),
-            getState: this.config.getState,
             setState: this.config.setState,
         });
 
         return registerLeftMouseButtonListeners({
+            getState: this.config.getState,
+            setState: this.config.setState,
             canvas: this.canvas!,
             down: leftClick.down,
         });
@@ -1070,8 +1073,8 @@ export default class HexCartographerContent {
 
     private registerMiddleMouseButtonListeners() {
         const middleClick = createMiddleMouseButtonInteraction({
-            getState: this.config.getState,
-            setState: this.config.setState,
+            getState: this.config.getStateDep,
+            setState: this.config.setStateDep,
         });
 
         return registerMiddleMouseButtonListeners({
@@ -1085,8 +1088,8 @@ export default class HexCartographerContent {
             data: this.data,
             getWorldCoordinates: (e) => this.getWorldCoords(e),
             pushHistory: data => this.historyService.push(data),
-            getState: this.config.getState,
-            setState: this.config.setState,
+            getState: this.config.getStateDep,
+            setState: this.config.setStateDep,
         });
 
         return registerRightMouseButtonListeners({
@@ -1928,6 +1931,9 @@ export default class HexCartographerContent {
         // }, { passive: false });
     }
 
+    /**
+     * @deprecated use the global function getWorldCoordinates
+     */
     private getWorldCoords(e: MouseEvent) {
         const r = this.canvas!.getBoundingClientRect();
         return {

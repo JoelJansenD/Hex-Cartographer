@@ -1,10 +1,50 @@
-import { ToolGroup } from "../types/tool-group";
+import { Border } from "../types/border";
+import { Hexagon, HexCoordinates } from "../types/hexagon";
+import { MapData } from "../types/map-data";
+import { River, Road } from "../types/rivers-and-roads";
+import { PaintMode, ToolGroup } from "../types/tool-group";
 
 export default interface HexCartographerViewState {
+
+    /**
+     * The current map data being displayed and edited in the view. This includes all hexes, rivers, roads, texts, borders, and other relevant map information.
+     */
+    data: MapData;
+
     /**
      * Indicates whether the view is currently in edit mode or not. When in edit mode, the user can modify the map, while in view mode, the map is read-only.
      */
     editMode: boolean;
+
+    /**
+     * Indicates whether the user is currently panning the map. This is typically set when the user holds down the middle mouse button.
+     */
+    isPanning: boolean;
+
+    /**
+     * The currently selected paint mode in the toolbar. This determines how the user interacts with the map when using painting tools.
+     */
+    selectedPaintMode: PaintMode | null;
+
+    /**
+     * The currently selected pattern which can be copied onto other hexes on the map.
+     */
+    selectedPattern: Hexagon | null;
+
+    /**
+     * The currently selected region on the map.
+     */
+    selectedRegion: { border: Border; hexagon: HexCoordinates; } | null;
+
+    /**
+     * The currently selected river on the map. This is used when the user wants to modify or interact with a specific river.
+     */
+    selectedRiver: River | null;
+
+    /**
+     * The currently selected road on the map. This is used when the user wants to modify or interact with a specific road.
+     */
+    selectedRoad: Road | null;
 
     /**
      * The currently selected symbol in the side panel. This determines which icon is active for the user to place on the map.
@@ -14,5 +54,5 @@ export default interface HexCartographerViewState {
     /**
      * The currently selected tool group in the toolbar. This determines which set of tools is active for the user to interact with the map.
      */
-    selectedToolGroup: ToolGroup;
+    selectedToolGroup: ToolGroup | null;
 }

@@ -2,7 +2,7 @@ import { getHexNeighbors, PixelCoordinates, pixelToHex } from "../../../function
 import { HexCoordinates } from "../../../types/hexagon";
 import { HexagonSet, MapData } from "../../../types/map-data";
 import { EditorInteractionState } from "./editor-interaction-state";
-import { MouseButtonInteraction } from "./mouse-button-interaction";
+import { MouseButtonInteraction, MouseButtonInteractionDep } from "./mouse-button-interaction";
 
 export interface RightMouseButtonInteractionContext {
     data: MapData;
@@ -12,7 +12,7 @@ export interface RightMouseButtonInteractionContext {
     setState: (newState: EditorInteractionState) => void;
 }
 
-export function createRightMouseButtonInteraction(ctx: RightMouseButtonInteractionContext) : MouseButtonInteraction {
+export function createRightMouseButtonInteraction(ctx: RightMouseButtonInteractionContext) : MouseButtonInteractionDep {
     return {
         down(e: MouseEvent) {
             const state = ctx.getState();

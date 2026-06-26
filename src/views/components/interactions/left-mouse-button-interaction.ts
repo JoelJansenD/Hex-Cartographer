@@ -3,35 +3,32 @@ import { calculateHexPath, PixelCoordinates, pixelToHex } from "../../../functio
 import { HexagonSet, MapData } from "../../../types/map-data";
 import { MouseButtonInteraction } from "./mouse-button-interaction";
 import { localizeString } from "../../../functions/i18n";
-import { EditorInteractionState } from "./editor-interaction-state";
 import { Border } from "../../../types/border";
 import { HexCoordinates } from "../../../types/hexagon";
 import { LinearFeature, River, Road } from "../../../types/rivers-and-roads";
 import PathPickerModal from "../../../modals/path-picker-modal";
 import { Label } from "../../../types/label";
 import { TextInputModal, TextInputModalParams } from "../../../modals/text-input-modal";
+import HexCartographerViewState from "../../hex-cartographer-view-state";
+import { getWorldCoordinates } from "../../../functions/canvas";
 
 export interface LeftMouseButtonInteractionContext {
     getApp: () => App;
-    getState: () => EditorInteractionState;
     getCanvas: () => HTMLCanvasElement;
     getData: () => MapData;
-    getWorldCoordinates: (e: MouseEvent) => PixelCoordinates;
-    setState: (newState: EditorInteractionState) => void;
+    setState: (state: HexCartographerViewState) => void;
 }
 
 export function createLeftMouseButtonInteraction(ctx: LeftMouseButtonInteractionContext) : MouseButtonInteraction {
 
     return {
-        down(e: MouseEvent) {
-            const state = {... ctx.getState()};
-
+        down(e: MouseEvent, state: HexCartographerViewState) {
             if(e.ctrlKey) {
                 state.isPanning = true;
                 return;
             }
 
-            const selectedToolGroup = ctx.getState().selectedToolGroup;
+            const selectedToolGroup = state.selectedToolGroup;
             switch(selectedToolGroup) {
                 case 'pattern-picker':
                     down_PatternPicker(e, ctx, state);
@@ -48,15 +45,13 @@ export function createLeftMouseButtonInteraction(ctx: LeftMouseButtonInteraction
                 default:
                     throw new Error(`Unhandled tool group: ${selectedToolGroup}`);
             }
-
-            ctx.setState(state);
         },
     };
 }
 
-function down_PatternPicker(e: MouseEvent, ctx: LeftMouseButtonInteractionContext, state: EditorInteractionState) {
+function down_PatternPicker(e: MouseEvent, ctx: LeftMouseButtonInteractionContext, state: HexCartographerViewState) {
     ctx.getCanvas().focus();
-    const hex = getHexagonCoordinatesAtMousePosition(ctx, e);
+    const hex = getHexagonCoordinatesAtMousePosition(ctx, e, state);
     const data = ctx.getData();
     const hexData = getHexagonAtCoordinates(data.hexes, hex);
 
@@ -72,8 +67,8 @@ function down_PatternPicker(e: MouseEvent, ctx: LeftMouseButtonInteractionContex
     }
 }
 
-function down_SelectBorder(e: MouseEvent, ctx: LeftMouseButtonInteractionContext, state: EditorInteractionState) {
-    const hex = getHexagonCoordinatesAtMousePosition(ctx, e);
+function down_SelectBorder(e: MouseEvent, ctx: LeftMouseButtonInteractionContext, state: HexCartographerViewState) {
+    const hex = getHexagonCoordinatesAtMousePosition(ctx, e, state);
     const data = ctx.getData();
     
     let foundRegion: Border | null = null;
@@ -97,16 +92,17 @@ function down_SelectBorder(e: MouseEvent, ctx: LeftMouseButtonInteractionContext
     new Notice(localizeString('notice.borderSelected', { id: foundRegion.id }));
 }
 
-function down_SelectPath(e: MouseEvent, ctx: LeftMouseButtonInteractionContext, state: EditorInteractionState) {
-    const foundRiver = findLinearFeatureAtHex(ctx.getData().rivers, getHexagonCoordinatesAtMousePosition(ctx, e)) as River | null;
-    const foundRoad = findLinearFeatureAtHex(ctx.getData().roads, getHexagonCoordinatesAtMousePosition(ctx, e)) as Road | null;
+function down_SelectPath(e: MouseEvent, ctx: LeftMouseButtonInteractionContext, state: HexCartographerViewState) {
+    const foundRiver = findLinearFeatureAtHex(ctx.getData().rivers, getHexagonCoordinatesAtMousePosition(ctx, e, state)) as River | null;
+    const foundRoad = findLinearFeatureAtHex(ctx.getData().roads, getHexagonCoordinatesAtMousePosition(ctx, e, state)) as Road | null;
 
     if(foundRiver && foundRoad) {
         const modal = new PathPickerModal(ctx.getApp(), foundRiver, foundRoad, (river, road) => {
-            const newState = {...ctx.getState()};
-            newState.selectedRiver = river;
-            newState.selectedRoad = road;
-            newState.selectedToolGroup = river !== null ? 'river' : 'road';
+            const newState: HexCartographerViewState = {...state,
+                selectedRiver: river,
+                selectedRoad: road,
+                selectedToolGroup: river !== null ? 'river' : 'road',
+            };
 
             // Because this is a callback from a modal, we need to set the state here instead of relying on the outer function to do it.
             ctx.setState(newState);
@@ -128,8 +124,8 @@ function down_SelectPath(e: MouseEvent, ctx: LeftMouseButtonInteractionContext, 
     }
 }
 
-function down_SelectText(e: MouseEvent, ctx: LeftMouseButtonInteractionContext, state: EditorInteractionState) {
-    const location = ctx.getWorldCoordinates(e);
+function down_SelectText(e: MouseEvent, ctx: LeftMouseButtonInteractionContext, state: HexCartographerViewState) {
+    const location = getWorldCoordinates(e, ctx.getCanvas(), { x: state.data.offX, y: state.data.offY}, state.data.zoom);
     const textIdx = getTextIndexAtClick(location, ctx);
 
     let inputParams: TextInputModalParams = {
@@ -192,10 +188,9 @@ function findLinearFeatureAtHex(features: LinearFeature[], hex: HexCoordinates) 
     return null;
 }
 
-function getHexagonCoordinatesAtMousePosition(ctx: LeftMouseButtonInteractionContext, e: MouseEvent) {
-    const data = ctx.getData();
-    const world = ctx.getWorldCoordinates(e);
-    const hex = pixelToHex(world.x, world.y, data.gridSize, data.settings.hexOrientation === 'horizontal');
+function getHexagonCoordinatesAtMousePosition(ctx: LeftMouseButtonInteractionContext, e: MouseEvent, state: HexCartographerViewState) {
+    const world = getWorldCoordinates(e, ctx.getCanvas(), { x: state.data.offX, y: state.data.offY}, state.data.zoom);
+    const hex = pixelToHex(world.x, world.y, state.data.gridSize, state.data.settings.hexOrientation === 'horizontal');
     return hex;
 }
 

@@ -1,5 +1,5 @@
 import { ButtonComponent } from "obsidian";
-import { ToolGroup } from "../../types/tool-group";
+import { PaintMode, ToolGroup } from "../../types/tool-group";
 import HexCartographerComponentConfig from "./hex-cartographer-component-config";
 import HexCartographerViewState from "../hex-cartographer-view-state";
 
@@ -19,7 +19,7 @@ export default class HexCartographerToolbar {
     // ===================================================
     // Buttons
     // ===================================================
-    private toolButtons: Record<ToolGroup, ButtonComponent> = {} as Record<ToolGroup, ButtonComponent>;
+    private toolButtons: Record<ToolGroup | PaintMode, ButtonComponent> = {} as Record<ToolGroup | PaintMode, ButtonComponent>;
 
     private viewModeButton!: ButtonComponent;
     private paintBrushButton!: ButtonComponent;
@@ -70,10 +70,20 @@ export default class HexCartographerToolbar {
             this.toolButtons[key]!.removeCta();
         });
 
-        console.log(state.selectedToolGroup, Object.keys(this.toolButtons), state.selectedToolGroup);
         if(state.selectedToolGroup) {
             this.toolButtons[state.selectedToolGroup]?.setCta();
         }
+
+        if(state.selectedPaintMode) {
+            this.toolButtons[state.selectedPaintMode]?.setCta();
+        }
+    }
+
+    private setPaintMode(paintMode: 'brush' | 'bucket' | 'eraser') {
+        this.config.setState({
+            ...this.config.getState(),
+            selectedPaintMode: paintMode,
+        });
     }
 
     private setTool(toolGroup: ToolGroup) {
@@ -136,17 +146,17 @@ export default class HexCartographerToolbar {
 
         this.paintBrushButton = new ButtonComponent(this.paintActions)
             .setIcon('brush')
-            .onClick(() => this.setTool('brush'));
+            .onClick(() => this.setPaintMode('brush'));
         this.toolButtons['brush'] = this.paintBrushButton;
 
         this.paintBucketButton = new ButtonComponent(this.paintActions)
             .setIcon('paint-bucket')
-            .onClick(() => this.setTool('bucket'));
+            .onClick(() => this.setPaintMode('bucket'));
         this.toolButtons['bucket'] = this.paintBucketButton;
 
         this.eraserButton = new ButtonComponent(this.paintActions)
             .setIcon('eraser')
-            .onClick(() => this.setTool('eraser'));
+            .onClick(() => this.setPaintMode('eraser'));
         this.toolButtons['eraser'] = this.eraserButton;
 
         this.textButton = new ButtonComponent(this.paintActions)
