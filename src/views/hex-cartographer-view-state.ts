@@ -7,6 +7,11 @@ export default interface HexCartographerViewState {
     editMode: boolean;
 
     /**
+     * The currently selected symbol in the side panel. This determines which icon is active for the user to place on the map.
+     */
+    selectedSymbol: string;
+
+    /**
      * The currently selected tool group in the toolbar. This determines which set of tools is active for the user to interact with the map.
      */
     selectedToolGroup: ToolGroup;

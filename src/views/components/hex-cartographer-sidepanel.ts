@@ -1,28 +1,23 @@
 import { SVG_SYMBOL_DATA } from "../../data/svg-symbol-data";
-import { EditorInteractionState } from "./interactions/editor-interaction-state";
-
-interface HexCartographerToolbarConfig {
-    getState: () => EditorInteractionState;
-    setState: (newState: EditorInteractionState) => void;
-}
+import HexCartographerViewState from "../hex-cartographer-view-state";
+import HexCartographerComponentConfig from "./hex-cartographer-component-config";
 
 export default class HexCartographerSidepanel {
-    private editMode = false;
     private containerEl: HTMLDivElement;
-    private config: HexCartographerToolbarConfig;
+    private config: HexCartographerComponentConfig;
 
     private iconButtons: Record<string, HTMLElement> = {} as Record<string, HTMLElement>;
     
-    constructor(parentEl: HTMLElement, config: HexCartographerToolbarConfig) {
+    constructor(parentEl: HTMLElement, config: HexCartographerComponentConfig) {
         this.containerEl = parentEl.createDiv({ cls: 'hex-sidepanel hidden' });
         this.config = config;
         this.initializeIconSelectionButtons();
     }
 
-    public updateState(state: EditorInteractionState) {
+    public updateState(state: HexCartographerViewState) {
         Object.values(this.iconButtons).forEach(btn => btn.removeClass('selected'));
         if(state.selectedSymbol) {
-            this.iconButtons[state.selectedSymbol]?.addClass('selected');
+            this.iconButtons[state.selectedSymbol]!.addClass('selected');
         }
 
         if(state.editMode) {
@@ -33,10 +28,10 @@ export default class HexCartographerSidepanel {
         }
     }
 
-    private setIcon(iconId?: string) {
+    private setIcon(iconId: string) {
         this.config.setState({
             ...this.config.getState(),
-            selectedSymbol: iconId || null,
+            selectedSymbol: iconId,
         });
     }
 

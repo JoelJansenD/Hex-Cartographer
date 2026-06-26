@@ -1,6 +1,5 @@
 import { ItemView, WorkspaceLeaf } from "obsidian";
 import HexCartographerToolbar from "./components/hex-cartographer-toolbar";
-import { isPaintingTool, ToolGroup } from "../types/tool-group";
 import HexCartographerContent from "./components/hex-cartographer-content";
 import HexCartographerSidepanel from "./components/hex-cartographer-sidepanel";
 import { MapData } from "../types/map-data";
@@ -12,7 +11,8 @@ export default class HexCartographerView extends ItemView {
 
     private _state: HexCartographerViewState = {
         editMode: false,
-        selectedToolGroup: 'brush'
+        selectedSymbol: 'hexagon',
+        selectedToolGroup: 'brush',
     };
 
     private _content: HexCartographerContent;
@@ -45,8 +45,8 @@ export default class HexCartographerView extends ItemView {
         }, TEST_DATA);
 
         this._sidebar = new HexCartographerSidepanel(container, {
-            getState: this.getEditorState.bind(this),
-            setState: this.setEditorState.bind(this)
+            getState: this.getViewState.bind(this),
+            setState: this.setViewState.bind(this)
         });
     }
 
@@ -62,6 +62,7 @@ export default class HexCartographerView extends ItemView {
       console.log('updating state:', newState);
       this._state = newState;
       this._toolbar.updateState(this._state);
+      this._sidebar.updateState(this._state);
     }
 
     // private onEditModeChanged(enabled: boolean) {
@@ -124,7 +125,7 @@ export default class HexCartographerView extends ItemView {
     private setEditorState(newState: EditorInteractionState) {
         this._editorState = newState;
         // this._toolbar.updateState(newState);
-        this._sidebar.updateState(newState);
+        // this._sidebar.updateState(newState);
     }
 }
 
