@@ -1,10 +1,7 @@
 import HexCartographerViewState from "../../hex-cartographer-view-state";
 import { MouseButtonInteraction } from "./mouse-button-interaction";
 
-export interface MiddleMouseButtonInteractionContext {
-}
-
-export function createMiddleMouseButtonInteraction(ctx: MiddleMouseButtonInteractionContext) : MouseButtonInteraction {
+export function createMiddleMouseButtonInteraction() : MouseButtonInteraction {
     return {
         down(_: MouseEvent, state: HexCartographerViewState) {
             state.isPanning = !state.isPanning;

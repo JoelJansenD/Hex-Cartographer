@@ -4,7 +4,6 @@ import HexCartographerContent from "./components/hex-cartographer-content";
 import HexCartographerSidepanel from "./components/hex-cartographer-sidepanel";
 import { MapData } from "../types/map-data";
 import HexCartographerPlugin from "../main";
-import { EditorInteractionState } from "./components/interactions/editor-interaction-state";
 import HexCartographerViewState from "./hex-cartographer-view-state";
 
 export default class HexCartographerView extends ItemView {
@@ -49,8 +48,6 @@ export default class HexCartographerView extends ItemView {
         this._content = new HexCartographerContent(plugin, mainViewContainer, {
             getState: this.getViewState.bind(this),
             setState: this.setViewState.bind(this),
-            getStateDep: this.getEditorState.bind(this),
-            setStateDep: this.setEditorState.bind(this)
         }, TEST_DATA);
 
         this._sidebar = new HexCartographerSidepanel(container, {
@@ -115,26 +112,6 @@ export default class HexCartographerView extends ItemView {
     getViewType() { return 'hex-cartographer'; }
     getDisplayText() {
         return 'Hex Cartographer';
-    }
-
-    private _editorState: EditorInteractionState = {
-        editMode: false,
-        isPanning: false,
-        selectedPaintMode: null,
-        selectedPattern: null,
-        selectedRegion: null,
-        selectedRiver: null,
-        selectedRoad: null,
-        selectedSymbol: null,
-        selectedToolGroup: null,
-    }
-    private getEditorState() {
-        return this._editorState;
-    }
-    private setEditorState(newState: EditorInteractionState) {
-        this._editorState = newState;
-        // this._toolbar.updateState(newState);
-        // this._sidebar.updateState(newState);
     }
 }
 

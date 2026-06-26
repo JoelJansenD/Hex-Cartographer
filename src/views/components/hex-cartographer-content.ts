@@ -10,7 +10,6 @@ import HexCartographerViewState from "../hex-cartographer-view-state";
 import { registerLeftMouseButtonListeners } from "./event-listeners/left-mouse-button-listener";
 import { registerMiddleMouseButtonListeners } from "./event-listeners/middle-mouse-button-listener";
 import { registerRightMouseButtonListeners } from "./event-listeners/right-mouse-button-listener";
-import { EditorInteractionState } from "./interactions/editor-interaction-state";
 import { createLeftMouseButtonInteraction } from "./interactions/left-mouse-button-interaction";
 import { createMiddleMouseButtonInteraction } from "./interactions/middle-mouse-button-interaction";
 import { createRightMouseButtonInteraction } from "./interactions/right-mouse-button-interaction";
@@ -18,8 +17,6 @@ import { createRightMouseButtonInteraction } from "./interactions/right-mouse-bu
 interface HexCartographerContentConfig {
     getState: () => HexCartographerViewState;
     setState: (newState: HexCartographerViewState) => void;
-    getStateDep: () => EditorInteractionState;
-    setStateDep: (newState: EditorInteractionState) => void;
 }
 
 export default class HexCartographerContent {
@@ -140,7 +137,7 @@ export default class HexCartographerContent {
 
     private highlightSelectedHex() {
         if (!this.canvas || !this.ctx) throw new Error("Canvas or context not initialized");
-        if (this.config.getStateDep().selectedToolGroup === 'pattern' && this.patternSourceHex) {
+        if (this.config.getState().selectedToolGroup === 'pattern' && this.patternSourceHex) {
             const pos = hexToPixel({  q: this.patternSourceHex.q, r: this.patternSourceHex.r }, this.data.gridSize, this.data.settings.hexOrientation === 'horizontal');
             const s = this.data.gridSize;
 
@@ -531,7 +528,7 @@ export default class HexCartographerContent {
         });
 
         const ph = this.data.settings.borderSettings.pickedHex;
-        if (ph && this.config.getStateDep().selectedToolGroup === 'border') {
+        if (ph && this.config.getState().selectedToolGroup === 'border') {
             const activeRegion = this.data.borders.find(r => r.id === this.data.settings.borderSettings.activeRegionId);
             if (activeRegion) {
                 this.ctx.strokeStyle = activeRegion.color || '#FF0000';
@@ -1072,10 +1069,7 @@ export default class HexCartographerContent {
     }
 
     private registerMiddleMouseButtonListeners() {
-        const middleClick = createMiddleMouseButtonInteraction({
-            getState: this.config.getStateDep,
-            setState: this.config.setStateDep,
-        });
+        const middleClick = createMiddleMouseButtonInteraction();
 
         return registerMiddleMouseButtonListeners({
             getState: this.config.getState,
@@ -1928,16 +1922,5 @@ export default class HexCartographerContent {
         //     this.touchState.touches = [];
         //     this.render();
         // }, { passive: false });
-    }
-
-    /**
-     * @deprecated use the global function getWorldCoordinates
-     */
-    private getWorldCoords(e: MouseEvent) {
-        const r = this.canvas!.getBoundingClientRect();
-        return {
-            x: (e.clientX - r.left - this.data.offX) / this.data.zoom,
-            y: (e.clientY - r.top - this.data.offY) / this.data.zoom
-        };
     }
 }
