@@ -1087,16 +1087,13 @@ export default class HexCartographerContent {
 
     private registerRightMouseButtonListeners() {
         const rightClick = createRightMouseButtonInteraction({
-            data: this.data,
-            getWorldCoordinates: (e) => this.getWorldCoords(e),
-            pushHistory: data => this.historyService.push(data),
-            getState: this.config.getStateDep,
-            setState: this.config.setStateDep,
+            getCanvas: () => this.canvas!,
         });
 
         return registerRightMouseButtonListeners({
+            getState: this.config.getState,
+            setState: this.config.setState,
             canvas: this.canvas!,
-            data: this.data,
             down: rightClick.down,
         });
     }

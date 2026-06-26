@@ -1,32 +1,27 @@
-import { getHexNeighbors, PixelCoordinates, pixelToHex } from "../../../functions/hex-math";
+import { getWorldCoordinates } from "../../../functions/canvas";
+import { getHexNeighbors, pixelToHex } from "../../../functions/hex-math";
 import { HexCoordinates } from "../../../types/hexagon";
-import { HexagonSet, MapData } from "../../../types/map-data";
-import { EditorInteractionState } from "./editor-interaction-state";
-import { MouseButtonInteraction, MouseButtonInteractionDep } from "./mouse-button-interaction";
+import { HexagonSet } from "../../../types/map-data";
+import HexCartographerViewState from "../../hex-cartographer-view-state";
+import { MouseButtonInteraction } from "./mouse-button-interaction";
 
 export interface RightMouseButtonInteractionContext {
-    data: MapData;
-    getWorldCoordinates: (e: MouseEvent) => PixelCoordinates;
-    pushHistory(data: MapData): void;
-    getState: () => EditorInteractionState;
-    setState: (newState: EditorInteractionState) => void;
+    getCanvas: () => HTMLCanvasElement;
 }
 
-export function createRightMouseButtonInteraction(ctx: RightMouseButtonInteractionContext) : MouseButtonInteractionDep {
+export function createRightMouseButtonInteraction(ctx: RightMouseButtonInteractionContext) : MouseButtonInteraction {
     return {
-        down(e: MouseEvent) {
-            const state = ctx.getState();
+        down(e: MouseEvent, state: HexCartographerViewState) {
             if(!state.editMode) {
                 return;
             }
 
-            const world = ctx.getWorldCoordinates(e);
-            const hex = pixelToHex(world.x, world.y, ctx.data.gridSize, ctx.data.settings.hexOrientation === 'horizontal');
+            const world = getWorldCoordinates(e, ctx.getCanvas(), {x: state.data.offX, y: state.data.offY}, state.data.zoom);
+            const hex = pixelToHex(world.x, world.y, state.data.gridSize, state.data.settings.hexOrientation === 'horizontal');
 
             const key = `${hex.q}_${hex.r}`;
 
-            deleteHex(state, ctx.data.hexes, key);
-            ctx.pushHistory(ctx.data);
+            deleteHex(state, key);
         },
 
         // move(hex: HexCoordinates, world: PixelCoordinates) {
@@ -49,21 +44,21 @@ export function createRightMouseButtonInteraction(ctx: RightMouseButtonInteracti
     };
 }
 
-function deleteHex(state: EditorInteractionState, hexes: HexagonSet, key: string) {
+function deleteHex(state: HexCartographerViewState, key: string) {
     const activeTool = state.selectedPaintMode;
     const activeSymbol = state.selectedSymbol;
     const shouldTargetSymbol = activeSymbol !== undefined && activeSymbol !== 'hexagon';
 
     if(activeTool === 'brush' || activeTool === 'eraser') {
         if(shouldTargetSymbol) {
-            deleteHexSymbol(hexes, key);
+            deleteHexSymbol(state.data.hexes, key);
         }
         else {
-            deleteHexColor(hexes, key);
+            deleteHexColor(state.data.hexes, key);
         }
     }
     else if(activeTool === 'bucket') {
-        floodDeleteHexes(hexes, key, shouldTargetSymbol);
+        floodDeleteHexes(state.data.hexes, key, shouldTargetSymbol);
     }
 }
 

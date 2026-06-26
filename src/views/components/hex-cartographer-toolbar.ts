@@ -87,9 +87,10 @@ export default class HexCartographerToolbar {
     }
 
     private setTool(toolGroup: ToolGroup) {
+        const state = this.config.getState();
         this.config.setState({
-            ...this.config.getState(),
-            selectedToolGroup: toolGroup,
+            ...state,
+            selectedToolGroup: toolGroup === state.selectedToolGroup ? null : toolGroup,
         });
     }
 

@@ -1,9 +1,10 @@
-import { MapData } from "../../../types/map-data";
+import HexCartographerViewState from "../../hex-cartographer-view-state";
 
 export interface RightMouseButtonContext {
+    getState: () => HexCartographerViewState;
+    setState: (newState: HexCartographerViewState) => void;
     canvas: HTMLCanvasElement;
-    data: MapData;
-    down(e: MouseEvent): void;
+    down(e: MouseEvent, state: HexCartographerViewState): void;
     // onRightClickMove(hex: { q: number; r: number }, world: { x: number; y: number }): void;
     // onRightClickEnd(): void;
     // onDoubleRightClick(hex: { q: number; r: number }): void;
@@ -14,7 +15,9 @@ export function registerRightMouseButtonListeners(ctx: RightMouseButtonContext) 
         if (e.button !== 2) return;
         e.preventDefault();
 
-        ctx.down(e);
+        const state = ctx.getState();
+        ctx.down(e, state);
+        ctx.setState(state);
     };
 
     // const onMouseMove = (e: MouseEvent) => {
