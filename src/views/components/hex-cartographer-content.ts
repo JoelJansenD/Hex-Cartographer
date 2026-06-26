@@ -20,10 +20,8 @@ interface HexCartographerContentConfig {
 }
 
 export default class HexCartographerContent {
-    private data: MapData;
     private patternSourceHex?: HexCoordinates;
     private plugin: HexCartographerPlugin;
-    private historyService = new HistoryService();
     
     // =============================================
     // Elements & Canvas
@@ -37,7 +35,6 @@ export default class HexCartographerContent {
         this.contentEl = parentEl.createDiv({ cls: 'hex-content' });
         this.plugin = plugin;
         this.config = config;
-        this.data = data;
     }
 
     public startRender() {   
@@ -82,23 +79,23 @@ export default class HexCartographerContent {
         if (!this.canvas || !this.ctx) throw new Error("Canvas or context not initialized");
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         this.ctx.save();
-        this.ctx.translate(this.data.offX, this.data.offY);
-        this.ctx.scale(this.data.zoom, this.data.zoom);
+        this.ctx.translate(this.config.getState().data.offX, this.config.getState().data.offY);
+        this.ctx.scale(this.config.getState().data.zoom, this.config.getState().data.zoom);
 
-        Object.values(this.data.hexes).forEach(h => {
+        Object.values(this.config.getState().data.hexes).forEach(h => {
             this.drawHexBase(h);
         });
 
         // Zeichenreihenfolge (unten → oben):
 
         const drawSymbolLayer = (symbols: string[]) => {
-            Object.values(this.data.hexes).forEach((h: Hexagon) => {
+            Object.values(this.config.getState().data.hexes).forEach((h: Hexagon) => {
                 if (h.symbol && symbols.includes(h.symbol)) {
-                    const pos = hexToPixel({  q: h.q, r: h.r }, this.data.gridSize, this.data.settings.hexOrientation === 'horizontal');
+                    const pos = hexToPixel({  q: h.q, r: h.r }, this.config.getState().data.gridSize, this.config.getState().data.settings.hexOrientation === 'horizontal');
                     if (SVG_SYMBOL_DATA[h.symbol]) {
                         this.drawSVGOnCanvas(h.symbol, pos, h.symbolColor);
                     } else {
-                        this.drawCustomSymbol(h.symbol, pos.x, pos.y, this.data.gridSize, h.symbolColor);
+                        this.drawCustomSymbol(h.symbol, pos.x, pos.y, this.config.getState().data.gridSize, h.symbolColor);
                     }
                 }
             });
@@ -138,12 +135,12 @@ export default class HexCartographerContent {
     private highlightSelectedHex() {
         if (!this.canvas || !this.ctx) throw new Error("Canvas or context not initialized");
         if (this.config.getState().selectedToolGroup === 'pattern' && this.patternSourceHex) {
-            const pos = hexToPixel({  q: this.patternSourceHex.q, r: this.patternSourceHex.r }, this.data.gridSize, this.data.settings.hexOrientation === 'horizontal');
-            const s = this.data.gridSize;
+            const pos = hexToPixel({  q: this.patternSourceHex.q, r: this.patternSourceHex.r }, this.config.getState().data.gridSize, this.config.getState().data.settings.hexOrientation === 'horizontal');
+            const s = this.config.getState().data.gridSize;
 
             this.ctx.beginPath();
             for (let i = 0; i < 6; i++) {
-                const a = (Math.PI / 180) * (60 * i + (this.data.settings.hexOrientation === 'horizontal' ? 0 : -30));
+                const a = (Math.PI / 180) * (60 * i + (this.config.getState().data.settings.hexOrientation === 'horizontal' ? 0 : -30));
                 this.ctx.lineTo(pos.x + s * Math.cos(a), pos.y + s * Math.sin(a));
             }
             this.ctx.closePath();
@@ -155,8 +152,8 @@ export default class HexCartographerContent {
 
     private drawHexBase(h: Hexagon) {
         if (!this.canvas || !this.ctx) throw new Error("Canvas or context not initialized");
-        const pos = hexToPixel({ q: h.q, r: h.r }, this.data.gridSize, this.data.settings.hexOrientation === 'horizontal'), s = this.data.gridSize;
-        const angleOffset = this.data.settings.hexOrientation === 'horizontal' ? 0 : -30;
+        const pos = hexToPixel({ q: h.q, r: h.r }, this.config.getState().data.gridSize, this.config.getState().data.settings.hexOrientation === 'horizontal'), s = this.config.getState().data.gridSize;
+        const angleOffset = this.config.getState().data.settings.hexOrientation === 'horizontal' ? 0 : -30;
 
         if (h.color) {
             const sf = s + 0.5; // Kleiner Überstand, damit keine Lücken zwischen benachbarten Hexen entstehen
@@ -189,13 +186,13 @@ export default class HexCartographerContent {
         if (!svgData) return;
 
         const config = SVG_SYMBOL_CONFIG[symbol] || { size: 0.30, align: 'center', marginX: 0, marginY: 0 };
-        const baseSize = this.data.gridSize * 2.0;
+        const baseSize = this.config.getState().data.gridSize * 2.0;
         const size = baseSize * config.size;
         const viewBoxSize = svgData.viewBoxWidth;
         const scale = size / viewBoxSize;
 
-        const hexWidth = this.data.gridSize * Math.sqrt(3);
-        const hexHeight = this.data.gridSize * 2;
+        const hexWidth = this.config.getState().data.gridSize * Math.sqrt(3);
+        const hexHeight = this.config.getState().data.gridSize * 2;
         let offsetX = 0, offsetY = 0;
         const alignParts = config.align.split('-');
         alignParts.forEach(part => {
@@ -437,18 +434,18 @@ export default class HexCartographerContent {
                 }
             });
         };
-        if (this.data.rivers) this.data.rivers.forEach(r => addSegments(r, 'river'));
-        if (this.data.roads) this.data.roads.forEach(r => addSegments(r, 'road'));
+        if (this.config.getState().data.rivers) this.config.getState().data.rivers.forEach(r => addSegments(r, 'river'));
+        if (this.config.getState().data.roads) this.config.getState().data.roads.forEach(r => addSegments(r, 'road'));
     }
 
     private drawRivers() {
-        if (!this.data.rivers) return;
-        this.data.rivers.forEach(river => this.drawLinearFeature(river, 'river'));
+        if (!this.config.getState().data.rivers) return;
+        this.config.getState().data.rivers.forEach(river => this.drawLinearFeature(river, 'river'));
     }
 
     private drawRoads() {
-        if (!this.data.roads) return;
-        this.data.roads.forEach(road => this.drawLinearFeature(road, 'road'));
+        if (!this.config.getState().data.roads) return;
+        this.config.getState().data.roads.forEach(road => this.drawLinearFeature(road, 'road'));
     }
 
     private drawLinearFeature(feature: LinearFeature, type: 'river' | 'road') {
@@ -459,10 +456,10 @@ export default class HexCartographerContent {
     }
 
     private drawBorders() {
-        if (!this.data.borders || this.data.borders.length === 0 || !this.data.settings.borderSettings.visible) return;
+        if (!this.config.getState().data.borders || this.config.getState().data.borders.length === 0 || !this.config.getState().data.settings.borderSettings.visible) return;
         if (!this.canvas || !this.ctx) throw new Error("Canvas or context not initialized");
 
-        const s = this.data.gridSize;
+        const s = this.config.getState().data.gridSize;
         const sf = s + 0.5;
         const lineWidth = 3;
         const inset = lineWidth / 2 + 0.575; // 1px Abstand zu Hex-Kante + Hälfte der Linienbreite
@@ -481,7 +478,7 @@ export default class HexCartographerContent {
         this.ctx.lineWidth = lineWidth;
         this.ctx.lineCap = 'round';
 
-        this.data.borders.forEach(region => {
+        this.config.getState().data.borders.forEach(region => {
         if (!this.canvas || !this.ctx) throw new Error("Canvas or context not initialized");
             if (!region.hexes || region.hexes.length === 0) return;
 
@@ -498,11 +495,11 @@ export default class HexCartographerContent {
 
             region.hexes.forEach(b => {
                 if (!this.canvas || !this.ctx) throw new Error("Canvas or context not initialized");
-                const pos = hexToPixel({ q: b.q, r: b.r }, this.data.gridSize, this.data.settings.hexOrientation === 'horizontal');
+                const pos = hexToPixel({ q: b.q, r: b.r }, this.config.getState().data.gridSize, this.config.getState().data.settings.hexOrientation === 'horizontal');
 
                 const corners: any[] = [];
                 for (let i = 0; i < 6; i++) {
-                    const a = (Math.PI / 180) * (60 * i + (this.data.settings.hexOrientation === 'horizontal' ? 0 : -30));
+                    const a = (Math.PI / 180) * (60 * i + (this.config.getState().data.settings.hexOrientation === 'horizontal' ? 0 : -30));
                     corners.push({
                         x: pos.x + sf * factor * Math.cos(a),
                         y: pos.y + sf * factor * Math.sin(a)
@@ -527,18 +524,18 @@ export default class HexCartographerContent {
             if (dashes > 1) { this.ctx.setLineDash([]); this.ctx.lineDashOffset = 0; }
         });
 
-        const ph = this.data.settings.borderSettings.pickedHex;
+        const ph = this.config.getState().data.settings.borderSettings.pickedHex;
         if (ph && this.config.getState().selectedToolGroup === 'border') {
-            const activeRegion = this.data.borders.find(r => r.id === this.data.settings.borderSettings.activeRegionId);
+            const activeRegion = this.config.getState().data.borders.find(r => r.id === this.config.getState().data.settings.borderSettings.activeRegionId);
             if (activeRegion) {
                 this.ctx.strokeStyle = activeRegion.color || '#FF0000';
                 this.ctx.lineWidth = DEFAULT_BORDER_HIGHLIGHT_WIDTH;
                 this.ctx.setLineDash([4, 4]);
-                const pos = hexToPixel({ q: ph.q, r: ph.r }, this.data.gridSize, this.data.settings.hexOrientation === 'horizontal');
+                const pos = hexToPixel({ q: ph.q, r: ph.r }, this.config.getState().data.gridSize, this.config.getState().data.settings.hexOrientation === 'horizontal');
                 const hlInset = (sf - DEFAULT_BORDER_HIGHLIGHT_WIDTH / 2 - 1) / sf;
                 this.ctx.beginPath();
                 for (let i = 0; i < 6; i++) {
-                    const a = (Math.PI / 180) * (60 * i + (this.data.settings.hexOrientation === 'horizontal' ? 0 : -30));
+                    const a = (Math.PI / 180) * (60 * i + (this.config.getState().data.settings.hexOrientation === 'horizontal' ? 0 : -30));
                     const cx = pos.x + sf * hlInset * Math.cos(a);
                     const cy = pos.y + sf * hlInset * Math.sin(a);
                     if (i === 0) this.ctx.moveTo(cx, cy);
@@ -554,15 +551,15 @@ export default class HexCartographerContent {
     }
 
     private drawPathWaypoints() {
-        if (this.data.settings.riverSettings.editMode && this.data.rivers) {
-            const river = this.data.rivers.find(r => r.id === this.data.settings.riverSettings.activeRiverId);
+        if (this.config.getState().data.settings.riverSettings.editMode && this.config.getState().data.rivers) {
+            const river = this.config.getState().data.rivers.find(r => r.id === this.config.getState().data.settings.riverSettings.activeRiverId);
             if (river && river.waypoints) {
-                const activeIdx = this.data.settings.riverSettings.insertAfter;
+                const activeIdx = this.config.getState().data.settings.riverSettings.insertAfter;
                 const activeWp = activeIdx !== null ? river.waypoints[activeIdx] : null;
                 river.waypoints.forEach((wp) => {
                     if (!this.canvas || !this.ctx) throw new Error("Canvas or context not initialized");
                     const isActive = activeWp && wp.q === activeWp.q && wp.r === activeWp.r;
-                    const pos = hexToPixel({ q: wp.q, r: wp.r }, this.data.gridSize, this.data.settings.hexOrientation === 'horizontal');
+                    const pos = hexToPixel({ q: wp.q, r: wp.r }, this.config.getState().data.gridSize, this.config.getState().data.settings.hexOrientation === 'horizontal');
                     this.ctx.beginPath();
                     this.ctx.arc(pos.x, pos.y, 4, 0, Math.PI * 2);
                     this.ctx.fillStyle = isActive ? '#FF0000' : '#000000';
@@ -570,15 +567,15 @@ export default class HexCartographerContent {
                 });
             }
         }
-        if (this.data.settings.roadSettings.editMode && this.data.roads) {
-            const road = this.data.roads.find(r => r.id === this.data.settings.roadSettings.activeRoadId);
+        if (this.config.getState().data.settings.roadSettings.editMode && this.config.getState().data.roads) {
+            const road = this.config.getState().data.roads.find(r => r.id === this.config.getState().data.settings.roadSettings.activeRoadId);
             if (road && road.waypoints) {
-                const activeIdx = this.data.settings.roadSettings.insertAfter;
+                const activeIdx = this.config.getState().data.settings.roadSettings.insertAfter;
                 const activeWp = activeIdx !== null ? road.waypoints[activeIdx] : null;
                 road.waypoints.forEach((wp) => {
                     if (!this.canvas || !this.ctx) throw new Error("Canvas or context not initialized");
                     const isActive = activeWp && wp.q === activeWp.q && wp.r === activeWp.r;
-                    const pos = hexToPixel({ q: wp.q, r: wp.r }, this.data.gridSize, this.data.settings.hexOrientation === 'horizontal');
+                    const pos = hexToPixel({ q: wp.q, r: wp.r }, this.config.getState().data.gridSize, this.config.getState().data.settings.hexOrientation === 'horizontal');
                     this.ctx.beginPath();
                     this.ctx.arc(pos.x, pos.y, 4, 0, Math.PI * 2);
                     this.ctx.fillStyle = isActive ? '#FF0000' : '#000000';
@@ -592,10 +589,10 @@ export default class HexCartographerContent {
         if (!this.canvas || !this.ctx) throw new Error("Canvas or context not initialized");
         if (!this.plugin.settings.showCrosshair) return;
 
-        const origin = hexToPixel({ q: 0, r: 0 }, this.data.gridSize, this.data.settings.hexOrientation === 'horizontal');
-        const sx = origin.x * this.data.zoom + this.data.offX;
-        const sy = origin.y * this.data.zoom + this.data.offY;
-        const arm = 2 * this.data.gridSize * this.data.zoom;
+        const origin = hexToPixel({ q: 0, r: 0 }, this.config.getState().data.gridSize, this.config.getState().data.settings.hexOrientation === 'horizontal');
+        const sx = origin.x * this.config.getState().data.zoom + this.config.getState().data.offX;
+        const sy = origin.y * this.config.getState().data.zoom + this.config.getState().data.offY;
+        const arm = 2 * this.config.getState().data.gridSize * this.config.getState().data.zoom;
 
         this.ctx.save();
         this.ctx.strokeStyle = 'rgba(128, 128, 128, 0.5)';
@@ -613,10 +610,10 @@ export default class HexCartographerContent {
         if (!this.canvas || !this.ctx) throw new Error("Canvas or context not initialized");
         
         this.ctx.save();
-        this.ctx.translate(this.data.offX, this.data.offY);
-        this.ctx.scale(this.data.zoom, this.data.zoom);
+        this.ctx.translate(this.config.getState().data.offX, this.config.getState().data.offY);
+        this.ctx.scale(this.config.getState().data.zoom, this.config.getState().data.zoom);
 
-        this.data.texts.forEach(t => {
+        this.config.getState().data.texts.forEach(t => {
             if (!this.canvas || !this.ctx) throw new Error("Canvas or context not initialized");
 
             const weight = t.bold ? "bold " : "";
@@ -648,7 +645,7 @@ export default class HexCartographerContent {
     private renderHexNumbering() {
         if (!this.plugin.settings.hexNumberingEnabled) return;
         if (!this.ctx) return;
-        this._renderHexNumberingToCtx(this.ctx, this.data.zoom, this.data.offX, this.data.offY);
+        this._renderHexNumberingToCtx(this.ctx, this.config.getState().data.zoom, this.config.getState().data.offX, this.config.getState().data.offY);
     }
 
     // Zeichnet Nummerierung auf einen beliebigen 2D-Context
@@ -657,9 +654,9 @@ export default class HexCartographerContent {
         const labels = this._buildHexNumberLabels();
         if (labels.length === 0) return;
 
-        const s = this.data.gridSize;
+        const s = this.config.getState().data.gridSize;
         const fontSize = Math.max(1, (this.plugin.settings.hexNumberingFontSize || 10) * zoom);
-        const flatTop = this.data.settings.hexOrientation === 'horizontal';
+        const flatTop = this.config.getState().data.settings.hexOrientation === 'horizontal';
 
         ctx.save();
         ctx.font = `bold ${fontSize}px Verdana`;
@@ -667,7 +664,7 @@ export default class HexCartographerContent {
         ctx.textBaseline = 'middle';
 
         for (const { hex, label } of labels) {
-            const pos = hexToPixel({ q: hex.q, r: hex.r }, this.data.gridSize, this.data.settings.hexOrientation === 'horizontal');
+            const pos = hexToPixel({ q: hex.q, r: hex.r }, this.config.getState().data.gridSize, this.config.getState().data.settings.hexOrientation === 'horizontal');
 
             // Y-Offset je nach Position (top/bottom) und Orientierung
             // Bei pointy-top (flatTop=false) liegt die breiteste Stelle in der Mitte.
@@ -708,15 +705,15 @@ export default class HexCartographerContent {
 
     private _buildHexNumberLabels() {
         const settings = this.plugin.settings;
-        const hexes: any[] = Object.values(this.data.hexes);
+        const hexes: any[] = Object.values(this.config.getState().data.hexes);
         if (hexes.length === 0) return [];
 
         const horizontal = settings.hexNumberingDirection !== 'vertical';
-        const tol = this.data.gridSize * 0.6;
+        const tol = this.config.getState().data.gridSize * 0.6;
 
         // Pixelposition jeder Wabe berechnen
         const withPos = hexes.map(hex => {
-            const pos = hexToPixel({ q: hex.q, r: hex.r }, this.data.gridSize, this.data.settings.hexOrientation === 'horizontal');
+            const pos = hexToPixel({ q: hex.q, r: hex.r }, this.config.getState().data.gridSize, this.config.getState().data.settings.hexOrientation === 'horizontal');
             return { hex, px: pos.x, py: pos.y };
         });
 
@@ -948,7 +945,7 @@ export default class HexCartographerContent {
         this.ctx.lineWidth = defaultWidth;
 
         const computedLines = lines.map((l, idx) => {
-            const fullP1 = hexToPixel({ q: l.from.q, r: l.from.r }, this.data.gridSize, this.data.settings.hexOrientation === "horizontal"), fullP2 = hexToPixel({ q: l.to.q, r: l.to.r }, this.data.gridSize, this.data.settings.hexOrientation === "horizontal");
+            const fullP1 = hexToPixel({ q: l.from.q, r: l.from.r }, this.config.getState().data.gridSize, this.config.getState().data.settings.hexOrientation === "horizontal"), fullP2 = hexToPixel({ q: l.to.q, r: l.to.r }, this.config.getState().data.gridSize, this.config.getState().data.settings.hexOrientation === "horizontal");
             let p1 = { x: fullP1.x, y: fullP1.y }, p2 = { x: fullP2.x, y: fullP2.y };
             const inset = (1 - PATH_END_INSET) * 0.5;
             if (trimStart && idx === 0) p1 = { x: p1.x + (p2.x - p1.x) * inset, y: p1.y + (p2.y - p1.y) * inset };
@@ -983,7 +980,7 @@ export default class HexCartographerContent {
                 const seedHash = Math.abs(sf.q * 7 + sf.r * 13 + st.q * 11 + st.r * 17 + i * 3);
                 const seed = seedHash % 10;
                 const sine = Math.sin(t * Math.PI * curveSegs / 2);
-                const amplitude = (this.data.gridSize * 0.09) * (0.4 + seed / 15) * sine;
+                const amplitude = (this.config.getState().data.gridSize * 0.09) * (0.4 + seed / 15) * sine;
                 allPts.push({ x: baseX + nx * amplitude, y: baseY + ny * amplitude, w: width + (nextWidth - width) * t });
             }
 
@@ -1035,17 +1032,17 @@ export default class HexCartographerContent {
     }
 
     // private undo() {
-    //     const previousState = this.historyService.undo(this.data);
+    //     const previousState = this.historyService.undo(this.config.getState().data);
     //     console.log(previousState)
     //     if (previousState) {
-    //         this.data = previousState;
+    //         this.config.getState().data = previousState;
     //     }
     // }
 
     // private redo() {
-    //     const nextState = this.historyService.redo(this.data);
+    //     const nextState = this.historyService.redo(this.config.getState().data);
     //     if (nextState) {
-    //         this.data = nextState;
+    //         this.config.getState().data = nextState;
     //     }
     // }
 
@@ -1056,7 +1053,7 @@ export default class HexCartographerContent {
         const leftClick = createLeftMouseButtonInteraction({
             getApp: () => this.plugin.app,
             getCanvas: () => this.canvas!,
-            getData: () => this.data,
+            getData: () => this.config.getState().data,
             setState: this.config.setState,
         });
 
@@ -1118,12 +1115,12 @@ export default class HexCartographerContent {
         //     this.pendingHistory = true;
         //     this.isMouseDown = true;
         //     this.mouseDownPos = { x: world.x, y: world.y };
-        //     this.startHex = pixelToHex(world.x, world.y, this.data.gridSize, this.hexOrientation);
+        //     this.startHex = pixelToHex(world.x, world.y, this.config.getState().data.gridSize, this.hexOrientation);
         //     this.lastHex = this.startHex;
 
         //     if (this.colorPickMode) {
-        //         const cx = Math.round(this.mouseDownPos.x * this.data.zoom + this.data.offX);
-        //         const cy = Math.round(this.mouseDownPos.y * this.data.zoom + this.data.offY);
+        //         const cx = Math.round(this.mouseDownPos.x * this.config.getState().data.zoom + this.config.getState().data.offX);
+        //         const cy = Math.round(this.mouseDownPos.y * this.config.getState().data.zoom + this.config.getState().data.offY);
         //         if (cx >= 0 && cy >= 0 && cx < this.canvas.width && cy < this.canvas.height) {
         //             const pixel = this.ctx.getImageData(cx, cy, 1, 1).data;
         //             if (pixel[3] > 0) {
@@ -1154,7 +1151,7 @@ export default class HexCartographerContent {
         //     if (!this.editMode) return;
         //     if (e.button === 2 || this.drawMode === 'eraser') {
         //         const world = this.getWorldCoords(e);
-        //         const hex = pixelToHex(world.x, world.y, this.data.gridSize, this.hexOrientation);
+        //         const hex = pixelToHex(world.x, world.y, this.config.getState().data.gridSize, this.hexOrientation);
         //         if (this.history.length > 0) this.history.pop();
         //         this.handleEraserFlood(hex);
         //         this.render();
@@ -1165,7 +1162,7 @@ export default class HexCartographerContent {
         // this.contentEl.addEventListener('mousemove', (e) => {
         //     const world = this.getWorldCoords(e);
         //     if (this.isRightMouseErasing) {
-        //         const hex = pixelToHex(world.x, world.y, this.data.gridSize, this.hexOrientation);
+        //         const hex = pixelToHex(world.x, world.y, this.config.getState().data.gridSize, this.hexOrientation);
         //         const key = `${hex.q}_${hex.r}`;
         //         if (key !== this.rightEraseLastHex) {
         //             this.handleEraser(hex, world.x, world.y);
@@ -1175,8 +1172,8 @@ export default class HexCartographerContent {
         //         return;
         //     }
         //     if (this.isDraggingMap) {
-        //         this.data.offX += e.movementX;
-        //         this.data.offY += e.movementY;
+        //         this.config.getState().data.offX += e.movementX;
+        //         this.config.getState().data.offY += e.movementY;
         //         this.render();
         //     } else if (this.draggedText) {
         //         this.draggedText.x = world.x;
@@ -1184,13 +1181,13 @@ export default class HexCartographerContent {
         //         this.render();
         //     } else if (this.isMouseDown) {
         //         if (!this.editMode) {
-        //             this.data.offX += e.movementX;
-        //             this.data.offY += e.movementY;
+        //             this.config.getState().data.offX += e.movementX;
+        //             this.config.getState().data.offY += e.movementY;
         //             this.render();
         //         } else if (this.roadDragIndex !== null && this.roadSettings.editMode) {
-        //             const road = this.data.roads && this.data.roads.find(r => r.id === this.roadSettings.activeRoadId);
+        //             const road = this.config.getState().data.roads && this.config.getState().data.roads.find(r => r.id === this.roadSettings.activeRoadId);
         //             if (road) {
-        //                 const currentHex = pixelToHex(world.x, world.y, this.data.gridSize, this.hexOrientation);
+        //                 const currentHex = pixelToHex(world.x, world.y, this.config.getState().data.gridSize, this.hexOrientation);
         //                 const curQ = road.waypoints[this.roadDragIndex.idx]!.q;
         //                 const curR = road.waypoints[this.roadDragIndex.idx]!.r;
         //                 if (curQ !== currentHex.q || curR !== currentHex.r) {
@@ -1203,9 +1200,9 @@ export default class HexCartographerContent {
         //                 }
         //             }
         //         } else if (this.riverDragIndex !== null && this.riverSettings.editMode) {
-        //             const river = this.data.rivers && this.data.rivers.find(r => r.id === this.riverSettings.activeRiverId);
+        //             const river = this.config.getState().data.rivers && this.config.getState().data.rivers.find(r => r.id === this.riverSettings.activeRiverId);
         //             if (river) {
-        //                 const currentHex = pixelToHex(world.x, world.y, this.data.gridSize, this.hexOrientation);
+        //                 const currentHex = pixelToHex(world.x, world.y, this.config.getState().data.gridSize, this.hexOrientation);
         //                 const curQ = river.waypoints[this.riverDragIndex.idx]!.q;
         //                 const curR = river.waypoints[this.riverDragIndex.idx]!.r;
         //                 if (curQ !== currentHex.q || curR !== currentHex.r) {
@@ -1245,7 +1242,7 @@ export default class HexCartographerContent {
         //         if (this.roadDragIndex !== null && this.roadSettings.editMode) {
         //             const dist = Math.sqrt((world.x - this.mouseDownPos.x)**2 + (world.y - this.mouseDownPos.y)**2);
         //             if (dist < 5) {
-        //                 const road = this.data.roads && this.data.roads.find(r => r.id === this.roadSettings.activeRoadId);
+        //                 const road = this.config.getState().data.roads && this.config.getState().data.roads.find(r => r.id === this.roadSettings.activeRoadId);
         //                 if (road) {
         //                     this.handleWaypointClick(road, this.roadSettings, this.roadDragIndex.idx);
         //                 }
@@ -1264,7 +1261,7 @@ export default class HexCartographerContent {
         //         if (this.riverDragIndex !== null && this.riverSettings.editMode) {
         //             const dist = Math.sqrt((world.x - this.mouseDownPos.x)**2 + (world.y - this.mouseDownPos.y)**2);
         //             if (dist < 5) {
-        //                 const river = this.data.rivers && this.data.rivers.find(r => r.id === this.riverSettings.activeRiverId);
+        //                 const river = this.config.getState().data.rivers && this.config.getState().data.rivers.find(r => r.id === this.riverSettings.activeRiverId);
         //                 if (river) {
         //                     this.handleWaypointClick(river, this.riverSettings, this.riverDragIndex.idx);
         //                 }
@@ -1286,7 +1283,7 @@ export default class HexCartographerContent {
         //                 if (this.currentToolGroup === 'text') {
         //                     const hitX = hitText.x, hitY = hitText.y;
         //                     new TextInputModal(this.app, (v, s, l, c, o, b, sh, shd, sho) => {
-        //                         const target = this.data.texts.find(t => t.x === hitX && t.y === hitY);
+        //                         const target = this.config.getState().data.texts.find(t => t.x === hitX && t.y === hitY);
         //                         if (v && target) {
         //                             target.text = v; target.size = s; target.link = l;
         //                             target.color = c; target.outline = o; target.bold = b;
@@ -1294,7 +1291,7 @@ export default class HexCartographerContent {
         //                             this.lastUsedTextSize = s; this.lastUsedTextColor = c; this.lastUsedTextOutline = o; this.lastUsedTextBold = b;
         //                             this.lastUsedTextShadow = sh; this.lastUsedTextShadowDistance = shd; this.lastUsedTextShadowOpatown = sho;
         //                         }
-        //                         else if (!v) { this.data.texts = this.data.texts.filter(t => !(t.x === hitX && t.y === hitY)); }
+        //                         else if (!v) { this.config.getState().data.texts = this.config.getState().data.texts.filter(t => !(t.x === hitX && t.y === hitY)); }
         //                         this.render(); this.requestSave();
         //                     }, hitText.text, hitText.size, hitText.link, hitText.color, hitText.outline, hitText.bold, hitText.shadow, hitText.shadowDistance, hitText.shadowOpatown, this.colorPalette, this.colorPalette2).open();
         //                 } else if (hitText.link) {
@@ -1320,7 +1317,7 @@ export default class HexCartographerContent {
         //     e.preventDefault();
 
         //     const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
-        //     const oldZoom = this.data.zoom;
+        //     const oldZoom = this.config.getState().data.zoom;
         //     const newZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, oldZoom * zoomFactor));
         //     if (newZoom === oldZoom) return;
 
@@ -1328,12 +1325,12 @@ export default class HexCartographerContent {
         //     const mouseX = e.clientX - rect.left;
         //     const mouseY = e.clientY - rect.top;
 
-        //     const worldX = (mouseX - this.data.offX) / oldZoom;
-        //     const worldY = (mouseY - this.data.offY) / oldZoom;
+        //     const worldX = (mouseX - this.config.getState().data.offX) / oldZoom;
+        //     const worldY = (mouseY - this.config.getState().data.offY) / oldZoom;
 
-        //     this.data.offX = mouseX - worldX * newZoom;
-        //     this.data.offY = mouseY - worldY * newZoom;
-        //     this.data.zoom = newZoom;
+        //     this.config.getState().data.offX = mouseX - worldX * newZoom;
+        //     this.config.getState().data.offY = mouseY - worldY * newZoom;
+        //     this.config.getState().data.zoom = newZoom;
 
         //     this.render();
         //     this.requestSave();
@@ -1391,10 +1388,10 @@ export default class HexCartographerContent {
         //         const dx = touch2.clientX - touch1.clientX;
         //         const dy = touch2.clientY - touch1.clientY;
         //         this.touchState.initialDistance = Math.sqrt(dx * dx + dy * dy);
-        //         this.touchState.initialZoom = this.data.zoom;
+        //         this.touchState.initialZoom = this.config.getState().data.zoom;
 
-        //         this.touchState.initialPanX = this.data.offX;
-        //         this.touchState.initialPanY = this.data.offY;
+        //         this.touchState.initialPanX = this.config.getState().data.offX;
+        //         this.touchState.initialPanY = this.config.getState().data.offY;
         //         this.touchState.centerX = (touch1.clientX + touch2.clientX) / 2;
         //         this.touchState.centerY = (touch1.clientY + touch2.clientY) / 2;
 
@@ -1437,12 +1434,12 @@ export default class HexCartographerContent {
         //                 this.pendingHistory = true;
         //                 this.isMouseDown = true;
         //                 this.mouseDownPos = { x: world.x, y: world.y };
-        //                 this.startHex = pixelToHex(world.x, world.y, this.data.gridSize, this.hexOrientation);
+        //                 this.startHex = pixelToHex(world.x, world.y, this.config.getState().data.gridSize, this.hexOrientation);
         //                 this.lastHex = this.startHex;
 
         //                 if (this.colorPickMode) {
-        //                     const cx = Math.round(this.mouseDownPos.x * this.data.zoom + this.data.offX);
-        //                     const cy = Math.round(this.mouseDownPos.y * this.data.zoom + this.data.offY);
+        //                     const cx = Math.round(this.mouseDownPos.x * this.config.getState().data.zoom + this.config.getState().data.offX);
+        //                     const cy = Math.round(this.mouseDownPos.y * this.config.getState().data.zoom + this.config.getState().data.offY);
         //                     if (cx >= 0 && cy >= 0 && cx < this.canvas.width && cy < this.canvas.height) {
         //                         const pixel = this.ctx.getImageData(cx, cy, 1, 1).data;
         //                         if (pixel[3] > 0) {
@@ -1468,7 +1465,7 @@ export default class HexCartographerContent {
 
         //                 if (this.patternPickMode) {
         //                     const key = `${this.startHex.q}_${this.startHex.r}`;
-        //                     const hexData = this.data.hexes[key];
+        //                     const hexData = this.config.getState().data.hexes[key];
         //                     if (hexData) {
         //                         this.patternData = JSON.parse(JSON.stringify(hexData));
         //                         this.patternSourceHex = { q: this.startHex.q, r: this.startHex.r };
@@ -1497,8 +1494,8 @@ export default class HexCartographerContent {
         //                 if (this.borderPickMode) {
         //                     const clickedHex = this.startHex;
         //                     let foundRegion: any = null;
-        //                     if (this.data.borders) {
-        //                         for (const region of this.data.borders) {
+        //                     if (this.config.getState().data.borders) {
+        //                         for (const region of this.config.getState().data.borders) {
         //                             if (region.hexes.some(b => b.q === clickedHex.q && b.r === clickedHex.r)) {
         //                                 foundRegion = region;
         //                                 break;
@@ -1571,9 +1568,9 @@ export default class HexCartographerContent {
         //         const deltaX = currentCenterX - this.touchState.centerX;
         //         const deltaY = currentCenterY - this.touchState.centerY;
 
-        //         this.data.zoom = newZoom;
-        //         this.data.offX = newOffX + deltaX;
-        //         this.data.offY = newOffY + deltaY;
+        //         this.config.getState().data.zoom = newZoom;
+        //         this.config.getState().data.offX = newOffX + deltaX;
+        //         this.config.getState().data.offY = newOffY + deltaY;
 
         //         this.render();
         //     } else if (e.touches.length === 1&& this.touchState && !this.touchState.isTwoFingerGesture) {
@@ -1583,8 +1580,8 @@ export default class HexCartographerContent {
         //                 this.touchState.hasMovedSinceStart = true;
         //                 const touch = e.touches[0];
         //                 if (this.touchState.lastTouchX !== undefined) {
-        //                     this.data.offX += touch.clientX - this.touchState.lastTouchX;
-        //                     this.data.offY += touch.clientY - this.touchState.lastTouchY!;
+        //                     this.config.getState().data.offX += touch.clientX - this.touchState.lastTouchX;
+        //                     this.config.getState().data.offY += touch.clientY - this.touchState.lastTouchY!;
         //                     this.render();
         //                 }
         //                 this.touchState.lastTouchX = touch.clientX;
@@ -1614,16 +1611,16 @@ export default class HexCartographerContent {
         //             if (!this.editMode) {
         //                 const touch = e.touches[0];
         //                 if (this.touchState.lastTouchX !== undefined) {
-        //                     this.data.offX += touch.clientX - this.touchState.lastTouchX;
-        //                     this.data.offY += touch.clientY - this.touchState.lastTouchY!;
+        //                     this.config.getState().data.offX += touch.clientX - this.touchState.lastTouchX;
+        //                     this.config.getState().data.offY += touch.clientY - this.touchState.lastTouchY!;
         //                     this.render();
         //                 }
         //                 this.touchState.lastTouchX = touch.clientX;
         //                 this.touchState.lastTouchY = touch.clientY;
         //             } else if (this.roadDragIndex !== null && this.roadSettings.editMode) {
-        //                 const road = this.data.roads && this.data.roads.find(r => r.id === this.roadSettings.activeRoadId);
+        //                 const road = this.config.getState().data.roads && this.config.getState().data.roads.find(r => r.id === this.roadSettings.activeRoadId);
         //                 if (road) {
-        //                     const currentHex = pixelToHex(world.x, world.y, this.data.gridSize, this.hexOrientation);
+        //                     const currentHex = pixelToHex(world.x, world.y, this.config.getState().data.gridSize, this.hexOrientation);
         //                     const curQ = road.waypoints[this.roadDragIndex.idx]!.q;
         //                     const curR = road.waypoints[this.roadDragIndex.idx]!.r;
         //                     if (curQ !== currentHex.q || curR !== currentHex.r) {
@@ -1636,9 +1633,9 @@ export default class HexCartographerContent {
         //                     }
         //                 }
         //             } else if (this.riverDragIndex !== null && this.riverSettings.editMode) {
-        //                 const river = this.data.rivers && this.data.rivers.find(r => r.id === this.riverSettings.activeRiverId);
+        //                 const river = this.config.getState().data.rivers && this.config.getState().data.rivers.find(r => r.id === this.riverSettings.activeRiverId);
         //                 if (river) {
-        //                     const currentHex = pixelToHex(world.x, world.y, this.data.gridSize, this.hexOrientation);
+        //                     const currentHex = pixelToHex(world.x, world.y, this.config.getState().data.gridSize, this.hexOrientation);
         //                     const curQ = river.waypoints[this.riverDragIndex.idx]!.q;
         //                     const curR = river.waypoints[this.riverDragIndex.idx]!.r;
         //                     if (curQ !== currentHex.q || curR !== currentHex.r) {
@@ -1678,12 +1675,12 @@ export default class HexCartographerContent {
         //             this.pendingHistory = true;
         //             this.isMouseDown = true;
         //             this.mouseDownPos = { x: world.x, y: world.y };
-        //             this.startHex = pixelToHex(world.x, world.y, this.data.gridSize, this.hexOrientation);
+        //             this.startHex = pixelToHex(world.x, world.y, this.config.getState().data.gridSize, this.hexOrientation);
         //             this.lastHex = this.startHex;
 
         //             if (this.colorPickMode) {
-        //                 const cx = Math.round(this.mouseDownPos.x * this.data.zoom + this.data.offX);
-        //                 const cy = Math.round(this.mouseDownPos.y * this.data.zoom + this.data.offY);
+        //                 const cx = Math.round(this.mouseDownPos.x * this.config.getState().data.zoom + this.config.getState().data.offX);
+        //                 const cy = Math.round(this.mouseDownPos.y * this.config.getState().data.zoom + this.config.getState().data.offY);
         //                 if (cx >= 0 && cy >= 0 && cx < this.canvas.width && cy < this.canvas.height) {
         //                     const pixel = this.ctx.getImageData(cx, cy, 1, 1).data;
         //                     if (pixel[3] > 0) {
@@ -1709,7 +1706,7 @@ export default class HexCartographerContent {
 
         //             if (this.patternPickMode) {
         //                 const key = `${this.startHex.q}_${this.startHex.r}`;
-        //                 const hexData = this.data.hexes[key];
+        //                 const hexData = this.config.getState().data.hexes[key];
         //                 if (hexData) {
         //                     this.patternData = JSON.parse(JSON.stringify(hexData));
         //                     this.patternSourceHex = { q: this.startHex.q, r: this.startHex.r };
@@ -1739,8 +1736,8 @@ export default class HexCartographerContent {
         //             if (this.borderPickMode) {
         //                 const clickedHex = this.startHex;
         //                 let foundRegion: any = null;
-        //                 if (this.data.borders) {
-        //                     for (const region of this.data.borders) {
+        //                 if (this.config.getState().data.borders) {
+        //                     for (const region of this.config.getState().data.borders) {
         //                         if (region.hexes.some(b => b.q === clickedHex.q && b.r === clickedHex.r)) {
         //                             foundRegion = region;
         //                             break;
@@ -1800,7 +1797,7 @@ export default class HexCartographerContent {
         //             if (this.roadDragIndex !== null && this.roadSettings.editMode) {
         //                 const dist = Math.sqrt((world.x - this.mouseDownPos.x)**2 + (world.y - this.mouseDownPos.y)**2);
         //                 if (dist < 5) {
-        //                     const road = this.data.roads && this.data.roads.find(r => r.id === this.roadSettings.activeRoadId);
+        //                     const road = this.config.getState().data.roads && this.config.getState().data.roads.find(r => r.id === this.roadSettings.activeRoadId);
         //                     if (road) {
         //                         this.handleWaypointClick(road, this.roadSettings, this.roadDragIndex.idx);
         //                     }
@@ -1819,7 +1816,7 @@ export default class HexCartographerContent {
         //             if (this.riverDragIndex !== null && this.riverSettings.editMode) {
         //                 const dist = Math.sqrt((world.x - this.mouseDownPos.x)**2 + (world.y - this.mouseDownPos.y)**2);
         //                 if (dist < 5) {
-        //                     const river = this.data.rivers && this.data.rivers.find(r => r.id === this.riverSettings.activeRiverId);
+        //                     const river = this.config.getState().data.rivers && this.config.getState().data.rivers.find(r => r.id === this.riverSettings.activeRiverId);
         //                     if (river) {
         //                         this.handleWaypointClick(river, this.riverSettings, this.riverDragIndex.idx);
         //                     }
@@ -1841,7 +1838,7 @@ export default class HexCartographerContent {
         //                     if (this.currentToolGroup === 'text') {
         //                         const hitX = hitText.x, hitY = hitText.y;
         //                         new TextInputModal(this.app, (v, s, l, c, o, b, sh, shd, sho) => {
-        //                             const target = this.data.texts.find(t => t.x === hitX && t.y === hitY);
+        //                             const target = this.config.getState().data.texts.find(t => t.x === hitX && t.y === hitY);
         //                             if (v && target) {
         //                                 target.text = v; target.size = s; target.link = l;
         //                                 target.color = c; target.outline = o; target.bold = b;
@@ -1849,7 +1846,7 @@ export default class HexCartographerContent {
         //                                 this.lastUsedTextSize = s; this.lastUsedTextColor = c; this.lastUsedTextOutline = o; this.lastUsedTextBold = b;
         //                                 this.lastUsedTextShadow = sh; this.lastUsedTextShadowDistance = shd; this.lastUsedTextShadowOpatown = sho;
         //                             }
-        //                             else if (!v) { this.data.texts = this.data.texts.filter(t => !(t.x === hitX && t.y === hitY)); }
+        //                             else if (!v) { this.config.getState().data.texts = this.config.getState().data.texts.filter(t => !(t.x === hitX && t.y === hitY)); }
         //                             this.render(); this.requestSave();
         //                         }, hitText.text, hitText.size, hitText.link, hitText.color, hitText.outline, hitText.bold, hitText.shadow, hitText.shadowDistance, hitText.shadowOpatown, this.colorPalette, this.colorPalette2).open();
         //                     } else if (hitText.link) {
@@ -1864,7 +1861,7 @@ export default class HexCartographerContent {
         //             const tapTouch = e.changedTouches[0];
         //             const tapEvent = new MouseEvent('mouseup', { clientX: tapTouch.clientX, clientY: tapTouch.clientY, bubbles: true, cancelable: true });
         //             const tapWorld = this.getWorldCoords(tapEvent);
-        //             const tapHex = pixelToHex(tapWorld.x, tapWorld.y, this.data.gridSize, this.hexOrientation);
+        //             const tapHex = pixelToHex(tapWorld.x, tapWorld.y, this.config.getState().data.gridSize, this.hexOrientation);
         //             const now = Date.now();
 
         //             if (this.touchState.lastTapTime &&

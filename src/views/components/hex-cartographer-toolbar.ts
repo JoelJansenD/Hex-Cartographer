@@ -3,9 +3,14 @@ import { PaintMode, ToolGroup } from "../../types/tool-group";
 import HexCartographerComponentConfig from "./hex-cartographer-component-config";
 import HexCartographerViewState from "../hex-cartographer-view-state";
 
+interface HexCartographerToolbarConfig extends HexCartographerComponentConfig {
+    undo: () => void;
+    redo: () => void;
+}
+
 export default class HexCartographerToolbar {
 
-    private config: HexCartographerComponentConfig;
+    private config: HexCartographerToolbarConfig;
 
     // ===================================================
     // Containers
@@ -42,7 +47,7 @@ export default class HexCartographerToolbar {
     private resizeActionButton!: ButtonComponent;
     private settingsActionButton!: ButtonComponent;
 
-    constructor(parentEl: HTMLElement, config: HexCartographerComponentConfig) {
+    constructor(parentEl: HTMLElement, config: HexCartographerToolbarConfig) {
         this.config = config;
         this.actionsContainerEl = parentEl.createDiv({ cls: 'hex-toolbar' });
         
@@ -126,10 +131,12 @@ export default class HexCartographerToolbar {
             .onClick(() => this.enterEditMode());
 
         this.undoActionButton = new ButtonComponent(actions)
-            .setIcon('undo');
+            .setIcon('undo')
+            .onClick(() => this.config.undo());
         
         this.redoActionButton = new ButtonComponent(actions)
-            .setIcon('redo');
+            .setIcon('redo')
+            .onClick(() => this.config.redo());
 
         this.resizeActionButton = new ButtonComponent(actions)
             .setIcon('scaling');

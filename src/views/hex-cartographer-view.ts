@@ -5,6 +5,7 @@ import HexCartographerSidepanel from "./components/hex-cartographer-sidepanel";
 import { MapData } from "../types/map-data";
 import HexCartographerPlugin from "../main";
 import HexCartographerViewState from "./hex-cartographer-view-state";
+import HistoryService from "../services/history-service";
 
 export default class HexCartographerView extends ItemView {
 
@@ -25,6 +26,8 @@ export default class HexCartographerView extends ItemView {
     private _toolbar: HexCartographerToolbar;
     private _sidebar: HexCartographerSidepanel;
 
+    private historyService = new HistoryService();
+    
     constructor(plugin: HexCartographerPlugin, leaf: WorkspaceLeaf) {
         super(leaf);
 
@@ -42,7 +45,9 @@ export default class HexCartographerView extends ItemView {
         
         this._toolbar = new HexCartographerToolbar(mainViewContainer, {
             getState: this.getViewState.bind(this),
-            setState: this.setViewState.bind(this)
+            setState: this.setViewState.bind(this),
+            undo: this.undo.bind(this),
+            redo: this.redo.bind(this)
         });
 
         this._content = new HexCartographerContent(plugin, mainViewContainer, {
@@ -60,12 +65,44 @@ export default class HexCartographerView extends ItemView {
         this._content.startRender();
     }
 
+    private redo() {
+      const a = {...this._state.data.hexes['0_1']};
+      const data = this.historyService.redo(this._state.data);
+      if(!data) {
+        return;
+      }
+      const b = {...data.hexes['0_1']};
+      console.log(JSON.stringify(a), JSON.stringify(b));
+      
+      this._state = {
+        ...this._state,
+        data: data
+      };
+    }
+
+    private undo() {
+      const a = {...this._state.data.hexes['0_1']};
+      const data = this.historyService.undo(this._state.data);
+      if(!data) {
+        return;
+      }
+      const b = {...data.hexes['0_1']};
+      console.log(JSON.stringify(a), JSON.stringify(b));
+
+      this._state = {
+        ...this._state,
+        data: data
+      };
+      console.log(Object.keys(this._state.data.hexes).length);
+      console.log(data);
+    }
+
     private getViewState() {
-      return this._state;
+      return {...this._state};
     }
 
     private setViewState(newState: HexCartographerViewState) {
-      console.log('updating state:', newState);
+      this.historyService.push(newState.data);
       this._state = newState;
       this._toolbar.updateState(this._state);
       this._sidebar.updateState(this._state);
