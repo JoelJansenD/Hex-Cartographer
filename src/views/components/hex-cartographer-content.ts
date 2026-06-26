@@ -1078,6 +1078,8 @@ export default class HexCartographerContent {
         });
 
         return registerMiddleMouseButtonListeners({
+            getState: this.config.getState,
+            setState: this.config.setState,
             canvas: this.canvas!,
             down: middleClick.down,
         });

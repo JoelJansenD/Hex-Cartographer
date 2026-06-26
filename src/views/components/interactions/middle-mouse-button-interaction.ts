@@ -1,18 +1,14 @@
-import { EditorInteractionState } from "./editor-interaction-state";
-import { MouseButtonInteraction, MouseButtonInteractionDep } from "./mouse-button-interaction";
+import HexCartographerViewState from "../../hex-cartographer-view-state";
+import { MouseButtonInteraction } from "./mouse-button-interaction";
 
 export interface MiddleMouseButtonInteractionContext {
-    getState: () => EditorInteractionState;
-    setState: (newState: EditorInteractionState) => void;
 }
 
-export function createMiddleMouseButtonInteraction(ctx: MiddleMouseButtonInteractionContext) : MouseButtonInteractionDep {
+export function createMiddleMouseButtonInteraction(ctx: MiddleMouseButtonInteractionContext) : MouseButtonInteraction {
     return {
-        down(_: MouseEvent) {
-            const state = ctx.getState();
+        down(_: MouseEvent, state: HexCartographerViewState) {
             state.isPanning = !state.isPanning;
             console.log(`Middle mouse button down: Panning ${state.isPanning ? 'enabled' : 'disabled'}`);
-            ctx.setState(state);
         },
     };
 }
