@@ -10,7 +10,7 @@ import {
 } from './services/map-document-service';
 import { HexCartographerViewLegacy } from './legacy/hex-cartographer-view-legacy';
 import HexCartographerSettingTab from './settings/hex-cartographer-setting-tab';
-import HexCartographerView from './views/hex-cartographer-view/hex-cartographer-view';
+import HexCartographerView from './views/hex-cartographer-view';
 
 
 const DEFAULT_SETTINGS: PluginSettings = {

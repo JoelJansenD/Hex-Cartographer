@@ -1,11 +1,11 @@
 import { ItemView, WorkspaceLeaf } from "obsidian";
-import HexCartographerToolbar from "./hex-cartographer-toolbar";
-import { isPaintingTool, ToolGroup } from "../../types/tool-group";
-import HexCartographerContent from "./hex-cartographer-content";
-import HexCartographerSidepanel from "./hex-cartographer-sidepanel";
-import { MapData } from "../../types/map-data";
-import HexCartographerPlugin from "../../main";
-import { EditorInteractionState } from "./interactions/editor-interaction-state";
+import HexCartographerToolbar from "./components/hex-cartographer-toolbar";
+import { isPaintingTool, ToolGroup } from "../types/tool-group";
+import HexCartographerContent from "./components/hex-cartographer-content";
+import HexCartographerSidepanel from "./components/hex-cartographer-sidepanel";
+import { MapData } from "../types/map-data";
+import HexCartographerPlugin from "../main";
+import { EditorInteractionState } from "./components/interactions/editor-interaction-state";
 
 export default class HexCartographerView extends ItemView {
 
