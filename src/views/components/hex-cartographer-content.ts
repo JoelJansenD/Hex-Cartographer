@@ -2,7 +2,6 @@ import { DEFAULT_BORDER_HIGHLIGHT_WIDTH, PATH_END_INSET, PATH_OVERLAP_SPACING, S
 import { SVG_SYMBOL_DATA } from "../../data/svg-symbol-data";
 import { calculateHexPath, createSegmentKey, hexToPixel } from "../../functions/hex-math";
 import HexCartographerPlugin from "../../main";
-import HistoryService from "../../services/history-service";
 import { Hexagon, HexCoordinates } from "../../types/hexagon";
 import { MapData } from "../../types/map-data";
 import { LinearFeature } from "../../types/rivers-and-roads";
@@ -75,6 +74,884 @@ export default class HexCartographerContent {
         this.render();
     }
 
+    // ==============================
+    // Event Listeners
+    // ==============================
+    private registerLeftMouseButtonListeners() {
+        const leftClick = createLeftMouseButtonInteraction({
+            getApp: () => this.plugin.app,
+            getCanvas: () => this.canvas!,
+            getData: () => this.config.getState().data,
+            setState: this.config.setState,
+        });
+
+        return registerLeftMouseButtonListeners({
+            getState: this.config.getState,
+            setState: this.config.setState,
+            canvas: this.canvas!,
+            down: leftClick.down,
+        });
+    }
+
+    private registerMiddleMouseButtonListeners() {
+        const middleClick = createMiddleMouseButtonInteraction();
+
+        return registerMiddleMouseButtonListeners({
+            getState: this.config.getState,
+            setState: this.config.setState,
+            canvas: this.canvas!,
+            down: middleClick.down,
+        });
+    }
+
+    private registerRightMouseButtonListeners() {
+        const rightClick = createRightMouseButtonInteraction({
+            getCanvas: () => this.canvas!,
+        });
+
+        return registerRightMouseButtonListeners({
+            getState: this.config.getState,
+            setState: this.config.setState,
+            canvas: this.canvas!,
+            down: rightClick.down,
+        });
+    }
+
+    private registerEventListeners() {
+        if(!this.canvas) throw new Error("Canvas not initialized");
+
+        const leftClickUnregister = this.registerLeftMouseButtonListeners();
+        const middleClickUnregister = this.registerMiddleMouseButtonListeners();
+        const rightClickUnregister = this.registerRightMouseButtonListeners();
+
+        // this.contentEl.addEventListener('keydown', (e) => {
+        //     e.preventDefault();
+
+        //     if(e.ctrlKey || e.metaKey) {
+        //         const key = e.key.toLowerCase();
+        //         if((key === 'z' && e.shiftKey) || key === 'y') this.redo();
+        //         else if(key === 'z') this.undo();
+        //     }
+        // });
+
+        
+
+        // this.canvas.addEventListener('mousedown', (e) => {
+        //     this.canvas.focus();
+        //     const world = this.getWorldCoords(e);
+
+        //     this.pendingHistory = true;
+        //     this.isMouseDown = true;
+        //     this.mouseDownPos = { x: world.x, y: world.y };
+        //     this.startHex = pixelToHex(world.x, world.y, this.config.getState().data.gridSize, this.hexOrientation);
+        //     this.lastHex = this.startHex;
+
+        //     if (this.colorPickMode) {
+        //         const cx = Math.round(this.mouseDownPos.x * this.config.getState().data.zoom + this.config.getState().data.offX);
+        //         const cy = Math.round(this.mouseDownPos.y * this.config.getState().data.zoom + this.config.getState().data.offY);
+        //         if (cx >= 0 && cy >= 0 && cx < this.canvas.width && cy < this.canvas.height) {
+        //             const pixel = this.ctx.getImageData(cx, cy, 1, 1).data;
+        //             if (pixel[3] > 0) {
+        //                 this.masterColor = rgbToHex(pixel[0], pixel[1], pixel[2]);
+        //                 if (this.masterColorInput) { this.masterColorInput.value = this.masterColor; if (this.masterColorBtn) this.masterColorBtn.style.backgroundColor = this.masterColor; }
+        //                 this.updateActivePathColor();
+        //                 new Notice(localizeString('notice.colorPicked'));
+        //             } else {
+        //                 new Notice(localizeString('notice.noColorAtPosition'));
+        //             }
+        //         } else {
+        //             new Notice(localizeString('notice.noColorAtPosition'));
+        //         }
+        //         this.colorPickMode = false;
+        //         if (this.colorEyedropperBtn) { this.colorEyedropperBtn.style.background = BUTTON_BG_DEFAULT; this.colorEyedropperBtn.style.color = ''; }
+        //         this.isMouseDown = false;
+        //         const toolbar = this.contentEl.querySelector('.hex-toolbar');
+        //         if (toolbar) this.updateToolbarState(toolbar);
+        //         this.render();
+        //         return;
+        //     }
+
+        // this.canvas.addEventListener('contextmenu', (e) => {
+        //     if (this.editMode) e.preventDefault();
+        // });
+
+        // this.canvas.addEventListener('dblclick', (e) => {
+        //     if (!this.editMode) return;
+        //     if (e.button === 2 || this.drawMode === 'eraser') {
+        //         const world = this.getWorldCoords(e);
+        //         const hex = pixelToHex(world.x, world.y, this.config.getState().data.gridSize, this.hexOrientation);
+        //         if (this.history.length > 0) this.history.pop();
+        //         this.handleEraserFlood(hex);
+        //         this.render();
+        //         this.requestSave();
+        //     }
+        // });
+
+        // this.contentEl.addEventListener('mousemove', (e) => {
+        //     const world = this.getWorldCoords(e);
+        //     if (this.isRightMouseErasing) {
+        //         const hex = pixelToHex(world.x, world.y, this.config.getState().data.gridSize, this.hexOrientation);
+        //         const key = `${hex.q}_${hex.r}`;
+        //         if (key !== this.rightEraseLastHex) {
+        //             this.handleEraser(hex, world.x, world.y);
+        //             this.rightEraseLastHex = key;
+        //             this.render();
+        //         }
+        //         return;
+        //     }
+        //     if (this.isDraggingMap) {
+        //         this.config.getState().data.offX += e.movementX;
+        //         this.config.getState().data.offY += e.movementY;
+        //         this.render();
+        //     } else if (this.draggedText) {
+        //         this.draggedText.x = world.x;
+        //         this.draggedText.y = world.y;
+        //         this.render();
+        //     } else if (this.isMouseDown) {
+        //         if (!this.editMode) {
+        //             this.config.getState().data.offX += e.movementX;
+        //             this.config.getState().data.offY += e.movementY;
+        //             this.render();
+        //         } else if (this.roadDragIndex !== null && this.roadSettings.editMode) {
+        //             const road = this.config.getState().data.roads && this.config.getState().data.roads.find(r => r.id === this.roadSettings.activeRoadId);
+        //             if (road) {
+        //                 const currentHex = pixelToHex(world.x, world.y, this.config.getState().data.gridSize, this.hexOrientation);
+        //                 const curQ = road.waypoints[this.roadDragIndex.idx]!.q;
+        //                 const curR = road.waypoints[this.roadDragIndex.idx]!.r;
+        //                 if (curQ !== currentHex.q || curR !== currentHex.r) {
+        //                     this.pushHistoryIfNeeded();
+        //                     this.roadDragIndex.group.forEach(i => {
+        //                         road.waypoints[i]!.q = currentHex.q;
+        //                         road.waypoints[i]!.r = currentHex.r;
+        //                     });
+        //                     this.render();
+        //                 }
+        //             }
+        //         } else if (this.riverDragIndex !== null && this.riverSettings.editMode) {
+        //             const river = this.config.getState().data.rivers && this.config.getState().data.rivers.find(r => r.id === this.riverSettings.activeRiverId);
+        //             if (river) {
+        //                 const currentHex = pixelToHex(world.x, world.y, this.config.getState().data.gridSize, this.hexOrientation);
+        //                 const curQ = river.waypoints[this.riverDragIndex.idx]!.q;
+        //                 const curR = river.waypoints[this.riverDragIndex.idx]!.r;
+        //                 if (curQ !== currentHex.q || curR !== currentHex.r) {
+        //                     this.pushHistoryIfNeeded();
+        //                     this.riverDragIndex.group.forEach(i => {
+        //                         river.waypoints[i]!.q = currentHex.q;
+        //                         river.waypoints[i]!.r = currentHex.r;
+        //                     });
+        //                     this.render();
+        //                 }
+        //             }
+        //         } else {
+        //             this.processInput(e, false);
+        //             this.render();
+        //         }
+        //     }
+
+        //     const hoverText = this.getTextAt(world.x, world.y);
+        //     if (hoverText && hoverText.link) {
+        //         this.canvas.title = `${hoverText.link}`;
+        //         this.canvas.style.cursor = 'pointer';
+        //     } else {
+        //         this.canvas.title = '';
+        //         this.canvas.style.cursor = (hoverText && this.currentToolGroup === 'text') ? 'text' : 'crosshair';
+        //     }
+        // });
+
+        // const stop = (e) => {
+        //     if (this.isRightMouseErasing) {
+        //         this.isRightMouseErasing = false;
+        //         this.rightEraseLastHex = null;
+        //         this.requestSave();
+        //         return;
+        //     }
+        //     const world = this.getWorldCoords(e);
+        //     if (this.isMouseDown && this.mouseDownPos) {
+        //         if (this.roadDragIndex !== null && this.roadSettings.editMode) {
+        //             const dist = Math.sqrt((world.x - this.mouseDownPos.x)**2 + (world.y - this.mouseDownPos.y)**2);
+        //             if (dist < 5) {
+        //                 const road = this.config.getState().data.roads && this.config.getState().data.roads.find(r => r.id === this.roadSettings.activeRoadId);
+        //                 if (road) {
+        //                     this.handleWaypointClick(road, this.roadSettings, this.roadDragIndex.idx);
+        //                 }
+        //             }
+        //             this.roadDragIndex = null;
+        //             this.requestSave();
+        //             this.isMouseDown = false;
+        //             this.isDraggingMap = false;
+        //             this.draggedText = null;
+        //             this.lastHex = null;
+        //             this.startHex = null;
+        //             this.render();
+        //             return;
+        //         }
+
+        //         if (this.riverDragIndex !== null && this.riverSettings.editMode) {
+        //             const dist = Math.sqrt((world.x - this.mouseDownPos.x)**2 + (world.y - this.mouseDownPos.y)**2);
+        //             if (dist < 5) {
+        //                 const river = this.config.getState().data.rivers && this.config.getState().data.rivers.find(r => r.id === this.riverSettings.activeRiverId);
+        //                 if (river) {
+        //                     this.handleWaypointClick(river, this.riverSettings, this.riverDragIndex.idx);
+        //                 }
+        //             }
+        //             this.riverDragIndex = null;
+        //             this.requestSave();
+        //             this.isMouseDown = false;
+        //             this.isDraggingMap = false;
+        //             this.draggedText = null;
+        //             this.lastHex = null;
+        //             this.startHex = null;
+        //             this.render();
+        //             return;
+        //         }
+        //         const dist = Math.sqrt((world.x - this.mouseDownPos.x)**2 + (world.y - this.mouseDownPos.y)**2);
+        //         if (dist < 5 && this.drawMode !== 'eraser') {
+        //             const hitText = this.getTextAt(world.x, world.y);
+        //             if (hitText) {
+        //                 if (this.currentToolGroup === 'text') {
+        //                     const hitX = hitText.x, hitY = hitText.y;
+        //                     new TextInputModal(this.app, (v, s, l, c, o, b, sh, shd, sho) => {
+        //                         const target = this.config.getState().data.texts.find(t => t.x === hitX && t.y === hitY);
+        //                         if (v && target) {
+        //                             target.text = v; target.size = s; target.link = l;
+        //                             target.color = c; target.outline = o; target.bold = b;
+        //                             target.shadow = sh; target.shadowDistance = shd; target.shadowOpatown = sho;
+        //                             this.lastUsedTextSize = s; this.lastUsedTextColor = c; this.lastUsedTextOutline = o; this.lastUsedTextBold = b;
+        //                             this.lastUsedTextShadow = sh; this.lastUsedTextShadowDistance = shd; this.lastUsedTextShadowOpatown = sho;
+        //                         }
+        //                         else if (!v) { this.config.getState().data.texts = this.config.getState().data.texts.filter(t => !(t.x === hitX && t.y === hitY)); }
+        //                         this.render(); this.requestSave();
+        //                     }, hitText.text, hitText.size, hitText.link, hitText.color, hitText.outline, hitText.bold, hitText.shadow, hitText.shadowDistance, hitText.shadowOpatown, this.colorPalette, this.colorPalette2).open();
+        //                 } else if (hitText.link) {
+        //                     this.app.workspace.openLinkText(hitText.link, this.file.path, true);
+        //                 }
+        //             }
+        //         }
+        //     }
+        //     if (this.isMouseDown || this.draggedText || this.isDraggingMap) this.requestSave();
+        //     this.isMouseDown = false;
+        //     this.isDraggingMap = false;
+        //     this.draggedText = null;
+        //     this.roadDragIndex = null;
+        //     this.riverDragIndex = null;
+        //     this.lastHex = null;
+        //     this.startHex = null;
+        //     this.render();
+        // };
+        // this.contentEl.addEventListener('mouseup', stop);
+        // this.contentEl.addEventListener('mouseleave', stop);
+
+        // this.canvas.addEventListener('wheel', (e) => {
+        //     e.preventDefault();
+
+        //     const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
+        //     const oldZoom = this.config.getState().data.zoom;
+        //     const newZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, oldZoom * zoomFactor));
+        //     if (newZoom === oldZoom) return;
+
+        //     const rect = this.canvas.getBoundingClientRect();
+        //     const mouseX = e.clientX - rect.left;
+        //     const mouseY = e.clientY - rect.top;
+
+        //     const worldX = (mouseX - this.config.getState().data.offX) / oldZoom;
+        //     const worldY = (mouseY - this.config.getState().data.offY) / oldZoom;
+
+        //     this.config.getState().data.offX = mouseX - worldX * newZoom;
+        //     this.config.getState().data.offY = mouseY - worldY * newZoom;
+        //     this.config.getState().data.zoom = newZoom;
+
+        //     this.render();
+        //     this.requestSave();
+        // }, { passive: false });
+
+        // this.touchState = {
+        //     touches: [],
+        //     initialDistance: 0,
+        //     initialZoom: 1,
+        //     initialPanX: 0,
+        //     initialPanY: 0,
+        //     isTwoFingerGesture: false,
+        //     touchStartTimeout: null,
+        //     pendingTouchStart: null,
+        //     hasMovedSinceStart: false,
+        //     lastTapTime: 0,
+        //     lastTapHex: null,
+        //     lastTouchX: undefined,
+        //     lastTouchY: undefined,
+        //     centerX: 0,
+        //     centerY: 0,
+        //     pivotX: 0,
+        //     pivotY: 0
+        // };
+
+        // this.canvas.addEventListener('touchstart', (e) => {
+        //     this.canvas.focus();
+        //     if(!this.touchState) return;
+            
+        //     this.touchState.touches = Array.from(e.touches);
+
+        //     if (this.touchState.touchStartTimeout) {
+        //         clearTimeout(this.touchState.touchStartTimeout);
+        //         this.touchState.touchStartTimeout = null;
+        //         this.touchState.pendingTouchStart = null;
+        //     }
+
+        //     if (e.touches.length === 2) {
+        //         e.preventDefault();
+        //         this.touchState.isTwoFingerGesture = true;
+        //         this.touchState.hasMovedSinceStart = false;
+        //         this.touchState.pendingTouchStart = null;
+
+        //         if (this.isMouseDown && !this.touchState.hasMovedSinceStart) {
+        //             this.isMouseDown = false;
+        //             this.draggedText = null;
+        //             if (this.history.length > 0 && !this.touchState.hasMovedSinceStart) {
+        //                 this.history.pop(); // Entferne den History-Eintrag vom Touch-Start
+        //             }
+        //         }
+
+        //         const touch1 = e.touches[0];
+        //         const touch2 = e.touches[1];
+
+        //         const dx = touch2.clientX - touch1.clientX;
+        //         const dy = touch2.clientY - touch1.clientY;
+        //         this.touchState.initialDistance = Math.sqrt(dx * dx + dy * dy);
+        //         this.touchState.initialZoom = this.config.getState().data.zoom;
+
+        //         this.touchState.initialPanX = this.config.getState().data.offX;
+        //         this.touchState.initialPanY = this.config.getState().data.offY;
+        //         this.touchState.centerX = (touch1.clientX + touch2.clientX) / 2;
+        //         this.touchState.centerY = (touch1.clientY + touch2.clientY) / 2;
+
+        //         const rect = this.canvas.getBoundingClientRect();
+        //         this.touchState.pivotX = this.touchState.centerX - rect.left;
+        //         this.touchState.pivotY = this.touchState.centerY - rect.top;
+        //     } else if (e.touches.length === 1) {
+        //         this.touchState.isTwoFingerGesture = false;
+        //         this.touchState.hasMovedSinceStart = false;
+
+        //         const touch = e.touches[0];
+        //         const mouseEvent = new MouseEvent('mousedown', {
+        //             clientX: touch.clientX,
+        //             clientY: touch.clientY,
+        //             button: 0,
+        //             bubbles: true,
+        //             cancelable: true
+        //         });
+
+        //         this.touchState.pendingTouchStart = {
+        //             touch: touch,
+        //             mouseEvent: mouseEvent,
+        //             timestamp: Date.now()
+        //         };
+
+        //         if (!this.editMode) {
+        //             this.touchState.lastTouchX = touch.clientX;
+        //             this.touchState.lastTouchY = touch.clientY;
+        //         }
+
+        //         this.touchState.touchStartTimeout = setTimeout(() => {
+        //             if(!this.touchState) throw new Error("No touch state found!");
+
+        //             if (this.touchState.pendingTouchStart && !this.touchState.isTwoFingerGesture) {
+        //                 if (this.touchState.lastTouchX === undefined) {
+        //                     this.touchState.lastTouchX = this.touchState.pendingTouchStart.touch.clientX;
+        //                     this.touchState.lastTouchY = this.touchState.pendingTouchStart.touch.clientY;
+        //                 }
+        //                 const world = this.getWorldCoords(this.touchState.pendingTouchStart.mouseEvent);
+        //                 this.pendingHistory = true;
+        //                 this.isMouseDown = true;
+        //                 this.mouseDownPos = { x: world.x, y: world.y };
+        //                 this.startHex = pixelToHex(world.x, world.y, this.config.getState().data.gridSize, this.hexOrientation);
+        //                 this.lastHex = this.startHex;
+
+        //                 if (this.colorPickMode) {
+        //                     const cx = Math.round(this.mouseDownPos.x * this.config.getState().data.zoom + this.config.getState().data.offX);
+        //                     const cy = Math.round(this.mouseDownPos.y * this.config.getState().data.zoom + this.config.getState().data.offY);
+        //                     if (cx >= 0 && cy >= 0 && cx < this.canvas.width && cy < this.canvas.height) {
+        //                         const pixel = this.ctx.getImageData(cx, cy, 1, 1).data;
+        //                         if (pixel[3] > 0) {
+        //                             this.masterColor = rgbToHex(pixel[0], pixel[1], pixel[2]);
+        //                             if (this.masterColorInput) { this.masterColorInput.value = this.masterColor; if (this.masterColorBtn) this.masterColorBtn.style.backgroundColor = this.masterColor; }
+        //                             this.updateActivePathColor();
+        //                             new Notice(localizeString('notice.colorPicked'));
+        //                         } else {
+        //                             new Notice(localizeString('notice.noColorAtPosition'));
+        //                         }
+        //                     } else {
+        //                         new Notice(localizeString('notice.noColorAtPosition'));
+        //                     }
+        //                     this.colorPickMode = false;
+        //                     if (this.colorEyedropperBtn) { this.colorEyedropperBtn.style.background = BUTTON_BG_DEFAULT; this.colorEyedropperBtn.style.color = ''; }
+        //                     this.isMouseDown = false;
+        //                     this.touchState.pendingTouchStart = null;
+        //                     const toolbar = this.contentEl.querySelector('.hex-toolbar');
+        //                     if (toolbar) this.updateToolbarState(toolbar);
+        //                     this.render();
+        //                     return;
+        //                 }
+
+        //                 if (this.patternPickMode) {
+        //                     const key = `${this.startHex.q}_${this.startHex.r}`;
+        //                     const hexData = this.config.getState().data.hexes[key];
+        //                     if (hexData) {
+        //                         this.patternData = JSON.parse(JSON.stringify(hexData));
+        //                         this.patternSourceHex = { q: this.startHex.q, r: this.startHex.r };
+        //                         new Notice(localizeString('notice.patternPicked'));
+        //                         this.currentToolGroup = 'pattern';
+        //                         this.drawMode = 'pen';
+        //                     } else {
+        //                         this.patternData = null;
+        //                         this.patternSourceHex = null;
+        //                         new Notice(localizeString('notice.noHexAtPosition'));
+        //                     }
+        //                     this.patternPickMode = false;
+        //                     if (this.patternPickerBtn) {
+        //                         this.patternPickerBtn.style.background = BUTTON_BG_DEFAULT;
+        //                     }
+        //                     const toolbar = this.contentEl.querySelector('.hex-toolbar');
+        //                     if (toolbar) {
+        //                         this.updateToolbarState(toolbar);
+        //                     }
+        //                     this.render();
+        //                     this.requestSave();
+        //                     this.touchState.pendingTouchStart = null;
+        //                     return;
+        //                 }
+
+        //                 if (this.borderPickMode) {
+        //                     const clickedHex = this.startHex;
+        //                     let foundRegion: any = null;
+        //                     if (this.config.getState().data.borders) {
+        //                         for (const region of this.config.getState().data.borders) {
+        //                             if (region.hexes.some(b => b.q === clickedHex.q && b.r === clickedHex.r)) {
+        //                                 foundRegion = region;
+        //                                 break;
+        //                             }
+        //                         }
+        //                     }
+        //                     if (foundRegion) {
+        //                         this.borderSettings.activeRegionId = foundRegion.id;
+        //                         this.borderSettings.pickedHex = { q: clickedHex.q, r: clickedHex.r };
+        //                         this.borderSettings.dashes = foundRegion.dashes || DEFAULT_BORDER_DASHES;
+        //                         this.masterColor = foundRegion.color;
+        //                         if (this.masterColorInput) { this.masterColorInput.value = this.masterColor; if (this.masterColorBtn) this.masterColorBtn.style.backgroundColor = this.masterColor; }
+        //                         if (this.borderDashesInput) this.borderDashesInput.value = this.borderSettings.dashes.toString();
+        //                         new Notice(localizeString('notice.borderSelected', { id: foundRegion.id }));
+        //                     } else {
+        //                         new Notice(localizeString('notice.noBorderAtPosition'));
+        //                     }
+        //                     this.borderPickMode = false;
+        //                     if (this.borderPickerBtn) { this.borderPickerBtn.style.background = BUTTON_BG_DEFAULT; this.borderPickerBtn.style.color = ''; }
+        //                     this.currentToolGroup = 'border';
+        //                     this.drawMode = 'pen';
+        //                     const toolbar = this.contentEl.querySelector('.hex-toolbar');
+        //                     if (toolbar) this.updateToolbarState(toolbar);
+        //                     this.render();
+        //                     this.touchState.pendingTouchStart = null;
+        //                     return;
+        //                 }
+
+        //                 if (this.pathPickMode) {
+        //                     this.pickPathAtHex(this.startHex);
+        //                     this.touchState.pendingTouchStart = null;
+        //                     return;
+        //                 }
+
+        //                 let hitText = this.getTextAt(world.x, world.y);
+        //                 if (hitText && this.currentToolGroup === 'text' && this.drawMode === 'none') {
+        //                     this.pushHistoryIfNeeded();
+        //                     this.draggedText = hitText;
+        //                 } else {
+        //                     this.processInput(this.touchState.pendingTouchStart.mouseEvent, true);
+        //                 }
+        //             }
+        //             this.touchState.pendingTouchStart = null;
+        //             this.touchState.touchStartTimeout = null;
+        //         }, 150); // 150ms Verzögerung
+        //     }
+        // }, { passive: false });
+
+        // this.canvas.addEventListener('touchmove', (e) => {
+        //     if (e.touches.length === 2 && this.touchState?.isTwoFingerGesture) {
+        //         e.preventDefault();
+
+        //         const touch1 = e.touches[0];
+        //         const touch2 = e.touches[1];
+
+        //         const dx = touch2.clientX - touch1.clientX;
+        //         const dy = touch2.clientY - touch1.clientY;
+        //         const currentDistance = Math.sqrt(dx * dx + dy * dy);
+        //         const zoomFactor = currentDistance / this.touchState.initialDistance;
+        //         const newZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, this.touchState.initialZoom * zoomFactor));
+
+        //         const pivotWorldX = (this.touchState.pivotX - this.touchState.initialPanX) / this.touchState.initialZoom;
+        //         const pivotWorldY = (this.touchState.pivotY - this.touchState.initialPanY) / this.touchState.initialZoom;
+
+        //         const newOffX = this.touchState.pivotX - pivotWorldX * newZoom;
+        //         const newOffY = this.touchState.pivotY - pivotWorldY * newZoom;
+
+        //         const currentCenterX = (touch1.clientX + touch2.clientX) / 2;
+        //         const currentCenterY = (touch1.clientY + touch2.clientY) / 2;
+        //         const deltaX = currentCenterX - this.touchState.centerX;
+        //         const deltaY = currentCenterY - this.touchState.centerY;
+
+        //         this.config.getState().data.zoom = newZoom;
+        //         this.config.getState().data.offX = newOffX + deltaX;
+        //         this.config.getState().data.offY = newOffY + deltaY;
+
+        //         this.render();
+        //     } else if (e.touches.length === 1&& this.touchState && !this.touchState.isTwoFingerGesture) {
+        //         if (!this.isMouseDown && this.touchState.pendingTouchStart) {
+        //             if (!this.editMode) {
+        //                 e.preventDefault();
+        //                 this.touchState.hasMovedSinceStart = true;
+        //                 const touch = e.touches[0];
+        //                 if (this.touchState.lastTouchX !== undefined) {
+        //                     this.config.getState().data.offX += touch.clientX - this.touchState.lastTouchX;
+        //                     this.config.getState().data.offY += touch.clientY - this.touchState.lastTouchY!;
+        //                     this.render();
+        //                 }
+        //                 this.touchState.lastTouchX = touch.clientX;
+        //                 this.touchState.lastTouchY = touch.clientY;
+        //             }
+        //             return;
+        //         }
+
+        //         e.preventDefault();
+        //         this.touchState.hasMovedSinceStart = true;
+
+        //         const touch = e.touches[0];
+        //         const mouseEvent = new MouseEvent('mousemove', {
+        //             clientX: touch.clientX,
+        //             clientY: touch.clientY,
+        //             bubbles: true,
+        //             cancelable: true
+        //         });
+
+        //         const world = this.getWorldCoords(mouseEvent);
+
+        //         if (this.draggedText) {
+        //             this.draggedText.x = world.x;
+        //             this.draggedText.y = world.y;
+        //             this.render();
+        //         } else if (this.isMouseDown) {
+        //             if (!this.editMode) {
+        //                 const touch = e.touches[0];
+        //                 if (this.touchState.lastTouchX !== undefined) {
+        //                     this.config.getState().data.offX += touch.clientX - this.touchState.lastTouchX;
+        //                     this.config.getState().data.offY += touch.clientY - this.touchState.lastTouchY!;
+        //                     this.render();
+        //                 }
+        //                 this.touchState.lastTouchX = touch.clientX;
+        //                 this.touchState.lastTouchY = touch.clientY;
+        //             } else if (this.roadDragIndex !== null && this.roadSettings.editMode) {
+        //                 const road = this.config.getState().data.roads && this.config.getState().data.roads.find(r => r.id === this.roadSettings.activeRoadId);
+        //                 if (road) {
+        //                     const currentHex = pixelToHex(world.x, world.y, this.config.getState().data.gridSize, this.hexOrientation);
+        //                     const curQ = road.waypoints[this.roadDragIndex.idx]!.q;
+        //                     const curR = road.waypoints[this.roadDragIndex.idx]!.r;
+        //                     if (curQ !== currentHex.q || curR !== currentHex.r) {
+        //                         this.pushHistoryIfNeeded();
+        //                         this.roadDragIndex.group.forEach(i => {
+        //                             road.waypoints[i]!.q = currentHex.q;
+        //                             road.waypoints[i]!.r = currentHex.r;
+        //                         });
+        //                         this.render();
+        //                     }
+        //                 }
+        //             } else if (this.riverDragIndex !== null && this.riverSettings.editMode) {
+        //                 const river = this.config.getState().data.rivers && this.config.getState().data.rivers.find(r => r.id === this.riverSettings.activeRiverId);
+        //                 if (river) {
+        //                     const currentHex = pixelToHex(world.x, world.y, this.config.getState().data.gridSize, this.hexOrientation);
+        //                     const curQ = river.waypoints[this.riverDragIndex.idx]!.q;
+        //                     const curR = river.waypoints[this.riverDragIndex.idx]!.r;
+        //                     if (curQ !== currentHex.q || curR !== currentHex.r) {
+        //                         this.pushHistoryIfNeeded();
+        //                         this.riverDragIndex.group.forEach(i => {
+        //                             river.waypoints[i]!.q = currentHex.q;
+        //                             river.waypoints[i]!.r = currentHex.r;
+        //                         });
+        //                         this.render();
+        //                     }
+        //                 }
+        //             } else {
+        //                 this.processInput(mouseEvent, false);
+        //                 this.render();
+        //             }
+        //         }
+        //     }
+        // }, { passive: false });
+
+        // this.canvas.addEventListener('touchend', (e) => {
+        //     if(!this.touchState) return;
+
+        //     if (this.touchState.touchStartTimeout) {
+        //         clearTimeout(this.touchState.touchStartTimeout);
+        //         this.touchState.touchStartTimeout = null;
+        //     }
+
+        //     if (this.touchState.isTwoFingerGesture && e.touches.length < 2) {
+        //         e.preventDefault();
+        //         this.touchState.isTwoFingerGesture = false;
+        //         this.requestSave();
+        //     } else if (e.touches.length === 0 && !this.touchState.isTwoFingerGesture) {
+        //         e.preventDefault();
+
+        //         if (this.touchState.pendingTouchStart && !this.isMouseDown) {
+        //             const world = this.getWorldCoords(this.touchState.pendingTouchStart.mouseEvent);
+        //             this.pendingHistory = true;
+        //             this.isMouseDown = true;
+        //             this.mouseDownPos = { x: world.x, y: world.y };
+        //             this.startHex = pixelToHex(world.x, world.y, this.config.getState().data.gridSize, this.hexOrientation);
+        //             this.lastHex = this.startHex;
+
+        //             if (this.colorPickMode) {
+        //                 const cx = Math.round(this.mouseDownPos.x * this.config.getState().data.zoom + this.config.getState().data.offX);
+        //                 const cy = Math.round(this.mouseDownPos.y * this.config.getState().data.zoom + this.config.getState().data.offY);
+        //                 if (cx >= 0 && cy >= 0 && cx < this.canvas.width && cy < this.canvas.height) {
+        //                     const pixel = this.ctx.getImageData(cx, cy, 1, 1).data;
+        //                     if (pixel[3] > 0) {
+        //                         this.masterColor = rgbToHex(pixel[0], pixel[1], pixel[2]);
+        //                         if (this.masterColorInput) { this.masterColorInput.value = this.masterColor; if (this.masterColorBtn) this.masterColorBtn.style.backgroundColor = this.masterColor; }
+        //                         this.updateActivePathColor();
+        //                         new Notice(localizeString('notice.colorPicked'));
+        //                     } else {
+        //                         new Notice(localizeString('notice.noColorAtPosition'));
+        //                     }
+        //                 } else {
+        //                     new Notice(localizeString('notice.noColorAtPosition'));
+        //                 }
+        //                 this.colorPickMode = false;
+        //                 if (this.colorEyedropperBtn) { this.colorEyedropperBtn.style.background = BUTTON_BG_DEFAULT; this.colorEyedropperBtn.style.color = ''; }
+        //                 this.isMouseDown = false;
+        //                 this.touchState.pendingTouchStart = null;
+        //                 const toolbar = this.contentEl.querySelector('.hex-toolbar');
+        //                 if (toolbar) this.updateToolbarState(toolbar);
+        //                 this.render();
+        //                 return;
+        //             }
+
+        //             if (this.patternPickMode) {
+        //                 const key = `${this.startHex.q}_${this.startHex.r}`;
+        //                 const hexData = this.config.getState().data.hexes[key];
+        //                 if (hexData) {
+        //                     this.patternData = JSON.parse(JSON.stringify(hexData));
+        //                     this.patternSourceHex = { q: this.startHex.q, r: this.startHex.r };
+        //                     new Notice(localizeString('notice.patternPicked'));
+        //                     this.currentToolGroup = 'pattern';
+        //                     this.drawMode = 'pen';
+        //                 } else {
+        //                     this.patternData = null;
+        //                     this.patternSourceHex = null;
+        //                     new Notice(localizeString('notice.noHexAtPosition'));
+        //                 }
+        //                 this.patternPickMode = false;
+        //                 if (this.patternPickerBtn) {
+        //                     this.patternPickerBtn.style.background = BUTTON_BG_DEFAULT;
+        //                 }
+        //                 const toolbar = this.contentEl.querySelector('.hex-toolbar');
+        //                 if (toolbar) {
+        //                     this.updateToolbarState(toolbar);
+        //                 }
+        //                 this.render();
+        //                 this.requestSave();
+        //                 this.touchState.pendingTouchStart = null;
+        //                 this.isMouseDown = false;
+        //                 return;
+        //             }
+
+        //             if (this.borderPickMode) {
+        //                 const clickedHex = this.startHex;
+        //                 let foundRegion: any = null;
+        //                 if (this.config.getState().data.borders) {
+        //                     for (const region of this.config.getState().data.borders) {
+        //                         if (region.hexes.some(b => b.q === clickedHex.q && b.r === clickedHex.r)) {
+        //                             foundRegion = region;
+        //                             break;
+        //                         }
+        //                     }
+        //                 }
+        //                 if (foundRegion) {
+        //                     this.borderSettings.activeRegionId = foundRegion.id;
+        //                     this.borderSettings.pickedHex = { q: clickedHex.q, r: clickedHex.r };
+        //                     this.borderSettings.dashes = foundRegion.dashes || DEFAULT_BORDER_DASHES;
+        //                     this.masterColor = foundRegion.color;
+        //                     if (this.masterColorInput) { this.masterColorInput.value = this.masterColor; if (this.masterColorBtn) this.masterColorBtn.style.backgroundColor = this.masterColor; }
+        //                     if (this.borderDashesInput) this.borderDashesInput.value = this.borderSettings.dashes.toString();
+        //                     new Notice(localizeString('notice.borderSelected', { id: foundRegion.id }));
+        //                 } else {
+        //                     new Notice(localizeString('notice.noBorderAtPosition'));
+        //                 }
+        //                 this.borderPickMode = false;
+        //                 if (this.borderPickerBtn) { this.borderPickerBtn.style.background = BUTTON_BG_DEFAULT; this.borderPickerBtn.style.color = ''; }
+        //                 this.currentToolGroup = 'border';
+        //                 this.drawMode = 'pen';
+        //                 const toolbar = this.contentEl.querySelector('.hex-toolbar');
+        //                 if (toolbar) this.updateToolbarState(toolbar);
+        //                 this.render();
+        //                 this.touchState.pendingTouchStart = null;
+        //                 this.isMouseDown = false;
+        //                 return;
+        //             }
+
+        //             if (this.pathPickMode) {
+        //                 this.pickPathAtHex(this.startHex);
+        //                 this.touchState.pendingTouchStart = null;
+        //                 this.isMouseDown = false;
+        //                 return;
+        //             }
+
+        //             let hitText = this.getTextAt(world.x, world.y);
+        //             if (hitText && this.currentToolGroup === 'text' && this.drawMode === 'none') {
+        //                 this.pushHistoryIfNeeded();
+        //                 this.draggedText = hitText;
+        //             } else {
+        //                 this.processInput(this.touchState.pendingTouchStart.mouseEvent, true);
+        //             }
+        //         }
+
+        //         const touch = e.changedTouches[0];
+        //         const mouseEvent = new MouseEvent('mouseup', {
+        //             clientX: touch.clientX,
+        //             clientY: touch.clientY,
+        //             bubbles: true,
+        //             cancelable: true
+        //         });
+
+        //         const world = this.getWorldCoords(mouseEvent);
+
+        //         if (this.isMouseDown && this.mouseDownPos) {
+        //             if (this.roadDragIndex !== null && this.roadSettings.editMode) {
+        //                 const dist = Math.sqrt((world.x - this.mouseDownPos.x)**2 + (world.y - this.mouseDownPos.y)**2);
+        //                 if (dist < 5) {
+        //                     const road = this.config.getState().data.roads && this.config.getState().data.roads.find(r => r.id === this.roadSettings.activeRoadId);
+        //                     if (road) {
+        //                         this.handleWaypointClick(road, this.roadSettings, this.roadDragIndex.idx);
+        //                     }
+        //                 }
+        //                 this.roadDragIndex = null;
+        //                 this.requestSave();
+        //                 this.isMouseDown = false;
+        //                 this.draggedText = null;
+        //                 this.lastHex = null;
+        //                 this.startHex = null;
+        //                 this.touchState.pendingTouchStart = null;
+        //                 this.render();
+        //                 return;
+        //             }
+
+        //             if (this.riverDragIndex !== null && this.riverSettings.editMode) {
+        //                 const dist = Math.sqrt((world.x - this.mouseDownPos.x)**2 + (world.y - this.mouseDownPos.y)**2);
+        //                 if (dist < 5) {
+        //                     const river = this.config.getState().data.rivers && this.config.getState().data.rivers.find(r => r.id === this.riverSettings.activeRiverId);
+        //                     if (river) {
+        //                         this.handleWaypointClick(river, this.riverSettings, this.riverDragIndex.idx);
+        //                     }
+        //                 }
+        //                 this.riverDragIndex = null;
+        //                 this.requestSave();
+        //                 this.isMouseDown = false;
+        //                 this.draggedText = null;
+        //                 this.lastHex = null;
+        //                 this.startHex = null;
+        //                 this.touchState.pendingTouchStart = null;
+        //                 this.render();
+        //                 return;
+        //             }
+        //             const dist = Math.sqrt((world.x - this.mouseDownPos.x)**2 + (world.y - this.mouseDownPos.y)**2);
+        //             if (dist < 5 && this.drawMode !== 'eraser') {
+        //                 const hitText = this.getTextAt(world.x, world.y);
+        //                 if (hitText) {
+        //                     if (this.currentToolGroup === 'text') {
+        //                         const hitX = hitText.x, hitY = hitText.y;
+        //                         new TextInputModal(this.app, (v, s, l, c, o, b, sh, shd, sho) => {
+        //                             const target = this.config.getState().data.texts.find(t => t.x === hitX && t.y === hitY);
+        //                             if (v && target) {
+        //                                 target.text = v; target.size = s; target.link = l;
+        //                                 target.color = c; target.outline = o; target.bold = b;
+        //                                 target.shadow = sh; target.shadowDistance = shd; target.shadowOpatown = sho;
+        //                                 this.lastUsedTextSize = s; this.lastUsedTextColor = c; this.lastUsedTextOutline = o; this.lastUsedTextBold = b;
+        //                                 this.lastUsedTextShadow = sh; this.lastUsedTextShadowDistance = shd; this.lastUsedTextShadowOpatown = sho;
+        //                             }
+        //                             else if (!v) { this.config.getState().data.texts = this.config.getState().data.texts.filter(t => !(t.x === hitX && t.y === hitY)); }
+        //                             this.render(); this.requestSave();
+        //                         }, hitText.text, hitText.size, hitText.link, hitText.color, hitText.outline, hitText.bold, hitText.shadow, hitText.shadowDistance, hitText.shadowOpatown, this.colorPalette, this.colorPalette2).open();
+        //                     } else if (hitText.link) {
+        //                         this.app.workspace.openLinkText(hitText.link, this.file.path, true);
+        //                     }
+        //                 }
+        //             }
+        //         }
+        //         if (this.isMouseDown || this.draggedText || this.touchState.hasMovedSinceStart) this.requestSave();
+
+        //         if (this.editMode && this.drawMode === 'eraser' && e.changedTouches.length > 0) {
+        //             const tapTouch = e.changedTouches[0];
+        //             const tapEvent = new MouseEvent('mouseup', { clientX: tapTouch.clientX, clientY: tapTouch.clientY, bubbles: true, cancelable: true });
+        //             const tapWorld = this.getWorldCoords(tapEvent);
+        //             const tapHex = pixelToHex(tapWorld.x, tapWorld.y, this.config.getState().data.gridSize, this.hexOrientation);
+        //             const now = Date.now();
+
+        //             if (this.touchState.lastTapTime &&
+        //                 now - this.touchState.lastTapTime < 400 &&
+        //                 this.touchState.lastTapHex &&
+        //                 this.touchState.lastTapHex.q === tapHex.q &&
+        //                 this.touchState.lastTapHex.r === tapHex.r) {
+        //                 if (this.history.length > 0) this.history.pop();
+        //                 this.handleEraserFlood(tapHex);
+        //                 this.render();
+        //                 this.requestSave();
+        //                 this.touchState.lastTapTime = 0;
+        //                 this.touchState.lastTapHex = null;
+        //             } else {
+        //                 this.touchState.lastTapTime = now;
+        //                 this.touchState.lastTapHex = { q: tapHex.q, r: tapHex.r };
+        //             }
+        //         }
+
+        //         this.isMouseDown = false;
+        //         this.draggedText = null;
+        //         this.roadDragIndex = null;
+        //         this.riverDragIndex = null;
+        //         this.lastHex = null;
+        //         this.startHex = null;
+        //         this.touchState.pendingTouchStart = null;
+        //         this.touchState.lastTouchX = undefined;
+        //         this.touchState.lastTouchY = undefined;
+        //         this.render();
+        //     }
+
+        //     this.touchState.touches = Array.from(e.touches);
+        // }, { passive: false });
+
+        // this.canvas.addEventListener('touchcancel', (e) => {
+        //     e.preventDefault();
+
+        //     if(!this.touchState) return;
+
+        //     if (this.touchState.touchStartTimeout) {
+        //         clearTimeout(this.touchState.touchStartTimeout);
+        //         this.touchState.touchStartTimeout = null;
+        //     }
+
+        //     this.touchState.isTwoFingerGesture = false;
+        //     this.touchState.pendingTouchStart = null;
+        //     this.touchState.lastTouchX = undefined;
+        //     this.touchState.lastTouchY = undefined;
+        //     this.isMouseDown = false;
+        //     this.draggedText = null;
+        //     this.roadDragIndex = null;
+        //     this.riverDragIndex = null;
+        //     this.lastHex = null;
+        //     this.startHex = null;
+        //     this.touchState.touches = [];
+        //     this.render();
+        // }, { passive: false });
+    }
+
+    // ===============================
+    // Rendering
+    // ===============================
     private render() {
         if (!this.canvas || !this.ctx) throw new Error("Canvas or context not initialized");
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -1029,895 +1906,5 @@ export default class HexCartographerContent {
         }
 
         if (dashCount > 1) { this.ctx.setLineDash([]); this.ctx.lineDashOffset = 0; }
-    }
-
-    // private undo() {
-    //     const previousState = this.historyService.undo(this.config.getState().data);
-    //     console.log(previousState)
-    //     if (previousState) {
-    //         this.config.getState().data = previousState;
-    //     }
-    // }
-
-    // private redo() {
-    //     const nextState = this.historyService.redo(this.config.getState().data);
-    //     if (nextState) {
-    //         this.config.getState().data = nextState;
-    //     }
-    // }
-
-    // ==============================
-    // Event Listeners
-    // ==============================
-    private registerLeftMouseButtonListeners() {
-        const leftClick = createLeftMouseButtonInteraction({
-            getApp: () => this.plugin.app,
-            getCanvas: () => this.canvas!,
-            getData: () => this.config.getState().data,
-            setState: this.config.setState,
-        });
-
-        return registerLeftMouseButtonListeners({
-            getState: this.config.getState,
-            setState: this.config.setState,
-            canvas: this.canvas!,
-            down: leftClick.down,
-        });
-    }
-
-    private registerMiddleMouseButtonListeners() {
-        const middleClick = createMiddleMouseButtonInteraction();
-
-        return registerMiddleMouseButtonListeners({
-            getState: this.config.getState,
-            setState: this.config.setState,
-            canvas: this.canvas!,
-            down: middleClick.down,
-        });
-    }
-
-    private registerRightMouseButtonListeners() {
-        const rightClick = createRightMouseButtonInteraction({
-            getCanvas: () => this.canvas!,
-        });
-
-        return registerRightMouseButtonListeners({
-            getState: this.config.getState,
-            setState: this.config.setState,
-            canvas: this.canvas!,
-            down: rightClick.down,
-        });
-    }
-
-    private registerEventListeners() {
-        if(!this.canvas) throw new Error("Canvas not initialized");
-
-        const leftClickUnregister = this.registerLeftMouseButtonListeners();
-        const middleClickUnregister = this.registerMiddleMouseButtonListeners();
-        const rightClickUnregister = this.registerRightMouseButtonListeners();
-
-        // this.contentEl.addEventListener('keydown', (e) => {
-        //     e.preventDefault();
-
-        //     if(e.ctrlKey || e.metaKey) {
-        //         const key = e.key.toLowerCase();
-        //         if((key === 'z' && e.shiftKey) || key === 'y') this.redo();
-        //         else if(key === 'z') this.undo();
-        //     }
-        // });
-
-        
-
-        // this.canvas.addEventListener('mousedown', (e) => {
-        //     this.canvas.focus();
-        //     const world = this.getWorldCoords(e);
-
-        //     this.pendingHistory = true;
-        //     this.isMouseDown = true;
-        //     this.mouseDownPos = { x: world.x, y: world.y };
-        //     this.startHex = pixelToHex(world.x, world.y, this.config.getState().data.gridSize, this.hexOrientation);
-        //     this.lastHex = this.startHex;
-
-        //     if (this.colorPickMode) {
-        //         const cx = Math.round(this.mouseDownPos.x * this.config.getState().data.zoom + this.config.getState().data.offX);
-        //         const cy = Math.round(this.mouseDownPos.y * this.config.getState().data.zoom + this.config.getState().data.offY);
-        //         if (cx >= 0 && cy >= 0 && cx < this.canvas.width && cy < this.canvas.height) {
-        //             const pixel = this.ctx.getImageData(cx, cy, 1, 1).data;
-        //             if (pixel[3] > 0) {
-        //                 this.masterColor = rgbToHex(pixel[0], pixel[1], pixel[2]);
-        //                 if (this.masterColorInput) { this.masterColorInput.value = this.masterColor; if (this.masterColorBtn) this.masterColorBtn.style.backgroundColor = this.masterColor; }
-        //                 this.updateActivePathColor();
-        //                 new Notice(localizeString('notice.colorPicked'));
-        //             } else {
-        //                 new Notice(localizeString('notice.noColorAtPosition'));
-        //             }
-        //         } else {
-        //             new Notice(localizeString('notice.noColorAtPosition'));
-        //         }
-        //         this.colorPickMode = false;
-        //         if (this.colorEyedropperBtn) { this.colorEyedropperBtn.style.background = BUTTON_BG_DEFAULT; this.colorEyedropperBtn.style.color = ''; }
-        //         this.isMouseDown = false;
-        //         const toolbar = this.contentEl.querySelector('.hex-toolbar');
-        //         if (toolbar) this.updateToolbarState(toolbar);
-        //         this.render();
-        //         return;
-        //     }
-
-        // this.canvas.addEventListener('contextmenu', (e) => {
-        //     if (this.editMode) e.preventDefault();
-        // });
-
-        // this.canvas.addEventListener('dblclick', (e) => {
-        //     if (!this.editMode) return;
-        //     if (e.button === 2 || this.drawMode === 'eraser') {
-        //         const world = this.getWorldCoords(e);
-        //         const hex = pixelToHex(world.x, world.y, this.config.getState().data.gridSize, this.hexOrientation);
-        //         if (this.history.length > 0) this.history.pop();
-        //         this.handleEraserFlood(hex);
-        //         this.render();
-        //         this.requestSave();
-        //     }
-        // });
-
-        // this.contentEl.addEventListener('mousemove', (e) => {
-        //     const world = this.getWorldCoords(e);
-        //     if (this.isRightMouseErasing) {
-        //         const hex = pixelToHex(world.x, world.y, this.config.getState().data.gridSize, this.hexOrientation);
-        //         const key = `${hex.q}_${hex.r}`;
-        //         if (key !== this.rightEraseLastHex) {
-        //             this.handleEraser(hex, world.x, world.y);
-        //             this.rightEraseLastHex = key;
-        //             this.render();
-        //         }
-        //         return;
-        //     }
-        //     if (this.isDraggingMap) {
-        //         this.config.getState().data.offX += e.movementX;
-        //         this.config.getState().data.offY += e.movementY;
-        //         this.render();
-        //     } else if (this.draggedText) {
-        //         this.draggedText.x = world.x;
-        //         this.draggedText.y = world.y;
-        //         this.render();
-        //     } else if (this.isMouseDown) {
-        //         if (!this.editMode) {
-        //             this.config.getState().data.offX += e.movementX;
-        //             this.config.getState().data.offY += e.movementY;
-        //             this.render();
-        //         } else if (this.roadDragIndex !== null && this.roadSettings.editMode) {
-        //             const road = this.config.getState().data.roads && this.config.getState().data.roads.find(r => r.id === this.roadSettings.activeRoadId);
-        //             if (road) {
-        //                 const currentHex = pixelToHex(world.x, world.y, this.config.getState().data.gridSize, this.hexOrientation);
-        //                 const curQ = road.waypoints[this.roadDragIndex.idx]!.q;
-        //                 const curR = road.waypoints[this.roadDragIndex.idx]!.r;
-        //                 if (curQ !== currentHex.q || curR !== currentHex.r) {
-        //                     this.pushHistoryIfNeeded();
-        //                     this.roadDragIndex.group.forEach(i => {
-        //                         road.waypoints[i]!.q = currentHex.q;
-        //                         road.waypoints[i]!.r = currentHex.r;
-        //                     });
-        //                     this.render();
-        //                 }
-        //             }
-        //         } else if (this.riverDragIndex !== null && this.riverSettings.editMode) {
-        //             const river = this.config.getState().data.rivers && this.config.getState().data.rivers.find(r => r.id === this.riverSettings.activeRiverId);
-        //             if (river) {
-        //                 const currentHex = pixelToHex(world.x, world.y, this.config.getState().data.gridSize, this.hexOrientation);
-        //                 const curQ = river.waypoints[this.riverDragIndex.idx]!.q;
-        //                 const curR = river.waypoints[this.riverDragIndex.idx]!.r;
-        //                 if (curQ !== currentHex.q || curR !== currentHex.r) {
-        //                     this.pushHistoryIfNeeded();
-        //                     this.riverDragIndex.group.forEach(i => {
-        //                         river.waypoints[i]!.q = currentHex.q;
-        //                         river.waypoints[i]!.r = currentHex.r;
-        //                     });
-        //                     this.render();
-        //                 }
-        //             }
-        //         } else {
-        //             this.processInput(e, false);
-        //             this.render();
-        //         }
-        //     }
-
-        //     const hoverText = this.getTextAt(world.x, world.y);
-        //     if (hoverText && hoverText.link) {
-        //         this.canvas.title = `${hoverText.link}`;
-        //         this.canvas.style.cursor = 'pointer';
-        //     } else {
-        //         this.canvas.title = '';
-        //         this.canvas.style.cursor = (hoverText && this.currentToolGroup === 'text') ? 'text' : 'crosshair';
-        //     }
-        // });
-
-        // const stop = (e) => {
-        //     if (this.isRightMouseErasing) {
-        //         this.isRightMouseErasing = false;
-        //         this.rightEraseLastHex = null;
-        //         this.requestSave();
-        //         return;
-        //     }
-        //     const world = this.getWorldCoords(e);
-        //     if (this.isMouseDown && this.mouseDownPos) {
-        //         if (this.roadDragIndex !== null && this.roadSettings.editMode) {
-        //             const dist = Math.sqrt((world.x - this.mouseDownPos.x)**2 + (world.y - this.mouseDownPos.y)**2);
-        //             if (dist < 5) {
-        //                 const road = this.config.getState().data.roads && this.config.getState().data.roads.find(r => r.id === this.roadSettings.activeRoadId);
-        //                 if (road) {
-        //                     this.handleWaypointClick(road, this.roadSettings, this.roadDragIndex.idx);
-        //                 }
-        //             }
-        //             this.roadDragIndex = null;
-        //             this.requestSave();
-        //             this.isMouseDown = false;
-        //             this.isDraggingMap = false;
-        //             this.draggedText = null;
-        //             this.lastHex = null;
-        //             this.startHex = null;
-        //             this.render();
-        //             return;
-        //         }
-
-        //         if (this.riverDragIndex !== null && this.riverSettings.editMode) {
-        //             const dist = Math.sqrt((world.x - this.mouseDownPos.x)**2 + (world.y - this.mouseDownPos.y)**2);
-        //             if (dist < 5) {
-        //                 const river = this.config.getState().data.rivers && this.config.getState().data.rivers.find(r => r.id === this.riverSettings.activeRiverId);
-        //                 if (river) {
-        //                     this.handleWaypointClick(river, this.riverSettings, this.riverDragIndex.idx);
-        //                 }
-        //             }
-        //             this.riverDragIndex = null;
-        //             this.requestSave();
-        //             this.isMouseDown = false;
-        //             this.isDraggingMap = false;
-        //             this.draggedText = null;
-        //             this.lastHex = null;
-        //             this.startHex = null;
-        //             this.render();
-        //             return;
-        //         }
-        //         const dist = Math.sqrt((world.x - this.mouseDownPos.x)**2 + (world.y - this.mouseDownPos.y)**2);
-        //         if (dist < 5 && this.drawMode !== 'eraser') {
-        //             const hitText = this.getTextAt(world.x, world.y);
-        //             if (hitText) {
-        //                 if (this.currentToolGroup === 'text') {
-        //                     const hitX = hitText.x, hitY = hitText.y;
-        //                     new TextInputModal(this.app, (v, s, l, c, o, b, sh, shd, sho) => {
-        //                         const target = this.config.getState().data.texts.find(t => t.x === hitX && t.y === hitY);
-        //                         if (v && target) {
-        //                             target.text = v; target.size = s; target.link = l;
-        //                             target.color = c; target.outline = o; target.bold = b;
-        //                             target.shadow = sh; target.shadowDistance = shd; target.shadowOpatown = sho;
-        //                             this.lastUsedTextSize = s; this.lastUsedTextColor = c; this.lastUsedTextOutline = o; this.lastUsedTextBold = b;
-        //                             this.lastUsedTextShadow = sh; this.lastUsedTextShadowDistance = shd; this.lastUsedTextShadowOpatown = sho;
-        //                         }
-        //                         else if (!v) { this.config.getState().data.texts = this.config.getState().data.texts.filter(t => !(t.x === hitX && t.y === hitY)); }
-        //                         this.render(); this.requestSave();
-        //                     }, hitText.text, hitText.size, hitText.link, hitText.color, hitText.outline, hitText.bold, hitText.shadow, hitText.shadowDistance, hitText.shadowOpatown, this.colorPalette, this.colorPalette2).open();
-        //                 } else if (hitText.link) {
-        //                     this.app.workspace.openLinkText(hitText.link, this.file.path, true);
-        //                 }
-        //             }
-        //         }
-        //     }
-        //     if (this.isMouseDown || this.draggedText || this.isDraggingMap) this.requestSave();
-        //     this.isMouseDown = false;
-        //     this.isDraggingMap = false;
-        //     this.draggedText = null;
-        //     this.roadDragIndex = null;
-        //     this.riverDragIndex = null;
-        //     this.lastHex = null;
-        //     this.startHex = null;
-        //     this.render();
-        // };
-        // this.contentEl.addEventListener('mouseup', stop);
-        // this.contentEl.addEventListener('mouseleave', stop);
-
-        // this.canvas.addEventListener('wheel', (e) => {
-        //     e.preventDefault();
-
-        //     const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
-        //     const oldZoom = this.config.getState().data.zoom;
-        //     const newZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, oldZoom * zoomFactor));
-        //     if (newZoom === oldZoom) return;
-
-        //     const rect = this.canvas.getBoundingClientRect();
-        //     const mouseX = e.clientX - rect.left;
-        //     const mouseY = e.clientY - rect.top;
-
-        //     const worldX = (mouseX - this.config.getState().data.offX) / oldZoom;
-        //     const worldY = (mouseY - this.config.getState().data.offY) / oldZoom;
-
-        //     this.config.getState().data.offX = mouseX - worldX * newZoom;
-        //     this.config.getState().data.offY = mouseY - worldY * newZoom;
-        //     this.config.getState().data.zoom = newZoom;
-
-        //     this.render();
-        //     this.requestSave();
-        // }, { passive: false });
-
-        // this.touchState = {
-        //     touches: [],
-        //     initialDistance: 0,
-        //     initialZoom: 1,
-        //     initialPanX: 0,
-        //     initialPanY: 0,
-        //     isTwoFingerGesture: false,
-        //     touchStartTimeout: null,
-        //     pendingTouchStart: null,
-        //     hasMovedSinceStart: false,
-        //     lastTapTime: 0,
-        //     lastTapHex: null,
-        //     lastTouchX: undefined,
-        //     lastTouchY: undefined,
-        //     centerX: 0,
-        //     centerY: 0,
-        //     pivotX: 0,
-        //     pivotY: 0
-        // };
-
-        // this.canvas.addEventListener('touchstart', (e) => {
-        //     this.canvas.focus();
-        //     if(!this.touchState) return;
-            
-        //     this.touchState.touches = Array.from(e.touches);
-
-        //     if (this.touchState.touchStartTimeout) {
-        //         clearTimeout(this.touchState.touchStartTimeout);
-        //         this.touchState.touchStartTimeout = null;
-        //         this.touchState.pendingTouchStart = null;
-        //     }
-
-        //     if (e.touches.length === 2) {
-        //         e.preventDefault();
-        //         this.touchState.isTwoFingerGesture = true;
-        //         this.touchState.hasMovedSinceStart = false;
-        //         this.touchState.pendingTouchStart = null;
-
-        //         if (this.isMouseDown && !this.touchState.hasMovedSinceStart) {
-        //             this.isMouseDown = false;
-        //             this.draggedText = null;
-        //             if (this.history.length > 0 && !this.touchState.hasMovedSinceStart) {
-        //                 this.history.pop(); // Entferne den History-Eintrag vom Touch-Start
-        //             }
-        //         }
-
-        //         const touch1 = e.touches[0];
-        //         const touch2 = e.touches[1];
-
-        //         const dx = touch2.clientX - touch1.clientX;
-        //         const dy = touch2.clientY - touch1.clientY;
-        //         this.touchState.initialDistance = Math.sqrt(dx * dx + dy * dy);
-        //         this.touchState.initialZoom = this.config.getState().data.zoom;
-
-        //         this.touchState.initialPanX = this.config.getState().data.offX;
-        //         this.touchState.initialPanY = this.config.getState().data.offY;
-        //         this.touchState.centerX = (touch1.clientX + touch2.clientX) / 2;
-        //         this.touchState.centerY = (touch1.clientY + touch2.clientY) / 2;
-
-        //         const rect = this.canvas.getBoundingClientRect();
-        //         this.touchState.pivotX = this.touchState.centerX - rect.left;
-        //         this.touchState.pivotY = this.touchState.centerY - rect.top;
-        //     } else if (e.touches.length === 1) {
-        //         this.touchState.isTwoFingerGesture = false;
-        //         this.touchState.hasMovedSinceStart = false;
-
-        //         const touch = e.touches[0];
-        //         const mouseEvent = new MouseEvent('mousedown', {
-        //             clientX: touch.clientX,
-        //             clientY: touch.clientY,
-        //             button: 0,
-        //             bubbles: true,
-        //             cancelable: true
-        //         });
-
-        //         this.touchState.pendingTouchStart = {
-        //             touch: touch,
-        //             mouseEvent: mouseEvent,
-        //             timestamp: Date.now()
-        //         };
-
-        //         if (!this.editMode) {
-        //             this.touchState.lastTouchX = touch.clientX;
-        //             this.touchState.lastTouchY = touch.clientY;
-        //         }
-
-        //         this.touchState.touchStartTimeout = setTimeout(() => {
-        //             if(!this.touchState) throw new Error("No touch state found!");
-
-        //             if (this.touchState.pendingTouchStart && !this.touchState.isTwoFingerGesture) {
-        //                 if (this.touchState.lastTouchX === undefined) {
-        //                     this.touchState.lastTouchX = this.touchState.pendingTouchStart.touch.clientX;
-        //                     this.touchState.lastTouchY = this.touchState.pendingTouchStart.touch.clientY;
-        //                 }
-        //                 const world = this.getWorldCoords(this.touchState.pendingTouchStart.mouseEvent);
-        //                 this.pendingHistory = true;
-        //                 this.isMouseDown = true;
-        //                 this.mouseDownPos = { x: world.x, y: world.y };
-        //                 this.startHex = pixelToHex(world.x, world.y, this.config.getState().data.gridSize, this.hexOrientation);
-        //                 this.lastHex = this.startHex;
-
-        //                 if (this.colorPickMode) {
-        //                     const cx = Math.round(this.mouseDownPos.x * this.config.getState().data.zoom + this.config.getState().data.offX);
-        //                     const cy = Math.round(this.mouseDownPos.y * this.config.getState().data.zoom + this.config.getState().data.offY);
-        //                     if (cx >= 0 && cy >= 0 && cx < this.canvas.width && cy < this.canvas.height) {
-        //                         const pixel = this.ctx.getImageData(cx, cy, 1, 1).data;
-        //                         if (pixel[3] > 0) {
-        //                             this.masterColor = rgbToHex(pixel[0], pixel[1], pixel[2]);
-        //                             if (this.masterColorInput) { this.masterColorInput.value = this.masterColor; if (this.masterColorBtn) this.masterColorBtn.style.backgroundColor = this.masterColor; }
-        //                             this.updateActivePathColor();
-        //                             new Notice(localizeString('notice.colorPicked'));
-        //                         } else {
-        //                             new Notice(localizeString('notice.noColorAtPosition'));
-        //                         }
-        //                     } else {
-        //                         new Notice(localizeString('notice.noColorAtPosition'));
-        //                     }
-        //                     this.colorPickMode = false;
-        //                     if (this.colorEyedropperBtn) { this.colorEyedropperBtn.style.background = BUTTON_BG_DEFAULT; this.colorEyedropperBtn.style.color = ''; }
-        //                     this.isMouseDown = false;
-        //                     this.touchState.pendingTouchStart = null;
-        //                     const toolbar = this.contentEl.querySelector('.hex-toolbar');
-        //                     if (toolbar) this.updateToolbarState(toolbar);
-        //                     this.render();
-        //                     return;
-        //                 }
-
-        //                 if (this.patternPickMode) {
-        //                     const key = `${this.startHex.q}_${this.startHex.r}`;
-        //                     const hexData = this.config.getState().data.hexes[key];
-        //                     if (hexData) {
-        //                         this.patternData = JSON.parse(JSON.stringify(hexData));
-        //                         this.patternSourceHex = { q: this.startHex.q, r: this.startHex.r };
-        //                         new Notice(localizeString('notice.patternPicked'));
-        //                         this.currentToolGroup = 'pattern';
-        //                         this.drawMode = 'pen';
-        //                     } else {
-        //                         this.patternData = null;
-        //                         this.patternSourceHex = null;
-        //                         new Notice(localizeString('notice.noHexAtPosition'));
-        //                     }
-        //                     this.patternPickMode = false;
-        //                     if (this.patternPickerBtn) {
-        //                         this.patternPickerBtn.style.background = BUTTON_BG_DEFAULT;
-        //                     }
-        //                     const toolbar = this.contentEl.querySelector('.hex-toolbar');
-        //                     if (toolbar) {
-        //                         this.updateToolbarState(toolbar);
-        //                     }
-        //                     this.render();
-        //                     this.requestSave();
-        //                     this.touchState.pendingTouchStart = null;
-        //                     return;
-        //                 }
-
-        //                 if (this.borderPickMode) {
-        //                     const clickedHex = this.startHex;
-        //                     let foundRegion: any = null;
-        //                     if (this.config.getState().data.borders) {
-        //                         for (const region of this.config.getState().data.borders) {
-        //                             if (region.hexes.some(b => b.q === clickedHex.q && b.r === clickedHex.r)) {
-        //                                 foundRegion = region;
-        //                                 break;
-        //                             }
-        //                         }
-        //                     }
-        //                     if (foundRegion) {
-        //                         this.borderSettings.activeRegionId = foundRegion.id;
-        //                         this.borderSettings.pickedHex = { q: clickedHex.q, r: clickedHex.r };
-        //                         this.borderSettings.dashes = foundRegion.dashes || DEFAULT_BORDER_DASHES;
-        //                         this.masterColor = foundRegion.color;
-        //                         if (this.masterColorInput) { this.masterColorInput.value = this.masterColor; if (this.masterColorBtn) this.masterColorBtn.style.backgroundColor = this.masterColor; }
-        //                         if (this.borderDashesInput) this.borderDashesInput.value = this.borderSettings.dashes.toString();
-        //                         new Notice(localizeString('notice.borderSelected', { id: foundRegion.id }));
-        //                     } else {
-        //                         new Notice(localizeString('notice.noBorderAtPosition'));
-        //                     }
-        //                     this.borderPickMode = false;
-        //                     if (this.borderPickerBtn) { this.borderPickerBtn.style.background = BUTTON_BG_DEFAULT; this.borderPickerBtn.style.color = ''; }
-        //                     this.currentToolGroup = 'border';
-        //                     this.drawMode = 'pen';
-        //                     const toolbar = this.contentEl.querySelector('.hex-toolbar');
-        //                     if (toolbar) this.updateToolbarState(toolbar);
-        //                     this.render();
-        //                     this.touchState.pendingTouchStart = null;
-        //                     return;
-        //                 }
-
-        //                 if (this.pathPickMode) {
-        //                     this.pickPathAtHex(this.startHex);
-        //                     this.touchState.pendingTouchStart = null;
-        //                     return;
-        //                 }
-
-        //                 let hitText = this.getTextAt(world.x, world.y);
-        //                 if (hitText && this.currentToolGroup === 'text' && this.drawMode === 'none') {
-        //                     this.pushHistoryIfNeeded();
-        //                     this.draggedText = hitText;
-        //                 } else {
-        //                     this.processInput(this.touchState.pendingTouchStart.mouseEvent, true);
-        //                 }
-        //             }
-        //             this.touchState.pendingTouchStart = null;
-        //             this.touchState.touchStartTimeout = null;
-        //         }, 150); // 150ms Verzögerung
-        //     }
-        // }, { passive: false });
-
-        // this.canvas.addEventListener('touchmove', (e) => {
-        //     if (e.touches.length === 2 && this.touchState?.isTwoFingerGesture) {
-        //         e.preventDefault();
-
-        //         const touch1 = e.touches[0];
-        //         const touch2 = e.touches[1];
-
-        //         const dx = touch2.clientX - touch1.clientX;
-        //         const dy = touch2.clientY - touch1.clientY;
-        //         const currentDistance = Math.sqrt(dx * dx + dy * dy);
-        //         const zoomFactor = currentDistance / this.touchState.initialDistance;
-        //         const newZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, this.touchState.initialZoom * zoomFactor));
-
-        //         const pivotWorldX = (this.touchState.pivotX - this.touchState.initialPanX) / this.touchState.initialZoom;
-        //         const pivotWorldY = (this.touchState.pivotY - this.touchState.initialPanY) / this.touchState.initialZoom;
-
-        //         const newOffX = this.touchState.pivotX - pivotWorldX * newZoom;
-        //         const newOffY = this.touchState.pivotY - pivotWorldY * newZoom;
-
-        //         const currentCenterX = (touch1.clientX + touch2.clientX) / 2;
-        //         const currentCenterY = (touch1.clientY + touch2.clientY) / 2;
-        //         const deltaX = currentCenterX - this.touchState.centerX;
-        //         const deltaY = currentCenterY - this.touchState.centerY;
-
-        //         this.config.getState().data.zoom = newZoom;
-        //         this.config.getState().data.offX = newOffX + deltaX;
-        //         this.config.getState().data.offY = newOffY + deltaY;
-
-        //         this.render();
-        //     } else if (e.touches.length === 1&& this.touchState && !this.touchState.isTwoFingerGesture) {
-        //         if (!this.isMouseDown && this.touchState.pendingTouchStart) {
-        //             if (!this.editMode) {
-        //                 e.preventDefault();
-        //                 this.touchState.hasMovedSinceStart = true;
-        //                 const touch = e.touches[0];
-        //                 if (this.touchState.lastTouchX !== undefined) {
-        //                     this.config.getState().data.offX += touch.clientX - this.touchState.lastTouchX;
-        //                     this.config.getState().data.offY += touch.clientY - this.touchState.lastTouchY!;
-        //                     this.render();
-        //                 }
-        //                 this.touchState.lastTouchX = touch.clientX;
-        //                 this.touchState.lastTouchY = touch.clientY;
-        //             }
-        //             return;
-        //         }
-
-        //         e.preventDefault();
-        //         this.touchState.hasMovedSinceStart = true;
-
-        //         const touch = e.touches[0];
-        //         const mouseEvent = new MouseEvent('mousemove', {
-        //             clientX: touch.clientX,
-        //             clientY: touch.clientY,
-        //             bubbles: true,
-        //             cancelable: true
-        //         });
-
-        //         const world = this.getWorldCoords(mouseEvent);
-
-        //         if (this.draggedText) {
-        //             this.draggedText.x = world.x;
-        //             this.draggedText.y = world.y;
-        //             this.render();
-        //         } else if (this.isMouseDown) {
-        //             if (!this.editMode) {
-        //                 const touch = e.touches[0];
-        //                 if (this.touchState.lastTouchX !== undefined) {
-        //                     this.config.getState().data.offX += touch.clientX - this.touchState.lastTouchX;
-        //                     this.config.getState().data.offY += touch.clientY - this.touchState.lastTouchY!;
-        //                     this.render();
-        //                 }
-        //                 this.touchState.lastTouchX = touch.clientX;
-        //                 this.touchState.lastTouchY = touch.clientY;
-        //             } else if (this.roadDragIndex !== null && this.roadSettings.editMode) {
-        //                 const road = this.config.getState().data.roads && this.config.getState().data.roads.find(r => r.id === this.roadSettings.activeRoadId);
-        //                 if (road) {
-        //                     const currentHex = pixelToHex(world.x, world.y, this.config.getState().data.gridSize, this.hexOrientation);
-        //                     const curQ = road.waypoints[this.roadDragIndex.idx]!.q;
-        //                     const curR = road.waypoints[this.roadDragIndex.idx]!.r;
-        //                     if (curQ !== currentHex.q || curR !== currentHex.r) {
-        //                         this.pushHistoryIfNeeded();
-        //                         this.roadDragIndex.group.forEach(i => {
-        //                             road.waypoints[i]!.q = currentHex.q;
-        //                             road.waypoints[i]!.r = currentHex.r;
-        //                         });
-        //                         this.render();
-        //                     }
-        //                 }
-        //             } else if (this.riverDragIndex !== null && this.riverSettings.editMode) {
-        //                 const river = this.config.getState().data.rivers && this.config.getState().data.rivers.find(r => r.id === this.riverSettings.activeRiverId);
-        //                 if (river) {
-        //                     const currentHex = pixelToHex(world.x, world.y, this.config.getState().data.gridSize, this.hexOrientation);
-        //                     const curQ = river.waypoints[this.riverDragIndex.idx]!.q;
-        //                     const curR = river.waypoints[this.riverDragIndex.idx]!.r;
-        //                     if (curQ !== currentHex.q || curR !== currentHex.r) {
-        //                         this.pushHistoryIfNeeded();
-        //                         this.riverDragIndex.group.forEach(i => {
-        //                             river.waypoints[i]!.q = currentHex.q;
-        //                             river.waypoints[i]!.r = currentHex.r;
-        //                         });
-        //                         this.render();
-        //                     }
-        //                 }
-        //             } else {
-        //                 this.processInput(mouseEvent, false);
-        //                 this.render();
-        //             }
-        //         }
-        //     }
-        // }, { passive: false });
-
-        // this.canvas.addEventListener('touchend', (e) => {
-        //     if(!this.touchState) return;
-
-        //     if (this.touchState.touchStartTimeout) {
-        //         clearTimeout(this.touchState.touchStartTimeout);
-        //         this.touchState.touchStartTimeout = null;
-        //     }
-
-        //     if (this.touchState.isTwoFingerGesture && e.touches.length < 2) {
-        //         e.preventDefault();
-        //         this.touchState.isTwoFingerGesture = false;
-        //         this.requestSave();
-        //     } else if (e.touches.length === 0 && !this.touchState.isTwoFingerGesture) {
-        //         e.preventDefault();
-
-        //         if (this.touchState.pendingTouchStart && !this.isMouseDown) {
-        //             const world = this.getWorldCoords(this.touchState.pendingTouchStart.mouseEvent);
-        //             this.pendingHistory = true;
-        //             this.isMouseDown = true;
-        //             this.mouseDownPos = { x: world.x, y: world.y };
-        //             this.startHex = pixelToHex(world.x, world.y, this.config.getState().data.gridSize, this.hexOrientation);
-        //             this.lastHex = this.startHex;
-
-        //             if (this.colorPickMode) {
-        //                 const cx = Math.round(this.mouseDownPos.x * this.config.getState().data.zoom + this.config.getState().data.offX);
-        //                 const cy = Math.round(this.mouseDownPos.y * this.config.getState().data.zoom + this.config.getState().data.offY);
-        //                 if (cx >= 0 && cy >= 0 && cx < this.canvas.width && cy < this.canvas.height) {
-        //                     const pixel = this.ctx.getImageData(cx, cy, 1, 1).data;
-        //                     if (pixel[3] > 0) {
-        //                         this.masterColor = rgbToHex(pixel[0], pixel[1], pixel[2]);
-        //                         if (this.masterColorInput) { this.masterColorInput.value = this.masterColor; if (this.masterColorBtn) this.masterColorBtn.style.backgroundColor = this.masterColor; }
-        //                         this.updateActivePathColor();
-        //                         new Notice(localizeString('notice.colorPicked'));
-        //                     } else {
-        //                         new Notice(localizeString('notice.noColorAtPosition'));
-        //                     }
-        //                 } else {
-        //                     new Notice(localizeString('notice.noColorAtPosition'));
-        //                 }
-        //                 this.colorPickMode = false;
-        //                 if (this.colorEyedropperBtn) { this.colorEyedropperBtn.style.background = BUTTON_BG_DEFAULT; this.colorEyedropperBtn.style.color = ''; }
-        //                 this.isMouseDown = false;
-        //                 this.touchState.pendingTouchStart = null;
-        //                 const toolbar = this.contentEl.querySelector('.hex-toolbar');
-        //                 if (toolbar) this.updateToolbarState(toolbar);
-        //                 this.render();
-        //                 return;
-        //             }
-
-        //             if (this.patternPickMode) {
-        //                 const key = `${this.startHex.q}_${this.startHex.r}`;
-        //                 const hexData = this.config.getState().data.hexes[key];
-        //                 if (hexData) {
-        //                     this.patternData = JSON.parse(JSON.stringify(hexData));
-        //                     this.patternSourceHex = { q: this.startHex.q, r: this.startHex.r };
-        //                     new Notice(localizeString('notice.patternPicked'));
-        //                     this.currentToolGroup = 'pattern';
-        //                     this.drawMode = 'pen';
-        //                 } else {
-        //                     this.patternData = null;
-        //                     this.patternSourceHex = null;
-        //                     new Notice(localizeString('notice.noHexAtPosition'));
-        //                 }
-        //                 this.patternPickMode = false;
-        //                 if (this.patternPickerBtn) {
-        //                     this.patternPickerBtn.style.background = BUTTON_BG_DEFAULT;
-        //                 }
-        //                 const toolbar = this.contentEl.querySelector('.hex-toolbar');
-        //                 if (toolbar) {
-        //                     this.updateToolbarState(toolbar);
-        //                 }
-        //                 this.render();
-        //                 this.requestSave();
-        //                 this.touchState.pendingTouchStart = null;
-        //                 this.isMouseDown = false;
-        //                 return;
-        //             }
-
-        //             if (this.borderPickMode) {
-        //                 const clickedHex = this.startHex;
-        //                 let foundRegion: any = null;
-        //                 if (this.config.getState().data.borders) {
-        //                     for (const region of this.config.getState().data.borders) {
-        //                         if (region.hexes.some(b => b.q === clickedHex.q && b.r === clickedHex.r)) {
-        //                             foundRegion = region;
-        //                             break;
-        //                         }
-        //                     }
-        //                 }
-        //                 if (foundRegion) {
-        //                     this.borderSettings.activeRegionId = foundRegion.id;
-        //                     this.borderSettings.pickedHex = { q: clickedHex.q, r: clickedHex.r };
-        //                     this.borderSettings.dashes = foundRegion.dashes || DEFAULT_BORDER_DASHES;
-        //                     this.masterColor = foundRegion.color;
-        //                     if (this.masterColorInput) { this.masterColorInput.value = this.masterColor; if (this.masterColorBtn) this.masterColorBtn.style.backgroundColor = this.masterColor; }
-        //                     if (this.borderDashesInput) this.borderDashesInput.value = this.borderSettings.dashes.toString();
-        //                     new Notice(localizeString('notice.borderSelected', { id: foundRegion.id }));
-        //                 } else {
-        //                     new Notice(localizeString('notice.noBorderAtPosition'));
-        //                 }
-        //                 this.borderPickMode = false;
-        //                 if (this.borderPickerBtn) { this.borderPickerBtn.style.background = BUTTON_BG_DEFAULT; this.borderPickerBtn.style.color = ''; }
-        //                 this.currentToolGroup = 'border';
-        //                 this.drawMode = 'pen';
-        //                 const toolbar = this.contentEl.querySelector('.hex-toolbar');
-        //                 if (toolbar) this.updateToolbarState(toolbar);
-        //                 this.render();
-        //                 this.touchState.pendingTouchStart = null;
-        //                 this.isMouseDown = false;
-        //                 return;
-        //             }
-
-        //             if (this.pathPickMode) {
-        //                 this.pickPathAtHex(this.startHex);
-        //                 this.touchState.pendingTouchStart = null;
-        //                 this.isMouseDown = false;
-        //                 return;
-        //             }
-
-        //             let hitText = this.getTextAt(world.x, world.y);
-        //             if (hitText && this.currentToolGroup === 'text' && this.drawMode === 'none') {
-        //                 this.pushHistoryIfNeeded();
-        //                 this.draggedText = hitText;
-        //             } else {
-        //                 this.processInput(this.touchState.pendingTouchStart.mouseEvent, true);
-        //             }
-        //         }
-
-        //         const touch = e.changedTouches[0];
-        //         const mouseEvent = new MouseEvent('mouseup', {
-        //             clientX: touch.clientX,
-        //             clientY: touch.clientY,
-        //             bubbles: true,
-        //             cancelable: true
-        //         });
-
-        //         const world = this.getWorldCoords(mouseEvent);
-
-        //         if (this.isMouseDown && this.mouseDownPos) {
-        //             if (this.roadDragIndex !== null && this.roadSettings.editMode) {
-        //                 const dist = Math.sqrt((world.x - this.mouseDownPos.x)**2 + (world.y - this.mouseDownPos.y)**2);
-        //                 if (dist < 5) {
-        //                     const road = this.config.getState().data.roads && this.config.getState().data.roads.find(r => r.id === this.roadSettings.activeRoadId);
-        //                     if (road) {
-        //                         this.handleWaypointClick(road, this.roadSettings, this.roadDragIndex.idx);
-        //                     }
-        //                 }
-        //                 this.roadDragIndex = null;
-        //                 this.requestSave();
-        //                 this.isMouseDown = false;
-        //                 this.draggedText = null;
-        //                 this.lastHex = null;
-        //                 this.startHex = null;
-        //                 this.touchState.pendingTouchStart = null;
-        //                 this.render();
-        //                 return;
-        //             }
-
-        //             if (this.riverDragIndex !== null && this.riverSettings.editMode) {
-        //                 const dist = Math.sqrt((world.x - this.mouseDownPos.x)**2 + (world.y - this.mouseDownPos.y)**2);
-        //                 if (dist < 5) {
-        //                     const river = this.config.getState().data.rivers && this.config.getState().data.rivers.find(r => r.id === this.riverSettings.activeRiverId);
-        //                     if (river) {
-        //                         this.handleWaypointClick(river, this.riverSettings, this.riverDragIndex.idx);
-        //                     }
-        //                 }
-        //                 this.riverDragIndex = null;
-        //                 this.requestSave();
-        //                 this.isMouseDown = false;
-        //                 this.draggedText = null;
-        //                 this.lastHex = null;
-        //                 this.startHex = null;
-        //                 this.touchState.pendingTouchStart = null;
-        //                 this.render();
-        //                 return;
-        //             }
-        //             const dist = Math.sqrt((world.x - this.mouseDownPos.x)**2 + (world.y - this.mouseDownPos.y)**2);
-        //             if (dist < 5 && this.drawMode !== 'eraser') {
-        //                 const hitText = this.getTextAt(world.x, world.y);
-        //                 if (hitText) {
-        //                     if (this.currentToolGroup === 'text') {
-        //                         const hitX = hitText.x, hitY = hitText.y;
-        //                         new TextInputModal(this.app, (v, s, l, c, o, b, sh, shd, sho) => {
-        //                             const target = this.config.getState().data.texts.find(t => t.x === hitX && t.y === hitY);
-        //                             if (v && target) {
-        //                                 target.text = v; target.size = s; target.link = l;
-        //                                 target.color = c; target.outline = o; target.bold = b;
-        //                                 target.shadow = sh; target.shadowDistance = shd; target.shadowOpatown = sho;
-        //                                 this.lastUsedTextSize = s; this.lastUsedTextColor = c; this.lastUsedTextOutline = o; this.lastUsedTextBold = b;
-        //                                 this.lastUsedTextShadow = sh; this.lastUsedTextShadowDistance = shd; this.lastUsedTextShadowOpatown = sho;
-        //                             }
-        //                             else if (!v) { this.config.getState().data.texts = this.config.getState().data.texts.filter(t => !(t.x === hitX && t.y === hitY)); }
-        //                             this.render(); this.requestSave();
-        //                         }, hitText.text, hitText.size, hitText.link, hitText.color, hitText.outline, hitText.bold, hitText.shadow, hitText.shadowDistance, hitText.shadowOpatown, this.colorPalette, this.colorPalette2).open();
-        //                     } else if (hitText.link) {
-        //                         this.app.workspace.openLinkText(hitText.link, this.file.path, true);
-        //                     }
-        //                 }
-        //             }
-        //         }
-        //         if (this.isMouseDown || this.draggedText || this.touchState.hasMovedSinceStart) this.requestSave();
-
-        //         if (this.editMode && this.drawMode === 'eraser' && e.changedTouches.length > 0) {
-        //             const tapTouch = e.changedTouches[0];
-        //             const tapEvent = new MouseEvent('mouseup', { clientX: tapTouch.clientX, clientY: tapTouch.clientY, bubbles: true, cancelable: true });
-        //             const tapWorld = this.getWorldCoords(tapEvent);
-        //             const tapHex = pixelToHex(tapWorld.x, tapWorld.y, this.config.getState().data.gridSize, this.hexOrientation);
-        //             const now = Date.now();
-
-        //             if (this.touchState.lastTapTime &&
-        //                 now - this.touchState.lastTapTime < 400 &&
-        //                 this.touchState.lastTapHex &&
-        //                 this.touchState.lastTapHex.q === tapHex.q &&
-        //                 this.touchState.lastTapHex.r === tapHex.r) {
-        //                 if (this.history.length > 0) this.history.pop();
-        //                 this.handleEraserFlood(tapHex);
-        //                 this.render();
-        //                 this.requestSave();
-        //                 this.touchState.lastTapTime = 0;
-        //                 this.touchState.lastTapHex = null;
-        //             } else {
-        //                 this.touchState.lastTapTime = now;
-        //                 this.touchState.lastTapHex = { q: tapHex.q, r: tapHex.r };
-        //             }
-        //         }
-
-        //         this.isMouseDown = false;
-        //         this.draggedText = null;
-        //         this.roadDragIndex = null;
-        //         this.riverDragIndex = null;
-        //         this.lastHex = null;
-        //         this.startHex = null;
-        //         this.touchState.pendingTouchStart = null;
-        //         this.touchState.lastTouchX = undefined;
-        //         this.touchState.lastTouchY = undefined;
-        //         this.render();
-        //     }
-
-        //     this.touchState.touches = Array.from(e.touches);
-        // }, { passive: false });
-
-        // this.canvas.addEventListener('touchcancel', (e) => {
-        //     e.preventDefault();
-
-        //     if(!this.touchState) return;
-
-        //     if (this.touchState.touchStartTimeout) {
-        //         clearTimeout(this.touchState.touchStartTimeout);
-        //         this.touchState.touchStartTimeout = null;
-        //     }
-
-        //     this.touchState.isTwoFingerGesture = false;
-        //     this.touchState.pendingTouchStart = null;
-        //     this.touchState.lastTouchX = undefined;
-        //     this.touchState.lastTouchY = undefined;
-        //     this.isMouseDown = false;
-        //     this.draggedText = null;
-        //     this.roadDragIndex = null;
-        //     this.riverDragIndex = null;
-        //     this.lastHex = null;
-        //     this.startHex = null;
-        //     this.touchState.touches = [];
-        //     this.render();
-        // }, { passive: false });
     }
 }
