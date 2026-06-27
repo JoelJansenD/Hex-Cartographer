@@ -4,9 +4,8 @@ const LEFT_CLICK_BUTTON = 0;
 
 export interface LeftMouseButtonContext {
     canvas: HTMLCanvasElement;
-    down: (e: MouseEvent, state: HexCartographerViewState) => void;
-    getState: () => HexCartographerViewState;
-    setState: (newState: HexCartographerViewState) => void;
+    down: (e: MouseEvent) => void;
+    up: (e: MouseEvent) => void;
 }
 
 export function registerLeftMouseButtonListeners(ctx: LeftMouseButtonContext) {
@@ -18,14 +17,21 @@ export function registerLeftMouseButtonListeners(ctx: LeftMouseButtonContext) {
         // registered are triggered.
         ctx.canvas.focus();
 
-        const state = ctx.getState();
-        ctx.down(e, state);
-        ctx.setState(state);
+        ctx.down(e);
+    };
+
+    const onMouseUp = (e: MouseEvent) => {
+        if (e.button !== LEFT_CLICK_BUTTON) return;
+        e.preventDefault();
+
+        ctx.up(e);
     };
 
     ctx.canvas.addEventListener("mousedown", onMouseDown);
+    ctx.canvas.addEventListener("mouseup", onMouseUp);
 
     return () => {
         ctx.canvas.removeEventListener("mousedown", onMouseDown);
+        ctx.canvas.removeEventListener("mouseup", onMouseUp);
     };
 }

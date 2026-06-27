@@ -16,15 +16,18 @@ export interface LeftMouseButtonInteractionContext {
     getApp: () => App;
     getCanvas: () => HTMLCanvasElement;
     getData: () => MapData;
-    setState: (state: HexCartographerViewState) => void;
+    getState: () => HexCartographerViewState;
+    setState: (state: HexCartographerViewState, pushToHistory?: boolean) => void;
 }
 
 export function createLeftMouseButtonInteraction(ctx: LeftMouseButtonInteractionContext) : MouseButtonInteraction {
 
     return {
-        down(e: MouseEvent, state: HexCartographerViewState) {
+        down(e: MouseEvent) {
+            const state = ctx.getState();
             if(e.ctrlKey) {
                 state.isPanning = true;
+                ctx.setState(state, false);
                 return;
             }
 
@@ -45,7 +48,14 @@ export function createLeftMouseButtonInteraction(ctx: LeftMouseButtonInteraction
                 default:
                     throw new Error(`Unhandled tool group: ${selectedToolGroup}`);
             }
+            ctx.setState(state);
         },
+        up(_: MouseEvent) {
+            const state = ctx.getState();
+            state.isPanning = false;
+            ctx.setState(state, false);
+            return;
+        }
     };
 }
 

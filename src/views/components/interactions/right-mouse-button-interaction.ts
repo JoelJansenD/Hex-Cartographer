@@ -6,23 +6,28 @@ import HexCartographerViewState from "../../hex-cartographer-view-state";
 import { MouseButtonInteraction } from "./mouse-button-interaction";
 
 export interface RightMouseButtonInteractionContext {
+    getState: () => HexCartographerViewState;
+    setState: (newState: HexCartographerViewState, pushToHistory?: boolean) => void;
     getCanvas: () => HTMLCanvasElement;
 }
 
 export function createRightMouseButtonInteraction(ctx: RightMouseButtonInteractionContext) : MouseButtonInteraction {
     return {
-        down(_: MouseEvent, state: HexCartographerViewState) {
-            state.isPanning = true;
+        down(e: MouseEvent) {
+            const state = ctx.getState();
+            if(!state.editMode) {
+                return;
+            }
 
-            // const world = getWorldCoordinates(e, ctx.getCanvas(), {x: state.data.offX, y: state.data.offY}, state.data.zoom);
-            // const hex = pixelToHex(world.x, world.y, state.data.gridSize, state.data.settings.hexOrientation === 'horizontal');
+            const world = getWorldCoordinates(e, ctx.getCanvas(), {x: state.data.offX, y: state.data.offY}, state.data.zoom);
+            const hex = pixelToHex(world.x, world.y, state.data.gridSize, state.data.settings.hexOrientation === 'horizontal');
 
-            // const key = `${hex.q}_${hex.r}`;
+            const key = `${hex.q}_${hex.r}`;
 
-            // deleteHex(state, key);
+            deleteHex(state, key);
+            ctx.setState(state, false);
         },
-        up(_: MouseEvent, state: HexCartographerViewState) {
-            state.isPanning = false;
+        up(_: MouseEvent) {
         }
 
         // move(hex: HexCoordinates, world: PixelCoordinates) {

@@ -19,7 +19,7 @@ import { createRightMouseButtonInteraction } from "./interactions/right-mouse-bu
 
 interface HexCartographerContentConfig {
     getState: () => HexCartographerViewState;
-    setState: (newState: HexCartographerViewState) => void;
+    setState: (newState: HexCartographerViewState, pushToHistory?: boolean) => void;
     undo: () => void;
     redo: () => void;
 }
@@ -89,14 +89,14 @@ export default class HexCartographerContent {
             getApp: () => this.plugin.app,
             getCanvas: () => this.canvas!,
             getData: () => this.config.getState().data,
+            getState: this.config.getState,
             setState: this.config.setState,
         });
 
         return registerLeftMouseButtonListeners({
-            getState: this.config.getState,
-            setState: this.config.setState,
             canvas: this.canvas!,
             down: leftClick.down,
+            up: leftClick.up,
         });
     }
 
@@ -104,8 +104,6 @@ export default class HexCartographerContent {
         const middleClick = createMiddleMouseButtonInteraction();
 
         return registerMiddleMouseButtonListeners({
-            getState: this.config.getState,
-            setState: this.config.setState,
             canvas: this.canvas!,
             down: middleClick.down,
             up: middleClick.up,
@@ -115,11 +113,11 @@ export default class HexCartographerContent {
     private registerRightMouseButtonListeners() {
         const rightClick = createRightMouseButtonInteraction({
             getCanvas: () => this.canvas!,
+            getState: this.config.getState,
+            setState: this.config.setState,
         });
 
         return registerRightMouseButtonListeners({
-            getState: this.config.getState,
-            setState: this.config.setState,
             canvas: this.canvas!,
             down: rightClick.down,
             up: rightClick.up,

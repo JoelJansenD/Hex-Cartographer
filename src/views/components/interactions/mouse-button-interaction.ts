@@ -1,7 +1,5 @@
-import HexCartographerViewState from "../../hex-cartographer-view-state";
-
 type MouseButtonInteraction = {
-    down: (e: MouseEvent, state: HexCartographerViewState) => void;
-    up: (e: MouseEvent, state: HexCartographerViewState) => void;
+    down: (e: MouseEvent) => void;
+    up: (e: MouseEvent) => void;
 }
 export type { MouseButtonInteraction };

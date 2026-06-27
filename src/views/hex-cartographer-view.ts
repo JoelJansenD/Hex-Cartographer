@@ -97,8 +97,10 @@ export default class HexCartographerView extends ItemView {
       return JSON.parse(JSON.stringify(this._state)) as HexCartographerViewState;
     }
 
-    private setViewState(newState: HexCartographerViewState) {
-      this.historyService.push(this._state.data);
+    private setViewState(newState: HexCartographerViewState, pushToHistory: boolean = true) {
+      if (pushToHistory) {
+        this.historyService.push(this._state.data);
+      }
       this._state = newState;
       this._toolbar.updateState(this._state);
       this._sidebar.updateState(this._state);

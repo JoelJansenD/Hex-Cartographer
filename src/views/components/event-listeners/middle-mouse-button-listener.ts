@@ -3,11 +3,9 @@ import HexCartographerViewState from "../../hex-cartographer-view-state";
 const MIDDLE_CLICK_BUTTON = 1;
 
 export interface MiddleMouseButtonContext {
-    getState: () => HexCartographerViewState;
-    setState: (newState: HexCartographerViewState) => void;
     canvas: HTMLCanvasElement;
-    down(e: MouseEvent, state: HexCartographerViewState): void;
-    up(e: MouseEvent, state: HexCartographerViewState): void;
+    down(e: MouseEvent): void;
+    up(e: MouseEvent): void;
 }
 
 export function registerMiddleMouseButtonListeners(ctx: MiddleMouseButtonContext) {
@@ -16,18 +14,14 @@ export function registerMiddleMouseButtonListeners(ctx: MiddleMouseButtonContext
         e.preventDefault();
         ctx.canvas.focus();
 
-        const state = ctx.getState();
-        ctx.down(e, state);
-        ctx.setState(state);
+        ctx.down(e);
     };
 
     const onMouseUp = (e: MouseEvent) => {
         if (e.button !== MIDDLE_CLICK_BUTTON) return;
         e.preventDefault();
         ctx.canvas.focus();
-        const state = ctx.getState();
-        ctx.up(e, state);
-        ctx.setState(state);
+        ctx.up(e);
     };
 
     ctx.canvas.addEventListener("mousedown", onMouseDown);

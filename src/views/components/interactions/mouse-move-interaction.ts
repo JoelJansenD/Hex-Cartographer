@@ -2,7 +2,7 @@ import HexCartographerViewState from "../../hex-cartographer-view-state";
 
 export interface MouseMoveInteractionContext {
     getState: () => HexCartographerViewState;
-    setState: (state: HexCartographerViewState) => void;
+    setState: (state: HexCartographerViewState, pushToHistory?: boolean) => void;
 }
 
 export function createMouseMoveInteraction(context: MouseMoveInteractionContext) {
@@ -14,7 +14,7 @@ export function createMouseMoveInteraction(context: MouseMoveInteractionContext)
                 state.data.offY += e.movementY;
             }
 
-            context.setState(state);
+            context.setState(state, false);
 
         },
     };
