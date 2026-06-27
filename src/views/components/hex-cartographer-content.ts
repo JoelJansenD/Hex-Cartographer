@@ -9,10 +9,12 @@ import HexCartographerViewState from "../hex-cartographer-view-state";
 import { registerKeyPressListener } from "./event-listeners/key-press-listener";
 import { registerLeftMouseButtonListeners } from "./event-listeners/left-mouse-button-listener";
 import { registerMiddleMouseButtonListeners } from "./event-listeners/middle-mouse-button-listener";
+import { registerMouseMoveListener } from "./event-listeners/mouse-move-listener";
 import { registerRightMouseButtonListeners } from "./event-listeners/right-mouse-button-listener";
 import { createKeyPressInteraction } from "./interactions/key-press-interaction";
 import { createLeftMouseButtonInteraction } from "./interactions/left-mouse-button-interaction";
 import { createMiddleMouseButtonInteraction } from "./interactions/middle-mouse-button-interaction";
+import { createMouseMoveInteraction } from "./interactions/mouse-move-interaction";
 import { createRightMouseButtonInteraction } from "./interactions/right-mouse-button-interaction";
 
 interface HexCartographerContentConfig {
@@ -134,6 +136,18 @@ export default class HexCartographerContent {
         });
     }
 
+    private registerMouseMoveListener() {
+        const mouseMove = createMouseMoveInteraction({
+            getState: this.config.getState,
+            setState: this.config.setState,
+        });
+
+        return registerMouseMoveListener({
+            canvas: this.canvas!,
+            onMouseMove: mouseMove.move
+        });
+    }
+
     private registerEventListeners() {
         if(!this.canvas) throw new Error("Canvas not initialized");
 
@@ -141,16 +155,7 @@ export default class HexCartographerContent {
         const middleClickUnregister = this.registerMiddleMouseButtonListeners();
         const rightClickUnregister = this.registerRightMouseButtonListeners();
         const keyPressUnregister = this.registerKeyPressListener();
-
-        // this.contentEl.addEventListener('keydown', (e) => {
-        //     e.preventDefault();
-
-        //     if(e.ctrlKey || e.metaKey) {
-        //         const key = e.key.toLowerCase();
-        //         if((key === 'z' && e.shiftKey) || key === 'y') this.redo();
-        //         else if(key === 'z') this.undo();
-        //     }
-        // });
+        const mouseMoveUnregister = this.registerMouseMoveListener();
 
         
 
@@ -188,21 +193,6 @@ export default class HexCartographerContent {
         //         this.render();
         //         return;
         //     }
-
-        // this.canvas.addEventListener('contextmenu', (e) => {
-        //     if (this.editMode) e.preventDefault();
-        // });
-
-        // this.canvas.addEventListener('dblclick', (e) => {
-        //     if (!this.editMode) return;
-        //     if (e.button === 2 || this.drawMode === 'eraser') {
-        //         const world = this.getWorldCoords(e);
-        //         const hex = pixelToHex(world.x, world.y, this.config.getState().data.gridSize, this.hexOrientation);
-        //         if (this.history.length > 0) this.history.pop();
-        //         this.handleEraserFlood(hex);
-        //         this.render();
-        //         this.requestSave();
-        //     }
         // });
 
         // this.contentEl.addEventListener('mousemove', (e) => {
@@ -217,11 +207,7 @@ export default class HexCartographerContent {
         //         }
         //         return;
         //     }
-        //     if (this.isDraggingMap) {
-        //         this.config.getState().data.offX += e.movementX;
-        //         this.config.getState().data.offY += e.movementY;
-        //         this.render();
-        //     } else if (this.draggedText) {
+        //     else if (this.draggedText) {
         //         this.draggedText.x = world.x;
         //         this.draggedText.y = world.y;
         //         this.render();
@@ -274,7 +260,7 @@ export default class HexCartographerContent {
         //         this.canvas.title = '';
         //         this.canvas.style.cursor = (hoverText && this.currentToolGroup === 'text') ? 'text' : 'crosshair';
         //     }
-        // });
+        // });  
 
         // const stop = (e) => {
         //     if (this.isRightMouseErasing) {
