@@ -13,6 +13,7 @@ export function registerMiddleMouseButtonListeners(ctx: MiddleMouseButtonContext
     const onMouseDown = (e: MouseEvent) => {
         if (e.button !== MIDDLE_CLICK_BUTTON) return;
         e.preventDefault();
+        ctx.canvas.focus();
 
         const state = ctx.getState();
         ctx.down(e, state);

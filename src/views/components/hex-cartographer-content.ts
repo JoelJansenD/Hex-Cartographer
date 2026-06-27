@@ -6,9 +6,11 @@ import { Hexagon, HexCoordinates } from "../../types/hexagon";
 import { MapData } from "../../types/map-data";
 import { LinearFeature } from "../../types/rivers-and-roads";
 import HexCartographerViewState from "../hex-cartographer-view-state";
+import { registerKeyPressListener } from "./event-listeners/key-press-listener";
 import { registerLeftMouseButtonListeners } from "./event-listeners/left-mouse-button-listener";
 import { registerMiddleMouseButtonListeners } from "./event-listeners/middle-mouse-button-listener";
 import { registerRightMouseButtonListeners } from "./event-listeners/right-mouse-button-listener";
+import { createKeyPressInteraction } from "./interactions/key-press-interaction";
 import { createLeftMouseButtonInteraction } from "./interactions/left-mouse-button-interaction";
 import { createMiddleMouseButtonInteraction } from "./interactions/middle-mouse-button-interaction";
 import { createRightMouseButtonInteraction } from "./interactions/right-mouse-button-interaction";
@@ -16,6 +18,8 @@ import { createRightMouseButtonInteraction } from "./interactions/right-mouse-bu
 interface HexCartographerContentConfig {
     getState: () => HexCartographerViewState;
     setState: (newState: HexCartographerViewState) => void;
+    undo: () => void;
+    redo: () => void;
 }
 
 export default class HexCartographerContent {
@@ -71,6 +75,7 @@ export default class HexCartographerContent {
         this.ctx = renderingContext;
 
         this.registerEventListeners();
+        this.canvas.focus();
         this.render();
     }
 
@@ -117,12 +122,25 @@ export default class HexCartographerContent {
         });
     }
 
+    private registerKeyPressListener() {
+        const keyPress = createKeyPressInteraction({
+            redo: this.config.redo.bind(this),
+            undo: this.config.undo.bind(this),
+        });
+
+        return registerKeyPressListener({
+            canvas: this.canvas!,
+            onKeyPress: keyPress.down,
+        });
+    }
+
     private registerEventListeners() {
         if(!this.canvas) throw new Error("Canvas not initialized");
 
         const leftClickUnregister = this.registerLeftMouseButtonListeners();
         const middleClickUnregister = this.registerMiddleMouseButtonListeners();
         const rightClickUnregister = this.registerRightMouseButtonListeners();
+        const keyPressUnregister = this.registerKeyPressListener();
 
         // this.contentEl.addEventListener('keydown', (e) => {
         //     e.preventDefault();

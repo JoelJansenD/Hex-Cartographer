@@ -14,6 +14,10 @@ export function registerLeftMouseButtonListeners(ctx: LeftMouseButtonContext) {
         if (e.button !== LEFT_CLICK_BUTTON) return;
         e.preventDefault();
 
+        // We need to focus the canvas to ensure keyboard listeners
+        // registered are triggered.
+        ctx.canvas.focus();
+
         const state = ctx.getState();
         ctx.down(e, state);
         ctx.setState(state);

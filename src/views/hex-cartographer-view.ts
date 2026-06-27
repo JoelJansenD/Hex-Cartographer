@@ -53,6 +53,8 @@ export default class HexCartographerView extends ItemView {
         this._content = new HexCartographerContent(plugin, mainViewContainer, {
             getState: this.getViewState.bind(this),
             setState: this.setViewState.bind(this),
+            redo: this.redo.bind(this),
+            undo: this.undo.bind(this)
         }, TEST_DATA);
 
         this._sidebar = new HexCartographerSidepanel(container, {
@@ -79,7 +81,6 @@ export default class HexCartographerView extends ItemView {
 
     private undo() {
       const data = this.historyService.undo(this._state.data);
-      console.log(data?.hexes);
       if(!data) {
         return;
       }

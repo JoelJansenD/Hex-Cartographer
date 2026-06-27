@@ -14,6 +14,7 @@ export function registerRightMouseButtonListeners(ctx: RightMouseButtonContext) 
     const onMouseDown = (e: MouseEvent) => {
         if (e.button !== 2) return;
         e.preventDefault();
+        ctx.canvas.focus();
 
         const state = ctx.getState();
         ctx.down(e, state);
