@@ -122,6 +122,7 @@ export default class HexCartographerContent {
             setState: this.config.setState,
             canvas: this.canvas!,
             down: rightClick.down,
+            up: rightClick.up,
         });
     }
 

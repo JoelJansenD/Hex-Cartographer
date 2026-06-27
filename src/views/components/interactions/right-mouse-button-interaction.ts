@@ -11,18 +11,19 @@ export interface RightMouseButtonInteractionContext {
 
 export function createRightMouseButtonInteraction(ctx: RightMouseButtonInteractionContext) : MouseButtonInteraction {
     return {
-        down(e: MouseEvent, state: HexCartographerViewState) {
-            if(!state.editMode) {
-                return;
-            }
+        down(_: MouseEvent, state: HexCartographerViewState) {
+            state.isPanning = true;
 
-            const world = getWorldCoordinates(e, ctx.getCanvas(), {x: state.data.offX, y: state.data.offY}, state.data.zoom);
-            const hex = pixelToHex(world.x, world.y, state.data.gridSize, state.data.settings.hexOrientation === 'horizontal');
+            // const world = getWorldCoordinates(e, ctx.getCanvas(), {x: state.data.offX, y: state.data.offY}, state.data.zoom);
+            // const hex = pixelToHex(world.x, world.y, state.data.gridSize, state.data.settings.hexOrientation === 'horizontal');
 
-            const key = `${hex.q}_${hex.r}`;
+            // const key = `${hex.q}_${hex.r}`;
 
-            deleteHex(state, key);
+            // deleteHex(state, key);
         },
+        up(_: MouseEvent, state: HexCartographerViewState) {
+            state.isPanning = false;
+        }
 
         // move(hex: HexCoordinates, world: PixelCoordinates) {
         //     if (!ctx.state.isRightErasing) return;
