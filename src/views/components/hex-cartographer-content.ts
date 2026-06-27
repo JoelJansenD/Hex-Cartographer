@@ -108,6 +108,7 @@ export default class HexCartographerContent {
             setState: this.config.setState,
             canvas: this.canvas!,
             down: middleClick.down,
+            up: middleClick.up,
         });
     }
 

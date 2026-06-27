@@ -4,8 +4,10 @@ import { MouseButtonInteraction } from "./mouse-button-interaction";
 export function createMiddleMouseButtonInteraction() : MouseButtonInteraction {
     return {
         down(_: MouseEvent, state: HexCartographerViewState) {
-            state.isPanning = !state.isPanning;
-            console.log(`Middle mouse button down: Panning ${state.isPanning ? 'enabled' : 'disabled'}`);
+            state.isPanning = true;
+        },
+        up(_: MouseEvent, state: HexCartographerViewState) {
+            state.isPanning = false;
         },
     };
 }
