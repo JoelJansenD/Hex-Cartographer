@@ -5,8 +5,10 @@ export default class HistoryService {
     private redoStack: string[] = [];
 
     public push(state: MapData) {
+        console.log(state)
         this.undoStack.push(JSON.stringify(state));
         this.redoStack = [];
+        console.log(this.undoStack);
     }
 
     public undo(currentState: MapData) : MapData | null {

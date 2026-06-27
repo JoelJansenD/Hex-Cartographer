@@ -79,6 +79,7 @@ export default class HexCartographerView extends ItemView {
 
     private undo() {
       const data = this.historyService.undo(this._state.data);
+      console.log(data?.hexes);
       if(!data) {
         return;
       }
@@ -90,11 +91,13 @@ export default class HexCartographerView extends ItemView {
     }
 
     private getViewState() {
-      return {...this._state};
+      // We create a deep copy through JSON serialization
+      // Spread-operators only create shallow copies, meaning that child objects are still pass-by-reference rather than value
+      return JSON.parse(JSON.stringify(this._state)) as HexCartographerViewState;
     }
 
     private setViewState(newState: HexCartographerViewState) {
-      this.historyService.push(newState.data);
+      this.historyService.push(this._state.data);
       this._state = newState;
       this._toolbar.updateState(this._state);
       this._sidebar.updateState(this._state);
