@@ -66,14 +66,11 @@ export default class HexCartographerView extends ItemView {
     }
 
     private redo() {
-      const a = {...this._state.data.hexes['0_1']};
       const data = this.historyService.redo(this._state.data);
       if(!data) {
         return;
       }
-      const b = {...data.hexes['0_1']};
-      console.log(JSON.stringify(a), JSON.stringify(b));
-      
+
       this._state = {
         ...this._state,
         data: data
@@ -81,20 +78,15 @@ export default class HexCartographerView extends ItemView {
     }
 
     private undo() {
-      const a = {...this._state.data.hexes['0_1']};
       const data = this.historyService.undo(this._state.data);
       if(!data) {
         return;
       }
-      const b = {...data.hexes['0_1']};
-      console.log(JSON.stringify(a), JSON.stringify(b));
 
       this._state = {
         ...this._state,
         data: data
       };
-      console.log(Object.keys(this._state.data.hexes).length);
-      console.log(data);
     }
 
     private getViewState() {
