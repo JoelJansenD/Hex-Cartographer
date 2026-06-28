@@ -89,11 +89,6 @@ export default class HexCartographerContent {
     private registerEventListeners() {
         if(!this.canvas) throw new Error("Canvas not initialized");
 
-        // const leftClickUnregister = this.registerLeftMouseButtonListeners();
-        // const middleClickUnregister = this.registerMiddleMouseButtonListeners();
-        // const rightClickUnregister = this.registerRightMouseButtonListeners();
-        // const keyPressUnregister = this.registerKeyPressListener();
-        // const mouseMoveUnregister = this.registerMouseMoveListener();
         const context: ListenerContext = {
             getCanvas: () => this.canvas!,
             getState: this.config.getState,
