@@ -73,15 +73,9 @@ function down_Paint(e: MouseEvent, ctx: LeftMouseButtonInteractionContext, state
     const hexData = getHexagonAtCoordinates(data.hexes, hex);
 
     switch(state.selectedPaintMode) {
-        case 'bucket':
-            if(!hexData) return;
-            down_PaintBucket(hexData, state);
-            break;
         case 'eraser':
             if(!hexData) return;
             down_Eraser(hexData, state);
-            break;
-        case 'text':
             break;
         default:
             throw new Error(`Unhandled paint mode: ${state.selectedPaintMode}`);

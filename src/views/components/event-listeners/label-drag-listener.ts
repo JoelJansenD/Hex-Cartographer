@@ -1,3 +1,4 @@
+import { LEFT_MOUSE_BUTTON } from "../../../constants/Events";
 import { getWorldCoordinates } from "../../../functions/canvas";
 import { getTextIndexAtClick } from "../../../functions/labels";
 import { Listener, ListenerContext } from "./listeners";
@@ -17,6 +18,8 @@ export default class LabelDragListener implements Listener {
     };
 
     mouseDown(e: MouseEvent): void {
+        if(!this.canHandle(e)) return;
+        
         const state = this._context.getState();
         const location = getWorldCoordinates(e, this._context.getCanvas(), { x: state.data.offX, y: state.data.offY}, state.data.zoom);
         const textIdx = getTextIndexAtClick(location, this._context.getCanvas(), state);
@@ -28,6 +31,8 @@ export default class LabelDragListener implements Listener {
     }
     
     mouseUp(e: MouseEvent): void {
+        if(!this.canHandle(e)) return;
+        
         const state = this._context.getState();
         if(!state.draggedText) {
             return;
@@ -38,6 +43,8 @@ export default class LabelDragListener implements Listener {
     }
     
     mouseMove(e: MouseEvent): void {
+        if(!this.canHandle(e)) return;
+        
         const state = this._context.getState();
         if(!state.draggedText) {
             return;
@@ -52,5 +59,11 @@ export default class LabelDragListener implements Listener {
         
         // Dragging can alway be excluded from history, any permanent changes should be saved on mouse up
         this._context.setState(state, false);
+    }
+
+    private canHandle(e: MouseEvent): boolean {
+        const state = this._context.getState();
+        return e.button === LEFT_MOUSE_BUTTON
+            && state.selectedPaintMode === 'text';
     }
 }
