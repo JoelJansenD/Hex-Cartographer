@@ -1,1 +1,2 @@
 - Removed double right click to delete everything of similar colour
+- Added double left click to edit text instead of single click becuase of new tool mode setup

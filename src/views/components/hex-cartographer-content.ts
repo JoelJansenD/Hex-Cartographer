@@ -96,6 +96,7 @@ export default class HexCartographerContent {
             canvas: this.canvas!,
             down: leftClick.down,
             up: leftClick.up,
+            doubleClick: leftClick.doubleClick
         });
     }
 
@@ -109,6 +110,7 @@ export default class HexCartographerContent {
             canvas: this.canvas!,
             down: middleClick.down,
             up: middleClick.up,
+            doubleClick: middleClick.doubleClick
         });
     }
 
@@ -123,6 +125,7 @@ export default class HexCartographerContent {
             canvas: this.canvas!,
             down: rightClick.down,
             up: rightClick.up,
+            doubleClick: rightClick.doubleClick
         });
     }
 

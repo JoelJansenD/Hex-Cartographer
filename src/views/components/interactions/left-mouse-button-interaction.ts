@@ -54,6 +54,8 @@ export function createLeftMouseButtonInteraction(ctx: LeftMouseButtonInteraction
             state.isPanning = false;
             ctx.setState(state, false);
             return;
+        },
+        doubleClick(_: MouseEvent) {
         }
     };
 }

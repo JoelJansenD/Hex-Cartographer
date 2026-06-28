@@ -25,28 +25,12 @@ export function createRightMouseButtonInteraction(ctx: RightMouseButtonInteracti
             const key = `${hex.q}_${hex.r}`;
 
             deleteHex(state, key);
-            ctx.setState(state, false);
+            ctx.setState(state);
         },
         up(_: MouseEvent) {
+        },
+        doubleClick(_: MouseEvent) {
         }
-
-        // move(hex: HexCoordinates, world: PixelCoordinates) {
-        //     if (!ctx.state.isRightErasing) return;
-
-        //     const key = `${hex.q}_${hex.r}`;
-        //     if (key === ctx.state.rightEraseLastHex) return;
-
-        //     ctx.handleEraser(hex, world.x, world.y);
-        //     ctx.state.rightEraseLastHex = key;
-        //     ctx.render();
-        // },
-
-        // end() {
-        //     if (!ctx.state.isRightErasing) return;
-        //     ctx.state.isRightErasing = false;
-        //     ctx.state.rightEraseLastHex = null;
-        //     ctx.requestSave();
-        // },
     };
 }
 

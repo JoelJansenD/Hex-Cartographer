@@ -6,6 +6,7 @@ export interface MiddleMouseButtonContext {
     canvas: HTMLCanvasElement;
     down(e: MouseEvent): void;
     up(e: MouseEvent): void;
+    doubleClick: (e: MouseEvent) => void;
 }
 
 export function registerMiddleMouseButtonListeners(ctx: MiddleMouseButtonContext) {

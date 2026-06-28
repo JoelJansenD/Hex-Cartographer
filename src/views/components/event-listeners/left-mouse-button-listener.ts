@@ -6,6 +6,7 @@ export interface LeftMouseButtonContext {
     canvas: HTMLCanvasElement;
     down: (e: MouseEvent) => void;
     up: (e: MouseEvent) => void;
+    doubleClick: (e: MouseEvent) => void;
 }
 
 export function registerLeftMouseButtonListeners(ctx: LeftMouseButtonContext) {

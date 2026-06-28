@@ -18,5 +18,7 @@ export function createMiddleMouseButtonInteraction(ctx: MiddleMouseButtonInterac
             state.isPanning = false;
             ctx.setState(state, false);
         },
+        doubleClick(_: MouseEvent) {
+        }
     };
 }
