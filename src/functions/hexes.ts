@@ -3,7 +3,7 @@
  * Implements axial coordinate system (q, r) for hexagonal grids
  */
 
-import { HexCoordinates } from "../types/hexagon";
+import { Hexagon, HexCoordinates } from "../types/hexagon";
 import { HexagonSet } from "../types/map-data";
 
 export interface PixelCoordinates {
@@ -25,6 +25,50 @@ export interface HexSegment {
     lateralOffset?: number;
 }
 
+/**
+ * Get all hexagons in a flood fill range starting from a given hexagon
+ * @param hexes - The set of hexagons
+ * @param startHex - The starting hexagon
+ * @param predicate - Optional function to determine if a hexagon should be included
+ * @returns Array of hexagons in the flood fill range
+ */
+export function getHexagonsInFloodRange(hexes: HexagonSet, startHex: Hexagon, predicate?: (hex: Hexagon, targetHex: Hexagon) => boolean): Hexagon[] { 
+    const result: Hexagon[] = [ startHex ];
+    const target = {...startHex};
+    const visited: string[] = [];
+    const targetHexes: HexCoordinates[] = [ startHex ];
+
+    while(targetHexes.length > 0) {
+        const hex = targetHexes.pop()!;
+        const currentKey = `${hex.q}_${hex.r}`;
+
+        if(visited.includes(currentKey)) continue;
+        
+        const hexData = getHexagonAtCoordinates(hexes, hex);
+        if(!hexData) continue;
+
+        if(predicate && !predicate(hexData, target)) {
+            continue;
+        }
+        else if(!predicate && (hexData.color !== target.color || hexData.symbol !== target.symbol || hexData.symbolColor !== target.symbolColor)) {
+            continue;
+        }
+
+        result.push(hexData);
+
+        targetHexes.push(...getHexNeighbors(hex));
+        visited.push(currentKey);
+    }
+
+    return result;
+}
+
+/**
+ * Get the hexagon at the specified hexagonal coordinates
+ * @param hexes - The set of hexagons
+ * @param hex - The hex coordinates
+ * @returns The hexagon at the specified coordinates, or null if not found
+ */
 export function getHexagonAtCoordinates(hexes: HexagonSet, hex: HexCoordinates) {
     const key = `${hex.q}_${hex.r}`;
     return hexes[key] || null;

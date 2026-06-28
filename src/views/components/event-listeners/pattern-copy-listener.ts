@@ -1,6 +1,6 @@
 import { LEFT_MOUSE_BUTTON } from "../../../constants/Events";
 import { getHexagonCoordinatesAtMousePosition } from "../../../functions/canvas";
-import { getHexagonAtCoordinates, getHexNeighbors } from "../../../functions/hexes";
+import { getHexagonAtCoordinates, getHexagonsInFloodRange, getHexNeighbors } from "../../../functions/hexes";
 import { HexCoordinates } from "../../../legacy/types-legacy";
 import { Hexagon } from "../../../types/hexagon";
 import HexCartographerViewState from "../../hex-cartographer-view-state";
@@ -62,27 +62,9 @@ export default class PatternCopyListener implements Listener {
 
         if(!hexData) return;
 
-        const target = {...hexData};
-        const targetHexes: HexCoordinates[] = [ hexData ];
-        const visited: string[] = [];
-
-        while(targetHexes.length > 0) {
-            const hex = targetHexes.pop()!;
-            const currentKey = `${hex.q}_${hex.r}`;
-
-            if(visited.includes(currentKey)) continue;
-            
-            const hexData = getHexagonAtCoordinates(state.data.hexes, hex);
-            if(!hexData) continue;
-
-            if(hexData.color !== target.color || hexData.symbol !== target.symbol || hexData.symbolColor !== target.symbolColor) {
-                continue;
-            }
-
-            this.paint(state, hex, hexData);
-
-            targetHexes.push(...getHexNeighbors(hex));
-            visited.push(currentKey);
+        const hexesToChange = getHexagonsInFloodRange(data.hexes, hexData);
+        for(const hex of hexesToChange) {
+            this.paint(state, hex, hex);
         }
     }
 
