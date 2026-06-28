@@ -19,6 +19,7 @@ import { registerMiddleMouseButtonListeners } from "./event-listeners/middle-mou
 import PatternPickerListener from "./event-listeners/pattern-picker-listener";
 import { registerRightMouseButtonListeners } from "./event-listeners/right-mouse-button-listener";
 import SelectBorderListener from "./event-listeners/select-border-listener";
+import SelectPathListener from "./event-listeners/select-path-listener";
 import { createKeyPressInteraction } from "./interactions/key-press-interaction";
 import { createLeftMouseButtonInteraction } from "./interactions/left-mouse-button-interaction";
 import { createMiddleMouseButtonInteraction } from "./interactions/middle-mouse-button-interaction";
@@ -157,9 +158,9 @@ export default class HexCartographerContent {
         // const keyPressUnregister = this.registerKeyPressListener();
         // const mouseMoveUnregister = this.registerMouseMoveListener();
         const context: ListenerContext = {
-                getCanvas: () => this.canvas!,
-                getState: this.config.getState,
-                setState: this.config.setState,
+            getCanvas: () => this.canvas!,
+            getState: this.config.getState,
+            setState: this.config.setState,
         };
         const unregisterFunctions = registerListeners(this.canvas, [
             new BrushListener(context),
@@ -169,6 +170,7 @@ export default class HexCartographerContent {
             new LabelDragListener(context),
             new PatternPickerListener(context),
             new SelectBorderListener(context),
+            new SelectPathListener({...context, getApp: () => this.plugin.app}),
         ]);
 
         
