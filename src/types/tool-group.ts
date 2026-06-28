@@ -10,12 +10,13 @@
  * - 'border': Border drawing tool
  * - 'select-border': Select border tool
  */
-export type ToolGroup = 'text' | 'colour-picker' | 'pattern' | 'pattern-picker' | 'river' | 'road' | 'select-path' | 'border' | 'select-border';
+export type ToolGroup = 'colour-picker' | 'pattern' | 'pattern-picker' | 'river' | 'road' | 'select-path' | 'border' | 'select-border';
 
 /**
  * Available tool groups/categories:
  * - 'brush': Paint tool
  * - 'bucket': Bucket fill tool
  * - 'eraser': Eraser tool
+ * - 'text': Text annotation tool
  */
-export type PaintMode = 'brush' | 'bucket' | 'eraser';
+export type PaintMode = 'brush' | 'bucket' | 'eraser' | 'text';

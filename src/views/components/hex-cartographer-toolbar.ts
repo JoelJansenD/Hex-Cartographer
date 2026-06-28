@@ -60,7 +60,6 @@ export default class HexCartographerToolbar {
     }
 
     public updateState(state: HexCartographerViewState) {
-        console.log('updating')
         // Update displayed buttons based on edit mode
         if(state.editMode) {
             this.showActions();
@@ -84,7 +83,7 @@ export default class HexCartographerToolbar {
         }
     }
 
-    private setPaintMode(paintMode: 'brush' | 'bucket' | 'eraser') {
+    private setPaintMode(paintMode: PaintMode) {
         this.config.setState({
             ...this.config.getState(),
             selectedPaintMode: paintMode,
@@ -169,7 +168,7 @@ export default class HexCartographerToolbar {
 
         this.textButton = new ButtonComponent(this.paintActions)
             .setIcon('type')
-            .onClick(() => this.setTool('text'));
+            .onClick(() => this.setPaintMode('text'));
         this.toolButtons['text'] = this.textButton;
     }
 

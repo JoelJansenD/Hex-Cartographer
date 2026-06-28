@@ -41,9 +41,6 @@ export function createLeftMouseButtonInteraction(ctx: LeftMouseButtonInteraction
                 case 'select-path':
                     down_SelectPath(e, ctx, state);
                     break;
-                case 'text':
-                    down_SelectText(e, ctx, state);
-                    break;
                 case null:
                     down_Paint(e, ctx, state);
                     break;
@@ -66,19 +63,21 @@ function down_Paint(e: MouseEvent, ctx: LeftMouseButtonInteractionContext, state
     const data = state.data;
     const hexData = getHexagonAtCoordinates(data.hexes, hex);
 
-    if(!hexData) {
-        return;
-    }
-
     switch(state.selectedPaintMode) {
         case 'brush':
+            if(!hexData) return;
             down_PaintBrush(hexData, state);
             break;
         case 'bucket':
+            if(!hexData) return;
             down_PaintBucket(hexData, state);
             break;
         case 'eraser':
+            if(!hexData) return;
             down_Eraser(hexData, state);
+            break;
+        case 'text':
+            down_SelectText(e, ctx, state);
             break;
         default:
             throw new Error(`Unhandled paint mode: ${state.selectedPaintMode}`);
@@ -245,10 +244,15 @@ function down_SelectText(e: MouseEvent, ctx: LeftMouseButtonInteractionContext, 
                     state.data.texts.push(label);
                 }
             }
+
+            // The history is already preserved by the main setState call before the modal opens.
+            // We don't need to push to history here.
+            ctx.setState(state, false);
         }
     }
 
     const foundText = textIdx !== -1 ? state.data.texts[textIdx] : null;
+    console.log('foundText', foundText, textIdx, state.data.texts)
     if(foundText) {
         inputParams = {
             ...inputParams,
