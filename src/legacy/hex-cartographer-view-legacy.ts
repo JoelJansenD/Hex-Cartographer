@@ -55,6 +55,13 @@ import {
 import { ColorPickerModal } from '../modals/color-picker-modal';
 import { ExportMapModal } from '../modals/export-map-modal';
 import { TextInputModalLegacy } from './text-input-modal-legacy';
+import {
+    addRiverWaypointLegacy,
+    addRoadWaypointLegacy,
+    findRiverAtHexLegacy,
+    findRoadAtHexLegacy,
+    handleWaypointClickLegacy,
+} from './river-road-creation-legacy';
 
 // === View-Klasse für den Hex Cartographer ===
 export class HexCartographerViewLegacy extends ItemView {
@@ -1447,34 +1454,7 @@ export class HexCartographerViewLegacy extends ItemView {
     }
 
     handleWaypointClick(path, settings, clickedIdx) {
-        const now = Date.now();
-        const isDouble = this.lastWaypointClick &&
-                         this.lastWaypointClick.pathId === path.id &&
-                         this.lastWaypointClick.idx === clickedIdx &&
-                         (now - this.lastWaypointClick.time) < 400;
-        if (isDouble) {
-            const anchorIdx = this.lastWaypointClick.previousInsertAfter;
-            if (anchorIdx !== null && anchorIdx !== undefined && anchorIdx !== clickedIdx) {
-                const fromWp = path.waypoints[anchorIdx];
-                const toWp = path.waypoints[clickedIdx];
-                if (fromWp && toWp && (fromWp.q !== toWp.q || fromWp.r !== toWp.r)) {
-                    path.waypoints.push({ q: fromWp.q, r: fromWp.r, break: true });
-                    path.waypoints.push({ q: toWp.q, r: toWp.r });
-                    settings.insertAfter = path.waypoints.length - 1;
-                }
-            }
-            this.lastWaypointClick = null;
-        } else {
-            this.lastWaypointClick = {
-                pathId: path.id,
-                idx: clickedIdx,
-                time: now,
-                previousInsertAfter: settings.insertAfter
-            };
-            settings.insertAfter = clickedIdx;
-        }
-        this.render();
-        this.requestSave();
+        handleWaypointClickLegacy(this, path, settings, clickedIdx);
     }
 
     completePathPick(path, type) {
@@ -2873,93 +2853,15 @@ export class HexCartographerViewLegacy extends ItemView {
     }
 
     findRoadAtHex(hex) {
-        if (!this.data.roads) return null;
-        for (const road of this.data.roads) {
-            if (!road.waypoints || road.waypoints.length === 0) continue;
-            if (road.waypoints.some(w => w.q === hex.q && w.r === hex.r)) return road;
-            for (let i = 0; i < road.waypoints.length - 1; i++) {
-                const segs = calculateHexPath(road.waypoints[i]!, road.waypoints[i + 1]!, road.width);
-                for (const seg of segs) {
-                    if (seg.to.q === hex.q && seg.to.r === hex.r) return road;
-                    if (seg.from.q === hex.q && seg.from.r === hex.r) return road;
-                }
-            }
-        }
-        return null;
+        return findRoadAtHexLegacy(this, hex);
     }
 
     addRoadWaypoint(hex) {
-        if (!this.data.roads) this.data.roads = [];
-
-        let road = this.data.roads.find(r => r.id === this.roadSettings.activeRoadId);
-        if (road) road.dashes = this.pathDashes || DEFAULT_PATH_DASHES;
-        if (!road) {
-            const maxId = this.data.roads.reduce((max, r) => Math.max(max, r.id || 0), 0);
-            road = { id: maxId + 1, color: this.masterColor, width: this.roadSettings.width, dashes: this.pathDashes || DEFAULT_PATH_DASHES, waypoints: [] };
-            this.data.roads.push(road);
-            this.roadSettings.activeRoadId = road.id;
-            this.roadSettings.editMode = true;
-            this.roadSettings.insertAfter = null;
-            if (this.pathPickerBtn) {
-                setIcon(this.pathPickerBtn, 'check');
-                this.pathPickerBtn.style.background = PICKER_ACTIVE_BG;
-                this.pathPickerBtn.style.color = 'var(--text-on-accent)';
-                this.pathPickerBtn.setAttribute('title', localizeString('tooltip.roadFinish'));
-            }
-        }
-
-        if (this.roadSettings.editMode) {
-            const existingIdx = road.waypoints.findIndex(w => w.q === hex.q && w.r === hex.r);
-            if (existingIdx !== -1) {
-                const dragGroup: number[] = [];
-                road.waypoints.forEach((wp, i) => { if (wp.q === hex.q && wp.r === hex.r) dragGroup.push(i); });
-                this.roadDragIndex = { idx: existingIdx, origQ: hex.q, origR: hex.r, group: dragGroup };
-                return;
-            }
-
-            for (let i = 0; i < road.waypoints.length - 1; i++) {
-                const to = road.waypoints[i + 1]!;
-                if (to.break) continue;
-                const from = road.waypoints[i]!;
-                const segs = calculateHexPath(from, to, road.width);
-                const onSegment = segs.some(s =>
-                    (s.from.q === hex.q && s.from.r === hex.r) ||
-                    (s.to.q === hex.q && s.to.r === hex.r)
-                );
-                if (onSegment) {
-                    road.waypoints.splice(i + 1, 0, { q: hex.q, r: hex.r });
-                    this.roadSettings.insertAfter = i + 1;
-                    return;
-                }
-            }
-        }
-
-        const insertIdx = this.roadSettings.insertAfter;
-        if (insertIdx !== null && insertIdx < road.waypoints.length - 1) {
-            const bp = road.waypoints[insertIdx]!;
-            road.waypoints.push({ q: bp.q, r: bp.r, break: true });
-            road.waypoints.push({ q: hex.q, r: hex.r });
-            this.roadSettings.insertAfter = road.waypoints.length - 1;
-        } else {
-            road.waypoints.push({ q: hex.q, r: hex.r });
-            this.roadSettings.insertAfter = road.waypoints.length - 1;
-        }
+        addRoadWaypointLegacy(this, hex);
     }
 
     findRiverAtHex(hex) {
-        if (!this.data.rivers) return null;
-        for (const river of this.data.rivers) {
-            if (!river.waypoints || river.waypoints.length === 0) continue;
-            if (river.waypoints.some(w => w.q === hex.q && w.r === hex.r)) return river;
-            for (let i = 0; i < river.waypoints.length - 1; i++) {
-                const segs = calculateHexPath(river.waypoints[i]!, river.waypoints[i + 1]!, river.width);
-                for (const seg of segs) {
-                    if (seg.to.q === hex.q && seg.to.r === hex.r) return river;
-                    if (seg.from.q === hex.q && seg.from.r === hex.r) return river;
-                }
-            }
-        }
-        return null;
+        return findRiverAtHexLegacy(this, hex);
     }
 
     erasePathElement(paths, hex) {
@@ -3013,61 +2915,7 @@ export class HexCartographerViewLegacy extends ItemView {
     }
 
     addRiverWaypoint(hex) {
-        if (!this.data.rivers) this.data.rivers = [];
-
-        let river = this.data.rivers.find(r => r.id === this.riverSettings.activeRiverId);
-        if (river) river.dashes = this.pathDashes || DEFAULT_PATH_DASHES;
-        if (!river) {
-            const maxId = this.data.rivers.reduce((max, r) => Math.max(max, r.id || 0), 0);
-            river = { id: maxId + 1, color: this.masterColor, width: this.riverSettings.width, dashes: this.pathDashes || DEFAULT_PATH_DASHES, waypoints: [] };
-            this.data.rivers.push(river);
-            this.riverSettings.activeRiverId = river.id;
-            this.riverSettings.editMode = true;
-            this.riverSettings.insertAfter = null;
-            if (this.pathPickerBtn) {
-                setIcon(this.pathPickerBtn, 'check');
-                this.pathPickerBtn.style.background = PICKER_ACTIVE_BG;
-                this.pathPickerBtn.style.color = 'var(--text-on-accent)';
-                this.pathPickerBtn.setAttribute('title', localizeString('tooltip.riverFinish'));
-            }
-        }
-
-        if (this.riverSettings.editMode) {
-            const existingIdx = river.waypoints.findIndex(w => w.q === hex.q && w.r === hex.r);
-            if (existingIdx !== -1) {
-                const dragGroup: number[] = [];
-                river.waypoints.forEach((wp, i) => { if (wp.q === hex.q && wp.r === hex.r) dragGroup.push(i); });
-                this.riverDragIndex = { idx: existingIdx, origQ: hex.q, origR: hex.r, group: dragGroup };
-                return;
-            }
-
-            for (let i = 0; i < river.waypoints.length - 1; i++) {
-                const to = river.waypoints[i + 1]!;
-                if (to.break) continue;
-                const from = river.waypoints[i]!;
-                const segs = calculateHexPath(from, to, river.width);
-                const onSegment = segs.some(s =>
-                    (s.from.q === hex.q && s.from.r === hex.r) ||
-                    (s.to.q === hex.q && s.to.r === hex.r)
-                );
-                if (onSegment) {
-                    river.waypoints.splice(i + 1, 0, { q: hex.q, r: hex.r });
-                    this.riverSettings.insertAfter = i + 1;
-                    return;
-                }
-            }
-        }
-
-        const insertIdx = this.riverSettings.insertAfter;
-        if (insertIdx !== null && insertIdx < river.waypoints.length - 1) {
-            const bp = river.waypoints[insertIdx]!;
-            river.waypoints.push({ q: bp.q, r: bp.r, break: true });
-            river.waypoints.push({ q: hex.q, r: hex.r });
-            this.riverSettings.insertAfter = river.waypoints.length - 1;
-        } else {
-            river.waypoints.push({ q: hex.q, r: hex.r });
-            this.riverSettings.insertAfter = river.waypoints.length - 1;
-        }
+        addRiverWaypointLegacy(this, hex);
     }
 
     paintHex(hex) {
