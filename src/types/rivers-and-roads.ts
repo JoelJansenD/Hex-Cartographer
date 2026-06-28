@@ -1,11 +1,9 @@
-import { HexCoordinates } from "./hexagon";
-
 export interface LinearFeature {
     id: number;
     color: string;
     width: number;
     dashes: number;
-    waypoints: HexCoordinates[];
+    waypoints: Waypoint[];
 }
 
 export interface River extends LinearFeature {
@@ -14,4 +12,10 @@ export interface River extends LinearFeature {
 
 export interface Road extends LinearFeature {
     type: 'road';
+}
+
+export interface Waypoint {
+    q: number;
+    r: number;
+    break?: boolean;
 }

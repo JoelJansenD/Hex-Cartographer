@@ -3,7 +3,7 @@ import { getHexagonCoordinatesAtMousePosition } from "../../../functions/canvas"
 import { River, Road } from "../../../types/rivers-and-roads";
 import { EventHandlerMap, Listener, ListenerContext } from "./listeners";
 
-export default class PathCreateListener implements Listener {
+export default class PathCreateAndEditListener implements Listener {
     public events: EventHandlerMap = {
         mousedown: this.onMouseDown.bind(this),
     };
