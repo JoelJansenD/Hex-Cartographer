@@ -14,6 +14,7 @@ import LabelCreateListener from "./event-listeners/label-create-listener";
 import LabelEditListener from "./event-listeners/label-edit-listener";
 import LabelDragListener from "./event-listeners/label-drag-listener";
 import { ListenerContext, registerListeners } from "./event-listeners/listeners";
+import PatternCopyListener from "./event-listeners/pattern-copy-listener";
 import PatternPickerListener from "./event-listeners/pattern-picker-listener";
 import SelectBorderListener from "./event-listeners/select-border-listener";
 import SelectPathListener from "./event-listeners/select-path-listener";
@@ -102,6 +103,7 @@ export default class HexCartographerContent {
             new LabelCreateListener({...context, getApp: () => this.plugin.app}),
             new LabelDragListener(context),
             new LabelEditListener({...context, getApp: () => this.plugin.app}),
+            new PatternCopyListener(context),
             new PatternPickerListener(context),
             new SelectBorderListener(context),
             new SelectPathListener({...context, getApp: () => this.plugin.app}),
@@ -969,8 +971,12 @@ export default class HexCartographerContent {
 
     private highlightSelectedHex() {
         if (!this.canvas || !this.ctx) throw new Error("Canvas or context not initialized");
-        if (this.config.getState().selectedToolGroup === 'pattern' && this.patternSourceHex) {
-            const pos = hexToPixel({  q: this.patternSourceHex.q, r: this.patternSourceHex.r }, this.config.getState().data.gridSize, this.config.getState().data.settings.hexOrientation === 'horizontal');
+
+        const state = this.config.getState();
+        const inPatternMode = state.selectedToolGroup === 'pattern' || state.selectedToolGroup === 'pattern-picker';
+        if(inPatternMode && state.selectedPattern) {
+            const coordinates: HexCoordinates = {...state.selectedPattern};
+            const pos = hexToPixel(coordinates, this.config.getState().data.gridSize, this.config.getState().data.settings.hexOrientation === 'horizontal');
             const s = this.config.getState().data.gridSize;
 
             this.ctx.beginPath();
