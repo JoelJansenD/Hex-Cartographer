@@ -10,9 +10,9 @@ import BrushListener from "./event-listeners/brush-listener";
 import BucketListener from "./event-listeners/bucket-listener";
 import CanvasPanningListener from "./event-listeners/canvas-panning-listener";
 import EraserListener from "./event-listeners/eraser-listener";
+import LabelEditListener from "./event-listeners/label-edit-listener";
 import { registerKeyPressListener } from "./event-listeners/key-press-listener";
 import LabelDragListener from "./event-listeners/label-drag-listener";
-import { registerLeftMouseButtonListeners } from "./event-listeners/left-mouse-button-listener";
 import registerListeners from "./event-listeners/listener-registration";
 import { ListenerContext } from "./event-listeners/listeners";
 import { registerMiddleMouseButtonListeners } from "./event-listeners/middle-mouse-button-listener";
@@ -21,7 +21,6 @@ import { registerRightMouseButtonListeners } from "./event-listeners/right-mouse
 import SelectBorderListener from "./event-listeners/select-border-listener";
 import SelectPathListener from "./event-listeners/select-path-listener";
 import { createKeyPressInteraction } from "./interactions/key-press-interaction";
-import { createLeftMouseButtonInteraction } from "./interactions/left-mouse-button-interaction";
 import { createMiddleMouseButtonInteraction } from "./interactions/middle-mouse-button-interaction";
 import { createRightMouseButtonInteraction } from "./interactions/right-mouse-button-interaction";
 
@@ -92,22 +91,6 @@ export default class HexCartographerContent {
     // ==============================
     // Event Listeners
     // ==============================
-    private registerLeftMouseButtonListeners() {
-        const leftClick = createLeftMouseButtonInteraction({
-            getApp: () => this.plugin.app,
-            getCanvas: () => this.canvas!,
-            getState: this.config.getState,
-            setState: this.config.setState,
-        });
-
-        return registerLeftMouseButtonListeners({
-            canvas: this.canvas!,
-            down: leftClick.down,
-            up: leftClick.up,
-            doubleClick: leftClick.doubleClick
-        });
-    }
-
     private registerMiddleMouseButtonListeners() {
         const middleClick = createMiddleMouseButtonInteraction({
             getState: this.config.getState,
@@ -168,6 +151,7 @@ export default class HexCartographerContent {
             new CanvasPanningListener(context),
             new EraserListener(context),
             new LabelDragListener(context),
+            new LabelEditListener({...context, getApp: () => this.plugin.app}),
             new PatternPickerListener(context),
             new SelectBorderListener(context),
             new SelectPathListener({...context, getApp: () => this.plugin.app}),
