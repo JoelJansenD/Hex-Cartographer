@@ -27,11 +27,12 @@ export function registerListeners(canvas: HTMLCanvasElement, listeners: Listener
     }
 
     listeners.forEach(listener => {
-        registerListener(canvas, listener, 'mousedown');
-        registerListener(canvas, listener, 'mouseup');
-        registerListener(canvas, listener, 'mousemove');
-        registerListener(canvas, listener, 'dblclick');
-        registerListener(canvas, listener, 'keydown');
+        registerListener(canvas, listener, 'mousedown', { passive: false });
+        registerListener(canvas, listener, 'mouseup', { passive: false });
+        registerListener(canvas, listener, 'mousemove', { passive: false });
+        registerListener(canvas, listener, 'wheel', { passive: false });
+        registerListener(canvas, listener, 'dblclick', { passive: false });
+        registerListener(canvas, listener, 'keydown', { passive: false });
     });
 
     return removeListenerFunctions;

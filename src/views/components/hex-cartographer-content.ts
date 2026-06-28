@@ -9,6 +9,7 @@ import HexCartographerViewState from "../hex-cartographer-view-state";
 import BrushListener from "./event-listeners/brush-listener";
 import BucketListener from "./event-listeners/bucket-listener";
 import CanvasPanningListener from "./event-listeners/canvas-panning-listener";
+import CanvasZoomListener from "./event-listeners/canvas-zoom-listener";
 import EraserListener from "./event-listeners/eraser-listener";
 import LabelCreateListener from "./event-listeners/label-create-listener";
 import LabelEditListener from "./event-listeners/label-edit-listener";
@@ -99,6 +100,7 @@ export default class HexCartographerContent {
             new BrushListener(context),
             new BucketListener(context),
             new CanvasPanningListener(context),
+            new CanvasZoomListener(context),
             new EraserListener(context),
             new LabelCreateListener({...context, getApp: () => this.plugin.app}),
             new LabelDragListener(context),
@@ -301,28 +303,6 @@ export default class HexCartographerContent {
         // this.contentEl.addEventListener('mouseup', stop);
         // this.contentEl.addEventListener('mouseleave', stop);
 
-        // this.canvas.addEventListener('wheel', (e) => {
-        //     e.preventDefault();
-
-        //     const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
-        //     const oldZoom = this.config.getState().data.zoom;
-        //     const newZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, oldZoom * zoomFactor));
-        //     if (newZoom === oldZoom) return;
-
-        //     const rect = this.canvas.getBoundingClientRect();
-        //     const mouseX = e.clientX - rect.left;
-        //     const mouseY = e.clientY - rect.top;
-
-        //     const worldX = (mouseX - this.config.getState().data.offX) / oldZoom;
-        //     const worldY = (mouseY - this.config.getState().data.offY) / oldZoom;
-
-        //     this.config.getState().data.offX = mouseX - worldX * newZoom;
-        //     this.config.getState().data.offY = mouseY - worldY * newZoom;
-        //     this.config.getState().data.zoom = newZoom;
-
-        //     this.render();
-        //     this.requestSave();
-        // }, { passive: false });
 
         // this.touchState = {
         //     touches: [],
