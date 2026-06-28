@@ -19,7 +19,7 @@ import PathCreateListener from "./event-listeners/path-create-listener";
 import PatternCopyListener from "./event-listeners/pattern-copy-listener";
 import PatternPickerListener from "./event-listeners/pattern-picker-listener";
 import SelectBorderListener from "./event-listeners/select-border-listener";
-import SelectPathListener from "./event-listeners/select-path-listener";
+import SelectPathListener from "./event-listeners/path-select-listener";
 import UndoRedoListener from "./event-listeners/undo-redo-listener";
 
 interface HexCartographerContentConfig {

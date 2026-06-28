@@ -1,3 +1,4 @@
+import { getHexagonCoordinatesAtMousePosition } from "../../../functions/canvas";
 import { EventHandlerMap, Listener, ListenerContext } from "./listeners";
 
 export default class PathCreateListener implements Listener {
@@ -11,7 +12,9 @@ export default class PathCreateListener implements Listener {
         this._context = context;
     }
 
-    private onMouseDown(_e: MouseEvent) {
-        void this._context;
+    private onMouseDown(e: MouseEvent) {
+        const state = this._context.getState();
+        const hexCoordinates = getHexagonCoordinatesAtMousePosition(e, this._context.getCanvas(), state);
+        
     }
 }
