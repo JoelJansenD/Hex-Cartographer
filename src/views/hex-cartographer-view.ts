@@ -18,6 +18,7 @@ export default class HexCartographerView extends ItemView {
         isPanning: false,
         selectedColor: DEFAULT_PALETTE[0]!,
         selectedPaintMode: 'brush',
+        selectedPath: null,
         selectedPattern: null,
         selectedRegion: null,
         selectedRiver: null,

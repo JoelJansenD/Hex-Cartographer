@@ -43,6 +43,11 @@ export default interface HexCartographerViewState {
     selectedPaintMode: PaintMode | null;
 
     /**
+     * The currently selected path (river or road) on the map.
+     */
+    selectedPath: SelectedPath | null;
+
+    /**
      * The currently selected pattern which can be copied onto other hexes on the map.
      */
     selectedPattern: Hexagon | null;
@@ -54,11 +59,13 @@ export default interface HexCartographerViewState {
 
     /**
      * The currently selected river on the map. This is used when the user wants to modify or interact with a specific river.
+     * @deprecated will be replaced with selectedPath
      */
     selectedRiver: River | null;
 
     /**
      * The currently selected road on the map. This is used when the user wants to modify or interact with a specific road.
+     * @deprecated will be replaced with selectedPath
      */
     selectedRoad: Road | null;
 
@@ -71,4 +78,13 @@ export default interface HexCartographerViewState {
      * The currently selected tool group in the toolbar. This determines which set of tools is active for the user to interact with the map.
      */
     selectedToolGroup: ToolGroup | null;
+}
+
+export interface SelectedPath {
+    id?: number;
+    color: string;
+    width: number;
+    dashes: number;
+    waypoints: HexCoordinates[];
+    type: 'river' | 'road';
 }
