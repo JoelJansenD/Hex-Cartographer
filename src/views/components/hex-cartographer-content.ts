@@ -8,6 +8,7 @@ import { LinearFeature } from "../../types/rivers-and-roads";
 import HexCartographerViewState from "../hex-cartographer-view-state";
 import BrushListener from "./event-listeners/brush-listener";
 import BucketListener from "./event-listeners/bucket-listener";
+import CanvasPanningListener from "./event-listeners/canvas-panning-listener";
 import EraserListener from "./event-listeners/eraser-listener";
 import { registerKeyPressListener } from "./event-listeners/key-press-listener";
 import LabelDragListener from "./event-listeners/label-drag-listener";
@@ -15,13 +16,11 @@ import { registerLeftMouseButtonListeners } from "./event-listeners/left-mouse-b
 import registerListeners from "./event-listeners/listener-registration";
 import { ListenerContext } from "./event-listeners/listeners";
 import { registerMiddleMouseButtonListeners } from "./event-listeners/middle-mouse-button-listener";
-import { registerMouseMoveListener } from "./event-listeners/mouse-move-listener";
 import PatternPickerListener from "./event-listeners/pattern-picker-listener";
 import { registerRightMouseButtonListeners } from "./event-listeners/right-mouse-button-listener";
 import { createKeyPressInteraction } from "./interactions/key-press-interaction";
 import { createLeftMouseButtonInteraction } from "./interactions/left-mouse-button-interaction";
 import { createMiddleMouseButtonInteraction } from "./interactions/middle-mouse-button-interaction";
-import { createMouseMoveInteraction } from "./interactions/mouse-move-interaction";
 import { createRightMouseButtonInteraction } from "./interactions/right-mouse-button-interaction";
 
 interface HexCartographerContentConfig {
@@ -148,19 +147,6 @@ export default class HexCartographerContent {
         });
     }
 
-    private registerMouseMoveListener() {
-        const mouseMove = createMouseMoveInteraction({
-            getCanvas: () => this.canvas!,
-            getState: this.config.getState,
-            setState: this.config.setState,
-        });
-
-        return registerMouseMoveListener({
-            canvas: this.canvas!,
-            onMouseMove: mouseMove.move
-        });
-    }
-
     private registerEventListeners() {
         if(!this.canvas) throw new Error("Canvas not initialized");
 
@@ -175,11 +161,12 @@ export default class HexCartographerContent {
                 setState: this.config.setState,
         };
         const unregisterFunctions = registerListeners(this.canvas, [
-            new LabelDragListener(context),
             new BrushListener(context),
             new BucketListener(context),
+            new CanvasPanningListener(context),
             new EraserListener(context),
-            new PatternPickerListener(context)
+            new LabelDragListener(context),
+            new PatternPickerListener(context),
         ]);
 
         

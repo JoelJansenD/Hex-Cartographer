@@ -25,11 +25,6 @@ export function createLeftMouseButtonInteraction(ctx: LeftMouseButtonInteraction
     return {
         down(e: MouseEvent) {
             const state = ctx.getState();
-            if(e.ctrlKey) {
-                state.isPanning = true;
-                ctx.setState(state, false);
-                return;
-            }
 
             const selectedToolGroup = state.selectedToolGroup;
             switch(selectedToolGroup) {
@@ -59,27 +54,6 @@ export function createLeftMouseButtonInteraction(ctx: LeftMouseButtonInteraction
             ctx.setState(state, false);
         }
     };
-}
-
-function down_Eraser(hexData: Hexagon, state: HexCartographerViewState) {
-    const key = `${hexData.q}_${hexData.r}`;
-    if(state.selectedSymbol !== 'hexagon') {
-        if(hexData.color) {
-            hexData.symbol = undefined;
-            hexData.symbolColor = undefined;
-        }
-        else {
-            delete state.data.hexes[key];
-        }
-    }
-    else {
-        if(hexData.symbol) {
-            hexData.color = undefined;
-        }
-        else {
-            delete state.data.hexes[key];
-        }
-    }
 }
 
 function down_SelectBorder(e: MouseEvent, ctx: LeftMouseButtonInteractionContext, state: HexCartographerViewState) {

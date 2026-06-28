@@ -3,6 +3,7 @@ import { getHexagonCoordinatesAtMousePosition } from "../../../functions/canvas"
 import { getHexagonAtCoordinates } from "../../../functions/hex-math";
 import { localizeString } from "../../../functions/i18n";
 import { EventHandlerMap, Listener, ListenerContext } from "./listeners";
+import { LEFT_MOUSE_BUTTON } from "../../../constants/Events";
 
 export default class PatternPickerListener implements Listener {
     events: EventHandlerMap = {
@@ -15,6 +16,8 @@ export default class PatternPickerListener implements Listener {
     }
 
     private onMouseDown(e: MouseEvent) {
+        if(!this.canHandle(e)) return;
+
         const state = this._context.getState();
         const hex = getHexagonCoordinatesAtMousePosition(e, this._context.getCanvas(), state);
         const data = state.data;
@@ -32,6 +35,13 @@ export default class PatternPickerListener implements Listener {
         }
 
         this._context.setState(state, true);
+    }
+
+    private canHandle(e: MouseEvent) {
+        const state = this._context.getState();
+        return e.button === LEFT_MOUSE_BUTTON
+            && state.editMode
+            && state.selectedToolGroup === 'pattern-picker';
     }
 
 }
