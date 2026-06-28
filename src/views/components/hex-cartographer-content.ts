@@ -88,7 +88,6 @@ export default class HexCartographerContent {
         const leftClick = createLeftMouseButtonInteraction({
             getApp: () => this.plugin.app,
             getCanvas: () => this.canvas!,
-            getData: () => this.config.getState().data,
             getState: this.config.getState,
             setState: this.config.setState,
         });

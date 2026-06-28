@@ -22,6 +22,11 @@ export default interface HexCartographerViewState {
     isPanning: boolean;
 
     /**
+     * The currently selected color in the toolbar. This determines the color used for painting hexes, rivers, roads, and other elements on the map.
+     */
+    selectedColor: string;
+
+    /**
      * The currently selected paint mode in the toolbar. This determines how the user interacts with the map when using painting tools.
      */
     selectedPaintMode: PaintMode | null;

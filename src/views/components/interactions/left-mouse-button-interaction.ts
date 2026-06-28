@@ -15,7 +15,6 @@ import { getWorldCoordinates } from "../../../functions/canvas";
 export interface LeftMouseButtonInteractionContext {
     getApp: () => App;
     getCanvas: () => HTMLCanvasElement;
-    getData: () => MapData;
     getState: () => HexCartographerViewState;
     setState: (state: HexCartographerViewState, pushToHistory?: boolean) => void;
 }
@@ -45,6 +44,9 @@ export function createLeftMouseButtonInteraction(ctx: LeftMouseButtonInteraction
                 case 'text':
                     down_SelectText(e, ctx, state);
                     break;
+                case null:
+                    down_Paint(e, ctx, state);
+                    break;
                 default:
                     throw new Error(`Unhandled tool group: ${selectedToolGroup}`);
             }
@@ -59,10 +61,29 @@ export function createLeftMouseButtonInteraction(ctx: LeftMouseButtonInteraction
     };
 }
 
-function down_PatternPicker(e: MouseEvent, ctx: LeftMouseButtonInteractionContext, state: HexCartographerViewState) {
-    ctx.getCanvas().focus();
+function down_Paint(e: MouseEvent, ctx: LeftMouseButtonInteractionContext, state: HexCartographerViewState) {
     const hex = getHexagonCoordinatesAtMousePosition(ctx, e, state);
-    const data = ctx.getData();
+    const data = state.data;
+    const hexData = getHexagonAtCoordinates(data.hexes, hex);
+
+    if(!hexData) {
+        return;
+    }
+
+    if(state.selectedPaintMode === 'brush') {
+        if(state.selectedSymbol !== 'hexagon') {
+            hexData.symbol = state.selectedSymbol;
+            hexData.symbolColor = state.selectedColor;
+        }
+        else {
+            hexData.color = state.selectedColor;
+        }
+    }
+}
+
+function down_PatternPicker(e: MouseEvent, ctx: LeftMouseButtonInteractionContext, state: HexCartographerViewState) {
+    const hex = getHexagonCoordinatesAtMousePosition(ctx, e, state);
+    const data = state.data;
     const hexData = getHexagonAtCoordinates(data.hexes, hex);
 
     if (hexData) {
@@ -79,7 +100,7 @@ function down_PatternPicker(e: MouseEvent, ctx: LeftMouseButtonInteractionContex
 
 function down_SelectBorder(e: MouseEvent, ctx: LeftMouseButtonInteractionContext, state: HexCartographerViewState) {
     const hex = getHexagonCoordinatesAtMousePosition(ctx, e, state);
-    const data = ctx.getData();
+    const data = state.data;
     
     let foundRegion: Border | null = null;
     for(const region of data.borders) {
@@ -103,8 +124,8 @@ function down_SelectBorder(e: MouseEvent, ctx: LeftMouseButtonInteractionContext
 }
 
 function down_SelectPath(e: MouseEvent, ctx: LeftMouseButtonInteractionContext, state: HexCartographerViewState) {
-    const foundRiver = findLinearFeatureAtHex(ctx.getData().rivers, getHexagonCoordinatesAtMousePosition(ctx, e, state)) as River | null;
-    const foundRoad = findLinearFeatureAtHex(ctx.getData().roads, getHexagonCoordinatesAtMousePosition(ctx, e, state)) as Road | null;
+    const foundRiver = findLinearFeatureAtHex(state.data.rivers, getHexagonCoordinatesAtMousePosition(ctx, e, state)) as River | null;
+    const foundRoad = findLinearFeatureAtHex(state.data.roads, getHexagonCoordinatesAtMousePosition(ctx, e, state)) as Road | null;
 
     if(foundRiver && foundRoad) {
         const modal = new PathPickerModal(ctx.getApp(), foundRiver, foundRoad, (river, road) => {
@@ -143,21 +164,21 @@ function down_SelectText(e: MouseEvent, ctx: LeftMouseButtonInteractionContext, 
         onSubmit: label => {
             if(label === 'delete') {
                 if(textIdx !== -1) {
-                    ctx.getData().texts.splice(textIdx, 1);
+                    state.data.texts.splice(textIdx, 1);
                 }
             }
             else if(label) {
                 if(textIdx !== -1) {
-                    ctx.getData().texts[textIdx] = label;
+                    state.data.texts[textIdx] = label;
                 }
                 else {
-                    ctx.getData().texts.push(label);
+                    state.data.texts.push(label);
                 }
             }
         }
     }
 
-    const foundText = textIdx !== -1 ? ctx.getData().texts[textIdx] : null;
+    const foundText = textIdx !== -1 ? state.data.texts[textIdx] : null;
     if(foundText) {
         inputParams = {
             ...inputParams,
@@ -170,8 +191,8 @@ function down_SelectText(e: MouseEvent, ctx: LeftMouseButtonInteractionContext, 
             shadow: foundText.shadow,
             shadowDistance: foundText.shadowDistance,
             shadowOpacity: foundText.shadowOpatown,
-            colorPalette: ctx.getData().settings.colorPalette,
-            colorPalette2: ctx.getData().settings.colorPalette2
+            colorPalette: state.data.settings.colorPalette,
+            colorPalette2: state.data.settings.colorPalette2
         };
     }
 
@@ -210,7 +231,7 @@ function getHexagonAtCoordinates(hexes: HexagonSet, hex: HexCoordinates) {
 }
 
 function getTextIndexAtClick(world: PixelCoordinates, ctx: LeftMouseButtonInteractionContext) {
-    const data = ctx.getData();
+    const data = ctx.getState().data;
     if(!data.texts) return -1;
 
     const canvas = ctx.getCanvas();

@@ -6,6 +6,7 @@ import { MapData } from "../types/map-data";
 import HexCartographerPlugin from "../main";
 import HexCartographerViewState from "./hex-cartographer-view-state";
 import HistoryService from "../services/history-service";
+import { DEFAULT_PALETTE } from "../constants";
 
 export default class HexCartographerView extends ItemView {
 
@@ -13,6 +14,7 @@ export default class HexCartographerView extends ItemView {
         data: TEST_DATA,
         editMode: false,
         isPanning: false,
+        selectedColor: DEFAULT_PALETTE[0]!,
         selectedPaintMode: 'brush',
         selectedPattern: null,
         selectedRegion: null,
