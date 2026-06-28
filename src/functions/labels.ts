@@ -1,5 +1,4 @@
 import { Label } from "../types/label";
-import { LeftMouseButtonInteractionContext } from "../views/components/interactions/left-mouse-button-interaction";
 import HexCartographerViewState from "../views/hex-cartographer-view-state";
 import { PixelCoordinates } from "./hex-math";
 

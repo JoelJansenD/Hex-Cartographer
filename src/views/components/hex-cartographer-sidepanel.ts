@@ -32,7 +32,7 @@ export default class HexCartographerSidepanel {
         this.config.setState({
             ...this.config.getState(),
             selectedSymbol: iconId,
-        });
+        }, false);
     }
 
     private initializeIconSelectionButtons() {
