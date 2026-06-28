@@ -10,6 +10,7 @@ import BrushListener from "./event-listeners/brush-listener";
 import BucketListener from "./event-listeners/bucket-listener";
 import CanvasPanningListener from "./event-listeners/canvas-panning-listener";
 import EraserListener from "./event-listeners/eraser-listener";
+import LabelCreateListener from "./event-listeners/label-create-listener";
 import LabelEditListener from "./event-listeners/label-edit-listener";
 import { registerKeyPressListener } from "./event-listeners/key-press-listener";
 import LabelDragListener from "./event-listeners/label-drag-listener";
@@ -150,6 +151,7 @@ export default class HexCartographerContent {
             new BucketListener(context),
             new CanvasPanningListener(context),
             new EraserListener(context),
+            new LabelCreateListener({...context, getApp: () => this.plugin.app}),
             new LabelDragListener(context),
             new LabelEditListener({...context, getApp: () => this.plugin.app}),
             new PatternPickerListener(context),

@@ -26,30 +26,23 @@ export default class LabelEditListener implements Listener {
 
         const state = this._context.getState();
         this.openLabelEditor(e, state);
-
-        // The state is stored in the onSubmit callback of the modal, so we don't need to push to history here.
-        this._context.setState(state, false);
     }
 
     private openLabelEditor(e: MouseEvent, state: HexCartographerViewState) {
         const location = getWorldCoordinates(e, this._context.getCanvas(), { x: state.data.offX, y: state.data.offY }, state.data.zoom);
         const textIdx = getTextIndexAtClick(location, this._context.getCanvas(), state);
+        if(textIdx === -1) {
+            return;
+        }
 
         let inputParams: TextInputModalParams = {
             location,
             onSubmit: label => {
                 if(label === "delete") {
-                    if(textIdx !== -1) {
-                        state.data.texts.splice(textIdx, 1);
-                    }
+                    state.data.texts.splice(textIdx, 1);
                 }
                 else if(label) {
-                    if(textIdx !== -1) {
-                        state.data.texts[textIdx] = label;
-                    }
-                    else {
-                        state.data.texts.push(label);
-                    }
+                    state.data.texts[textIdx] = label;
                 }
 
                 this._context.setState(state, true);
