@@ -1,7 +1,7 @@
 import { App } from "obsidian";
 import { LEFT_MOUSE_BUTTON } from "../../../constants/Events";
 import { getHexagonCoordinatesAtMousePosition } from "../../../functions/canvas";
-import { calculateHexPath } from "../../../functions/hex-math";
+import { calculateHexPath } from "../../../functions/hexes";
 import PathPickerModal from "../../../modals/path-picker-modal";
 import { HexCoordinates } from "../../../types/hexagon";
 import { LinearFeature, River, Road } from "../../../types/rivers-and-roads";

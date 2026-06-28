@@ -1,6 +1,6 @@
 import { Notice } from "obsidian";
 import { getHexagonCoordinatesAtMousePosition } from "../../../functions/canvas";
-import { getHexagonAtCoordinates } from "../../../functions/hex-math";
+import { getHexagonAtCoordinates } from "../../../functions/hexes";
 import { localizeString } from "../../../functions/i18n";
 import { EventHandlerMap, Listener, ListenerContext } from "./listeners";
 import { LEFT_MOUSE_BUTTON } from "../../../constants/Events";

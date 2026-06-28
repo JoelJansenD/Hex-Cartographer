@@ -1,6 +1,6 @@
 import { LEFT_MOUSE_BUTTON } from "../../../constants/Events";
 import { getHexagonCoordinatesAtMousePosition } from "../../../functions/canvas";
-import { getHexagonAtCoordinates } from "../../../functions/hex-math";
+import { getHexagonAtCoordinates } from "../../../functions/hexes";
 import HexCartographerViewState from "../../hex-cartographer-view-state";
 import { EventHandlerMap, Listener, ListenerContext } from "./listeners";
 

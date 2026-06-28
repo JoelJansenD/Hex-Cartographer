@@ -39,7 +39,7 @@ import {
     getHexBounds,
     isHexInPlausibleRange,
     createSegmentKey,
-} from '../functions/hex-math';
+} from '../functions/hexes';
 import {
     MapDocumentData,
     Waypoint,

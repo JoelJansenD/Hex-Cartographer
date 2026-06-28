@@ -1,6 +1,6 @@
 import { Label } from "../types/label";
 import HexCartographerViewState from "../views/hex-cartographer-view-state";
-import { PixelCoordinates } from "./hex-math";
+import { PixelCoordinates } from "./hexes";
 
 export function getTextIndexAtClick(world: PixelCoordinates, canvas: HTMLCanvasElement, state: HexCartographerViewState): number {
     const data = state.data;

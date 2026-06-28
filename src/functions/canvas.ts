@@ -1,5 +1,5 @@
 import HexCartographerViewState from "../views/hex-cartographer-view-state";
-import { PixelCoordinates, pixelToHex } from "./hex-math";
+import { PixelCoordinates, pixelToHex } from "./hexes";
 
 export function getWorldCoordinates(e: MouseEvent, canvas: HTMLCanvasElement, offset?: PixelCoordinates, zoom?: number): PixelCoordinates {
     const r = canvas!.getBoundingClientRect();

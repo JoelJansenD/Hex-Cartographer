@@ -1,6 +1,6 @@
 import { DEFAULT_BORDER_HIGHLIGHT_WIDTH, PATH_END_INSET, PATH_OVERLAP_SPACING, SVG_SYMBOL_CONFIG } from "../../constants";
 import { SVG_SYMBOL_DATA } from "../../data/svg-symbol-data";
-import { calculateHexPath, createSegmentKey, hexToPixel } from "../../functions/hex-math";
+import { calculateHexPath, createSegmentKey, hexToPixel } from "../../functions/hexes";
 import HexCartographerPlugin from "../../main";
 import { Hexagon, HexCoordinates } from "../../types/hexagon";
 import { MapData } from "../../types/map-data";

@@ -10,7 +10,7 @@ import { ColorPickerModal } from './color-picker-modal';
 import { FileSelectorModal } from './file-selector-modal';
 import isTouchDevice from '../functions/is-touch-device';
 import { Label } from '../types/label';
-import { PixelCoordinates } from '../functions/hex-math';
+import { PixelCoordinates } from '../functions/hexes';
 
 export interface TextInputModalParams {
     location: PixelCoordinates;
