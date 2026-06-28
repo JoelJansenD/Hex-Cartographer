@@ -1374,21 +1374,21 @@ export default class HexCartographerContent {
     }
 
     private drawPathWaypoints() {
+        const state = this.config.getState();
+        if(state.selectedPath) {
+            const activeWp = state.selectedPath.activeWaypoint;
+            state.selectedPath.path.waypoints.forEach((wp) => {
+                if (!this.canvas || !this.ctx) throw new Error("Canvas or context not initialized");
+                const isActive = activeWp && wp.q === activeWp.q && wp.r === activeWp.r;
+                const pos = hexToPixel({ q: wp.q, r: wp.r }, state.data.gridSize, state.data.settings.hexOrientation === 'horizontal');
+                this.ctx.beginPath();
+                this.ctx.arc(pos.x, pos.y, 4, 0, Math.PI * 2);
+                this.ctx.fillStyle = isActive ? '#FF0000' : '#000000';
+                this.ctx.fill();
+            });
+        }
         if (this.config.getState().data.settings.riverSettings.editMode && this.config.getState().data.rivers) {
-            const river = this.config.getState().data.rivers.find(r => r.id === this.config.getState().data.settings.riverSettings.activeRiverId);
-            if (river && river.waypoints) {
-                const activeIdx = this.config.getState().data.settings.riverSettings.insertAfter;
-                const activeWp = activeIdx !== null ? river.waypoints[activeIdx] : null;
-                river.waypoints.forEach((wp) => {
-                    if (!this.canvas || !this.ctx) throw new Error("Canvas or context not initialized");
-                    const isActive = activeWp && wp.q === activeWp.q && wp.r === activeWp.r;
-                    const pos = hexToPixel({ q: wp.q, r: wp.r }, this.config.getState().data.gridSize, this.config.getState().data.settings.hexOrientation === 'horizontal');
-                    this.ctx.beginPath();
-                    this.ctx.arc(pos.x, pos.y, 4, 0, Math.PI * 2);
-                    this.ctx.fillStyle = isActive ? '#FF0000' : '#000000';
-                    this.ctx.fill();
-                });
-            }
+            
         }
         if (this.config.getState().data.settings.roadSettings.editMode && this.config.getState().data.roads) {
             const road = this.config.getState().data.roads.find(r => r.id === this.config.getState().data.settings.roadSettings.activeRoadId);

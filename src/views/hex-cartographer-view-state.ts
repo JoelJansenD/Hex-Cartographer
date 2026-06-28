@@ -81,10 +81,6 @@ export default interface HexCartographerViewState {
 }
 
 export interface SelectedPath {
-    id?: number;
-    color: string;
-    width: number;
-    dashes: number;
-    waypoints: HexCoordinates[];
-    type: 'river' | 'road';
+    path: River | Road;
+    activeWaypoint: HexCoordinates;
 }
