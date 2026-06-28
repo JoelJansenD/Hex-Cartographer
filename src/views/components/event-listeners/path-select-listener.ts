@@ -7,6 +7,7 @@ import { HexCoordinates } from "../../../types/hexagon";
 import { LinearFeature, River, Road } from "../../../types/rivers-and-roads";
 import HexCartographerViewState from "../../hex-cartographer-view-state";
 import { EventHandlerMap, Listener, ListenerContext } from "./listeners";
+import { findLinearFeatureAtHex } from "../../../functions/paths";
 
 export interface SelectPathListenerContext extends ListenerContext {
     getApp: () => App;
@@ -35,8 +36,8 @@ export default class SelectPathListener implements Listener {
 
     private selectPath(e: MouseEvent, state: HexCartographerViewState) {
         const hex = getHexagonCoordinatesAtMousePosition(e, this._context.getCanvas(), state);
-        const foundRiver = this.findLinearFeatureAtHex(state.data.rivers, hex) as River | null;
-        const foundRoad = this.findLinearFeatureAtHex(state.data.roads, hex) as Road | null;
+        const foundRiver = findLinearFeatureAtHex(state.data.rivers, hex) as River | null;
+        const foundRoad = findLinearFeatureAtHex(state.data.roads, hex) as Road | null;
 
         if(foundRiver && foundRoad) {
             const modal = new PathPickerModal(this._context.getApp(), foundRiver, foundRoad, (river, road) => {
@@ -67,25 +68,7 @@ export default class SelectPathListener implements Listener {
         }
     }
 
-    private findLinearFeatureAtHex(features: LinearFeature[], hex: HexCoordinates) {
-        for(const feature of features) {
-            if(!feature.waypoints || feature.waypoints.length === 0) continue;
-            if(feature.waypoints.some(w => w.q === hex.q && w.r === hex.r)) return feature;
-
-            for(let i = 0; i < feature.waypoints.length - 1; i++) {
-                const waypoint1 = feature.waypoints[i]!;
-                const waypoint2 = feature.waypoints[i + 1]!;
-
-                const segs = calculateHexPath(waypoint1, waypoint2, feature.width);
-                for(const seg of segs) {
-                    if(seg.to.q === hex.q && seg.to.r === hex.r) return feature;
-                    if(seg.from.q === hex.q && seg.from.r === hex.r) return feature;
-                }
-            }
-        }
-
-        return null;
-    }
+    private 
 
     private canHandle(e: MouseEvent): boolean {
         const state = this._context.getState();
