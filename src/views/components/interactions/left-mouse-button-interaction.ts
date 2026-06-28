@@ -2,12 +2,9 @@ import { App, Notice } from "obsidian";
 import { calculateHexPath, getHexNeighbors, PixelCoordinates, pixelToHex } from "../../../functions/hex-math";
 import { HexagonSet } from "../../../types/map-data";
 import { MouseButtonInteraction } from "./mouse-button-interaction";
-import { localizeString } from "../../../functions/i18n";
-import { Border } from "../../../types/border";
-import { Hexagon, HexCoordinates } from "../../../types/hexagon";
+import { HexCoordinates } from "../../../types/hexagon";
 import { LinearFeature, River, Road } from "../../../types/rivers-and-roads";
 import PathPickerModal from "../../../modals/path-picker-modal";
-import { Label } from "../../../types/label";
 import { TextInputModal, TextInputModalParams } from "../../../modals/text-input-modal";
 import HexCartographerViewState from "../../hex-cartographer-view-state";
 import { getWorldCoordinates } from "../../../functions/canvas";
@@ -28,9 +25,6 @@ export function createLeftMouseButtonInteraction(ctx: LeftMouseButtonInteraction
 
             const selectedToolGroup = state.selectedToolGroup;
             switch(selectedToolGroup) {
-                case 'select-border':
-                    down_SelectBorder(e, ctx, state);
-                    break;
                 case 'select-path':
                     down_SelectPath(e, ctx, state);
                     break;
@@ -40,11 +34,6 @@ export function createLeftMouseButtonInteraction(ctx: LeftMouseButtonInteraction
             ctx.setState(state);
         },
         up(_: MouseEvent) {
-            const state = ctx.getState();
-            
-            // We always want to stop, even if the user let go of the control button
-            state.isPanning = false;
-            ctx.setState(state, false);
         },
         doubleClick(e: MouseEvent) {
             const state = ctx.getState();
@@ -54,31 +43,6 @@ export function createLeftMouseButtonInteraction(ctx: LeftMouseButtonInteraction
             ctx.setState(state, false);
         }
     };
-}
-
-function down_SelectBorder(e: MouseEvent, ctx: LeftMouseButtonInteractionContext, state: HexCartographerViewState) {
-    const hex = getHexagonCoordinatesAtMousePosition(ctx, e, state);
-    const data = state.data;
-    
-    let foundRegion: Border | null = null;
-    for(const region of data.borders) {
-        if(region.hexes.some(b => b.q === hex.q && b.r === hex.r)) {
-            foundRegion = region;
-            break;
-        }
-    }
-
-    if(!foundRegion) {
-        new Notice(localizeString('notice.noBorderAtPosition'));
-        return;
-    }
-
-    state.selectedRegion = {
-        border: foundRegion,
-        hexagon: hex
-    };
-
-    new Notice(localizeString('notice.borderSelected', { id: foundRegion.id }));
 }
 
 function down_SelectPath(e: MouseEvent, ctx: LeftMouseButtonInteractionContext, state: HexCartographerViewState) {

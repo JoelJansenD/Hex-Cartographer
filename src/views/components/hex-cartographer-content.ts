@@ -18,6 +18,7 @@ import { ListenerContext } from "./event-listeners/listeners";
 import { registerMiddleMouseButtonListeners } from "./event-listeners/middle-mouse-button-listener";
 import PatternPickerListener from "./event-listeners/pattern-picker-listener";
 import { registerRightMouseButtonListeners } from "./event-listeners/right-mouse-button-listener";
+import SelectBorderListener from "./event-listeners/select-border-listener";
 import { createKeyPressInteraction } from "./interactions/key-press-interaction";
 import { createLeftMouseButtonInteraction } from "./interactions/left-mouse-button-interaction";
 import { createMiddleMouseButtonInteraction } from "./interactions/middle-mouse-button-interaction";
@@ -167,6 +168,7 @@ export default class HexCartographerContent {
             new EraserListener(context),
             new LabelDragListener(context),
             new PatternPickerListener(context),
+            new SelectBorderListener(context),
         ]);
 
         
