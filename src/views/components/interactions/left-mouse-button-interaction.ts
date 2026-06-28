@@ -33,9 +33,6 @@ export function createLeftMouseButtonInteraction(ctx: LeftMouseButtonInteraction
 
             const selectedToolGroup = state.selectedToolGroup;
             switch(selectedToolGroup) {
-                case 'pattern-picker':
-                    down_PatternPicker(e, ctx, state);
-                    break;
                 case 'select-border':
                     down_SelectBorder(e, ctx, state);
                     break;
@@ -82,23 +79,6 @@ function down_Eraser(hexData: Hexagon, state: HexCartographerViewState) {
         else {
             delete state.data.hexes[key];
         }
-    }
-}
-
-function down_PatternPicker(e: MouseEvent, ctx: LeftMouseButtonInteractionContext, state: HexCartographerViewState) {
-    const hex = getHexagonCoordinatesAtMousePosition(ctx, e, state);
-    const data = state.data;
-    const hexData = getHexagonAtCoordinates(data.hexes, hex);
-
-    if (hexData) {
-        state.selectedPattern = {...hexData};
-        state.selectedToolGroup = 'pattern';
-        state.selectedPaintMode = 'brush';
-        new Notice(localizeString('notice.patternPicked'));
-    }
-    else {
-        state.selectedPattern = null;
-        new Notice(localizeString('notice.noHexAtPosition'));
     }
 }
 

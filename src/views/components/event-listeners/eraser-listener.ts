@@ -35,7 +35,6 @@ export default class EraserListener implements Listener {
 
     private onMouseUp(e: MouseEvent) {
         const state = this._context.getState();
-        console.log(`EraserListener.onMouseUp: canHandle=${this.canHandle(e)}, heldButton=${state.heldButton}`);
         if(!this.canHandle(e) || state.heldButton !== LEFT_MOUSE_BUTTON) return;
 
         state.heldButton = null;
