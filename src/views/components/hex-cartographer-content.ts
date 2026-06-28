@@ -100,7 +100,10 @@ export default class HexCartographerContent {
     }
 
     private registerMiddleMouseButtonListeners() {
-        const middleClick = createMiddleMouseButtonInteraction();
+        const middleClick = createMiddleMouseButtonInteraction({
+            getState: this.config.getState,
+            setState: this.config.setState,
+        });
 
         return registerMiddleMouseButtonListeners({
             canvas: this.canvas!,
