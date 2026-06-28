@@ -17,11 +17,9 @@ import LabelDragListener from "./event-listeners/label-drag-listener";
 import registerListeners from "./event-listeners/listener-registration";
 import { ListenerContext } from "./event-listeners/listeners";
 import PatternPickerListener from "./event-listeners/pattern-picker-listener";
-import { registerRightMouseButtonListeners } from "./event-listeners/right-mouse-button-listener";
 import SelectBorderListener from "./event-listeners/select-border-listener";
 import SelectPathListener from "./event-listeners/select-path-listener";
 import { createKeyPressInteraction } from "./interactions/key-press-interaction";
-import { createRightMouseButtonInteraction } from "./interactions/right-mouse-button-interaction";
 
 interface HexCartographerContentConfig {
     getState: () => HexCartographerViewState;
@@ -90,21 +88,6 @@ export default class HexCartographerContent {
     // ==============================
     // Event Listeners
     // ==============================
-    private registerRightMouseButtonListeners() {
-        const rightClick = createRightMouseButtonInteraction({
-            getCanvas: () => this.canvas!,
-            getState: this.config.getState,
-            setState: this.config.setState,
-        });
-
-        return registerRightMouseButtonListeners({
-            canvas: this.canvas!,
-            down: rightClick.down,
-            up: rightClick.up,
-            doubleClick: rightClick.doubleClick
-        });
-    }
-
     private registerKeyPressListener() {
         const keyPress = createKeyPressInteraction({
             redo: this.config.redo.bind(this),
