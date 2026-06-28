@@ -12,14 +12,13 @@ import CanvasPanningListener from "./event-listeners/canvas-panning-listener";
 import EraserListener from "./event-listeners/eraser-listener";
 import LabelCreateListener from "./event-listeners/label-create-listener";
 import LabelEditListener from "./event-listeners/label-edit-listener";
-import { registerKeyPressListener } from "./event-listeners/key-press-listener";
 import LabelDragListener from "./event-listeners/label-drag-listener";
 import registerListeners from "./event-listeners/listener-registration";
 import { ListenerContext } from "./event-listeners/listeners";
 import PatternPickerListener from "./event-listeners/pattern-picker-listener";
 import SelectBorderListener from "./event-listeners/select-border-listener";
 import SelectPathListener from "./event-listeners/select-path-listener";
-import { createKeyPressInteraction } from "./interactions/key-press-interaction";
+import UndoRedoListener from "./event-listeners/undo-redo-listener";
 
 interface HexCartographerContentConfig {
     getState: () => HexCartographerViewState;
@@ -88,18 +87,6 @@ export default class HexCartographerContent {
     // ==============================
     // Event Listeners
     // ==============================
-    private registerKeyPressListener() {
-        const keyPress = createKeyPressInteraction({
-            redo: this.config.redo.bind(this),
-            undo: this.config.undo.bind(this),
-        });
-
-        return registerKeyPressListener({
-            canvas: this.canvas!,
-            onKeyPress: keyPress.down,
-        });
-    }
-
     private registerEventListeners() {
         if(!this.canvas) throw new Error("Canvas not initialized");
 
@@ -124,6 +111,10 @@ export default class HexCartographerContent {
             new PatternPickerListener(context),
             new SelectBorderListener(context),
             new SelectPathListener({...context, getApp: () => this.plugin.app}),
+            new UndoRedoListener({
+                undo: this.config.undo.bind(this),
+                redo: this.config.redo.bind(this),
+            }),
         ]);
 
         

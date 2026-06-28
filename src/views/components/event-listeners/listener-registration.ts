@@ -18,6 +18,7 @@ export default function registerListeners(canvas: HTMLCanvasElement, listeners: 
         registerListener(canvas, listener, 'mouseup');
         registerListener(canvas, listener, 'mousemove');
         registerListener(canvas, listener, 'dblclick');
+        registerListener(canvas, listener, 'keydown');
     });
 
     return removeListenerFunctions;
