@@ -1,10 +1,10 @@
 import { App, Notice } from "obsidian";
-import { calculateHexPath, PixelCoordinates, pixelToHex } from "../../../functions/hex-math";
-import { HexagonSet, MapData } from "../../../types/map-data";
+import { calculateHexPath, getHexNeighbors, PixelCoordinates, pixelToHex } from "../../../functions/hex-math";
+import { HexagonSet } from "../../../types/map-data";
 import { MouseButtonInteraction } from "./mouse-button-interaction";
 import { localizeString } from "../../../functions/i18n";
 import { Border } from "../../../types/border";
-import { HexCoordinates } from "../../../types/hexagon";
+import { Hexagon, HexCoordinates } from "../../../types/hexagon";
 import { LinearFeature, River, Road } from "../../../types/rivers-and-roads";
 import PathPickerModal from "../../../modals/path-picker-modal";
 import { Label } from "../../../types/label";
@@ -70,14 +70,60 @@ function down_Paint(e: MouseEvent, ctx: LeftMouseButtonInteractionContext, state
         return;
     }
 
-    if(state.selectedPaintMode === 'brush') {
+    switch(state.selectedPaintMode) {
+        case 'brush':
+            down_PaintBrush(hexData, state);
+            break;
+        case 'bucket':
+            down_PaintBucket(hexData, state);
+            break;
+        default:
+            throw new Error(`Unhandled paint mode: ${state.selectedPaintMode}`);
+    }
+}
+
+function down_PaintBrush(hexData: Hexagon, state: HexCartographerViewState) {
+    if(state.selectedSymbol !== 'hexagon') {
+        hexData.symbol = state.selectedSymbol;
+        hexData.symbolColor = state.selectedColor;
+    }
+    else {
+        hexData.color = state.selectedColor;
+    }
+}
+
+function down_PaintBucket(hexData: Hexagon, state: HexCartographerViewState) {
+    const target = {...hexData};
+    const targetHexes: HexCoordinates[] = [ hexData ];
+    const visited: string[] = [];
+
+    while(targetHexes.length > 0) {
+        const hex = targetHexes.pop()!;
+        const currentKey = `${hex.q}_${hex.r}`;
+
+        if(visited.includes(currentKey)) continue;
+        
+        const hexData = getHexagonAtCoordinates(state.data.hexes, hex);
+        if(!hexData) continue;
+
         if(state.selectedSymbol !== 'hexagon') {
+            if(hexData.symbol !== target.symbol || hexData.symbolColor !== target.symbolColor) {
+                continue;
+            }
+
             hexData.symbol = state.selectedSymbol;
             hexData.symbolColor = state.selectedColor;
         }
         else {
+            if(hexData.color !== target.color) {
+                continue;
+            }
+
             hexData.color = state.selectedColor;
         }
+
+        targetHexes.push(...getHexNeighbors(hex));
+        visited.push(currentKey);
     }
 }
 

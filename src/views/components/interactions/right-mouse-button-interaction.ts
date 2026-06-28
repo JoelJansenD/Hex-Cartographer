@@ -93,10 +93,14 @@ function deleteHexSymbol(hexes: HexagonSet, key: string) {
 function floodDeleteHexes(hexes: HexagonSet, targetKey: string, shouldTargetSymbol: boolean) {
     const targetData = {... hexes[targetKey]!};
     const targetHexes: HexCoordinates[] = [ hexes[targetKey]! ];
+    const visited: string[] = [];
 
     while(targetHexes.length > 0) {
         const currentHexData = targetHexes.pop()!;
         const currentKey = `${currentHexData.q}_${currentHexData.r}`;
+        
+        if(visited.includes(currentKey)) continue;
+
         const currentData = hexes[currentKey];
 
         if(!currentData) continue;
@@ -111,5 +115,6 @@ function floodDeleteHexes(hexes: HexagonSet, targetKey: string, shouldTargetSymb
         }
 
         targetHexes.push(...getHexNeighbors(currentHexData));
+        visited.push(currentKey);
     }
 }
