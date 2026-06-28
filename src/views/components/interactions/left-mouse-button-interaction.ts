@@ -77,6 +77,9 @@ function down_Paint(e: MouseEvent, ctx: LeftMouseButtonInteractionContext, state
         case 'bucket':
             down_PaintBucket(hexData, state);
             break;
+        case 'eraser':
+            down_Eraser(hexData, state);
+            break;
         default:
             throw new Error(`Unhandled paint mode: ${state.selectedPaintMode}`);
     }
@@ -124,6 +127,27 @@ function down_PaintBucket(hexData: Hexagon, state: HexCartographerViewState) {
 
         targetHexes.push(...getHexNeighbors(hex));
         visited.push(currentKey);
+    }
+}
+
+function down_Eraser(hexData: Hexagon, state: HexCartographerViewState) {
+    const key = `${hexData.q}_${hexData.r}`;
+    if(state.selectedSymbol !== 'hexagon') {
+        if(hexData.color) {
+            hexData.symbol = undefined;
+            hexData.symbolColor = undefined;
+        }
+        else {
+            delete state.data.hexes[key];
+        }
+    }
+    else {
+        if(hexData.symbol) {
+            hexData.color = undefined;
+        }
+        else {
+            delete state.data.hexes[key];
+        }
     }
 }
 
