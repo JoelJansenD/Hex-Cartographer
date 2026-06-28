@@ -11,6 +11,7 @@ import { Label } from "../../../types/label";
 import { TextInputModal, TextInputModalParams } from "../../../modals/text-input-modal";
 import HexCartographerViewState from "../../hex-cartographer-view-state";
 import { getWorldCoordinates } from "../../../functions/canvas";
+import { getTextIndexAtClick } from "../../../functions/labels";
 
 export interface LeftMouseButtonInteractionContext {
     getApp: () => App;
@@ -55,14 +56,6 @@ export function createLeftMouseButtonInteraction(ctx: LeftMouseButtonInteraction
             // We always want to stop, even if the user let go of the control button
             state.isPanning = false;
             ctx.setState(state, false);
-
-            if(state.selectedPaintMode === 'text') {
-                up_Text(state);
-                // If dragging is stopped, we want to save the changes to history
-                ctx.setState(state);
-            }
-            
-            return;
         },
         doubleClick(e: MouseEvent) {
             const state = ctx.getState();
@@ -93,11 +86,6 @@ function down_Paint(e: MouseEvent, ctx: LeftMouseButtonInteractionContext, state
             down_Eraser(hexData, state);
             break;
         case 'text':
-            const location = getWorldCoordinates(e, ctx.getCanvas(), { x: state.data.offX, y: state.data.offY}, state.data.zoom);
-            const textIdx = getTextIndexAtClick(location, ctx);
-            if(textIdx !== -1) {
-                state.draggedText = state.data.texts[textIdx]!;
-            }
             break;
         default:
             throw new Error(`Unhandled paint mode: ${state.selectedPaintMode}`);
@@ -246,7 +234,7 @@ function down_SelectPath(e: MouseEvent, ctx: LeftMouseButtonInteractionContext, 
 
 function doubleClick_SelectText(e: MouseEvent, ctx: LeftMouseButtonInteractionContext, state: HexCartographerViewState) {
     const location = getWorldCoordinates(e, ctx.getCanvas(), { x: state.data.offX, y: state.data.offY}, state.data.zoom);
-    const textIdx = getTextIndexAtClick(location, ctx);
+    const textIdx = getTextIndexAtClick(location, ctx.getCanvas(), state);
 
     let inputParams: TextInputModalParams = {
         location: location,
@@ -325,25 +313,4 @@ function getHexagonCoordinatesAtMousePosition(ctx: LeftMouseButtonInteractionCon
 function getHexagonAtCoordinates(hexes: HexagonSet, hex: HexCoordinates) {
     const key = `${hex.q}_${hex.r}`;
     return hexes[key] || null;
-}
-
-function getTextIndexAtClick(world: PixelCoordinates, ctx: LeftMouseButtonInteractionContext) {
-    const data = ctx.getState().data;
-    if(!data.texts) return -1;
-
-    const canvas = ctx.getCanvas();
-    return data.texts.findIndex((t: Label) => {
-        const weight = t.bold ? "bold " : "";
-        const context = canvas.getContext("2d")!;
-
-        const height = t.size || 16;
-        context.font = `${weight}${height}px Verdana`;
-
-        const size = context.measureText(t.text);
-        const halfWidth = size.width / 2;
-        return world.x >= t.x - halfWidth - 5 
-            && world.x <= t.x + halfWidth + 5 
-            && world.y >= t.y - height 
-            && world.y <= t.y + 5;
-    });
 }

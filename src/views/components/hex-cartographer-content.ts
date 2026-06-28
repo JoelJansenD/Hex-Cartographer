@@ -7,7 +7,9 @@ import { MapData } from "../../types/map-data";
 import { LinearFeature } from "../../types/rivers-and-roads";
 import HexCartographerViewState from "../hex-cartographer-view-state";
 import { registerKeyPressListener } from "./event-listeners/key-press-listener";
+import LabelDragListener from "./event-listeners/label-drag-listener";
 import { registerLeftMouseButtonListeners } from "./event-listeners/left-mouse-button-listener";
+import registerListeners from "./event-listeners/listener-registration";
 import { registerMiddleMouseButtonListeners } from "./event-listeners/middle-mouse-button-listener";
 import { registerMouseMoveListener } from "./event-listeners/mouse-move-listener";
 import { registerRightMouseButtonListeners } from "./event-listeners/right-mouse-button-listener";
@@ -157,11 +159,18 @@ export default class HexCartographerContent {
     private registerEventListeners() {
         if(!this.canvas) throw new Error("Canvas not initialized");
 
-        const leftClickUnregister = this.registerLeftMouseButtonListeners();
-        const middleClickUnregister = this.registerMiddleMouseButtonListeners();
-        const rightClickUnregister = this.registerRightMouseButtonListeners();
-        const keyPressUnregister = this.registerKeyPressListener();
-        const mouseMoveUnregister = this.registerMouseMoveListener();
+        // const leftClickUnregister = this.registerLeftMouseButtonListeners();
+        // const middleClickUnregister = this.registerMiddleMouseButtonListeners();
+        // const rightClickUnregister = this.registerRightMouseButtonListeners();
+        // const keyPressUnregister = this.registerKeyPressListener();
+        // const mouseMoveUnregister = this.registerMouseMoveListener();
+        const unregisterFunctions = registerListeners(this.canvas, [
+            new LabelDragListener({
+                getCanvas: () => this.canvas!,
+                getState: this.config.getState,
+                setState: this.config.setState,
+            }),
+        ]);
 
         
 

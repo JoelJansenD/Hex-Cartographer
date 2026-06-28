@@ -12,6 +12,7 @@ export default class HexCartographerView extends ItemView {
 
     private _state: HexCartographerViewState = {
         data: TEST_DATA,
+        draggedText: null,
         editMode: false,
         isPanning: false,
         selectedColor: DEFAULT_PALETTE[0]!,
@@ -86,7 +87,6 @@ export default class HexCartographerView extends ItemView {
       if(!data) {
         return;
       }
-
       this._state = {
         ...this._state,
         data: data

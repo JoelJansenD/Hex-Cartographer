@@ -87,7 +87,7 @@ export default class HexCartographerToolbar {
         this.config.setState({
             ...this.config.getState(),
             selectedPaintMode: paintMode,
-        });
+        }, false);
     }
 
     private setTool(toolGroup: ToolGroup) {
@@ -95,21 +95,21 @@ export default class HexCartographerToolbar {
         this.config.setState({
             ...state,
             selectedToolGroup: toolGroup === state.selectedToolGroup ? null : toolGroup,
-        });
+        }, false);
     }
 
     private enterEditMode() {
         this.config.setState({
             ...this.config.getState(),
             editMode: true,
-        });
+        }, false);
     }
 
     private enterViewMode() {
         this.config.setState({
             ...this.config.getState(),
             editMode: false,
-        });
+        }, false);
     }
 
     private hideActions() {
