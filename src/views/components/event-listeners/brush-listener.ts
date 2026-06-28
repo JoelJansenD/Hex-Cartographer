@@ -21,7 +21,7 @@ export default class BrushListener implements Listener {
         const state = this._context.getState();
         this.paint(e, state);
         state.heldButton = LEFT_MOUSE_BUTTON;
-        this._context.setState(state, false); // We push to history in the mouseup event to support dragging
+        this._context.setState(state, true);
     }
 
     onMouseMove(e: MouseEvent) {
@@ -36,7 +36,7 @@ export default class BrushListener implements Listener {
         const state = this._context.getState();
         if(!this.canTrigger(e) || state.heldButton === null) return;
         state.heldButton = null;
-        this._context.setState(state, true);
+        this._context.setState(state, false);
     }
 
     private paint(e: MouseEvent, state: HexCartographerViewState) {

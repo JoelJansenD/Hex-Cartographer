@@ -8,6 +8,7 @@ import { LinearFeature } from "../../types/rivers-and-roads";
 import HexCartographerViewState from "../hex-cartographer-view-state";
 import BrushListener from "./event-listeners/brush-listener";
 import BucketListener from "./event-listeners/bucket-listener";
+import EraserListener from "./event-listeners/eraser-listener";
 import { registerKeyPressListener } from "./event-listeners/key-press-listener";
 import LabelDragListener from "./event-listeners/label-drag-listener";
 import { registerLeftMouseButtonListeners } from "./event-listeners/left-mouse-button-listener";
@@ -176,6 +177,7 @@ export default class HexCartographerContent {
             new LabelDragListener(context),
             new BrushListener(context),
             new BucketListener(context),
+            new EraserListener(context),
         ]);
 
         

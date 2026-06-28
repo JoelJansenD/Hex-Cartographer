@@ -42,9 +42,6 @@ export function createLeftMouseButtonInteraction(ctx: LeftMouseButtonInteraction
                 case 'select-path':
                     down_SelectPath(e, ctx, state);
                     break;
-                case null:
-                    down_Paint(e, ctx, state);
-                    break;
                 default:
                     throw new Error(`Unhandled tool group: ${selectedToolGroup}`);
             }
@@ -65,56 +62,6 @@ export function createLeftMouseButtonInteraction(ctx: LeftMouseButtonInteraction
             ctx.setState(state, false);
         }
     };
-}
-
-function down_Paint(e: MouseEvent, ctx: LeftMouseButtonInteractionContext, state: HexCartographerViewState) {
-    const hex = getHexagonCoordinatesAtMousePosition(ctx, e, state);
-    const data = state.data;
-    const hexData = getHexagonAtCoordinates(data.hexes, hex);
-
-    switch(state.selectedPaintMode) {
-        case 'eraser':
-            if(!hexData) return;
-            down_Eraser(hexData, state);
-            break;
-        default:
-            throw new Error(`Unhandled paint mode: ${state.selectedPaintMode}`);
-    }
-}
-
-function down_PaintBucket(hexData: Hexagon, state: HexCartographerViewState) {
-    const target = {...hexData};
-    const targetHexes: HexCoordinates[] = [ hexData ];
-    const visited: string[] = [];
-
-    while(targetHexes.length > 0) {
-        const hex = targetHexes.pop()!;
-        const currentKey = `${hex.q}_${hex.r}`;
-
-        if(visited.includes(currentKey)) continue;
-        
-        const hexData = getHexagonAtCoordinates(state.data.hexes, hex);
-        if(!hexData) continue;
-
-        if(state.selectedSymbol !== 'hexagon') {
-            if(hexData.symbol !== target.symbol || hexData.symbolColor !== target.symbolColor) {
-                continue;
-            }
-
-            hexData.symbol = state.selectedSymbol;
-            hexData.symbolColor = state.selectedColor;
-        }
-        else {
-            if(hexData.color !== target.color) {
-                continue;
-            }
-
-            hexData.color = state.selectedColor;
-        }
-
-        targetHexes.push(...getHexNeighbors(hex));
-        visited.push(currentKey);
-    }
 }
 
 function down_Eraser(hexData: Hexagon, state: HexCartographerViewState) {
