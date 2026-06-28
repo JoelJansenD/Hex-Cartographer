@@ -51,11 +51,25 @@ export function createLeftMouseButtonInteraction(ctx: LeftMouseButtonInteraction
         },
         up(_: MouseEvent) {
             const state = ctx.getState();
+            
+            // We always want to stop, even if the user let go of the control button
             state.isPanning = false;
             ctx.setState(state, false);
+
+            if(state.selectedPaintMode === 'text') {
+                up_Text(state);
+                // If dragging is stopped, we want to save the changes to history
+                ctx.setState(state);
+            }
+            
             return;
         },
-        doubleClick(_: MouseEvent) {
+        doubleClick(e: MouseEvent) {
+            const state = ctx.getState();
+            if(state.selectedPaintMode === 'text') {
+                doubleClick_SelectText(e, ctx, state);
+            }
+            ctx.setState(state, false);
         }
     };
 }
@@ -79,7 +93,11 @@ function down_Paint(e: MouseEvent, ctx: LeftMouseButtonInteractionContext, state
             down_Eraser(hexData, state);
             break;
         case 'text':
-            down_SelectText(e, ctx, state);
+            const location = getWorldCoordinates(e, ctx.getCanvas(), { x: state.data.offX, y: state.data.offY}, state.data.zoom);
+            const textIdx = getTextIndexAtClick(location, ctx);
+            if(textIdx !== -1) {
+                state.draggedText = state.data.texts[textIdx]!;
+            }
             break;
         default:
             throw new Error(`Unhandled paint mode: ${state.selectedPaintMode}`);
@@ -226,7 +244,7 @@ function down_SelectPath(e: MouseEvent, ctx: LeftMouseButtonInteractionContext, 
     }
 }
 
-function down_SelectText(e: MouseEvent, ctx: LeftMouseButtonInteractionContext, state: HexCartographerViewState) {
+function doubleClick_SelectText(e: MouseEvent, ctx: LeftMouseButtonInteractionContext, state: HexCartographerViewState) {
     const location = getWorldCoordinates(e, ctx.getCanvas(), { x: state.data.offX, y: state.data.offY}, state.data.zoom);
     const textIdx = getTextIndexAtClick(location, ctx);
 
@@ -254,7 +272,6 @@ function down_SelectText(e: MouseEvent, ctx: LeftMouseButtonInteractionContext, 
     }
 
     const foundText = textIdx !== -1 ? state.data.texts[textIdx] : null;
-    console.log('foundText', foundText, textIdx, state.data.texts)
     if(foundText) {
         inputParams = {
             ...inputParams,
@@ -273,6 +290,10 @@ function down_SelectText(e: MouseEvent, ctx: LeftMouseButtonInteractionContext, 
     }
 
     new TextInputModal(ctx.getApp(), inputParams).open();
+}
+
+function up_Text(state: HexCartographerViewState) {
+    state.draggedText = null;
 }
 
 function findLinearFeatureAtHex(features: LinearFeature[], hex: HexCoordinates) {

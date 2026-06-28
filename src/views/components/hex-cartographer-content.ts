@@ -143,6 +143,7 @@ export default class HexCartographerContent {
 
     private registerMouseMoveListener() {
         const mouseMove = createMouseMoveInteraction({
+            getCanvas: () => this.canvas!,
             getState: this.config.getState,
             setState: this.config.setState,
         });

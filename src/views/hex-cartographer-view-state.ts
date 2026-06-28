@@ -1,5 +1,6 @@
 import { Border } from "../types/border";
 import { Hexagon, HexCoordinates } from "../types/hexagon";
+import { Label } from "../types/label";
 import { MapData } from "../types/map-data";
 import { River, Road } from "../types/rivers-and-roads";
 import { PaintMode, ToolGroup } from "../types/tool-group";
@@ -15,6 +16,11 @@ export default interface HexCartographerViewState {
      * Indicates whether the view is currently in edit mode or not. When in edit mode, the user can modify the map, while in view mode, the map is read-only.
      */
     editMode: boolean;
+
+    /**
+     * The currently dragged text label, or null if no text is being dragged.
+     */
+    draggedText: Label | null;
 
     /**
      * Indicates whether the user is currently panning the map. This is typically set when the user holds down the middle mouse button.

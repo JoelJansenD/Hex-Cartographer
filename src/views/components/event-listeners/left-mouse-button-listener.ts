@@ -28,11 +28,20 @@ export function registerLeftMouseButtonListeners(ctx: LeftMouseButtonContext) {
         ctx.up(e);
     };
 
+    const onDoubleClick = (e: MouseEvent) => {
+        if (e.button !== LEFT_CLICK_BUTTON) return;
+        e.preventDefault();
+
+        ctx.doubleClick(e);
+    };
+
     ctx.canvas.addEventListener("mousedown", onMouseDown);
     ctx.canvas.addEventListener("mouseup", onMouseUp);
+    ctx.canvas.addEventListener("dblclick", onDoubleClick);
 
     return () => {
         ctx.canvas.removeEventListener("mousedown", onMouseDown);
         ctx.canvas.removeEventListener("mouseup", onMouseUp);
+        ctx.canvas.removeEventListener("dblclick", onDoubleClick);
     };
 }

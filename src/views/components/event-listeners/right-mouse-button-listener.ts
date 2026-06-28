@@ -23,22 +23,12 @@ export function registerRightMouseButtonListeners(ctx: RightMouseButtonContext) 
 
         ctx.up(e);
     };
-    
-    const onDoubleClick = (e: MouseEvent) => {
-        if (e.button !== 2) return;
-        e.preventDefault();
-        ctx.canvas.focus();
-
-        ctx.doubleClick(e);
-    };
 
     ctx.canvas.addEventListener("mousedown", onMouseDown);
     ctx.canvas.addEventListener("mouseup", onMouseUp);
-    ctx.canvas.addEventListener("dblclick", onDoubleClick);
 
     return () => {
         ctx.canvas.removeEventListener("mousedown", onMouseDown);
         ctx.canvas.removeEventListener("mouseup", onMouseUp);
-        ctx.canvas.removeEventListener("dblclick", onDoubleClick);
     };
 }

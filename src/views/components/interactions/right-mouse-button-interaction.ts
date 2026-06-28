@@ -28,6 +28,8 @@ export function createRightMouseButtonInteraction(ctx: RightMouseButtonInteracti
             ctx.setState(state);
         },
         up(_: MouseEvent) {
+            // Save any changes made by drag actions
+            ctx.setState(ctx.getState());
         },
         doubleClick(_: MouseEvent) {
         }
