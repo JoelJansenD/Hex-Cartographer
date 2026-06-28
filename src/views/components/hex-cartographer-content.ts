@@ -15,6 +15,7 @@ import LabelCreateListener from "./event-listeners/label-create-listener";
 import LabelEditListener from "./event-listeners/label-edit-listener";
 import LabelDragListener from "./event-listeners/label-drag-listener";
 import { ListenerContext, registerListeners } from "./event-listeners/listeners";
+import PathCreateListener from "./event-listeners/path-create-listener";
 import PatternCopyListener from "./event-listeners/pattern-copy-listener";
 import PatternPickerListener from "./event-listeners/pattern-picker-listener";
 import SelectBorderListener from "./event-listeners/select-border-listener";
@@ -105,6 +106,7 @@ export default class HexCartographerContent {
             new LabelCreateListener({...context, getApp: () => this.plugin.app}),
             new LabelDragListener(context),
             new LabelEditListener({...context, getApp: () => this.plugin.app}),
+            new PathCreateListener(context),
             new PatternCopyListener(context),
             new PatternPickerListener(context),
             new SelectBorderListener(context),
