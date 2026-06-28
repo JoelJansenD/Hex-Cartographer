@@ -73,10 +73,6 @@ function down_Paint(e: MouseEvent, ctx: LeftMouseButtonInteractionContext, state
     const hexData = getHexagonAtCoordinates(data.hexes, hex);
 
     switch(state.selectedPaintMode) {
-        case 'brush':
-            if(!hexData) return;
-            down_PaintBrush(hexData, state);
-            break;
         case 'bucket':
             if(!hexData) return;
             down_PaintBucket(hexData, state);
@@ -89,16 +85,6 @@ function down_Paint(e: MouseEvent, ctx: LeftMouseButtonInteractionContext, state
             break;
         default:
             throw new Error(`Unhandled paint mode: ${state.selectedPaintMode}`);
-    }
-}
-
-function down_PaintBrush(hexData: Hexagon, state: HexCartographerViewState) {
-    if(state.selectedSymbol !== 'hexagon') {
-        hexData.symbol = state.selectedSymbol;
-        hexData.symbolColor = state.selectedColor;
-    }
-    else {
-        hexData.color = state.selectedColor;
     }
 }
 

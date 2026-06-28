@@ -4,6 +4,7 @@
  */
 
 import { HexCoordinates } from "../types/hexagon";
+import { HexagonSet } from "../types/map-data";
 
 export interface PixelCoordinates {
     x: number;
@@ -22,6 +23,11 @@ export interface HexSegment {
     to: HexCoordinates;
     width?: number;
     lateralOffset?: number;
+}
+
+export function getHexagonAtCoordinates(hexes: HexagonSet, hex: HexCoordinates) {
+    const key = `${hex.q}_${hex.r}`;
+    return hexes[key] || null;
 }
 
 /**

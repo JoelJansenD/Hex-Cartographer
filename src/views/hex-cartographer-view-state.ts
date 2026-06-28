@@ -23,6 +23,11 @@ export default interface HexCartographerViewState {
     draggedText: Label | null;
 
     /**
+     * The mouse button currently being held down, or null if no button is being held.
+     */
+    heldButton: number | null;
+
+    /**
      * Indicates whether the user is currently panning the map. This is typically set when the user holds down the middle mouse button.
      */
     isPanning: boolean;

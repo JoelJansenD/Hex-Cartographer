@@ -6,10 +6,12 @@ import { Hexagon, HexCoordinates } from "../../types/hexagon";
 import { MapData } from "../../types/map-data";
 import { LinearFeature } from "../../types/rivers-and-roads";
 import HexCartographerViewState from "../hex-cartographer-view-state";
+import BrushListener from "./event-listeners/brush-listener";
 import { registerKeyPressListener } from "./event-listeners/key-press-listener";
 import LabelDragListener from "./event-listeners/label-drag-listener";
 import { registerLeftMouseButtonListeners } from "./event-listeners/left-mouse-button-listener";
 import registerListeners from "./event-listeners/listener-registration";
+import { ListenerContext } from "./event-listeners/listeners";
 import { registerMiddleMouseButtonListeners } from "./event-listeners/middle-mouse-button-listener";
 import { registerMouseMoveListener } from "./event-listeners/mouse-move-listener";
 import { registerRightMouseButtonListeners } from "./event-listeners/right-mouse-button-listener";
@@ -164,12 +166,14 @@ export default class HexCartographerContent {
         // const rightClickUnregister = this.registerRightMouseButtonListeners();
         // const keyPressUnregister = this.registerKeyPressListener();
         // const mouseMoveUnregister = this.registerMouseMoveListener();
-        const unregisterFunctions = registerListeners(this.canvas, [
-            new LabelDragListener({
+        const context: ListenerContext = {
                 getCanvas: () => this.canvas!,
                 getState: this.config.getState,
                 setState: this.config.setState,
-            }),
+        };
+        const unregisterFunctions = registerListeners(this.canvas, [
+            new LabelDragListener(context),
+            new BrushListener(context),
         ]);
 
         

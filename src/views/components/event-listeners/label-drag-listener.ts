@@ -1,19 +1,12 @@
 import { getWorldCoordinates } from "../../../functions/canvas";
 import { getTextIndexAtClick } from "../../../functions/labels";
-import HexCartographerViewState from "../../hex-cartographer-view-state";
-import { Listener } from "./listeners";
-
-interface LabelDragListenerContext {
-    getCanvas: () => HTMLCanvasElement;
-    getState: () => HexCartographerViewState;
-    setState: (newState: HexCartographerViewState, pushToHistory: boolean) => void;
-}
+import { Listener, ListenerContext } from "./listeners";
 
 export default class LabelDragListener implements Listener {
     
-    private _context: LabelDragListenerContext;
+    private _context: ListenerContext;
     
-    constructor(context: LabelDragListenerContext) {
+    constructor(context: ListenerContext) {
         this._context = context;
     }
     

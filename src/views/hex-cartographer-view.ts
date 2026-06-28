@@ -14,6 +14,7 @@ export default class HexCartographerView extends ItemView {
         data: TEST_DATA,
         draggedText: null,
         editMode: false,
+        heldButton: null,
         isPanning: false,
         selectedColor: DEFAULT_PALETTE[0]!,
         selectedPaintMode: 'brush',
