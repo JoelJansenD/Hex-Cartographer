@@ -1,4 +1,4 @@
-import { ButtonComponent } from "obsidian";
+import { ButtonComponent, Notice } from "obsidian";
 import { PaintMode, ToolGroup } from "../../types/tool-group";
 import HexCartographerComponentConfig from "./hex-cartographer-component-config";
 import HexCartographerViewState from "../hex-cartographer-view-state";
@@ -189,7 +189,15 @@ export default class HexCartographerToolbar {
         this.stampPatternActionButton = new ButtonComponent(this.patternActions)
             .setIcon('copy')
             .setTooltip(localizeString("tooltip.pattern"))
-            .onClick(() => this.setTool('pattern'));
+            .onClick(() => {
+                const state = this.config.getState();
+                if(!state.selectedPattern) {
+                    new Notice(localizeString("notice.noPattern"));
+                    this.setTool('pattern-picker');
+                    return;
+                }
+                this.setTool('pattern');
+            });
         this.toolButtons['pattern'] = this.stampPatternActionButton;
 
         this.pickPatternActionButton = new ButtonComponent(this.patternActions)
