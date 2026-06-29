@@ -11,6 +11,7 @@ import BucketListener from "./event-listeners/bucket-listener";
 import CanvasPanningListener from "./event-listeners/canvas-panning-listener";
 import CanvasZoomListener from "./event-listeners/canvas-zoom-listener";
 import BorderCreateAndEditListener from "./event-listeners/border-create-and-edit-listener";
+import BorderRemoveHexListener from "./event-listeners/border-remove-hex-listener";
 import EraserListener from "./event-listeners/eraser-listener";
 import LabelCreateListener from "./event-listeners/label-create-listener";
 import LabelEditListener from "./event-listeners/label-edit-listener";
@@ -104,6 +105,8 @@ export default class HexCartographerContent {
             new CanvasPanningListener(context),
             new CanvasZoomListener(context),
             new BorderCreateAndEditListener(context),
+            new BorderRemoveHexListener(context),
+            new BorderSelectListener(context),
             new EraserListener(context),
             new LabelCreateListener({...context, getApp: () => this.plugin.app}),
             new LabelDragListener(context),
@@ -112,7 +115,6 @@ export default class HexCartographerContent {
             new PathSelectListener({...context, getApp: () => this.plugin.app}),
             new PatternCopyListener(context),
             new PatternPickerListener(context),
-            new BorderSelectListener(context),
             new UndoRedoListener({
                 undo: this.config.undo.bind(this),
                 redo: this.config.redo.bind(this),

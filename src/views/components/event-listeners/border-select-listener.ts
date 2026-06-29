@@ -47,6 +47,8 @@ export default class BorderSelectListener implements Listener {
             border: foundRegion,
             hexagon: hex,
         };
+        state.selectedToolGroup = 'border';
+        state.selectedPaintMode = 'brush';
 
         new Notice(localizeString("notice.borderSelected", { id: foundRegion.id }));
     }
