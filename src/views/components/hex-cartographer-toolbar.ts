@@ -232,7 +232,14 @@ export default class HexCartographerToolbar {
         this.borderActionButton = new ButtonComponent(this.borderActions)
             .setIcon('shield')
             .setTooltip(localizeString("tooltip.border"))
-            .onClick(() => this.setTool('border'));
+            .onClick(() => {
+                const state = this.config.getState();
+                if(state.selectedRegion) {
+                    state.selectedRegion = null;
+                    this.config.setState(state, false);
+                }
+                this.setTool('border');
+            });
         this.toolButtons['border'] = this.borderActionButton;
         
         this.selectBorderActionButton = new ButtonComponent(this.borderActions)
