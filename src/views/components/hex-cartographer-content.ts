@@ -19,7 +19,7 @@ import { ListenerContext, registerListeners } from "./event-listeners/listeners"
 import PathCreateAndEditListener from "./event-listeners/path-create-and-edit-listener";
 import PatternCopyListener from "./event-listeners/pattern-copy-listener";
 import PatternPickerListener from "./event-listeners/pattern-picker-listener";
-import SelectBorderListener from "./event-listeners/select-border-listener";
+import BorderSelectListener from "./event-listeners/border-select-listener";
 import PathSelectListener from "./event-listeners/path-select-listener";
 import UndoRedoListener from "./event-listeners/undo-redo-listener";
 
@@ -112,7 +112,7 @@ export default class HexCartographerContent {
             new PathSelectListener({...context, getApp: () => this.plugin.app}),
             new PatternCopyListener(context),
             new PatternPickerListener(context),
-            new SelectBorderListener(context),
+            new BorderSelectListener(context),
             new UndoRedoListener({
                 undo: this.config.undo.bind(this),
                 redo: this.config.redo.bind(this),

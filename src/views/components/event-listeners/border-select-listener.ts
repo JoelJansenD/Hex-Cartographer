@@ -6,7 +6,7 @@ import { Border } from "../../../types/border";
 import HexCartographerViewState from "../../hex-cartographer-view-state";
 import { EventHandlerMap, Listener, ListenerContext } from "./listeners";
 
-export default class SelectBorderListener implements Listener {
+export default class BorderSelectListener implements Listener {
     public events: EventHandlerMap = {
         mousedown: this.onMouseDown.bind(this),
     };
