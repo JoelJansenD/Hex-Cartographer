@@ -51,6 +51,17 @@ export default class HexCartographerToolbar {
     private resizeActionButton!: ButtonComponent;
     private settingsActionButton!: ButtonComponent;
 
+    private disabledPaintModesPerTool: {[key in ToolGroup]: PaintMode[]} = {
+        "colour-picker":    ["brush", "bucket", "eraser", "text"],
+        "pattern":          ["eraser", "text"],
+        "pattern-picker":   ["brush", "bucket", "eraser", "text"],
+        "river":            ["bucket", "eraser", "text"],
+        "road":             ["bucket", "eraser", "text"],
+        "select-path":      ["brush", "bucket", "eraser", "text"],
+        "border":           ["bucket", "eraser", "text"],
+        "select-border":    ["brush", "bucket", "eraser", "text"]
+    }
+
     constructor(parentEl: HTMLElement, config: HexCartographerToolbarConfig) {
         this.config = config;
         this.actionsContainerEl = parentEl.createDiv({ cls: 'hex-toolbar' });
@@ -85,21 +96,22 @@ export default class HexCartographerToolbar {
         if(state.selectedPaintMode) {
             this.toolButtons[state.selectedPaintMode]?.setCta();
         }
-    }
 
-    private setPaintMode(paintMode: PaintMode) {
-        this.config.setState({
-            ...this.config.getState(),
-            selectedPaintMode: paintMode,
-        }, false);
-    }
+        const disabledPaintModes = state.selectedToolGroup === null
+            ? []
+            : this.disabledPaintModesPerTool[state.selectedToolGroup];
+        
+        this.paintBrushButton.setDisabled(disabledPaintModes.contains("brush"));
+        this.paintBucketButton.setDisabled(disabledPaintModes.contains("bucket"));
+        this.eraserButton.setDisabled(disabledPaintModes.contains("eraser"));
+        this.textButton.setDisabled(disabledPaintModes.contains("text"));
 
-    private setTool(toolGroup: ToolGroup) {
-        const state = this.config.getState();
-        this.config.setState({
-            ...state,
-            selectedToolGroup: toolGroup === state.selectedToolGroup ? null : toolGroup,
-        }, false);
+        console.log(disabledPaintModes)
+        console.log(state.selectedPaintMode)
+        if(disabledPaintModes.contains(state.selectedPaintMode!) && !disabledPaintModes.contains("brush")) {
+            console.log("Setting paint mode to brush");
+            this.setPaintMode('brush');
+        }
     }
 
     private enterEditMode() {
@@ -263,7 +275,25 @@ export default class HexCartographerToolbar {
         this.editModeButton.buttonEl.addClass('hidden');
     }
 
-    resizeActionButton_OnClick() {
+    private setPaintMode(paintMode: PaintMode) {
+        this.config.setState({
+            ...this.config.getState(),
+            selectedPaintMode: paintMode,
+        }, false);
+    }
+
+    private setTool(toolGroup: ToolGroup) {
+        const state = this.config.getState();
+        this.config.setState({
+            ...state,
+            selectedToolGroup: toolGroup === state.selectedToolGroup ? null : toolGroup,
+        }, false);
+    }
+
+    // ===================================================
+    // Event Handlers
+    // ===================================================
+    private resizeActionButton_OnClick() {
         const state = this.config.getState();
         const hexes = Object.values(state.data.hexes);
         const texts = state.data.texts || [];

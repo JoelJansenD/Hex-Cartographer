@@ -26,7 +26,6 @@ export default class PatternPickerListener implements Listener {
         if (hexData) {
             state.selectedPattern = {...hexData};
             state.selectedToolGroup = 'pattern';
-            state.selectedPaintMode = 'brush';
             new Notice(localizeString('notice.patternPicked'));
         }
         else {
