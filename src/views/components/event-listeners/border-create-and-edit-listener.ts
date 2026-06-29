@@ -122,7 +122,7 @@ export default class BorderCreateAndEditListener implements Listener {
 
     private canHandle(e: MouseEvent): boolean {
         const state = this._context.getState();
-        return e.buttons === LEFT_MOUSE_BUTTON
+        return e.button === LEFT_MOUSE_BUTTON
             && (!e.ctrlKey || !e.metaKey)
             && state.editMode
             && state.selectedToolGroup === "border";

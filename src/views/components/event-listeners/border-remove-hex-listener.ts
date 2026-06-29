@@ -73,7 +73,7 @@ export default class BorderRemoveHexListener implements Listener {
 
     private canHandle(e: MouseEvent): boolean {
         const state = this._context.getState();
-        return e.buttons === RIGHT_MOUSE_BUTTON
+        return (e.buttons & RIGHT_MOUSE_BUTTON) === RIGHT_MOUSE_BUTTON
             && (!e.ctrlKey || !e.metaKey)
             && state.editMode
             && state.selectedRegion !== null
