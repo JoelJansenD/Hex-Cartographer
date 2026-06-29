@@ -3,8 +3,11 @@ import { PaintMode, ToolGroup } from "../../types/tool-group";
 import HexCartographerComponentConfig from "./hex-cartographer-component-config";
 import HexCartographerViewState from "../hex-cartographer-view-state";
 import { localizeString } from "../../functions/i18n";
+import { hexToPixel } from "../../functions/hexes";
+import { MAX_ZOOM, MIN_ZOOM, VIEWPORT_PADDING } from "../../constants";
 
 interface HexCartographerToolbarConfig extends HexCartographerComponentConfig {
+    getCanvas(): HTMLCanvasElement;
     undo: () => void;
     redo: () => void;
 }
@@ -143,6 +146,7 @@ export default class HexCartographerToolbar {
 
         this.resizeActionButton = new ButtonComponent(actions)
             .setTooltip(localizeString("tooltip.fit"))
+            .onClick(this.resizeActionButton_OnClick.bind(this))
             .setIcon('scaling');
 
         this.settingsActionButton = new ButtonComponent(actions)
@@ -257,5 +261,61 @@ export default class HexCartographerToolbar {
         this.undoActionButton.buttonEl.removeClass('hidden');
         this.redoActionButton.buttonEl.removeClass('hidden');
         this.editModeButton.buttonEl.addClass('hidden');
+    }
+
+    resizeActionButton_OnClick() {
+        const state = this.config.getState();
+        const hexes = Object.values(state.data.hexes);
+        const texts = state.data.texts || [];
+        const borderHexes = state.data.borders.map(x => x.hexes).flat();
+
+        if (hexes.length === 0 && texts.length === 0 && borderHexes.length === 0) {
+            new Notice(localizeString('notice.noHexesToShow'));
+            return;
+        }
+
+        let minX = Infinity, maxX = -Infinity;
+        let minY = Infinity, maxY = -Infinity;
+
+        const expandBounds = (hex) => {
+            const pos = hexToPixel({ q: hex.q, r: hex.r }, state.data.gridSize, state.data.settings.hexOrientation === 'horizontal');
+            const s = state.data.gridSize;
+            minX = Math.min(minX, pos.x - s);
+            maxX = Math.max(maxX, pos.x + s);
+            minY = Math.min(minY, pos.y - s);
+            maxY = Math.max(maxY, pos.y + s);
+        };
+
+        hexes.forEach(expandBounds);
+        borderHexes.forEach(expandBounds);
+
+        texts.forEach(t => {
+            const textSize = t.size || 16;
+            const estimatedWidth = t.text.length * textSize * 0.6; // Geschätzte Textbreite
+            const estimatedHeight = textSize;
+
+            minX = Math.min(minX, t.x - estimatedWidth / 2);
+            maxX = Math.max(maxX, t.x + estimatedWidth / 2);
+            minY = Math.min(minY, t.y - estimatedHeight / 2);
+            maxY = Math.max(maxY, t.y + estimatedHeight / 2);
+        });
+
+        const centerX = (minX + maxX) / 2;
+        const centerY = (minY + maxY) / 2;
+        const width = maxX - minX;
+        const height = maxY - minY;
+
+        const canvas = this.config.getCanvas();
+        const canvasWidth = canvas.width;
+        const canvasHeight = canvas.height;
+        const zoomX = (canvasWidth * VIEWPORT_PADDING) / width;
+        const zoomY = (canvasHeight * VIEWPORT_PADDING) / height;
+        const newZoom = Math.max(MIN_ZOOM, Math.min(zoomX, zoomY, MAX_ZOOM));
+
+        state.data.zoom = newZoom;
+        state.data.offX = canvasWidth / 2 - centerX * newZoom;
+        state.data.offY = canvasHeight / 2 - centerY * newZoom;
+
+        this.config.setState(state, false);
     }
 }

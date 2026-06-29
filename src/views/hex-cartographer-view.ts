@@ -49,6 +49,7 @@ export default class HexCartographerView extends ItemView {
         });
         
         this._toolbar = new HexCartographerToolbar(mainViewContainer, {
+            getCanvas: (() => this._content.getCanvas()!).bind(this),
             getState: this.getViewState.bind(this),
             setState: this.setViewState.bind(this),
             undo: this.undo.bind(this),

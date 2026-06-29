@@ -49,6 +49,10 @@ export default class HexCartographerContent {
         this.config = config;
     }
 
+    public getCanvas(): HTMLCanvasElement | undefined {
+      return this.canvas;
+    }
+
     public startRender() {   
         const canvasContainer = this.contentEl.createDiv();
         canvasContainer.style.position = 'relative';
