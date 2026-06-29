@@ -5,7 +5,7 @@ import { HexCoordinates } from "../../../types/hexagon";
 import HexCartographerViewState from "../../hex-cartographer-view-state";
 import { EventHandlerMap, Listener, ListenerContext } from "./listeners";
 
-export default class CreateAndEditBorderListener implements Listener {
+export default class BorderCreateAndEditListener implements Listener {
     public events: EventHandlerMap = {
         mousedown: this.onMouseDown.bind(this),
         mousemove: this.onMouseMove.bind(this),
