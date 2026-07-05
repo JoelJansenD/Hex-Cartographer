@@ -21,7 +21,7 @@ export default class LabelDragListener implements Listener {
         if(!this.canHandle(e)) return;
         
         const state = this._context.getState();
-        const location = getWorldCoordinates(e, this._context.getCanvas(), { x: state.data.offX, y: state.data.offY}, state.data.zoom);
+        const location = getWorldCoordinates(e.clientX, e.clientY, this._context.getCanvas().getBoundingClientRect(), { x: state.data.offX, y: state.data.offY}, state.data.zoom);
         const textIdx = getTextIndexAtClick(location, this._context.getCanvas(), state);
 
         if(textIdx !== -1) {
@@ -50,7 +50,7 @@ export default class LabelDragListener implements Listener {
             return;
         }
 
-        const world = getWorldCoordinates(e, this._context.getCanvas(), { x: state.data.offX, y: state.data.offY }, state.data.zoom);
+        const world = getWorldCoordinates(e.clientX, e.clientY, this._context.getCanvas().getBoundingClientRect(), { x: state.data.offX, y: state.data.offY }, state.data.zoom);
         const target = state.data.texts.find(t => t.text === state.draggedText?.text);
         if(!target) throw new Error("Dragged text not found in state");
 

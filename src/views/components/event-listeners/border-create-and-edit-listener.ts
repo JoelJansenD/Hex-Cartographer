@@ -1,5 +1,5 @@
 import { LEFT_MOUSE_BUTTON } from "../../../constants/Events";
-import { getHexagonCoordinatesAtMousePosition, getWorldCoordinates } from "../../../functions/canvas";
+import { getHexagonCoordinatesAtMousePosition } from "../../../functions/canvas";
 import { Border } from "../../../types/border";
 import { HexCoordinates } from "../../../types/hexagon";
 import HexCartographerViewState from "../../hex-cartographer-view-state";

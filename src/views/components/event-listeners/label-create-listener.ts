@@ -24,7 +24,7 @@ export default class LabelCreateListener implements Listener {
         if(!this.canHandle(e)) return;
 
         const state = this._context.getState();
-        const location = getWorldCoordinates(e, this._context.getCanvas(), { x: state.data.offX, y: state.data.offY }, state.data.zoom);
+        const location = getWorldCoordinates(e.clientX, e.clientY, this._context.getCanvas().getBoundingClientRect(), { x: state.data.offX, y: state.data.offY }, state.data.zoom);
         const textIdx = getTextIndexAtClick(location, this._context.getCanvas(), state);
 
         // This listener only creates labels on empty space.
