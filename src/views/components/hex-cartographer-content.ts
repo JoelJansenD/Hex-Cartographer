@@ -99,7 +99,11 @@ export default class HexCartographerContent {
         if(!this.canvas) throw new Error("Canvas not initialized");
 
         const context: ListenerContext = {
-            getCanvas: () => this.canvas!,
+            getCanvasRect: () => this.canvas!.getBoundingClientRect(),
+            measureText: (text: string, font: string) => {
+                this.ctx!.font = font;
+                return this.ctx!.measureText(text).width;
+            },
             getState: this.config.getState,
             setState: this.config.setState,
         };

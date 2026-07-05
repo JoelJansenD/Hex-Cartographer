@@ -24,7 +24,7 @@ export default class BucketListener implements Listener {
     }
 
     private paint(e: MouseEvent, state: HexCartographerViewState) {
-        const hex = getHexagonCoordinatesAtMousePosition(e, this._context.getCanvas(), state);
+        const hex = getHexagonCoordinatesAtMousePosition(e, this._context.getCanvasRect(), state);
         const data = state.data;
         const hexData = getHexagonAtCoordinates(data.hexes, hex);
 

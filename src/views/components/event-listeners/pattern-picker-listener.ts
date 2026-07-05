@@ -19,7 +19,7 @@ export default class PatternPickerListener implements Listener {
         if(!this.canHandle(e)) return;
 
         const state = this._context.getState();
-        const hex = getHexagonCoordinatesAtMousePosition(e, this._context.getCanvas(), state);
+        const hex = getHexagonCoordinatesAtMousePosition(e, this._context.getCanvasRect(), state);
         const data = state.data;
         const hexData = getHexagonAtCoordinates(data.hexes, hex);
     

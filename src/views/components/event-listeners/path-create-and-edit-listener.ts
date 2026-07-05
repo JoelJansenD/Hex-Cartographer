@@ -33,7 +33,7 @@ export default class PathCreateAndEditListener implements Listener {
         }
 
         const state = this._context.getState();
-        const hexCoordinates = getHexagonCoordinatesAtMousePosition(e, this._context.getCanvas(), state);
+        const hexCoordinates = getHexagonCoordinatesAtMousePosition(e, this._context.getCanvasRect(), state);
         const tool = state.selectedToolGroup;
 
         if(tool === 'road' || tool === 'river') {
@@ -109,7 +109,7 @@ export default class PathCreateAndEditListener implements Listener {
             return;
         }
 
-        const hex = getHexagonCoordinatesAtMousePosition(e, this._context.getCanvas(), state);
+        const hex = getHexagonCoordinatesAtMousePosition(e, this._context.getCanvasRect(), state);
         const firstWaypoint = path.waypoints[drag.waypointIndices[0]!];
         if(!firstWaypoint) {
             return;

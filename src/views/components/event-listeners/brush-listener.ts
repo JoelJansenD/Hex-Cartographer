@@ -40,7 +40,7 @@ export default class BrushListener implements Listener {
     }
 
     private paint(e: MouseEvent, state: HexCartographerViewState) {
-        const hexCoordinates = getHexagonCoordinatesAtMousePosition(e, this._context.getCanvas(), state);
+        const hexCoordinates = getHexagonCoordinatesAtMousePosition(e, this._context.getCanvasRect(), state);
         const hexData = getHexagonAtCoordinates(state.data.hexes, hexCoordinates)!;
         if(hexData === null){
             const key = `${hexCoordinates.q}_${hexCoordinates.r}`;

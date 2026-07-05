@@ -35,7 +35,7 @@ export default class SelectPathListener implements Listener {
     }
 
     private selectPath(e: MouseEvent, state: HexCartographerViewState) {
-        const hex = getHexagonCoordinatesAtMousePosition(e, this._context.getCanvas(), state);
+        const hex = getHexagonCoordinatesAtMousePosition(e, this._context.getCanvasRect(), state);
         const foundRiver = findLinearFeatureAtHex(state.data.rivers, hex) as River | null;
         const foundRoad = findLinearFeatureAtHex(state.data.roads, hex) as Road | null;
 

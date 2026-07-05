@@ -8,8 +8,8 @@ export function getWorldCoordinates(clientX: number, clientY: number, canvasRect
     };
 }
 
-export function getHexagonCoordinatesAtMousePosition(e: MouseEvent, canvas: HTMLCanvasElement, state: HexCartographerViewState) {
-    const world = getWorldCoordinates(e.clientX, e.clientY, canvas.getBoundingClientRect(), { x: state.data.offX, y: state.data.offY}, state.data.zoom);
+export function getHexagonCoordinatesAtMousePosition(e: MouseEvent, canvasRect: { left: number; top: number }, state: HexCartographerViewState) {
+    const world = getWorldCoordinates(e.clientX, e.clientY, canvasRect, { x: state.data.offX, y: state.data.offY}, state.data.zoom);
     const hex = pixelToHex(world.x, world.y, state.data.gridSize, state.data.settings.hexOrientation === 'horizontal');
     return hex;
 }

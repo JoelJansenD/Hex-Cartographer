@@ -42,7 +42,7 @@ export default class EraserListener implements Listener {
     }
 
     private erase(e: MouseEvent, state: HexCartographerViewState) {
-        const hex = getHexagonCoordinatesAtMousePosition(e, this._context.getCanvas(), state);
+        const hex = getHexagonCoordinatesAtMousePosition(e, this._context.getCanvasRect(), state);
         const data = state.data;
         const hexData = getHexagonAtCoordinates(data.hexes, hex);
         if(!hexData) return;

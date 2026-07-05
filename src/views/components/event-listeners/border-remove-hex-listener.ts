@@ -25,7 +25,7 @@ export default class BorderRemoveHexListener implements Listener {
         }
         
         const state = this._context.getState();
-        const hex = getHexagonCoordinatesAtMousePosition(e, this._context.getCanvas(), state);
+        const hex = getHexagonCoordinatesAtMousePosition(e, this._context.getCanvasRect(), state);
         this.removeHex(hex, state);
 
         this._isHoldingMouseDown = true;
@@ -38,7 +38,7 @@ export default class BorderRemoveHexListener implements Listener {
         }
 
         const state = this._context.getState();
-        const hex = getHexagonCoordinatesAtMousePosition(e, this._context.getCanvas(), state);
+        const hex = getHexagonCoordinatesAtMousePosition(e, this._context.getCanvasRect(), state);
         this.removeHex(hex, state);
         
         this._context.setState(state, false);

@@ -28,7 +28,7 @@ export default class BorderSelectListener implements Listener {
     }
 
     private selectBorder(e: MouseEvent, state: HexCartographerViewState) {
-        const hex = getHexagonCoordinatesAtMousePosition(e, this._context.getCanvas(), state);
+        const hex = getHexagonCoordinatesAtMousePosition(e, this._context.getCanvasRect(), state);
 
         let foundRegion: Border | null = null;
         for(const region of state.data.borders) {

@@ -29,8 +29,8 @@ export default class LabelEditListener implements Listener {
     }
 
     private openLabelEditor(e: MouseEvent, state: HexCartographerViewState) {
-        const location = getWorldCoordinates(e.clientX, e.clientY, this._context.getCanvas().getBoundingClientRect(), { x: state.data.offX, y: state.data.offY }, state.data.zoom);
-        const textIdx = getTextIndexAtClick(location, this._context.getCanvas(), state);
+        const location = getWorldCoordinates(e.clientX, e.clientY, this._context.getCanvasRect(), { x: state.data.offX, y: state.data.offY }, state.data.zoom);
+        const textIdx = getTextIndexAtClick(location, this._context.measureText, state);
         if(textIdx === -1) {
             return;
         }

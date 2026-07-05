@@ -25,7 +25,7 @@ export default class BorderCreateAndEditListener implements Listener {
         }
 
         const state = this._context.getState();
-        const hex = getHexagonCoordinatesAtMousePosition(e, this._context.getCanvas(), state);
+        const hex = getHexagonCoordinatesAtMousePosition(e, this._context.getCanvasRect(), state);
 
         if(!state.selectedRegion) {
             state.selectedRegion = this.createBorder(hex, state);
@@ -50,7 +50,7 @@ export default class BorderCreateAndEditListener implements Listener {
             throw new Error("No selected region found while creating/editing border.");
         }
 
-        const hex = getHexagonCoordinatesAtMousePosition(e, this._context.getCanvas(), state);
+        const hex = getHexagonCoordinatesAtMousePosition(e, this._context.getCanvasRect(), state);
         if(state.selectedRegion.border.hexes.some(h => h.q === hex.q && h.r === hex.r)) {
             return;
         }

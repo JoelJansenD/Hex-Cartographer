@@ -50,13 +50,13 @@ export default class PatternCopyListener implements Listener {
     }
 
     private paintBrush(e: MouseEvent, state: HexCartographerViewState) {
-        const hexCoordinates = getHexagonCoordinatesAtMousePosition(e, this._context.getCanvas(), state);
+        const hexCoordinates = getHexagonCoordinatesAtMousePosition(e, this._context.getCanvasRect(), state);
         const hexData = getHexagonAtCoordinates(state.data.hexes, hexCoordinates)!;
         this.paint(state, hexCoordinates, hexData);
     }
 
     private paintBucket(e: MouseEvent, state: HexCartographerViewState) {
-        const hex = getHexagonCoordinatesAtMousePosition(e, this._context.getCanvas(), state);
+        const hex = getHexagonCoordinatesAtMousePosition(e, this._context.getCanvasRect(), state);
         const data = state.data;
         const hexData = getHexagonAtCoordinates(data.hexes, hex);
 

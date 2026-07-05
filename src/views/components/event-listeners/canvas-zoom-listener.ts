@@ -16,8 +16,6 @@ export default class CanvasZoomListener implements Listener {
         e.preventDefault();
 
         const state = this._context.getState();
-        const canvas = this._context.getCanvas();
-
         const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
         
         const oldZoom = state.data.zoom;
@@ -26,7 +24,7 @@ export default class CanvasZoomListener implements Listener {
             return;
         }
 
-        const rect = canvas.getBoundingClientRect();
+        const rect = this._context.getCanvasRect();
         const mouseX = e.clientX - rect.left;
         const mouseY = e.clientY - rect.top;
 

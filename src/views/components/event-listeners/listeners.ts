@@ -9,7 +9,8 @@ export type EventHandlerMap = {
 };
 
 export interface ListenerContext {
-    getCanvas: () => HTMLCanvasElement;
+    getCanvasRect: () => DOMRect;
+    measureText: (text: string, font: string) => number;
     getState: () => HexCartographerViewState;
     setState: (newState: HexCartographerViewState, pushToHistory: boolean) => void;
 }
