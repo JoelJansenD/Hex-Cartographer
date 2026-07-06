@@ -1,1 +1,9 @@
+# build outputs
+main.js
+main.js.map
+
+# dependencies
+node_modules/
+
+# runtime symbol cache
 symbols/
