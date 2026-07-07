@@ -6,6 +6,15 @@ export class TFile {
     extension = '';
     name = '';
 }
+export class WorkspaceLeaf {}
+export class ItemView {
+    app: any = null;
+    containerEl: any = null;
+    navigation = false;
+    constructor(_leaf: any) {}
+    setState(_state: any, _result: any): Promise<void> { return Promise.resolve(); }
+    onPaneMenu(_menu: any, _source: string) {}
+}
 export class Modal {
     app: unknown;
     constructor(app: unknown) { this.app = app; }
