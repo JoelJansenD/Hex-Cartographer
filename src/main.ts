@@ -40,7 +40,6 @@ import { t } from './i18n';
 import { SVG_SYMBOL_DATA } from './data/svgSymbols';
 import { extractJsonFromMarkdown, parseMapData, serializeMapToFileContent } from './data/serialization';
 import HexCartographerPlugin from './plugin/HexCartographerPlugin';
-import { FileSelectorModal } from './modals/FileSelectorModal';
 import { TextInputModal } from './modals/TextInputModal';
 import { ColorPickerModal } from './modals/ColorPickerModal';
 import { ExportMapModal } from './modals/ExportMapModal';

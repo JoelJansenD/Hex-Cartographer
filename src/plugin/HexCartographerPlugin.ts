@@ -5,6 +5,20 @@ import { DEFAULT_SETTINGS } from './settings';
 import { HexCartographerSettingTab } from '../settings/HexCartographerSettingTab';
 import { HexCartographerView } from '../main';
 
+/** Generates the default filename for a new hex map based on the given date. */
+export function buildNewMapFileName(now: Date): string {
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `HexMap_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}-${pad(now.getDate())}${pad(now.getMonth() + 1)}${String(now.getFullYear()).slice(-2)}.hexcartographer.md`;
+}
+
+/** Resolves the vault folder path for a new map given the context file/folder. */
+export function resolveTargetFolder(targetFile: { children?: unknown; path: string; parent?: { path: string } | null } | null): string {
+    if (!targetFile) return '';
+    if (targetFile.children !== undefined) return targetFile.path;
+    if (targetFile.parent) return targetFile.parent.path;
+    return '';
+}
+
 // === Hauptklasse des Plugins ===
 class HexCartographerPlugin extends Plugin {
     [key: string]: any;
@@ -183,20 +197,8 @@ class HexCartographerPlugin extends Plugin {
     }
 
     async createNewHexMap(targetFile = null) {
-        const now = new Date();
-        const pad = (n) => String(n).padStart(2, '0');
-        const fileName = `HexMap_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}-${pad(now.getDate())}${pad(now.getMonth() + 1)}${String(now.getFullYear()).slice(-2)}.hexcartographer.md`;
-
-        let folderPath = '';
-        if (targetFile) {
-            if (targetFile.children) {
-                folderPath = targetFile.path;
-            }
-            else if (targetFile.parent) {
-                folderPath = targetFile.parent.path;
-            }
-        }
-
+        const fileName = buildNewMapFileName(new Date());
+        const folderPath = resolveTargetFolder(targetFile);
         const filePath = folderPath ? `${folderPath}/${fileName}` : fileName;
 
         const initialData = createInitialMapData();
