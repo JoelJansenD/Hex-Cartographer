@@ -3,6 +3,81 @@ import { t } from '../i18n';
 import { SVG_SYMBOL_DATA } from '../data/svgSymbols';
 import { PluginSettings } from '../plugin/settings';
 
+/** Clamps a raw string input to a valid hex-numbering font size (4–40). */
+export function clampFontSize(value: string): number {
+    return Math.min(40, Math.max(4, parseInt(value) || 10));
+}
+
+/** Returns true when num is a valid export-width value (64–8192). */
+export function isValidExportWidth(num: number): boolean {
+    return num >= 64 && num <= 8192;
+}
+
+/** Section definitions for the in-settings user guide. */
+export const GUIDE_SECTIONS: [string, [string | null, string][]][] = [
+    ['basics', [
+        [null, 'guide.basics.create'],
+        ['wrench', 'guide.basics.editMode'],
+        ['rotate-cw', 'guide.basics.hexOrientation'],
+    ]],
+    ['navigation', [
+        [null, 'guide.navigation.zoom'],
+        [null, 'guide.navigation.pan'],
+        ['maximize-2', 'guide.navigation.fit'],
+    ]],
+    ['hexcolor', [
+        ['hexagon', 'guide.hexcolor.paint'],
+        ['pipette', 'guide.hexcolor.eyedropper'],
+        [null, 'guide.hexcolor.palette'],
+    ]],
+    ['symbols', [
+        ['pine', 'guide.symbols.groups'],
+        [null, 'guide.symbols.variant'],
+        [null, 'guide.symbols.colors'],
+    ]],
+    ['drawing', [
+        ['pencil', 'guide.drawing.pen'],
+        ['paint-bucket', 'guide.drawing.fill'],
+        ['eraser', 'guide.drawing.eraser'],
+        ['mouse-pointer-2', 'guide.drawing.rightclick'],
+    ]],
+    ['pattern', [
+        ['copy', 'guide.pattern.stamp'],
+        ['pipette', 'guide.pattern.pick'],
+    ]],
+    ['paths', [
+        ['waves', 'guide.paths.river'],
+        ['route', 'guide.paths.road'],
+        ['mouse-pointer', 'guide.paths.pick'],
+        ['text-cursor-input', 'guide.paths.width'],
+        ['text-cursor-input', 'guide.paths.dashes'],
+    ]],
+    ['borders', [
+        ['shield', 'guide.borders.draw'],
+        ['mouse-pointer', 'guide.borders.pick'],
+        ['text-cursor-input', 'guide.borders.dash'],
+        ['eye', 'guide.borders.visibility'],
+    ]],
+    ['text', [
+        ['type', 'guide.text.tool'],
+    ]],
+    ['undoredo', [
+        ['undo-2', 'guide.undoredo.undo'],
+        ['redo-2', 'guide.undoredo.redo'],
+    ]],
+    ['print', [
+        ['printer', 'guide.print.pc'],
+        ['download', 'guide.print.export'],
+        ['smartphone', 'guide.print.exportMobile'],
+    ]],
+    ['touch', [
+        ['pointer', 'guide.touch.tap'],
+        ['timer', 'guide.touch.longpress'],
+        ['zoom-in', 'guide.touch.zoom'],
+        ['move', 'guide.touch.pan'],
+    ]],
+];
+
 interface IHexCartographerPlugin extends Plugin {
     settings: PluginSettings;
     saveSettings(): Promise<void>;
@@ -43,7 +118,7 @@ export class HexCartographerSettingTab extends PluginSettingTab {
                 text.setValue(String(this.plugin.settings.exportWidth))
                     .onChange(async (value) => {
                         const num = parseInt(value);
-                        if (num >= 64 && num <= 8192) {
+                        if (isValidExportWidth(num)) {
                             this.plugin.settings.exportWidth = num;
                             await this.plugin.saveSettings();
                         }
@@ -78,7 +153,7 @@ export class HexCartographerSettingTab extends PluginSettingTab {
                     });
             });
 
-        // ── Waben nummerieren ─────────────────────────────────────
+        // ── Hex numbering ─────────────────────────────────────────
         containerEl.createEl('h3', { text: t('settings.hexNumbering') });
 
         const refreshAll = async () => {
@@ -88,7 +163,7 @@ export class HexCartographerSettingTab extends PluginSettingTab {
             });
         };
 
-        // Master-Schalter
+        // Master toggle
         new Setting(containerEl)
             .setName(t('settings.hexNumbering'))
             .setDesc(t('settings.hexNumberingDesc'))
@@ -96,7 +171,7 @@ export class HexCartographerSettingTab extends PluginSettingTab {
                 toggle.setValue(this.plugin.settings.hexNumberingEnabled)
                     .onChange(async (value) => {
                         this.plugin.settings.hexNumberingEnabled = value;
-                        // Unteroptionen ein-/ausblenden
+                        // Show/hide sub-options
                         subOptions.forEach(el => el.settingEl.style.display = value ? '' : 'none');
                         await refreshAll();
                     });
@@ -105,7 +180,7 @@ export class HexCartographerSettingTab extends PluginSettingTab {
         const subOptions: Setting[] = [];
         const hide = !this.plugin.settings.hexNumberingEnabled;
 
-        // Zähl-Ausrichtung: ein Schalter — aus=horizontal (Standard), ein=vertikal
+        // Counting direction: one toggle — off=horizontal (default), on=vertical
         const dirSetting = new Setting(containerEl)
             .setName(t('settings.hexNumberingVertical'))
             .setDesc(t('settings.hexNumberingVerticalDesc'))
@@ -118,9 +193,9 @@ export class HexCartographerSettingTab extends PluginSettingTab {
             });
         subOptions.push(dirSetting);
 
-        // Koordinaten Modus
-        // Gemerkter Chess-Zustand: wird beim Ausschalten des Koordinatenmodus gespeichert
-        // und beim Wiedereinschalten wiederhergestellt
+        // Coordinate mode
+        // Remembered chess state: saved when coordinate mode is disabled
+        // and restored when re-enabled
         let rememberedChessState = this.plugin.settings.hexNumberingAlphaChess;
 
         const alphaSetting = new Setting(containerEl)
@@ -131,13 +206,13 @@ export class HexCartographerSettingTab extends PluginSettingTab {
                     .onChange(async (value) => {
                         this.plugin.settings.hexNumberingAlpha = value;
                         if (!value) {
-                            // Zustand merken, Chess deaktivieren und sperren
+                            // Remember state, disable and lock chess toggle
                             rememberedChessState = this.plugin.settings.hexNumberingAlphaChess;
                             this.plugin.settings.hexNumberingAlphaChess = false;
                             chessToggle.setValue(false);
                             chessToggle.setDisabled(true);
                         } else {
-                            // Gespeicherten Zustand wiederherstellen
+                            // Restore saved state
                             chessToggle.setDisabled(false);
                             this.plugin.settings.hexNumberingAlphaChess = rememberedChessState;
                             chessToggle.setValue(rememberedChessState);
@@ -147,7 +222,7 @@ export class HexCartographerSettingTab extends PluginSettingTab {
             });
         subOptions.push(alphaSetting);
 
-        // Buchstabenkoordinaten
+        // Chess-style letter coordinates
         let chessToggle: any;
         const chessModeSetting = new Setting(containerEl)
             .setName(t('settings.hexNumberingAlphaChess'))
@@ -155,7 +230,7 @@ export class HexCartographerSettingTab extends PluginSettingTab {
             .addToggle(toggle => {
                 chessToggle = toggle;
                 toggle.setValue(this.plugin.settings.hexNumberingAlphaChess);
-                // Initial sperren wenn Koordinatenmodus aus
+                // Lock initially if coordinate mode is off
                 if (!this.plugin.settings.hexNumberingAlpha) toggle.setDisabled(true);
                 toggle.onChange(async (value) => {
                     this.plugin.settings.hexNumberingAlphaChess = value;
@@ -165,7 +240,7 @@ export class HexCartographerSettingTab extends PluginSettingTab {
             });
         subOptions.push(chessModeSetting);
 
-        // Textausrichtung (Pulldown)
+        // Label position (dropdown)
         const posSetting = new Setting(containerEl)
             .setName(t('settings.hexNumberingPosition'))
             .addDropdown(drop => {
@@ -179,7 +254,7 @@ export class HexCartographerSettingTab extends PluginSettingTab {
             });
         subOptions.push(posSetting);
 
-        // Textfarbe
+        // Label color
         const colorSetting = new Setting(containerEl)
             .setName(t('settings.hexNumberingColor'))
             .addColorPicker(picker => {
@@ -191,7 +266,7 @@ export class HexCartographerSettingTab extends PluginSettingTab {
             });
         subOptions.push(colorSetting);
 
-        // Textgröße
+        // Label font size
         const fontSizeSetting = new Setting(containerEl)
             .setName(t('settings.hexNumberingFontSize'))
             .setDesc(t('settings.hexNumberingFontSizeDesc'))
@@ -202,14 +277,14 @@ export class HexCartographerSettingTab extends PluginSettingTab {
                 text.inputEl.style.width = '60px';
                 text.setValue(String(this.plugin.settings.hexNumberingFontSize))
                     .onChange(async (value) => {
-                        const num = Math.min(40, Math.max(4, parseInt(value) || 10));
+                        const num = clampFontSize(value);
                         this.plugin.settings.hexNumberingFontSize = num;
                         await refreshAll();
                     });
             });
         subOptions.push(fontSizeSetting);
 
-        // Outline
+        // Label outline
         const outlineSetting = new Setting(containerEl)
             .setName(t('settings.hexNumberingOutline'))
             .setDesc(t('settings.hexNumberingOutlineDesc'))
@@ -222,7 +297,7 @@ export class HexCartographerSettingTab extends PluginSettingTab {
             });
         subOptions.push(outlineSetting);
 
-        // Initial-Sichtbarkeit der Unteroptionen
+        // Set initial visibility of sub-options
         subOptions.forEach(el => el.settingEl.style.display = hide ? 'none' : '');
 
         this.buildGuide(containerEl);
@@ -231,71 +306,7 @@ export class HexCartographerSettingTab extends PluginSettingTab {
     buildGuide(containerEl: HTMLElement) {
         containerEl.createEl('h3', { text: t('guide.title') });
 
-        const guide: [string, [string | null, string][]][] = [
-            ['basics', [
-                [null, 'guide.basics.create'],
-                ['wrench', 'guide.basics.editMode'],
-                ['rotate-cw', 'guide.basics.hexOrientation'],
-            ]],
-            ['navigation', [
-                [null, 'guide.navigation.zoom'],
-                [null, 'guide.navigation.pan'],
-                ['maximize-2', 'guide.navigation.fit'],
-            ]],
-            ['hexcolor', [
-                ['hexagon', 'guide.hexcolor.paint'],
-                ['pipette', 'guide.hexcolor.eyedropper'],
-                [null, 'guide.hexcolor.palette'],
-            ]],
-            ['symbols', [
-                ['pine', 'guide.symbols.groups'],
-                [null, 'guide.symbols.variant'],
-                [null, 'guide.symbols.colors'],
-            ]],
-            ['drawing', [
-                ['pencil', 'guide.drawing.pen'],
-                ['paint-bucket', 'guide.drawing.fill'],
-                ['eraser', 'guide.drawing.eraser'],
-                ['mouse-pointer-2', 'guide.drawing.rightclick'],
-            ]],
-            ['pattern', [
-                ['copy', 'guide.pattern.stamp'],
-                ['pipette', 'guide.pattern.pick'],
-            ]],
-            ['paths', [
-                ['waves', 'guide.paths.river'],
-                ['route', 'guide.paths.road'],
-                ['mouse-pointer', 'guide.paths.pick'],
-                ['text-cursor-input', 'guide.paths.width'],
-                ['text-cursor-input', 'guide.paths.dashes'],
-            ]],
-            ['borders', [
-                ['shield', 'guide.borders.draw'],
-                ['mouse-pointer', 'guide.borders.pick'],
-                ['text-cursor-input', 'guide.borders.dash'],
-                ['eye', 'guide.borders.visibility'],
-            ]],
-            ['text', [
-                ['type', 'guide.text.tool'],
-            ]],
-            ['undoredo', [
-                ['undo-2', 'guide.undoredo.undo'],
-                ['redo-2', 'guide.undoredo.redo'],
-            ]],
-            ['print', [
-                ['printer', 'guide.print.pc'],
-                ['download', 'guide.print.export'],
-                ['smartphone', 'guide.print.exportMobile'],
-            ]],
-            ['touch', [
-                ['pointer', 'guide.touch.tap'],
-                ['timer', 'guide.touch.longpress'],
-                ['zoom-in', 'guide.touch.zoom'],
-                ['move', 'guide.touch.pan'],
-            ]],
-        ];
-
-        for (const [key, items] of guide) {
+        for (const [key, items] of GUIDE_SECTIONS) {
             const details = containerEl.createEl('details');
             details.createEl('summary', { text: t(`guide.${key}`), cls: 'hex-guide-summary' });
             const content = details.createEl('div', { cls: 'hex-guide-content' });
