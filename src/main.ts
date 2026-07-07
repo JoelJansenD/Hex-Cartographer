@@ -37,9 +37,9 @@ import {
 import { rgbToHex } from './utils/color';
 import { hexToPixel, pixelToHex, hexDistance, hexLerp, getHexNeighbors, calculateHexPath } from './utils/hexMath';
 import { t } from './i18n';
-import { SVG_SYMBOL_DATA } from './data/svgSymbols';
 import { extractJsonFromMarkdown, parseMapData, serializeMapToFileContent } from './data/serialization';
 import HexCartographerPlugin from './plugin/HexCartographerPlugin';
+import { SvgSymbolLoader } from './view/SvgSymbolLoader';
 import { TextInputModal } from './modals/TextInputModal';
 import { ColorPickerModal } from './modals/ColorPickerModal';
 import { ExportMapModal } from './modals/ExportMapModal';
@@ -106,7 +106,8 @@ export class HexCartographerView extends ItemView {
 
         this.svgSymbols = {};
         this.svgSymbolsLoaded = false;
-        this.svgLoadPromise = this.loadSVGSymbols();
+        this.svgLoader = new SvgSymbolLoader(this);
+        this.svgLoadPromise = this.svgLoader.load();
 
         this.svgSymbolConfig = SVG_SYMBOL_CONFIG;
 
@@ -276,92 +277,6 @@ export class HexCartographerView extends ItemView {
         super.onPaneMenu(menu, source);
     }
 
-    async loadSVGSymbols() {
-        for (const [key, data] of Object.entries(SVG_SYMBOL_DATA)) {
-            this.svgSymbols[key] = { pathData: data.pathData, viewBoxWidth: data.viewBoxWidth };
-        }
-
-        const symbolsDir = '.obsidian/plugins/hex-cartographer/symbols';
-        try {
-            const listing = await this.app.vault.adapter.list(symbolsDir);
-            if (listing && listing.files && listing.files.length > 0) {
-                for (const filePath of listing.files) {
-                    if (!filePath.endsWith('.svg')) continue;
-                    const filename = filePath.split('/').pop();
-                    const key = filename.replace(/-\d+\.svg$/, '');
-                    try {
-                        const svgContent = await this.app.vault.adapter.read(filePath);
-                        const parser = new DOMParser();
-                        const svgDoc = parser.parseFromString(svgContent, 'image/svg+xml');
-                        const svgElement = svgDoc.querySelector('svg');
-                        const pathElement = svgDoc.querySelector('path');
-                        if (pathElement && svgElement) {
-                            const pathData = pathElement.getAttribute('d');
-                            const viewBox = svgElement.getAttribute('viewBox');
-                            let viewBoxWidth = 100;
-                            if (viewBox) {
-                                viewBoxWidth = parseFloat(viewBox.split(' ')[2]);
-                            }
-                            this.svgSymbols[key] = { pathData, viewBoxWidth };
-                            console.log(`SVG from file: ${key}`);
-                        }
-                    } catch (e) {
-                        console.log(`Could not read SVG file: ${filename}`);
-                    }
-                }
-            }
-        } catch (e) {
-        }
-
-        this.svgSymbolsLoaded = true;
-    }
-
-    updateToolConfigsWithAvailableSVGs() {
-        ['grass', 'tree', 'mountain', 'building'].forEach(groupId => {
-            const config = this.toolConfigs[groupId];
-            if (config && config.variants) {
-                const firstAvailableSVG = config.variants.find(v => this.svgSymbols[v.id]);
-                if (firstAvailableSVG) {
-                    config.currentVariant = firstAvailableSVG.id;
-                    console.log(`✓ Set default variant for ${groupId}: ${firstAvailableSVG.id}`);
-                }
-            }
-        });
-    }
-
-    updateToolGroupButtonIcons() {
-        if (!this.containerEl) return;
-
-        const toolbar = this.containerEl.querySelector('.hex-toolbar');
-        if (!toolbar) return;
-
-        ['grass', 'tree', 'mountain', 'building'].forEach(groupId => {
-            const config = this.toolConfigs[groupId];
-            if (!config) return;
-
-            const wrapper = toolbar.querySelector(`[data-tool-group-wrapper="${groupId}"]`);
-            if (!wrapper) return;
-
-            const btn = wrapper.querySelector('.hex-tool-btn');
-            if (!btn) return;
-
-            const currentVariant = config.variants.find(v => v.id === config.currentVariant);
-            if (!currentVariant) return;
-
-            if (this.svgSymbols[currentVariant.id]) {
-                const symbolInfo = this.svgSymbols[currentVariant.id];
-                btn.innerHTML = `<svg viewBox="0 0 ${symbolInfo.viewBoxWidth} ${symbolInfo.viewBoxWidth}"
-                                      width="16" height="16" style="vertical-align: middle;">
-                    <path d="${symbolInfo.pathData}" fill="currentColor"/>
-                </svg>`;
-                console.log(`✓ Updated button icon for ${groupId} to ${currentVariant.id}`);
-            } else {
-                btn.innerHTML = '';
-                setIcon(btn as HTMLElement, currentVariant.icon);
-            }
-        });
-    }
-
     async setState(state, result) {
         if (state && state.file) {
             const file = this.app.vault.getAbstractFileByPath(state.file);
@@ -429,10 +344,10 @@ export class HexCartographerView extends ItemView {
                             }
                         }
                     });
-                    this.updateToolGroupButtonIcons();
+                    this.svgLoader.updateButtonIcons();
                 } else {
-                    this.updateToolConfigsWithAvailableSVGs();
-                    this.updateToolGroupButtonIcons();
+                    this.svgLoader.updateToolConfigDefaults();
+                    this.svgLoader.updateButtonIcons();
                 }
                 if (newData.settings.patternData) {
                     this.patternData = newData.settings.patternData;
@@ -478,8 +393,8 @@ export class HexCartographerView extends ItemView {
                     if (this.masterColorInput) { this.masterColorInput.value = this.masterColor; if (this.masterColorBtn) this.masterColorBtn.style.backgroundColor = this.masterColor; }
                 }
             } else {
-                this.updateToolConfigsWithAvailableSVGs();
-                this.updateToolGroupButtonIcons();
+                this.svgLoader.updateToolConfigDefaults();
+                this.svgLoader.updateButtonIcons();
             }
 
             if (JSON.stringify(this.data) !== JSON.stringify(newData)) {
