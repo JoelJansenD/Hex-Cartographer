@@ -42,6 +42,7 @@ import HexCartographerPlugin from './plugin/HexCartographerPlugin';
 import { SvgSymbolLoader } from './view/SvgSymbolLoader';
 import { HistoryManager } from './view/HistoryManager';
 import { CameraController } from './view/CameraController';
+import { PersistenceController } from './view/PersistenceController';
 import { TextInputModal } from './modals/TextInputModal';
 import { ColorPickerModal } from './modals/ColorPickerModal';
 import { ExportMapModal } from './modals/ExportMapModal';
@@ -58,6 +59,7 @@ export class HexCartographerView extends ItemView {
 
         this.historyManager = new HistoryManager(this);
         this.camera = new CameraController(this);
+        this.persistence = new PersistenceController(this);
 
         this.saveTimeout = null;
         this.isMouseDown = false;
@@ -277,163 +279,11 @@ export class HexCartographerView extends ItemView {
     }
 
     async setState(state, result) {
-        if (state && state.file) {
-            const file = this.app.vault.getAbstractFileByPath(state.file);
-            if (file instanceof TFile) {
-                this.file = file;
-                await this.reloadFile();
-            }
-        }
+        await this.persistence.setState(state);
         await super.setState(state, result);
     }
 
-    async reloadFile() {
-        if (!this.file || this.isReloading) return;
-        this.isReloading = true;
-        try {
-            if (this.svgLoadPromise && !this.svgSymbolsLoaded) {
-                await this.svgLoadPromise;
-            }
-
-            const content = await this.app.vault.read(this.file);
-
-            const jsonContent = extractJsonFromMarkdown(content);
-            const newData = parseMapData(jsonContent);
-
-            if (newData.settings) {
-                if (newData.settings.colorPalette) {
-                    this.colorPalette = newData.settings.colorPalette;
-                }
-                if (newData.settings.colorPalette2) {
-                    this.colorPalette2 = newData.settings.colorPalette2;
-                }
-                if (newData.settings.activeColorSlot !== undefined) {
-                    this.activeColorSlot = newData.settings.activeColorSlot;
-                }
-                this.editMode = newData.settings.editMode === true;
-                if (newData.settings.hexOrientation !== undefined) this.hexOrientation = newData.settings.hexOrientation === true;
-                const savedToolGroup = newData.settings.currentToolGroup || null;
-                const savedDrawMode = newData.settings.drawMode || 'pen';
-                if (this.editMode) {
-                    this.currentToolGroup = savedToolGroup;
-                    this.drawMode = savedDrawMode;
-                } else {
-                    this.currentToolGroup = null;
-                    this.drawMode = 'pen';
-                    this._savedToolGroup = savedToolGroup;
-                    this._savedDrawMode = savedDrawMode;
-                }
-                if (newData.settings.toolConfigs) {
-                    // WICHTIG: Explizit jeden Key einzeln laden, um sicherzustellen,
-                    ['grass', 'tree', 'mountain', 'building'].forEach(key => {
-                        if (newData.settings.toolConfigs[key] && this.toolConfigs[key]) {
-                            const saved = newData.settings.toolConfigs[key];
-
-                            if (saved.currentVariant !== undefined) {
-                                this.toolConfigs[key].currentVariant = saved.currentVariant;
-                            }
-                            if (saved.symbolColor !== undefined) {
-                                this.toolConfigs[key].symbolColor = saved.symbolColor;
-                            }
-                            if (saved.backgroundColor !== undefined) {
-                                this.toolConfigs[key].backgroundColor = saved.backgroundColor;
-                            }
-                            if (saved.backgroundEnabled !== undefined) {
-                                this.toolConfigs[key].backgroundEnabled = saved.backgroundEnabled;
-                            }
-                        }
-                    });
-                    this.svgLoader.updateButtonIcons();
-                } else {
-                    this.svgLoader.updateToolConfigDefaults();
-                    this.svgLoader.updateButtonIcons();
-                }
-                if (newData.settings.patternData) {
-                    this.patternData = newData.settings.patternData;
-                }
-                if (newData.settings.patternSourceHex) {
-                    this.patternSourceHex = newData.settings.patternSourceHex;
-                }
-                if (newData.settings.borderSettings) {
-                    this.borderSettings = newData.settings.borderSettings;
-                    this.borderSettings.activeRegionId = null;
-                    this.borderSettings.pickedHex = null;
-                }
-                if (newData.settings.riverSettings) {
-                    this.riverSettings = newData.settings.riverSettings;
-                    this.riverSettings.editMode = false;
-                    this.riverSettings.activeRiverId = null;
-                    this.riverSettings.insertAfter = null;
-                }
-                if (newData.settings.roadSettings) {
-                    this.roadSettings = newData.settings.roadSettings;
-                    this.roadSettings.editMode = false;
-                    this.roadSettings.activeRoadId = null;
-                    this.roadSettings.insertAfter = null;
-                }
-                if (newData.settings.hexColorColor) {
-                    this.hexColorColor = newData.settings.hexColorColor;
-                }
-                if (newData.settings.lastUsedTextSize !== undefined) this.lastUsedTextSize = newData.settings.lastUsedTextSize;
-                if (newData.settings.lastUsedTextOutline !== undefined) this.lastUsedTextOutline = newData.settings.lastUsedTextOutline;
-                if (newData.settings.lastUsedTextBold !== undefined) this.lastUsedTextBold = newData.settings.lastUsedTextBold;
-                if (newData.settings.lastUsedTextShadow !== undefined) this.lastUsedTextShadow = newData.settings.lastUsedTextShadow;
-                if (newData.settings.lastUsedTextShadowDistance !== undefined) this.lastUsedTextShadowDistance = newData.settings.lastUsedTextShadowDistance;
-                if (newData.settings.lastUsedTextShadowOpatown !== undefined) this.lastUsedTextShadowOpatown = newData.settings.lastUsedTextShadowOpatown;
-                if (newData.settings.masterColor) {
-                    this.masterColor = newData.settings.masterColor;
-                    if (this.masterColorInput) { this.masterColorInput.value = this.masterColor; if (this.masterColorBtn) this.masterColorBtn.style.backgroundColor = this.masterColor; }
-                }
-                if (this.currentToolGroup === 'hexcolor') {
-                    this.masterColor = this.hexColorColor;
-                    if (this.masterColorInput) { this.masterColorInput.value = this.masterColor; if (this.masterColorBtn) this.masterColorBtn.style.backgroundColor = this.masterColor; }
-                } else if (this.currentToolGroup && this.toolConfigs[this.currentToolGroup]) {
-                    this.masterColor = this.toolConfigs[this.currentToolGroup].symbolColor;
-                    if (this.masterColorInput) { this.masterColorInput.value = this.masterColor; if (this.masterColorBtn) this.masterColorBtn.style.backgroundColor = this.masterColor; }
-                }
-            } else {
-                this.svgLoader.updateToolConfigDefaults();
-                this.svgLoader.updateButtonIcons();
-            }
-
-            if (JSON.stringify(this.data) !== JSON.stringify(newData)) {
-                this.data = Object.assign({}, newData);
-
-                if (this.canvas) {
-                    if (this.data.settings && this.data.settings.viewportSaved) {
-                        this.render();
-                    } else if (Object.keys(this.data.hexes).length > 0) {
-                        setTimeout(() => { this.fitMapToView(); }, 100);
-                    } else {
-                        if (this.canvas.width > 0) {
-                            this.data.offX = this.canvas.width / 2;
-                            this.data.offY = this.canvas.height / 2;
-                        }
-                        this.render();
-                    }
-                }
-            }
-
-            if (this.containerEl) {
-                const toolbar = this.containerEl.querySelector('.hex-toolbar');
-                if (toolbar) {
-                    this.updateToolbarState(toolbar);
-                    if (this.editMode) {
-                        setTimeout(() => {
-                            this.updateToolbarState(toolbar);
-                            this.recalcToolbarWidths();
-                        }, 50);
-                    }
-                }
-            }
-        } catch(e) {
-            console.error("HexCartographer Sync Fehler:", e);
-        } finally {
-            this.isReloading = false;
-        }
-    }
-
-
+    async reloadFile() { return this.persistence.reload(); }
 
     fitMapToView() { this.camera.fit(); }
 
@@ -4463,67 +4313,9 @@ export class HexCartographerView extends ItemView {
         if (dashCount > 1) { this.ctx.setLineDash([]); this.ctx.lineDashOffset = 0; }
     }
 
-    async saveData() {
-        if (this.file && await this.app.vault.adapter.exists(this.file.path)) {
-            this.isSaving = true;
-            try {
-                const toolConfigsToSave = {};
-                Object.keys(this.toolConfigs).forEach(key => {
-                    toolConfigsToSave[key] = {
-                        currentVariant: this.toolConfigs[key].currentVariant,
-                        symbolColor: this.toolConfigs[key].symbolColor,
-                        backgroundColor: this.toolConfigs[key].backgroundColor,
-                        backgroundEnabled: this.toolConfigs[key].backgroundEnabled
-                    };
-                });
+    async saveData() { return this.persistence.save(); }
 
-                if (this.canvas && this.data.zoom) {
-                    this.data.centerWorldX = (this.canvas.width / 2 - this.data.offX) / this.data.zoom;
-                    this.data.centerWorldY = (this.canvas.height / 2 - this.data.offY) / this.data.zoom;
-                }
-
-                this.data.settings = {
-                    colorPalette: this.colorPalette,
-                    colorPalette2: this.colorPalette2,
-                    activeColorSlot: this.activeColorSlot,
-                    drawMode: !this.editMode && this._savedDrawMode ? this._savedDrawMode : this.drawMode,
-                    currentToolGroup: !this.editMode && this._savedToolGroup !== undefined ? this._savedToolGroup : this.currentToolGroup,
-                    toolConfigs: toolConfigsToSave,
-                    patternData: this.patternData,
-                    patternSourceHex: this.patternSourceHex,
-                    borderSettings: this.borderSettings,
-                    riverSettings: this.riverSettings,
-                    roadSettings: this.roadSettings,
-                    masterColor: this.masterColor,
-                    editMode: this.editMode,
-                    hexColorColor: this.hexColorColor,
-                    lastUsedTextSize: this.lastUsedTextSize,
-                    lastUsedTextOutline: this.lastUsedTextOutline,
-                    lastUsedTextBold: this.lastUsedTextBold,
-                    lastUsedTextShadow: this.lastUsedTextShadow,
-                    lastUsedTextShadowDistance: this.lastUsedTextShadowDistance,
-                    lastUsedTextShadowOpatown: this.lastUsedTextShadowOpatown,
-                    viewportSaved: true,
-                    hexOrientation: this.hexOrientation
-                };
-
-                const title = this.file.basename.replace('.hexcartographer', '');
-                const content = serializeMapToFileContent(this.data, title);
-
-                await this.app.vault.modify(this.file, content);
-            }
-            catch (e) {
-                console.error(e);
-            } finally {
-                setTimeout(() => { this.isSaving = false; }, 200);
-            }
-        }
-    }
-
-    requestSave() {
-        if (this.saveTimeout) clearTimeout(this.saveTimeout);
-        this.saveTimeout = setTimeout(() => this.saveData(), 1000);
-    }
+    requestSave() { this.persistence.requestSave(); }
 
     resizeCanvas() { this.camera.resize(); }
 
@@ -4537,7 +4329,7 @@ export class HexCartographerView extends ItemView {
 
     async onClose() {
         if (this.resizeObserver) this.resizeObserver.disconnect();
-        await this.saveData();
+        await this.persistence.save();
     }
 }
 
