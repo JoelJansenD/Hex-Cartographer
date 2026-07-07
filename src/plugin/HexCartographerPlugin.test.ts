@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 
 // Prevent loading the full HexCartographerView (Obsidian API, DOM) during unit tests.
-vi.mock('../main', () => ({ HexCartographerView: class {} }));
+vi.mock('../view/HexCartographerView', () => ({ HexCartographerView: class {} }));
 
 import { buildNewMapFileName, resolveTargetFolder } from './HexCartographerPlugin';
 

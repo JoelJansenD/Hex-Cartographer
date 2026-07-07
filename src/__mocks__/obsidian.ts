@@ -1,5 +1,20 @@
 // Minimal stub for Obsidian classes used in unit-tested modules.
 // Only the symbols actually imported in tests need to be present.
+export class TFile {
+    path = '';
+    basename = '';
+    extension = '';
+    name = '';
+}
+export class WorkspaceLeaf {}
+export class ItemView {
+    app: any = null;
+    containerEl: any = null;
+    navigation = false;
+    constructor(_leaf: any) {}
+    setState(_state: any, _result: any): Promise<void> { return Promise.resolve(); }
+    onPaneMenu(_menu: any, _source: string) {}
+}
 export class Modal {
     app: unknown;
     constructor(app: unknown) { this.app = app; }
@@ -26,3 +41,6 @@ export class Setting {
     addColorPicker(_cb: (picker: any) => any) { return this; }
 }
 export function setIcon(_el: unknown, _icon: string) {}
+export class Notice {
+    constructor(_message: string) {}
+}

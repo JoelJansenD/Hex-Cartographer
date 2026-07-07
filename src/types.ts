@@ -5,6 +5,7 @@ export interface HexData {
     q: number;
     r: number;
     color?: string;
+    backgroundColor?: string;
     symbol?: string;
     symbolColor?: string;
 }
@@ -13,6 +14,8 @@ export interface HexData {
 export interface Waypoint {
     q: number;
     r: number;
+    /** When true, no segment is drawn between this waypoint and the previous one (path break). */
+    break?: boolean;
 }
 
 /** A river or road path. */
@@ -101,6 +104,7 @@ export interface BorderSettings {
 export interface PathEditSettings {
     width: number;
     activeRiverId: number | null;
+    activeRoadId: number | null;
     editMode: boolean;
     insertAfter: number | null;
 }

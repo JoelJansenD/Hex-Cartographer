@@ -1,9 +1,9 @@
-import { Plugin, Notice } from 'obsidian';
+import { Plugin, Notice, TFile } from 'obsidian';
 import { t, setCurrentLanguage, getObsidianLanguage } from '../i18n';
 import { serializeMapToFileContent, createInitialMapData } from '../data/serialization';
-import { DEFAULT_SETTINGS } from './settings';
+import { DEFAULT_SETTINGS, PluginSettings } from './settings';
 import { HexCartographerSettingTab } from '../settings/HexCartographerSettingTab';
-import { HexCartographerView } from '../main';
+import { HexCartographerView } from '../view/HexCartographerView';
 
 /** Generates the default filename for a new hex map based on the given date. */
 export function buildNewMapFileName(now: Date): string {
@@ -22,6 +22,7 @@ export function resolveTargetFolder(targetFile: { children?: unknown; path: stri
 // === Hauptklasse des Plugins ===
 class HexCartographerPlugin extends Plugin {
     [key: string]: any;
+    declare settings: PluginSettings;
     async onload() {
         await this.loadSettings();
         setCurrentLanguage(getObsidianLanguage());
@@ -121,7 +122,7 @@ class HexCartographerPlugin extends Plugin {
                 const view = leaf.view;
                 if (view instanceof HexCartographerView && view.file &&
                     (view.file.path === oldPath || view.file === file)) {
-                    view.file = file;
+                    if (file instanceof TFile) view.file = file;
                 }
             });
             setTimeout(() => {
@@ -186,7 +187,7 @@ class HexCartographerPlugin extends Plugin {
                 const filePath = state?.state?.file ||
                     (activeLeaf.view instanceof HexCartographerView && activeLeaf.view.file?.path);
                 if (state?.type === 'hex-cartographer' && filePath) {
-                    const fileEl = document.querySelector(`.nav-file-title[data-path="${CSS.escape(filePath)}"]`);
+                    const fileEl = document.querySelector(`.nav-file-title[data-path="${CSS.escape(filePath as string)}"]`);
                     if (fileEl) {
                         fileEl.classList.add('is-active');
                         fileEl.classList.add('hex-active');
