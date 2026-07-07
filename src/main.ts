@@ -41,6 +41,7 @@ import { extractJsonFromMarkdown, parseMapData, serializeMapToFileContent } from
 import HexCartographerPlugin from './plugin/HexCartographerPlugin';
 import { SvgSymbolLoader } from './view/SvgSymbolLoader';
 import { HistoryManager } from './view/HistoryManager';
+import { CameraController } from './view/CameraController';
 import { TextInputModal } from './modals/TextInputModal';
 import { ColorPickerModal } from './modals/ColorPickerModal';
 import { ExportMapModal } from './modals/ExportMapModal';
@@ -56,6 +57,7 @@ export class HexCartographerView extends ItemView {
         this.data = { hexes: {}, rivers: [], roads: [], texts: [], borders: [], gridSize: DEFAULT_GRID_SIZE, zoom: 1, offX: DEFAULT_OFF_X, offY: DEFAULT_OFF_Y };
 
         this.historyManager = new HistoryManager(this);
+        this.camera = new CameraController(this);
 
         this.saveTimeout = null;
         this.isMouseDown = false;
@@ -433,70 +435,7 @@ export class HexCartographerView extends ItemView {
 
 
 
-    fitMapToView() {
-        const hexes = Object.values(this.data.hexes);
-        const texts = this.data.texts || [];
-        const borders = this.data.borders || [];
-
-        const borderOnlyHexes = [];
-        const hexKeySet = new Set(Object.keys(this.data.hexes));
-        for (const region of borders) {
-            for (const bh of region.hexes) {
-                if (!hexKeySet.has(`${bh.q}_${bh.r}`)) {
-                    borderOnlyHexes.push(bh);
-                }
-            }
-        }
-
-        if (hexes.length === 0 && texts.length === 0 && borderOnlyHexes.length === 0) {
-            new Notice(t('notice.noHexesToShow'));
-            return;
-        }
-
-        let minX = Infinity, maxX = -Infinity;
-        let minY = Infinity, maxY = -Infinity;
-
-        const expandBounds = (hex) => {
-            const pos = this.hexToPixel(hex);
-            const s = this.data.gridSize;
-            minX = Math.min(minX, pos.x - s);
-            maxX = Math.max(maxX, pos.x + s);
-            minY = Math.min(minY, pos.y - s);
-            maxY = Math.max(maxY, pos.y + s);
-        };
-
-        hexes.forEach(expandBounds);
-        borderOnlyHexes.forEach(expandBounds);
-
-        texts.forEach(t => {
-            const textSize = t.size || 16;
-            const estimatedWidth = t.text.length * textSize * 0.6; // Geschätzte Textbreite
-            const estimatedHeight = textSize;
-
-            minX = Math.min(minX, t.x - estimatedWidth / 2);
-            maxX = Math.max(maxX, t.x + estimatedWidth / 2);
-            minY = Math.min(minY, t.y - estimatedHeight / 2);
-            maxY = Math.max(maxY, t.y + estimatedHeight / 2);
-        });
-
-        const centerX = (minX + maxX) / 2;
-        const centerY = (minY + maxY) / 2;
-        const width = maxX - minX;
-        const height = maxY - minY;
-
-        const canvasWidth = this.canvas.width;
-        const canvasHeight = this.canvas.height;
-        const zoomX = (canvasWidth * VIEWPORT_PADDING) / width;
-        const zoomY = (canvasHeight * VIEWPORT_PADDING) / height;
-        const newZoom = Math.max(MIN_ZOOM, Math.min(zoomX, zoomY, MAX_ZOOM));
-
-        this.data.zoom = newZoom;
-        this.data.offX = canvasWidth / 2 - centerX * newZoom;
-        this.data.offY = canvasHeight / 2 - centerY * newZoom;
-
-        this.render();
-        this.requestSave();
-    }
+    fitMapToView() { this.camera.fit(); }
 
     async onOpen() {
         const container = this.containerEl.children[1] as HTMLElement;
@@ -1955,25 +1894,12 @@ export class HexCartographerView extends ItemView {
 
         this.canvas.addEventListener('wheel', (e) => {
             e.preventDefault();
-
-            const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
-            const oldZoom = this.data.zoom;
-            const newZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, oldZoom * zoomFactor));
-            if (newZoom === oldZoom) return;
-
+            const factor = e.deltaY > 0 ? 0.9 : 1.1;
             const rect = this.canvas.getBoundingClientRect();
-            const mouseX = e.clientX - rect.left;
-            const mouseY = e.clientY - rect.top;
-
-            const worldX = (mouseX - this.data.offX) / oldZoom;
-            const worldY = (mouseY - this.data.offY) / oldZoom;
-
-            this.data.offX = mouseX - worldX * newZoom;
-            this.data.offY = mouseY - worldY * newZoom;
-            this.data.zoom = newZoom;
-
-            this.render();
-            this.requestSave();
+            if (this.camera.zoomAtPoint(factor, e.clientX - rect.left, e.clientY - rect.top)) {
+                this.render();
+                this.requestSave();
+            }
         }, { passive: false });
 
         this.touchState = {
@@ -4599,51 +4525,11 @@ export class HexCartographerView extends ItemView {
         this.saveTimeout = setTimeout(() => this.saveData(), 1000);
     }
 
-    resizeCanvas() {
-        if (!this.canvas) return;
-        this.canvas.width = this.canvas.clientWidth;
-        this.canvas.height = this.canvas.clientHeight;
+    resizeCanvas() { this.camera.resize(); }
 
-        if (!this._initialResizeDone) {
-            this._initialResizeDone = true;
-            if (this.data.settings && this.data.settings.viewportSaved && this.data.centerWorldX !== undefined && this.data.centerWorldY !== undefined) {
-                this.data.offX = this.canvas.width / 2 - this.data.centerWorldX * this.data.zoom;
-                this.data.offY = this.canvas.height / 2 - this.data.centerWorldY * this.data.zoom;
-            } else if (!this.data.settings || !this.data.settings.viewportSaved) {
-                this.data.offX = this.canvas.width / 2;
-                this.data.offY = this.canvas.height / 2;
-            }
-        }
+    getWorldCoords(e) { return this.camera.getWorldCoords(e); }
 
-        if (this.textCanvas) {
-            this.textCanvas.width = this.textCanvas.clientWidth;
-            this.textCanvas.height = this.textCanvas.clientHeight;
-        }
-
-        this.render();
-    }
-
-    getWorldCoords(e) {
-        const r = this.canvas.getBoundingClientRect();
-        return {
-            x: (e.clientX - r.left - this.data.offX) / this.data.zoom,
-            y: (e.clientY - r.top - this.data.offY) / this.data.zoom
-        };
-    }
-
-    getHexBounds() {
-        const keys = Object.keys(this.data.hexes || {});
-        if (keys.length === 0) return null;
-        let minQ = Infinity, maxQ = -Infinity, minR = Infinity, maxR = -Infinity;
-        for (const key of keys) {
-            const h = this.data.hexes[key];
-            if (h.q < minQ) minQ = h.q;
-            if (h.q > maxQ) maxQ = h.q;
-            if (h.r < minR) minR = h.r;
-            if (h.r > maxR) maxR = h.r;
-        }
-        return { minQ, maxQ, minR, maxR };
-    }
+    getHexBounds() { return this.camera.getHexBounds(); }
 
     hexToPixel(h) { return hexToPixel(h, this.data.gridSize, this.hexOrientation); }
 
