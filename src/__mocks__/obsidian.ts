@@ -26,3 +26,6 @@ export class Setting {
     addColorPicker(_cb: (picker: any) => any) { return this; }
 }
 export function setIcon(_el: unknown, _icon: string) {}
+export class Notice {
+    constructor(_message: string) {}
+}

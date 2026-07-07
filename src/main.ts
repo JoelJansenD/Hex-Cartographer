@@ -40,6 +40,7 @@ import { t } from './i18n';
 import { extractJsonFromMarkdown, parseMapData, serializeMapToFileContent } from './data/serialization';
 import HexCartographerPlugin from './plugin/HexCartographerPlugin';
 import { SvgSymbolLoader } from './view/SvgSymbolLoader';
+import { HistoryManager } from './view/HistoryManager';
 import { TextInputModal } from './modals/TextInputModal';
 import { ColorPickerModal } from './modals/ColorPickerModal';
 import { ExportMapModal } from './modals/ExportMapModal';
@@ -54,9 +55,7 @@ export class HexCartographerView extends ItemView {
         this.file = null;
         this.data = { hexes: {}, rivers: [], roads: [], texts: [], borders: [], gridSize: DEFAULT_GRID_SIZE, zoom: 1, offX: DEFAULT_OFF_X, offY: DEFAULT_OFF_Y };
 
-        this.history = [];
-        this.redoStack = [];
-        this.maxHistory = MAX_HISTORY;
+        this.historyManager = new HistoryManager(this);
 
         this.saveTimeout = null;
         this.isMouseDown = false;
@@ -82,8 +81,6 @@ export class HexCartographerView extends ItemView {
         this.riverDragIndex = null;
         this.roadDragIndex = null;
         this.lastWaypointClick = null;
-        this.pendingHistory = false;
-
         this.masterColor = DEFAULT_MASTER_COLOR;
         this.hexColorColor = DEFAULT_PALETTE[0];
 
@@ -434,78 +431,7 @@ export class HexCartographerView extends ItemView {
         }
     }
 
-    pushHistory() {
-        const dataToSave = {
-            hexes: this.data.hexes,
-            rivers: this.data.rivers,
-            roads: this.data.roads,
-            texts: this.data.texts,
-            borders: this.data.borders,
-            gridSize: this.data.gridSize
-        };
-        this.history.push(JSON.stringify(dataToSave));
-        if (this.history.length > this.maxHistory) this.history.shift();
-        this.redoStack = [];
-        this.pendingHistory = false;
-    }
 
-    pushHistoryIfNeeded() {
-        if (this.pendingHistory) {
-            this.pushHistory();
-        }
-    }
-
-    undo() {
-        if (this.history.length > 0) {
-            const dataToSave = {
-                hexes: this.data.hexes,
-                rivers: this.data.rivers,
-                roads: this.data.roads,
-                texts: this.data.texts,
-                borders: this.data.borders,
-                gridSize: this.data.gridSize
-            };
-            this.redoStack.push(JSON.stringify(dataToSave));
-            const previousState = this.history.pop();
-            const restored = JSON.parse(previousState);
-            this.data.hexes = restored.hexes;
-            this.data.rivers = restored.rivers;
-            this.data.roads = restored.roads;
-            this.data.texts = restored.texts;
-            this.data.borders = restored.borders || [];
-            this.data.gridSize = restored.gridSize;
-            this.render();
-            this.requestSave();
-        } else {
-            new Notice(t('notice.nothingToUndo'));
-        }
-    }
-
-    redo() {
-        if (this.redoStack.length > 0) {
-            const dataToSave = {
-                hexes: this.data.hexes,
-                rivers: this.data.rivers,
-                roads: this.data.roads,
-                texts: this.data.texts,
-                borders: this.data.borders,
-                gridSize: this.data.gridSize
-            };
-            this.history.push(JSON.stringify(dataToSave));
-            const nextState = this.redoStack.pop();
-            const restored = JSON.parse(nextState);
-            this.data.hexes = restored.hexes;
-            this.data.rivers = restored.rivers;
-            this.data.roads = restored.roads;
-            this.data.texts = restored.texts;
-            this.data.borders = restored.borders || [];
-            this.data.gridSize = restored.gridSize;
-            this.render();
-            this.requestSave();
-        } else {
-            new Notice(t('notice.nothingToRedo'));
-        }
-    }
 
     fitMapToView() {
         const hexes = Object.values(this.data.hexes);
@@ -792,10 +718,10 @@ export class HexCartographerView extends ItemView {
         editContent.createEl('span', { cls: 'hex-toolbar-sep', text: '\u200B' });
 
         const undoBtn = this.createToolButton(editContent, { icon: 'undo-2', title: t('tooltip.undo') });
-        undoBtn.onclick = () => this.undo();
+        undoBtn.onclick = () => this.historyManager.undo();
 
         const redoBtn = this.createToolButton(editContent, { icon: 'redo-2', title: t('tooltip.redo') });
-        redoBtn.onclick = () => this.redo();
+        redoBtn.onclick = () => this.historyManager.redo();
 
         const fitBtn = this.createToolButton(toolbar, { icon: 'maximize-2', title: t('tooltip.fit') });
         fitBtn.onclick = () => this.fitMapToView();
@@ -1709,11 +1635,11 @@ export class HexCartographerView extends ItemView {
         this.containerEl.addEventListener('keydown', (e) => {
             if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
                 e.preventDefault();
-                this.undo();
+                this.historyManager.undo();
             }
             if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
                 e.preventDefault();
-                this.redo();
+                this.historyManager.redo();
             }
         });
 
@@ -1741,14 +1667,14 @@ export class HexCartographerView extends ItemView {
                 this._rightClickLast = { time: now, key };
                 this.isRightMouseErasing = true;
                 this.rightEraseLastHex = null;
-                this.pushHistory();
+                this.historyManager.push();
                 this.handleEraser(hex, world.x, world.y);
                 this.rightEraseLastHex = key;
                 this.render();
                 return;
             }
 
-            this.pendingHistory = true;
+            this.historyManager.markPending();
             this.isMouseDown = true;
             this.mouseDownPos = { x: world.x, y: world.y };
             this.startHex = this.pixelToHex(world.x, world.y);
@@ -1850,7 +1776,7 @@ export class HexCartographerView extends ItemView {
 
             let hitText = this.getTextAt(world.x, world.y);
             if (hitText && this.currentToolGroup === 'text' && this.drawMode === 'none') {
-                this.pushHistoryIfNeeded();
+                this.historyManager.pushIfNeeded();
                 this.draggedText = hitText;
             } else {
                 this.processInput(e, true);
@@ -1866,7 +1792,7 @@ export class HexCartographerView extends ItemView {
             if (e.button === 2 || this.drawMode === 'eraser') {
                 const world = this.getWorldCoords(e);
                 const hex = this.pixelToHex(world.x, world.y);
-                if (this.history.length > 0) this.history.pop();
+                this.historyManager.dropLast();
                 this.handleEraserFlood(hex);
                 this.render();
                 this.requestSave();
@@ -1905,7 +1831,7 @@ export class HexCartographerView extends ItemView {
                         const curQ = road.waypoints[this.roadDragIndex.idx].q;
                         const curR = road.waypoints[this.roadDragIndex.idx].r;
                         if (curQ !== currentHex.q || curR !== currentHex.r) {
-                            this.pushHistoryIfNeeded();
+                            this.historyManager.pushIfNeeded();
                             this.roadDragIndex.group.forEach(i => {
                                 road.waypoints[i].q = currentHex.q;
                                 road.waypoints[i].r = currentHex.r;
@@ -1920,7 +1846,7 @@ export class HexCartographerView extends ItemView {
                         const curQ = river.waypoints[this.riverDragIndex.idx].q;
                         const curR = river.waypoints[this.riverDragIndex.idx].r;
                         if (curQ !== currentHex.q || curR !== currentHex.r) {
-                            this.pushHistoryIfNeeded();
+                            this.historyManager.pushIfNeeded();
                             this.riverDragIndex.group.forEach(i => {
                                 river.waypoints[i].q = currentHex.q;
                                 river.waypoints[i].r = currentHex.r;
@@ -2085,8 +2011,8 @@ export class HexCartographerView extends ItemView {
                 if (this.isMouseDown && !this.touchState.hasMovedSinceStart) {
                     this.isMouseDown = false;
                     this.draggedText = null;
-                    if (this.history.length > 0 && !this.touchState.hasMovedSinceStart) {
-                        this.history.pop(); // Entferne den History-Eintrag vom Touch-Start
+                    if (!this.touchState.hasMovedSinceStart) {
+                        this.historyManager.dropLast();
                     }
                 }
 
@@ -2137,7 +2063,7 @@ export class HexCartographerView extends ItemView {
                             this.touchState.lastTouchY = this.touchState.pendingTouchStart.touch.clientY;
                         }
                         const world = this.getWorldCoords(this.touchState.pendingTouchStart.mouseEvent);
-                        this.pendingHistory = true;
+                        this.historyManager.markPending();
                         this.isMouseDown = true;
                         this.mouseDownPos = { x: world.x, y: world.y };
                         this.startHex = this.pixelToHex(world.x, world.y);
@@ -2238,7 +2164,7 @@ export class HexCartographerView extends ItemView {
 
                         let hitText = this.getTextAt(world.x, world.y);
                         if (hitText && this.currentToolGroup === 'text' && this.drawMode === 'none') {
-                            this.pushHistoryIfNeeded();
+                            this.historyManager.pushIfNeeded();
                             this.draggedText = hitText;
                         } else {
                             this.processInput(this.touchState.pendingTouchStart.mouseEvent, true);
@@ -2330,7 +2256,7 @@ export class HexCartographerView extends ItemView {
                             const curQ = road.waypoints[this.roadDragIndex.idx].q;
                             const curR = road.waypoints[this.roadDragIndex.idx].r;
                             if (curQ !== currentHex.q || curR !== currentHex.r) {
-                                this.pushHistoryIfNeeded();
+                                this.historyManager.pushIfNeeded();
                                 this.roadDragIndex.group.forEach(i => {
                                     road.waypoints[i].q = currentHex.q;
                                     road.waypoints[i].r = currentHex.r;
@@ -2345,7 +2271,7 @@ export class HexCartographerView extends ItemView {
                             const curQ = river.waypoints[this.riverDragIndex.idx].q;
                             const curR = river.waypoints[this.riverDragIndex.idx].r;
                             if (curQ !== currentHex.q || curR !== currentHex.r) {
-                                this.pushHistoryIfNeeded();
+                                this.historyManager.pushIfNeeded();
                                 this.riverDragIndex.group.forEach(i => {
                                     river.waypoints[i].q = currentHex.q;
                                     river.waypoints[i].r = currentHex.r;
@@ -2376,7 +2302,7 @@ export class HexCartographerView extends ItemView {
 
                 if (this.touchState.pendingTouchStart && !this.isMouseDown) {
                     const world = this.getWorldCoords(this.touchState.pendingTouchStart.mouseEvent);
-                    this.pendingHistory = true;
+                    this.historyManager.markPending();
                     this.isMouseDown = true;
                     this.mouseDownPos = { x: world.x, y: world.y };
                     this.startHex = this.pixelToHex(world.x, world.y);
@@ -2480,7 +2406,7 @@ export class HexCartographerView extends ItemView {
 
                     let hitText = this.getTextAt(world.x, world.y);
                     if (hitText && this.currentToolGroup === 'text' && this.drawMode === 'none') {
-                        this.pushHistoryIfNeeded();
+                        this.historyManager.pushIfNeeded();
                         this.draggedText = hitText;
                     } else {
                         this.processInput(this.touchState.pendingTouchStart.mouseEvent, true);
@@ -2573,7 +2499,7 @@ export class HexCartographerView extends ItemView {
                         this.touchState.lastTapHex &&
                         this.touchState.lastTapHex.q === tapHex.q &&
                         this.touchState.lastTapHex.r === tapHex.r) {
-                        if (this.history.length > 0) this.history.pop();
+                        this.historyManager.dropLast();
                         this.handleEraserFlood(tapHex);
                         this.render();
                         this.requestSave();
@@ -2630,7 +2556,7 @@ export class HexCartographerView extends ItemView {
     hexLerp(a, b, t) { return hexLerp(a, b, t); }
 
     processInput(e, isInitial) {
-        this.pushHistoryIfNeeded();
+        this.historyManager.pushIfNeeded();
         const world = this.getWorldCoords(e);
         if (!isFinite(world.x) || !isFinite(world.y) || Math.abs(world.x) > 1e6 || Math.abs(world.y) > 1e6) {
             console.warn('Rejected processInput: implausible world coords', world);
