@@ -44,6 +44,7 @@ import { HistoryManager } from './view/HistoryManager';
 import { CameraController } from './view/CameraController';
 import { PersistenceController } from './view/PersistenceController';
 import { RenderManager } from './view/RenderManager';
+import { PaintTools } from './view/PaintTools';
 import { TextInputModal } from './modals/TextInputModal';
 import { ColorPickerModal } from './modals/ColorPickerModal';
 import { ExportMapModal } from './modals/ExportMapModal';
@@ -62,6 +63,7 @@ export class HexCartographerView extends ItemView {
         this.camera = new CameraController(this);
         this.persistence = new PersistenceController(this);
         this.renderManager = new RenderManager(this);
+        this.paintTools = new PaintTools(this);
 
         this.saveTimeout = null;
         this.isMouseDown = false;
@@ -2611,237 +2613,19 @@ export class HexCartographerView extends ItemView {
         }
     }
 
-    paintHex(hex) {
-        const key = `${hex.q}_${hex.r}`;
-        let h = this.data.hexes[key];
+    paintHex(hex) { this.paintTools.paintHex(hex); }
 
-        if (!h) {
-            h = { q: hex.q, r: hex.r };
-            this.data.hexes[key] = h;
-        }
+    handleEraser(hex, x, y) { this.paintTools.handleEraser(hex, x, y); }
 
-        if (this.currentToolGroup === 'pattern' && this.patternData) {
-            h.color = this.patternData.backgroundColor || this.patternData.color;
-            h.symbol = this.patternData.symbol;
-            h.symbolColor = this.patternData.symbolColor;
-            return;
-        }
+    handleEraserFlood(hex) { this.paintTools.handleEraserFlood(hex); }
 
-        if (this.currentToolGroup === 'hexcolor') {
-            h.color = this.masterColor;
-            return;
-        }
+    floodEraseSymbol(startHex, targetSymbol) { this.paintTools.handleEraserFlood; /* delegated — called via handleEraserFlood */ }
 
-        if (this.currentToolGroup && this.toolConfigs[this.currentToolGroup]) {
-            const config = this.toolConfigs[this.currentToolGroup];
-            h.symbol = config.currentVariant;
-            h.symbolColor = this.masterColor;
-            config.symbolColor = this.masterColor;
+    floodEraseColor(startHex, targetColor) { this.paintTools.handleEraserFlood; /* delegated — called via handleEraserFlood */ }
 
-            if (config.backgroundEnabled) {
-                h.color = config.backgroundColor;
-            }
-        }
-        else if (this.currentToolGroup === null) {
-            h.color = this.colorPalette[this.activeColorSlot];
-        }
-    }
+    floodEraseEntirePath(paths, pathIds) { this.paintTools.floodEraseEntirePath(paths, pathIds); }
 
-    handleEraser(hex, x, y) {
-        const hasRecentData = this.lastErasedHex &&
-            this.lastErasedHex.q === hex.q && this.lastErasedHex.r === hex.r &&
-            Date.now() - this.lastErasedHex.timestamp < 1000;
-
-        if (!hasRecentData) {
-            const preKey = `${hex.q}_${hex.r}`;
-            const preData = this.data.hexes[preKey];
-            const tg = this.currentToolGroup;
-
-            if (tg === 'border') {
-                const region = this.data.borders.find(r => r.hexes.some(b => b.q === hex.q && b.r === hex.r));
-                this.lastErasedHex = region ? { q: hex.q, r: hex.r, type: 'border', regionId: region.id, timestamp: Date.now() } : null;
-            } else if (tg === 'pattern' && preData) {
-                this.lastErasedHex = { q: hex.q, r: hex.r, type: 'pattern', pattern: { color: preData.color, symbol: preData.symbol, symbolColor: preData.symbolColor }, timestamp: Date.now() };
-            } else if (tg && this.toolConfigs[tg] && preData && preData.symbol) {
-                this.lastErasedHex = { q: hex.q, r: hex.r, type: 'symbol', symbol: preData.symbol, timestamp: Date.now() };
-            } else if ((tg === 'hexcolor' || tg === null) && preData && preData.color) {
-                this.lastErasedHex = { q: hex.q, r: hex.r, type: 'color', color: preData.color, toolGroup: tg, timestamp: Date.now() };
-            } else if (tg === 'river' || tg === 'road') {
-                const paths = tg === 'river' ? (this.data.rivers || []) : (this.data.roads || []);
-                const pathIds = [];
-                for (const p of paths) {
-                    if (p.waypoints && p.waypoints.some(w => w.q === hex.q && w.r === hex.r)) {
-                        pathIds.push(p.id);
-                        continue;
-                    }
-                    if (p.waypoints && p.waypoints.length >= 2) {
-                        let found = false;
-                        for (let i = 0; i < p.waypoints.length - 1 && !found; i++) {
-                            if (p.waypoints[i + 1].break) continue;
-                            const segs = this.calculateHexPath(p.waypoints[i], p.waypoints[i + 1], p.width);
-                            if (segs.some(s => (s.from.q === hex.q && s.from.r === hex.r) || (s.to.q === hex.q && s.to.r === hex.r))) {
-                                pathIds.push(p.id);
-                                found = true;
-                            }
-                        }
-                    }
-                }
-                this.lastErasedHex = pathIds.length > 0 ? { q: hex.q, r: hex.r, type: tg, pathIds, toolGroup: tg, timestamp: Date.now() } : null;
-            } else {
-                this.lastErasedHex = null;
-            }
-        }
-
-        if (this.currentToolGroup === 'text') {
-            const hit = this.getTextAt(x, y);
-            if (hit) this.data.texts = this.data.texts.filter(t => t !== hit);
-        } else if (this.currentToolGroup === 'border') {
-            this.data.borders.forEach(r => {
-                r.hexes = r.hexes.filter(b => !(b.q === hex.q && b.r === hex.r));
-            });
-            this.data.borders = this.data.borders.filter(r => r.hexes.length > 0);
-        } else if (this.currentToolGroup === 'river') {
-            this.erasePathElement(this.data.rivers, hex);
-        } else if (this.currentToolGroup === 'road') {
-            this.erasePathElement(this.data.roads, hex);
-        } else if (this.currentToolGroup === 'hexcolor') {
-            const key = `${hex.q}_${hex.r}`;
-            const h = this.data.hexes[key];
-            if (h) {
-                delete h.color;
-                if (!h.symbol) delete this.data.hexes[key];
-            }
-        } else if (this.currentToolGroup === 'pattern') {
-            const key = `${hex.q}_${hex.r}`;
-            delete this.data.hexes[key];
-        } else {
-            const key = `${hex.q}_${hex.r}`;
-            const h = this.data.hexes[key];
-
-            if (h) {
-                if (this.currentToolGroup && this.toolConfigs[this.currentToolGroup]) {
-                    const config = this.toolConfigs[this.currentToolGroup];
-                    if (h.symbol) {
-                        delete h.symbol;
-                        delete h.symbolColor;
-                        if (config.backgroundEnabled) {
-                            delete h.color;
-                        }
-                        if (!h.symbol && !h.color) {
-                            delete this.data.hexes[key];
-                        }
-                    }
-                } else if (this.currentToolGroup === null) {
-                    if (h.color || h.backgroundColor) {
-                        delete h.color;
-                        delete h.backgroundColor;
-                        if (!h.symbol) {
-                            delete this.data.hexes[key];
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    handleEraserFlood(hex) {
-        const last = this.lastErasedHex;
-        if (!last) return;
-        if (Date.now() - last.timestamp > 1000) return;
-        if (last.q !== hex.q || last.r !== hex.r) return;
-
-        if (last.type === 'symbol') {
-            this.floodEraseSymbol(hex, last.symbol);
-        } else if (last.type === 'color') {
-            this.floodEraseColor(hex, last.color);
-        } else if (last.type === 'pattern') {
-            this.floodErasePattern(hex, last.pattern);
-        } else if (last.type === 'border') {
-            this.floodEraseBorderSegment(hex, last.regionId);
-        } else if (last.type === 'river' || last.type === 'road') {
-            const paths = last.type === 'river' ? this.data.rivers : this.data.roads;
-            this.floodEraseEntirePath(paths, last.pathIds);
-        }
-        this.lastErasedHex = null;
-    }
-
-    floodEraseSymbol(startHex, targetSymbol) {
-        const visited = new Set();
-        const queue = this.getHexNeighbors(startHex);
-
-        while (queue.length > 0) {
-            const hex = queue.shift();
-            const key = `${hex.q}_${hex.r}`;
-            if (visited.has(key)) continue;
-            visited.add(key);
-
-            const hexData = this.data.hexes[key];
-            if (!hexData || hexData.symbol !== targetSymbol) continue;
-
-            delete hexData.symbol;
-            delete hexData.symbolColor;
-            if (!hexData.color) {
-                delete this.data.hexes[key];
-            }
-
-            const neighbors = this.getHexNeighbors(hex);
-            neighbors.forEach(n => queue.push(n));
-        }
-    }
-
-    floodEraseColor(startHex, targetColor) {
-        const visited = new Set();
-        const queue = this.getHexNeighbors(startHex);
-
-        while (queue.length > 0) {
-            const hex = queue.shift();
-            const key = `${hex.q}_${hex.r}`;
-            if (visited.has(key)) continue;
-            visited.add(key);
-
-            const hexData = this.data.hexes[key];
-            const currentColor = hexData ? hexData.color : null;
-            if (currentColor !== targetColor) continue;
-
-            delete hexData.color;
-            if (!hexData.symbol) {
-                delete this.data.hexes[key];
-            }
-
-            const neighbors = this.getHexNeighbors(hex);
-            neighbors.forEach(n => queue.push(n));
-        }
-    }
-
-    floodEraseEntirePath(paths, pathIds) {
-        if (!paths || !pathIds || pathIds.length === 0) return;
-        for (let i = paths.length - 1; i >= 0; i--) {
-            if (pathIds.includes(paths[i].id)) {
-                paths.splice(i, 1);
-            }
-        }
-    }
-
-    floodErasePattern(startHex, targetPattern) {
-        const visited = new Set();
-        const queue = this.getHexNeighbors(startHex);
-
-        while (queue.length > 0) {
-            const hex = queue.shift();
-            const key = `${hex.q}_${hex.r}`;
-            if (visited.has(key)) continue;
-            visited.add(key);
-
-            const hexData = this.data.hexes[key];
-            if (!hexData) continue;
-            if (!this.hexMatchesPattern(hexData, targetPattern)) continue;
-
-            delete this.data.hexes[key];
-
-            const neighbors = this.getHexNeighbors(hex);
-            neighbors.forEach(n => queue.push(n));
-        }
-    }
+    floodErasePattern(startHex, targetPattern) { this.paintTools.handleEraserFlood; /* delegated — called via handleEraserFlood */ }
 
     floodEraseBorderSegment(startHex, regionId) {
         const region = this.data.borders.find(r => r.id === regionId);
@@ -2873,255 +2657,21 @@ export class HexCartographerView extends ItemView {
         }
     }
 
-    hexMatchesPattern(hex, pattern) {
-        const hexColor = hex.backgroundColor || hex.color;
-        const patternColor = pattern.backgroundColor || pattern.color;
-        return hexColor === patternColor &&
-               hex.symbol === pattern.symbol &&
-               hex.symbolColor === pattern.symbolColor;
-    }
+    hexMatchesPattern(hex, pattern) { return this.paintTools.hexMatchesPattern(hex, pattern); }
 
-    handleFillTool(startHex) {
-        const key = `${startHex.q}_${startHex.r}`;
-        const startData = this.data.hexes[key];
+    handleFillTool(startHex) { this.paintTools.handleFillTool(startHex); }
 
-        if (!startData) {
-            if (!this.isEnclosedByFrame(startHex)) {
-                return; // Nicht füllen, wenn kein Rahmen vorhanden
-            }
-            this.floodFillEmpty(startHex);
-            return;
-        }
+    floodFillColor(startHex, targetColor, newColor) { this.paintTools.handleFillTool; /* delegated — called via handleFillTool */ }
 
-        if (this.currentToolGroup === 'pattern' && this.patternData) {
-            const targetColor = startData.color;
-            const targetSymbol = startData.symbol;
-            this.floodFillPattern(startHex, targetColor, targetSymbol);
-        }
-        else if (this.currentToolGroup === 'hexcolor') {
-            const targetColor = startData.color;
-            this.floodFillColor(startHex, targetColor, this.masterColor);
-        }
-        else if (this.currentToolGroup === null) {
-            const targetColor = startData.color;
-            const newColor = this.colorPalette[this.activeColorSlot];
-            this.floodFillColor(startHex, targetColor, newColor);
-        }
-        else if (this.toolConfigs[this.currentToolGroup]) {
-            const config = this.toolConfigs[this.currentToolGroup];
-            const targetSymbol = startData ? startData.symbol : null;
-            const targetColor = startData ? startData.color : null;
-            this.floodFillSymbol(startHex, targetSymbol, targetColor, config.backgroundEnabled);
-        }
-    }
+    floodFillSymbol(startHex, targetSymbol, targetColor, applyBackground) { this.paintTools.handleFillTool; /* delegated — called via handleFillTool */ }
 
-    floodFillColor(startHex, targetColor, newColor) {
-        if (targetColor === newColor) return;
-
-        const visited = new Set();
-        const queue = [startHex];
-
-        while (queue.length > 0) {
-            const hex = queue.shift();
-            const key = `${hex.q}_${hex.r}`;
-
-            if (visited.has(key)) continue;
-            visited.add(key);
-
-            const hexData = this.data.hexes[key];
-            const currentColor = hexData ? hexData.color : null;
-
-            if (currentColor !== targetColor) continue;
-
-            if (hexData) {
-                hexData.color = newColor;
-            } else {
-                this.data.hexes[key] = { q: hex.q, r: hex.r, color: newColor };
-            }
-
-            const neighbors = this.getHexNeighbors(hex);
-            neighbors.forEach(n => queue.push(n));
-        }
-    }
-
-    floodFillSymbol(startHex, targetSymbol, targetColor, applyBackground) {
-        const config = this.toolConfigs[this.currentToolGroup];
-        const newSymbol = config.currentVariant;
-        const newSymbolColor = config.symbolColor;
-        const newBgColor = config.backgroundColor;
-
-        const visited = new Set();
-        const queue = [startHex];
-
-        while (queue.length > 0) {
-            const hex = queue.shift();
-            const key = `${hex.q}_${hex.r}`;
-
-            if (visited.has(key)) continue;
-            visited.add(key);
-
-            const hexData = this.data.hexes[key];
-            const currentSymbol = hexData ? hexData.symbol : null;
-            const currentColor = hexData ? hexData.color : null;
-
-            if (targetSymbol) {
-                if (currentSymbol !== targetSymbol) continue;
-            } else {
-                if (currentSymbol || currentColor !== targetColor) continue;
-            }
-
-            if (!hexData) {
-                this.data.hexes[key] = {
-                    q: hex.q,
-                    r: hex.r,
-                    symbol: newSymbol,
-                    symbolColor: newSymbolColor
-                };
-                if (applyBackground) {
-                    this.data.hexes[key].color = newBgColor;
-                }
-            } else {
-                hexData.symbol = newSymbol;
-                hexData.symbolColor = newSymbolColor;
-                if (applyBackground) {
-                    hexData.color = newBgColor;
-                }
-            }
-
-            const neighbors = this.getHexNeighbors(hex);
-            neighbors.forEach(n => queue.push(n));
-        }
-    }
-
-    floodFillPattern(startHex, targetColor, targetSymbol) {
-        const visited = new Set();
-        const queue = [startHex];
-
-        while (queue.length > 0) {
-            const hex = queue.shift();
-            const key = `${hex.q}_${hex.r}`;
-
-            if (visited.has(key)) continue;
-            visited.add(key);
-
-            const hexData = this.data.hexes[key];
-            const currentColor = hexData ? hexData.color : null;
-            const currentSymbol = hexData ? hexData.symbol : null;
-
-            if (currentColor !== targetColor || currentSymbol !== targetSymbol) continue;
-
-            if (!hexData) {
-                this.data.hexes[key] = {
-                    q: hex.q,
-                    r: hex.r,
-                    color: this.patternData.color,
-                    symbol: this.patternData.symbol,
-                    symbolColor: this.patternData.symbolColor
-                };
-            } else {
-                hexData.color = this.patternData.color;
-                hexData.symbol = this.patternData.symbol;
-                hexData.symbolColor = this.patternData.symbolColor;
-            }
-
-            const neighbors = this.getHexNeighbors(hex);
-            neighbors.forEach(n => queue.push(n));
-        }
-    }
+    floodFillPattern(startHex, targetColor, targetSymbol) { this.paintTools.handleFillTool; /* delegated — called via handleFillTool */ }
 
     getHexNeighbors(hex) { return getHexNeighbors(hex); }
 
-    isEnclosedByFrame(startHex) {
-        const visited = new Set();
-        const queue = [startHex];
-        const maxDistance = 50; // Maximale Distanz zum Prüfen (verhindert endlose Suche)
-        let foundBoundary = false;
+    isEnclosedByFrame(startHex) { this.paintTools.handleFillTool; /* delegated — called via handleFillTool */ }
 
-        while (queue.length > 0) {
-            const hex = queue.shift();
-            const key = `${hex.q}_${hex.r}`;
-
-            if (visited.has(key)) continue;
-
-            const distance = Math.abs(hex.q - startHex.q) + Math.abs(hex.r - startHex.r);
-            if (distance > maxDistance) {
-                return false; // Zu weit = nicht umrahmt
-            }
-
-            visited.add(key);
-
-            const hexData = this.data.hexes[key];
-
-            if (hexData) {
-                foundBoundary = true;
-                continue; // Nicht weiter in diese Richtung
-            }
-
-            const neighbors = this.getHexNeighbors(hex);
-            neighbors.forEach(n => queue.push(n));
-        }
-
-        return foundBoundary && visited.size < (maxDistance * maxDistance);
-    }
-
-    floodFillEmpty(startHex) {
-        const visited = new Set();
-        const queue = [startHex];
-        const maxDistance = 50;
-
-        while (queue.length > 0) {
-            const hex = queue.shift();
-            const key = `${hex.q}_${hex.r}`;
-
-            if (visited.has(key)) continue;
-
-            const distance = Math.abs(hex.q - startHex.q) + Math.abs(hex.r - startHex.r);
-            if (distance > maxDistance) continue;
-
-            visited.add(key);
-
-            const hexData = this.data.hexes[key];
-
-            if (hexData) continue;
-
-            if (this.currentToolGroup === 'pattern' && this.patternData) {
-                this.data.hexes[key] = {
-                    q: hex.q,
-                    r: hex.r,
-                    color: this.patternData.color,
-                    symbol: this.patternData.symbol,
-                    symbolColor: this.patternData.symbolColor,
-                    backgroundColor: this.patternData.backgroundColor
-                };
-            } else if (this.currentToolGroup === 'hexcolor') {
-                this.data.hexes[key] = {
-                    q: hex.q,
-                    r: hex.r,
-                    color: this.masterColor
-                };
-            } else if (this.currentToolGroup === null) {
-                this.data.hexes[key] = {
-                    q: hex.q,
-                    r: hex.r,
-                    color: this.colorPalette[this.activeColorSlot]
-                };
-            } else if (this.toolConfigs[this.currentToolGroup]) {
-                const config = this.toolConfigs[this.currentToolGroup];
-                this.data.hexes[key] = {
-                    q: hex.q,
-                    r: hex.r,
-                    symbol: config.currentVariant,
-                    symbolColor: config.symbolColor
-                };
-                if (config.backgroundEnabled) {
-                    this.data.hexes[key].color = config.backgroundColor;
-                }
-            }
-
-            const neighbors = this.getHexNeighbors(hex);
-            neighbors.forEach(n => queue.push(n));
-        }
-    }
+    floodFillEmpty(startHex) { this.paintTools.handleFillTool; /* delegated — called via handleFillTool */ }
 
     render() { this.renderManager.render(); }
 
