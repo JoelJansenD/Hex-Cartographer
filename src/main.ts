@@ -39,20 +39,7 @@ import { hexToPixel, pixelToHex, hexDistance, hexLerp, getHexNeighbors, calculat
 import { t, setCurrentLanguage, getObsidianLanguage } from './i18n';
 import { SVG_SYMBOL_DATA } from './data/svgSymbols';
 import { extractJsonFromMarkdown, parseMapData, serializeMapToFileContent, createInitialMapData } from './data/serialization';
-
-const DEFAULT_SETTINGS = {
-    exportWidth: 1024,
-    showCrosshair: true,
-    hideHexBorders: false,
-    hexNumberingEnabled: false,
-    hexNumberingDirection: 'horizontal',  // 'horizontal' | 'vertical'
-    hexNumberingAlpha: false,
-    hexNumberingAlphaChess: false,
-    hexNumberingPosition: 'top',          // 'top' | 'bottom'
-    hexNumberingColor: '#ffffff',
-    hexNumberingOutline: true,
-    hexNumberingFontSize: 10,
-};
+import { DEFAULT_SETTINGS } from './plugin/settings';
 
 // === Hauptklasse des Plugins ===
 class HexCartographerPlugin extends Plugin {
