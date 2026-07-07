@@ -36,6 +36,7 @@ import {
     SVG_SYMBOL_CONFIG
 } from './constants';
 import { rgbToHex, hsbToHex, hexToHsb } from './utils/color';
+import { hexToPixel, pixelToHex, hexDistance, hexLerp, getHexNeighbors, calculateHexPath } from './utils/hexMath';
 
 // === Übersetzungen ===
 function getObsidianLanguage() {
@@ -5378,31 +5379,11 @@ class HexCartographerView extends ItemView {
         }, { passive: false });
     }
 
-    calculateHexPath(start, end, width) {
-        if (!start || !end) return [];
-        const path = [];
-        const n = this.hexDistance(start, end);
-        let prev = start;
-        for (let i = 1; i <= n; i++) {
-            const next = this.hexLerp(start, end, i / n);
-            path.push({ from: {q: prev.q, r: prev.r}, to: {q: next.q, r: next.r}, width: width });
-            prev = next;
-        }
-        return path;
-    }
+    calculateHexPath(start, end, width) { return calculateHexPath(start, end, width); }
 
-    hexDistance(a, b) {
-        return (Math.abs(a.q - b.q) + Math.abs(a.q + a.r - b.q - b.r) + Math.abs(a.r - b.r)) / 2;
-    }
+    hexDistance(a, b) { return hexDistance(a, b); }
 
-    hexLerp(a, b, t) {
-        const q = a.q + (b.q - a.q) * t, r = a.r + (b.r - a.r) * t;
-        let rq = Math.round(q), rr = Math.round(r), rs = Math.round(-q-r);
-        const qd = Math.abs(rq - q), rd = Math.abs(rr - r), sd = Math.abs(rs - (-q-r));
-        if (qd > rd && qd > sd) rq = -rr-rs;
-        else if (rd > sd) rr = -rq-rs;
-        return { q: rq, r: rr };
-    }
+    hexLerp(a, b, t) { return hexLerp(a, b, t); }
 
     processInput(e, isInitial) {
         this.pushHistoryIfNeeded();
@@ -6100,13 +6081,7 @@ class HexCartographerView extends ItemView {
         }
     }
 
-    getHexNeighbors(hex) {
-        const directions = [
-            {q: 1, r: 0}, {q: 1, r: -1}, {q: 0, r: -1},
-            {q: -1, r: 0}, {q: -1, r: 1}, {q: 0, r: 1}
-        ];
-        return directions.map(d => ({ q: hex.q + d.q, r: hex.r + d.r }));
-    }
+    getHexNeighbors(hex) { return getHexNeighbors(hex); }
 
     isEnclosedByFrame(startHex) {
         const visited = new Set();
@@ -7503,53 +7478,9 @@ class HexCartographerView extends ItemView {
         return { minQ, maxQ, minR, maxR };
     }
 
-    hexToPixel(h) {
-        const s = this.data.gridSize;
-        if (this.hexOrientation) {
-            return {
-                x: s * (3/2 * h.q),
-                y: s * (Math.sqrt(3)/2 * h.q + Math.sqrt(3) * h.r)
-            };
-        }
-        return {
-            x: s * (Math.sqrt(3) * h.q + Math.sqrt(3)/2 * h.r),
-            y: s * (3/2 * h.r)
-        };
-    }
+    hexToPixel(h) { return hexToPixel(h, this.data.gridSize, this.hexOrientation); }
 
-    pixelToHex(x, y) {
-        const s = this.data.gridSize;
-        let q, r;
-        if (this.hexOrientation) {
-            q = (2/3 * x) / s;
-            r = (-1/3 * x + Math.sqrt(3)/3 * y) / s;
-        } else {
-            q = (Math.sqrt(3)/3 * x - 1/3 * y) / s;
-            r = (2/3 * y) / s;
-        }
-
-        const cubeX = q;
-        const cubeZ = r;
-        const cubeY = -cubeX - cubeZ;
-
-        let rx = Math.round(cubeX);
-        let ry = Math.round(cubeY);
-        let rz = Math.round(cubeZ);
-
-        const xDiff = Math.abs(rx - cubeX);
-        const yDiff = Math.abs(ry - cubeY);
-        const zDiff = Math.abs(rz - cubeZ);
-
-        if (xDiff > yDiff && xDiff > zDiff) {
-            rx = -ry - rz;
-        } else if (yDiff > zDiff) {
-            ry = -rx - rz;
-        } else {
-            rz = -rx - ry;
-        }
-
-        return { q: rx, r: rz };
-    }
+    pixelToHex(x, y) { return pixelToHex(x, y, this.data.gridSize, this.hexOrientation); }
 
     async onClose() {
         if (this.resizeObserver) this.resizeObserver.disconnect();
