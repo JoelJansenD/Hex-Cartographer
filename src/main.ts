@@ -45,6 +45,7 @@ import { CameraController } from './view/CameraController';
 import { PersistenceController } from './view/PersistenceController';
 import { RenderManager } from './view/RenderManager';
 import { PaintTools } from './view/PaintTools';
+import { PathTools } from './view/PathTools';
 import { TextInputModal } from './modals/TextInputModal';
 import { ColorPickerModal } from './modals/ColorPickerModal';
 import { ExportMapModal } from './modals/ExportMapModal';
@@ -64,6 +65,7 @@ export class HexCartographerView extends ItemView {
         this.persistence = new PersistenceController(this);
         this.renderManager = new RenderManager(this);
         this.paintTools = new PaintTools(this);
+        this.pathTools = new PathTools(this);
 
         this.saveTimeout = null;
         this.isMouseDown = false;
@@ -1015,188 +1017,15 @@ export class HexCartographerView extends ItemView {
         }, 0);
     }
 
-    handleWaypointClick(path, settings, clickedIdx) {
-        const now = Date.now();
-        const isDouble = this.lastWaypointClick &&
-                         this.lastWaypointClick.pathId === path.id &&
-                         this.lastWaypointClick.idx === clickedIdx &&
-                         (now - this.lastWaypointClick.time) < 400;
-        if (isDouble) {
-            const anchorIdx = this.lastWaypointClick.previousInsertAfter;
-            if (anchorIdx !== null && anchorIdx !== undefined && anchorIdx !== clickedIdx) {
-                const fromWp = path.waypoints[anchorIdx];
-                const toWp = path.waypoints[clickedIdx];
-                if (fromWp && toWp && (fromWp.q !== toWp.q || fromWp.r !== toWp.r)) {
-                    path.waypoints.push({ q: fromWp.q, r: fromWp.r, break: true });
-                    path.waypoints.push({ q: toWp.q, r: toWp.r });
-                    settings.insertAfter = path.waypoints.length - 1;
-                }
-            }
-            this.lastWaypointClick = null;
-        } else {
-            this.lastWaypointClick = {
-                pathId: path.id,
-                idx: clickedIdx,
-                time: now,
-                previousInsertAfter: settings.insertAfter
-            };
-            settings.insertAfter = clickedIdx;
-        }
-        this.render();
-        this.requestSave();
-    }
+    handleWaypointClick(path, settings, clickedIdx) { this.pathTools.handleWaypointClick(path, settings, clickedIdx); }
 
-    completePathPick(path, type) {
-        this.exitPathEditMode();
-        this.pathPickPending = null;
-        if (type === 'river') {
-            this.currentToolGroup = 'river';
-            this.riverSettings.activeRiverId = path.id;
-            this.riverSettings.width = path.width;
-            this.riverSettings.editMode = true;
-            this.riverSettings.insertAfter = path.waypoints.length - 1;
-            this.masterColor = path.color;
-            if (this.masterColorInput) { this.masterColorInput.value = this.masterColor; if (this.masterColorBtn) this.masterColorBtn.style.backgroundColor = this.masterColor; }
-            if (this.riverWidthInput) this.riverWidthInput.value = path.width.toString();
-            this.pathDashes = path.dashes || DEFAULT_PATH_DASHES;
-            if (this.pathDashesInput) this.pathDashesInput.value = this.pathDashes.toString();
-            new Notice(t('notice.riverSelected', { id: path.id }));
-        } else {
-            this.currentToolGroup = 'road';
-            this.roadSettings.activeRoadId = path.id;
-            this.roadSettings.width = path.width;
-            this.roadSettings.editMode = true;
-            this.roadSettings.insertAfter = path.waypoints.length - 1;
-            this.masterColor = path.color;
-            if (this.masterColorInput) { this.masterColorInput.value = this.masterColor; if (this.masterColorBtn) this.masterColorBtn.style.backgroundColor = this.masterColor; }
-            if (this.roadWidthInput) this.roadWidthInput.value = path.width.toString();
-            this.pathDashes = path.dashes || DEFAULT_PATH_DASHES;
-            if (this.pathDashesInput) this.pathDashesInput.value = this.pathDashes.toString();
-            new Notice(t('notice.roadSelected', { id: path.id }));
-        }
-        this.lastToolGroup = null;
-        this.pathPickMode = false;
-        if (this.pathPickerBtn) {
-            this.pathPickerBtn.style.background = BUTTON_BG_DEFAULT;
-            this.pathPickerBtn.style.color = '';
-        }
-        this.drawMode = 'pen';
-        const toolbar = this.containerEl.querySelector('.hex-toolbar');
-        if (toolbar) this.updateToolbarState(toolbar);
-        this.render();
-        this.requestSave();
-    }
+    completePathPick(path, type) { this.pathTools.completePathPick(path, type); }
 
-    pickPathAtHex(hex) {
-        this.pathPickPending = null;
-        const foundRiver = this.findRiverAtHex(hex);
-        const foundRoad = this.findRoadAtHex(hex);
+    pickPathAtHex(hex) { this.pathTools.pickPathAtHex(hex); }
 
-        if (foundRiver && foundRoad) {
-            this.pathPickPending = { river: foundRiver, road: foundRoad };
-            new Notice(t('notice.chooseRiverOrRoad'));
-            const toolbar = this.containerEl.querySelector('.hex-toolbar');
-            if (toolbar) this.updateToolbarState(toolbar);
-            return;
-        }
+    updateActivePathColor() { this.pathTools.updateActivePathColor(); }
 
-        if (foundRiver) {
-            this.completePathPick(foundRiver, 'river');
-        } else if (foundRoad) {
-            this.completePathPick(foundRoad, 'road');
-        } else {
-            this.currentToolGroup = this.lastToolGroup;
-            if (this.currentToolGroup === 'hexcolor') {
-                this.masterColor = this.hexColorColor;
-            } else if (this.currentToolGroup && this.toolConfigs[this.currentToolGroup]) {
-                this.masterColor = this.toolConfigs[this.currentToolGroup].symbolColor;
-            }
-            this.lastToolGroup = null;
-            this.pathPickMode = false;
-            if (this.pathPickerBtn) {
-                this.pathPickerBtn.style.background = BUTTON_BG_DEFAULT;
-                this.pathPickerBtn.style.color = '';
-            }
-            this.drawMode = 'pen';
-            const toolbar = this.containerEl.querySelector('.hex-toolbar');
-            if (toolbar) this.updateToolbarState(toolbar);
-            this.render();
-        }
-    }
-
-    updateActivePathColor() {
-        if (this.riverSettings.editMode) {
-            const river = this.data.rivers && this.data.rivers.find(r => r.id === this.riverSettings.activeRiverId);
-            if (river) { river.color = this.masterColor; this.render(); this.requestSave(); }
-        }
-        if (this.roadSettings.editMode) {
-            const road = this.data.roads && this.data.roads.find(r => r.id === this.roadSettings.activeRoadId);
-            if (road) { road.color = this.masterColor; this.render(); this.requestSave(); }
-        }
-        if (this.borderSettings.activeRegionId !== null && this.currentToolGroup === 'border') {
-            const region = this.data.borders && this.data.borders.find(r => r.id === this.borderSettings.activeRegionId);
-            if (region) { region.color = this.masterColor; this.render(); this.requestSave(); }
-        }
-        if (this.currentToolGroup === 'hexcolor') {
-            this.hexColorColor = this.masterColor;
-            const toolbar = this.containerEl.querySelector('.hex-toolbar');
-            if (toolbar) this.updateToolbarState(toolbar);
-        } else if (this.currentToolGroup && this.toolConfigs[this.currentToolGroup]) {
-            this.toolConfigs[this.currentToolGroup].symbolColor = this.masterColor;
-            const toolbar = this.containerEl.querySelector('.hex-toolbar');
-            if (toolbar) this.updateToolbarState(toolbar);
-        }
-    }
-
-    exitPathEditMode() {
-        let changed = false;
-        for (const settings of [this.riverSettings, this.roadSettings]) {
-            if (settings.editMode) {
-                const isRiver = settings === this.riverSettings;
-                const activeIdKey = isRiver ? 'activeRiverId' : 'activeRoadId';
-                const arr = isRiver ? this.data.rivers : this.data.roads;
-                const activeId = settings[activeIdKey];
-                if (activeId != null && arr) {
-                    const idx = arr.findIndex(p => p.id === activeId);
-                    if (idx !== -1 && arr[idx].waypoints.length < 2) {
-                        arr.splice(idx, 1);
-                    }
-                }
-                settings.editMode = false;
-                settings[activeIdKey] = null;
-                settings.insertAfter = null;
-                changed = true;
-            }
-        }
-        if (this.pathPickerBtn) {
-            setIcon(this.pathPickerBtn, 'mouse-pointer');
-            this.pathPickerBtn.style.background = BUTTON_BG_DEFAULT;
-            this.pathPickerBtn.style.color = '';
-            this.pathPickerBtn.setAttribute('title', t('tooltip.pathPicker'));
-        }
-        this.pathPickMode = false;
-        this.patternPickMode = false;
-        if (this.patternPickerBtn) {
-            this.patternPickerBtn.style.background = BUTTON_BG_DEFAULT;
-        }
-        this.borderPickMode = false;
-        if (this.borderPickerBtn) {
-            this.borderPickerBtn.style.background = BUTTON_BG_DEFAULT;
-            this.borderPickerBtn.style.color = '';
-        }
-        this.colorPickMode = false;
-        if (this.colorEyedropperBtn) {
-            this.colorEyedropperBtn.style.background = BUTTON_BG_DEFAULT;
-            this.colorEyedropperBtn.style.color = '';
-        }
-        if (this.borderSettings.activeRegionId !== null) {
-            this.borderSettings.activeRegionId = null;
-            this.borderSettings.pickedHex = null;
-            if (this.drawMode === 'eraser') this.drawMode = 'pen';
-            changed = true;
-        }
-        if (changed) this.render();
-    }
+    exitPathEditMode() { this.pathTools.exitPathEditMode(); }
 
     createBorderButton(toolbar) {
         const wrapper = toolbar.createDiv({
@@ -2415,203 +2244,15 @@ export class HexCartographerView extends ItemView {
         if (toolbar) this.updateToolbarState(toolbar);
     }
 
-    findRoadAtHex(hex) {
-        if (!this.data.roads) return null;
-        for (const road of this.data.roads) {
-            if (!road.waypoints || road.waypoints.length === 0) continue;
-            if (road.waypoints.some(w => w.q === hex.q && w.r === hex.r)) return road;
-            for (let i = 0; i < road.waypoints.length - 1; i++) {
-                const segs = this.calculateHexPath(road.waypoints[i], road.waypoints[i + 1], road.width);
-                for (const seg of segs) {
-                    if (seg.to.q === hex.q && seg.to.r === hex.r) return road;
-                    if (seg.from.q === hex.q && seg.from.r === hex.r) return road;
-                }
-            }
-        }
-        return null;
-    }
+    findRoadAtHex(hex) { return this.pathTools.findRoadAtHex(hex); }
 
-    addRoadWaypoint(hex) {
-        if (!this.data.roads) this.data.roads = [];
+    addRoadWaypoint(hex) { this.pathTools.addRoadWaypoint(hex); }
 
-        let road = this.data.roads.find(r => r.id === this.roadSettings.activeRoadId);
-        if (road) road.dashes = this.pathDashes || DEFAULT_PATH_DASHES;
-        if (!road) {
-            const maxId = this.data.roads.reduce((max, r) => Math.max(max, r.id || 0), 0);
-            road = { id: maxId + 1, color: this.masterColor, width: this.roadSettings.width, dashes: this.pathDashes || DEFAULT_PATH_DASHES, waypoints: [] };
-            this.data.roads.push(road);
-            this.roadSettings.activeRoadId = road.id;
-            this.roadSettings.editMode = true;
-            this.roadSettings.insertAfter = null;
-            if (this.pathPickerBtn) {
-                setIcon(this.pathPickerBtn, 'check');
-                this.pathPickerBtn.style.background = PICKER_ACTIVE_BG;
-                this.pathPickerBtn.style.color = 'var(--text-on-accent)';
-                this.pathPickerBtn.setAttribute('title', t('tooltip.roadFinish'));
-            }
-        }
+    findRiverAtHex(hex) { return this.pathTools.findRiverAtHex(hex); }
 
-        if (this.roadSettings.editMode) {
-            const existingIdx = road.waypoints.findIndex(w => w.q === hex.q && w.r === hex.r);
-            if (existingIdx !== -1) {
-                const dragGroup = [];
-                road.waypoints.forEach((wp, i) => { if (wp.q === hex.q && wp.r === hex.r) dragGroup.push(i); });
-                this.roadDragIndex = { idx: existingIdx, origQ: hex.q, origR: hex.r, group: dragGroup };
-                return;
-            }
+    erasePathElement(paths, hex) { this.pathTools.erasePathElement(paths, hex); }
 
-            for (let i = 0; i < road.waypoints.length - 1; i++) {
-                const to = road.waypoints[i + 1];
-                if (to.break) continue;
-                const from = road.waypoints[i];
-                const segs = this.calculateHexPath(from, to, road.width);
-                const onSegment = segs.some(s =>
-                    (s.from.q === hex.q && s.from.r === hex.r) ||
-                    (s.to.q === hex.q && s.to.r === hex.r)
-                );
-                if (onSegment) {
-                    road.waypoints.splice(i + 1, 0, { q: hex.q, r: hex.r });
-                    this.roadSettings.insertAfter = i + 1;
-                    return;
-                }
-            }
-        }
-
-        const insertIdx = this.roadSettings.insertAfter;
-        if (insertIdx !== null && insertIdx < road.waypoints.length - 1) {
-            const bp = road.waypoints[insertIdx];
-            road.waypoints.push({ q: bp.q, r: bp.r, break: true });
-            road.waypoints.push({ q: hex.q, r: hex.r });
-            this.roadSettings.insertAfter = road.waypoints.length - 1;
-        } else {
-            road.waypoints.push({ q: hex.q, r: hex.r });
-            this.roadSettings.insertAfter = road.waypoints.length - 1;
-        }
-    }
-
-    findRiverAtHex(hex) {
-        if (!this.data.rivers) return null;
-        for (const river of this.data.rivers) {
-            if (!river.waypoints || river.waypoints.length === 0) continue;
-            if (river.waypoints.some(w => w.q === hex.q && w.r === hex.r)) return river;
-            for (let i = 0; i < river.waypoints.length - 1; i++) {
-                const segs = this.calculateHexPath(river.waypoints[i], river.waypoints[i + 1], river.width);
-                for (const seg of segs) {
-                    if (seg.to.q === hex.q && seg.to.r === hex.r) return river;
-                    if (seg.from.q === hex.q && seg.from.r === hex.r) return river;
-                }
-            }
-        }
-        return null;
-    }
-
-    erasePathElement(paths, hex) {
-        if (!paths) return;
-        const onWaypoint = paths.some(p =>
-            p.waypoints && p.waypoints.some(w => w.q === hex.q && w.r === hex.r)
-        );
-        if (onWaypoint) {
-            paths.forEach(p => {
-                p.waypoints = p.waypoints.filter(w => !(w.q === hex.q && w.r === hex.r));
-            });
-        } else {
-            for (const path of paths) {
-                if (!path.waypoints || path.waypoints.length < 2) continue;
-                for (let i = 0; i < path.waypoints.length - 1; i++) {
-                    const to = path.waypoints[i + 1];
-                    if (to.break) continue;
-                    const from = path.waypoints[i];
-                    const segs = this.calculateHexPath(from, to, path.width);
-                    const onSegment = segs.some(s =>
-                        (s.from.q === hex.q && s.from.r === hex.r) ||
-                        (s.to.q === hex.q && s.to.r === hex.r)
-                    );
-                    if (onSegment) {
-                        to.break = true;
-                        break;
-                    }
-                }
-            }
-        }
-        paths.forEach(path => {
-            let changed = true;
-            while (changed) {
-                changed = false;
-                for (let j = path.waypoints.length - 1; j >= 0; j--) {
-                    const hasLeft = j > 0 && !path.waypoints[j].break;
-                    const hasRight = j < path.waypoints.length - 1 && !path.waypoints[j + 1].break;
-                    if (!hasLeft && !hasRight) {
-                        path.waypoints.splice(j, 1);
-                        changed = true;
-                    }
-                }
-            }
-            if (path.waypoints.length > 0 && path.waypoints[0].break) {
-                delete path.waypoints[0].break;
-            }
-        });
-        for (let i = paths.length - 1; i >= 0; i--) {
-            if (paths[i].waypoints.length < 2) paths.splice(i, 1);
-        }
-    }
-
-    addRiverWaypoint(hex) {
-        if (!this.data.rivers) this.data.rivers = [];
-
-        let river = this.data.rivers.find(r => r.id === this.riverSettings.activeRiverId);
-        if (river) river.dashes = this.pathDashes || DEFAULT_PATH_DASHES;
-        if (!river) {
-            const maxId = this.data.rivers.reduce((max, r) => Math.max(max, r.id || 0), 0);
-            river = { id: maxId + 1, color: this.masterColor, width: this.riverSettings.width, dashes: this.pathDashes || DEFAULT_PATH_DASHES, waypoints: [] };
-            this.data.rivers.push(river);
-            this.riverSettings.activeRiverId = river.id;
-            this.riverSettings.editMode = true;
-            this.riverSettings.insertAfter = null;
-            if (this.pathPickerBtn) {
-                setIcon(this.pathPickerBtn, 'check');
-                this.pathPickerBtn.style.background = PICKER_ACTIVE_BG;
-                this.pathPickerBtn.style.color = 'var(--text-on-accent)';
-                this.pathPickerBtn.setAttribute('title', t('tooltip.riverFinish'));
-            }
-        }
-
-        if (this.riverSettings.editMode) {
-            const existingIdx = river.waypoints.findIndex(w => w.q === hex.q && w.r === hex.r);
-            if (existingIdx !== -1) {
-                const dragGroup = [];
-                river.waypoints.forEach((wp, i) => { if (wp.q === hex.q && wp.r === hex.r) dragGroup.push(i); });
-                this.riverDragIndex = { idx: existingIdx, origQ: hex.q, origR: hex.r, group: dragGroup };
-                return;
-            }
-
-            for (let i = 0; i < river.waypoints.length - 1; i++) {
-                const to = river.waypoints[i + 1];
-                if (to.break) continue;
-                const from = river.waypoints[i];
-                const segs = this.calculateHexPath(from, to, river.width);
-                const onSegment = segs.some(s =>
-                    (s.from.q === hex.q && s.from.r === hex.r) ||
-                    (s.to.q === hex.q && s.to.r === hex.r)
-                );
-                if (onSegment) {
-                    river.waypoints.splice(i + 1, 0, { q: hex.q, r: hex.r });
-                    this.riverSettings.insertAfter = i + 1;
-                    return;
-                }
-            }
-        }
-
-        const insertIdx = this.riverSettings.insertAfter;
-        if (insertIdx !== null && insertIdx < river.waypoints.length - 1) {
-            const bp = river.waypoints[insertIdx];
-            river.waypoints.push({ q: bp.q, r: bp.r, break: true });
-            river.waypoints.push({ q: hex.q, r: hex.r });
-            this.riverSettings.insertAfter = river.waypoints.length - 1;
-        } else {
-            river.waypoints.push({ q: hex.q, r: hex.r });
-            this.riverSettings.insertAfter = river.waypoints.length - 1;
-        }
-    }
+    addRiverWaypoint(hex) { this.pathTools.addRiverWaypoint(hex); }
 
     paintHex(hex) { this.paintTools.paintHex(hex); }
 
