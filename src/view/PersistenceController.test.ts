@@ -79,7 +79,7 @@ function makeView(overrides: Record<string, any> = {}) {
         updateToolbarState: vi.fn(),
         recalcToolbarWidths: vi.fn(),
         ...overrides,
-    };
+    } as any;
 }
 
 // ---------------------------------------------------------------------------

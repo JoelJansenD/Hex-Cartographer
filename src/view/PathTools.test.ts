@@ -50,7 +50,7 @@ function makeView(overrides: Record<string, any> = {}) {
         requestSave: vi.fn(),
         updateToolbarState: vi.fn(),
         ...overrides,
-    };
+    } as any;
 }
 
 // ---------------------------------------------------------------------------

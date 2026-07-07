@@ -37,7 +37,7 @@ function makeView(overrides: Record<string, any> = {}) {
         requestSave: vi.fn(),
         hexToPixel: vi.fn((hex: any) => ({ x: hex.q * 100, y: hex.r * 100 })),
         ...overrides,
-    };
+    } as any;
 }
 
 // ---------------------------------------------------------------------------

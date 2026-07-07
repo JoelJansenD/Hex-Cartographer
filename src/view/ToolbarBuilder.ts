@@ -10,6 +10,7 @@ import {
     PICKER_ACTIVE_BG, BUTTON_BG_DEFAULT, ACTIVE_BORDER, ACTIVE_BOX_SHADOW
 } from '../constants';
 import { ColorPickerModal } from '../modals/ColorPickerModal';
+import type { HexCartographerView } from './HexCartographerView';
 
 /**
  * Builds and manages the toolbar UI for HexCartographerView.
@@ -17,10 +18,10 @@ import { ColorPickerModal } from '../modals/ColorPickerModal';
  * sub-toolbar helpers (palette, path, border, pattern, variant menu).
  */
 export class ToolbarBuilder {
-    private readonly view: any;
+    private readonly view: HexCartographerView;
 
     /** @param view The owning HexCartographerView instance. */
-    constructor(view: any) {
+    constructor(view: HexCartographerView) {
         this.view = view;
     }
 

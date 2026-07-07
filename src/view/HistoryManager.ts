@@ -1,6 +1,7 @@
 import { Notice } from 'obsidian';
 import { t } from '../i18n';
 import { MAX_HISTORY } from '../constants';
+import type { HexCartographerView } from './HexCartographerView';
 
 /**
  * Manages the undo/redo history stack for a HexCartographerView.
@@ -9,13 +10,13 @@ import { MAX_HISTORY } from '../constants';
  * viewport state (zoom, offsets) is intentionally excluded.
  */
 export class HistoryManager {
-    private readonly view: any;
+    private readonly view: HexCartographerView;
     readonly history: string[] = [];
     readonly redoStack: string[] = [];
     readonly maxHistory: number;
     pending = false;
 
-    constructor(view: any, maxHistory = MAX_HISTORY) {
+    constructor(view: HexCartographerView, maxHistory = MAX_HISTORY) {
         this.view = view;
         this.maxHistory = maxHistory;
     }

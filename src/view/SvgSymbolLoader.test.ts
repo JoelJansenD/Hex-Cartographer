@@ -60,7 +60,7 @@ function makeView(overrides: Record<string, any> = {}) {
             },
         },
         ...overrides,
-    };
+    } as any;
 }
 
 describe('SvgSymbolLoader.load()', () => {

@@ -1,14 +1,15 @@
 import { TFile } from 'obsidian';
 import { extractJsonFromMarkdown, parseMapData, serializeMapToFileContent } from '../data/serialization';
+import type { HexCartographerView } from './HexCartographerView';
 
 /**
  * Handles file persistence for a HexCartographerView:
  * setState file-loading, reload, save, and debounced requestSave.
  */
 export class PersistenceController {
-    private readonly view: any;
+    private readonly view: HexCartographerView;
 
-    constructor(view: any) {
+    constructor(view: HexCartographerView) {
         this.view = view;
     }
 

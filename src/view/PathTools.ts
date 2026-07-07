@@ -1,5 +1,6 @@
 import { Notice, setIcon } from 'obsidian';
 import { calculateHexPath } from '../utils/hexMath';
+import type { HexCartographerView } from './HexCartographerView';
 import { t } from '../i18n';
 import {
     DEFAULT_PATH_DASHES,
@@ -13,9 +14,9 @@ import {
  * toggling, path-picker completion, erasing, and clearing edit mode.
  */
 export class PathTools {
-    private readonly view: any;
+    private readonly view: HexCartographerView;
 
-    constructor(view: any) {
+    constructor(view: HexCartographerView) {
         this.view = view;
     }
 

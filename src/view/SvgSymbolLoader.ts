@@ -1,5 +1,6 @@
 import { setIcon } from 'obsidian';
 import { SVG_SYMBOL_DATA } from '../data/svgSymbols';
+import type { HexCartographerView } from './HexCartographerView';
 
 /** Derives the symbol key from an SVG filename by stripping the trailing `-N.svg` variant suffix. */
 export function resolveSymbolKey(filename: string): string {
@@ -21,9 +22,9 @@ export function parseViewBoxWidth(viewBox: string | null): number {
  * the currently-selected variant for each tool group.
  */
 export class SvgSymbolLoader {
-    private view: any;
+    private view: HexCartographerView;
 
-    constructor(view: any) {
+    constructor(view: HexCartographerView) {
         this.view = view;
     }
 

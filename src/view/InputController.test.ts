@@ -134,7 +134,7 @@ function makeView(overrides: Record<string, any> = {}) {
         touchState: undefined as any,
         _rightClickLast: null,
         ...overrides,
-    };
+    } as any;
 }
 
 /** Synthetic pointer event with default coordinates. */

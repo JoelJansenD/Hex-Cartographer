@@ -1,14 +1,15 @@
 import { getHexNeighbors } from '../utils/hexMath';
 import { DEFAULT_BORDER_DASHES } from '../constants';
+import type { HexCartographerView } from './HexCartographerView';
 
 /**
  * Handles border-region editing for HexCartographerView.
  * Covers adding hexes to a border region and flood-erasing an entire region.
  */
 export class BorderTools {
-    private readonly view: any;
+    private readonly view: HexCartographerView;
 
-    constructor(view: any) {
+    constructor(view: HexCartographerView) {
         this.view = view;
     }
 

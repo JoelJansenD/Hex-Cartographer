@@ -27,7 +27,7 @@ function makeView(overrides: Record<string, any> = {}) {
         render: vi.fn(),
         requestSave: vi.fn(),
         ...overrides,
-    };
+    } as any;
 }
 
 // ---------------------------------------------------------------------------

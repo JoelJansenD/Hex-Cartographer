@@ -1,15 +1,16 @@
 import { Notice } from 'obsidian';
 import { t } from '../i18n';
 import { MIN_ZOOM, MAX_ZOOM, VIEWPORT_PADDING } from '../constants';
+import type { HexCartographerView } from './HexCartographerView';
 
 /**
  * Manages the viewport camera for a HexCartographerView:
  * fit-to-view, canvas resize, coordinate conversion, zoom, and hex bounds.
  */
 export class CameraController {
-    private readonly view: any;
+    private readonly view: HexCartographerView;
 
-    constructor(view: any) {
+    constructor(view: HexCartographerView) {
         this.view = view;
     }
 

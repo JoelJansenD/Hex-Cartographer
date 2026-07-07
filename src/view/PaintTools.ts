@@ -10,6 +10,7 @@ import {
 } from '../utils/floodFill';
 import type { PatternSnapshot } from '../utils/floodFill';
 import type { HexData } from '../types';
+import type { HexCartographerView } from './HexCartographerView';
 
 /**
  * Handles the pen/eraser/fill-tool paint operations for HexCartographerView.
@@ -18,9 +19,9 @@ import type { HexData } from '../types';
  * Pure flood algorithms are in `src/utils/floodFill.ts`.
  */
 export class PaintTools {
-    private readonly view: any;
+    private readonly view: HexCartographerView;
 
-    constructor(view: any) {
+    constructor(view: HexCartographerView) {
         this.view = view;
     }
 

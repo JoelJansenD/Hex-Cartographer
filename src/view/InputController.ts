@@ -1,5 +1,6 @@
 import { Notice } from 'obsidian';
 import { rgbToHex } from '../utils/color';
+import type { HexCartographerView } from './HexCartographerView';
 import { t } from '../i18n';
 import { TextInputModal } from '../modals/TextInputModal';
 import {
@@ -15,10 +16,10 @@ import {
  * well as processInput (tool dispatch) and getTextAt (hit-test).
  */
 export class InputController {
-    private readonly view: any;
+    private readonly view: HexCartographerView;
 
     /** @param view The owning HexCartographerView instance. */
-    constructor(view: any) {
+    constructor(view: HexCartographerView) {
         this.view = view;
     }
 

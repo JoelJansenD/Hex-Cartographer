@@ -51,7 +51,7 @@ function makeView(overrides: Record<string, any> = {}) {
         svgLayer: null as any,
         pathEndInset: 0.5,
         ...overrides,
-    };
+    } as any;
 }
 
 // Convenience: build a RenderManager and expose its private overlapMap via cast.

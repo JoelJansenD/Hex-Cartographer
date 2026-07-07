@@ -1,15 +1,16 @@
 import { PATH_OVERLAP_SPACING } from '../constants';
 import { hexToPixel, calculateHexPath } from '../utils/hexMath';
+import type { HexCartographerView } from './HexCartographerView';
 
 /**
  * Handles the full render pipeline for a HexCartographerView:
  * per-frame canvas drawing, full-map export, and all hex/path/border/text/symbol primitives.
  */
 export class RenderManager {
-    private readonly view: any;
+    private readonly view: HexCartographerView;
     private overlapMap: Record<string, any> = {};
 
-    constructor(view: any) {
+    constructor(view: HexCartographerView) {
         this.view = view;
     }
 
