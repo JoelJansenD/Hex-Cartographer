@@ -69,12 +69,16 @@ describe('floodFillColor', () => {
         expect(hexes[key(0, 0)].color).toBe('red');
     });
 
-    it('creates new hex entries for empty cells that match undefined targetColor', () => {
-        const hexes: HexMap = {};
+    it('creates a new hex entry when the start cell is absent but matches targetColor', () => {
+        // Neighbors have a different color so the BFS does not expand beyond (0,0).
+        const hexes: HexMap = {
+            [key(-1, 0)]: { q: -1, r: 0, color: 'blue' },
+            [key(1, 0)]:  { q:  1, r: 0, color: 'blue' },
+        };
         floodFillColor(hexes, { q: 0, r: 0 }, undefined, 'green', linearNeighbors);
-        // Only (0,0) is processed; neighbors (-1,0) and (1,0) also have undefined
-        // color so they get created — but linearNeighbors only returns ±1 on q
         expect(hexes[key(0, 0)]?.color).toBe('green');
+        expect(hexes[key(-1, 0)].color).toBe('blue'); // unchanged
+        expect(hexes[key(1, 0)].color).toBe('blue');  // unchanged
     });
 });
 
