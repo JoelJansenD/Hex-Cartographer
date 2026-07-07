@@ -7,6 +7,22 @@ import {
 import { FileSelectorModal } from './FileSelectorModal';
 import { ColorPickerModal } from './ColorPickerModal';
 
+/** Parses an opacity input string to an integer and clamps it to [0, 100]. Empty string maps to 0. */
+export function clampOpacity(raw: string): number {
+    const value = raw === '' ? 0 : parseInt(raw, 10);
+    return Math.max(0, Math.min(100, isNaN(value) ? 0 : value));
+}
+
+/** Shadow is only considered enabled when the checkbox is checked AND opacity is non-zero. */
+export function resolveShadowEnabled(checked: boolean, opacity: number): boolean {
+    return opacity !== 0 && checked;
+}
+
+/** Parses a shadow distance string; returns `fallback` when the result is falsy (NaN, 0, empty). */
+export function parseShadowDistance(raw: string, fallback: number): number {
+    return parseInt(raw, 10) || fallback;
+}
+
 function createColorPickerElement(containerEl: HTMLElement, app: App, initialColor: string, onChange: (color: string) => void) {
     const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
     let currentColor = initialColor;
@@ -212,9 +228,8 @@ export class TextInputModal extends Modal {
         const okBtn = btnRow.createEl('button', { text: 'OK', cls: 'mod-cta' });
         okBtn.style.justifySelf = 'end';
         okBtn.onclick = () => {
-            const opatownValue = shadowOpatownInput.value === '' ? 0 : parseInt(shadowOpatownInput.value);
-            const clampedOpatown = Math.max(0, Math.min(100, opatownValue));
-            const shadowEnabled = clampedOpatown === 0 ? false : shadowInput.checked;
+            const clampedOpatown = clampOpacity(shadowOpatownInput.value);
+            const shadowEnabled = resolveShadowEnabled(shadowInput.checked, clampedOpatown);
 
             this.onSubmit(
                 mainInput.value,
@@ -224,7 +239,7 @@ export class TextInputModal extends Modal {
                 outlineInput.checked,
                 boldInput.checked,
                 shadowEnabled,
-                parseInt(shadowDistanceInput.value) || DEFAULT_SHADOW_DISTANCE,
+                parseShadowDistance(shadowDistanceInput.value, DEFAULT_SHADOW_DISTANCE),
                 clampedOpatown
             );
             this.close();
