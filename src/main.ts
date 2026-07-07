@@ -46,6 +46,7 @@ import { PersistenceController } from './view/PersistenceController';
 import { RenderManager } from './view/RenderManager';
 import { PaintTools } from './view/PaintTools';
 import { PathTools } from './view/PathTools';
+import { BorderTools } from './view/BorderTools';
 import { TextInputModal } from './modals/TextInputModal';
 import { ColorPickerModal } from './modals/ColorPickerModal';
 import { ExportMapModal } from './modals/ExportMapModal';
@@ -66,6 +67,7 @@ export class HexCartographerView extends ItemView {
         this.renderManager = new RenderManager(this);
         this.paintTools = new PaintTools(this);
         this.pathTools = new PathTools(this);
+        this.borderTools = new BorderTools(this);
 
         this.saveTimeout = null;
         this.isMouseDown = false;
@@ -2209,40 +2211,7 @@ export class HexCartographerView extends ItemView {
         }
     }
 
-    addBorderHex(hex) {
-        if (!this.data.borders) this.data.borders = [];
-
-        const hq = Math.round(hex.q);
-        const hr = Math.round(hex.r);
-
-        const bounds = this.getHexBounds();
-        if (bounds && (hq < bounds.minQ - 50 || hq > bounds.maxQ + 50 || hr < bounds.minR - 50 || hr > bounds.maxR + 50)) {
-            console.warn('Rejected border hex: outside plausible range', { q: hq, r: hr, bounds });
-            return;
-        }
-
-        let region = this.data.borders.find(r => r.id === this.borderSettings.activeRegionId);
-        if (!region) {
-            const maxId = this.data.borders.reduce((max, r) => Math.max(max, r.id || 0), 0);
-            region = { id: maxId + 1, color: this.masterColor, dashes: this.borderSettings.dashes || DEFAULT_BORDER_DASHES, hexes: [] };
-            this.data.borders.push(region);
-            this.borderSettings.activeRegionId = region.id;
-        }
-
-        this.data.borders.forEach(r => {
-            if (r.id !== region.id) {
-                r.hexes = r.hexes.filter(b => !(b.q === hex.q && b.r === hex.r));
-            }
-        });
-        this.data.borders = this.data.borders.filter(r => r.hexes.length > 0 || r.id === region.id);
-        const exists = region.hexes.some(b => b.q === hq && b.r === hr);
-        if (!exists) {
-            region.hexes.push({ q: hq, r: hr });
-        }
-
-        const toolbar = this.containerEl.querySelector('.hex-toolbar');
-        if (toolbar) this.updateToolbarState(toolbar);
-    }
+    addBorderHex(hex) { this.borderTools.addBorderHex(hex); }
 
     findRoadAtHex(hex) { return this.pathTools.findRoadAtHex(hex); }
 
@@ -2268,35 +2237,7 @@ export class HexCartographerView extends ItemView {
 
     floodErasePattern(startHex, targetPattern) { this.paintTools.handleEraserFlood; /* delegated — called via handleEraserFlood */ }
 
-    floodEraseBorderSegment(startHex, regionId) {
-        const region = this.data.borders.find(r => r.id === regionId);
-        if (!region) return;
-
-        const regionHexSet = new Set(region.hexes.map(h => `${h.q}_${h.r}`));
-        const toRemove = new Set();
-        const visited = new Set();
-
-        const queue = [startHex, ...this.getHexNeighbors(startHex)];
-
-        while (queue.length > 0) {
-            const hex = queue.shift();
-            const key = `${hex.q}_${hex.r}`;
-            if (visited.has(key)) continue;
-            visited.add(key);
-
-            if (!regionHexSet.has(key)) continue;
-
-            toRemove.add(key);
-            const neighbors = this.getHexNeighbors(hex);
-            neighbors.forEach(n => queue.push(n));
-        }
-
-        region.hexes = region.hexes.filter(h => !toRemove.has(`${h.q}_${h.r}`));
-
-        if (region.hexes.length === 0) {
-            this.data.borders = this.data.borders.filter(r => r.id !== regionId);
-        }
-    }
+    floodEraseBorderSegment(startHex, regionId) { this.borderTools.floodEraseBorderSegment(startHex, regionId); }
 
     hexMatchesPattern(hex, pattern) { return this.paintTools.hexMatchesPattern(hex, pattern); }
 

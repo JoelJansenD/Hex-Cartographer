@@ -183,7 +183,7 @@ export class PaintTools {
         } else if (last.type === 'pattern') {
             floodErasePattern(v.data.hexes, hex, last.pattern, this.hexMatchesPattern);
         } else if (last.type === 'border') {
-            v.floodEraseBorderSegment(hex, last.regionId);
+            v.borderTools.floodEraseBorderSegment(hex, last.regionId);
         } else if (last.type === 'river' || last.type === 'road') {
             const paths = last.type === 'river' ? v.data.rivers : v.data.roads;
             this.floodEraseEntirePath(paths, last.pathIds);
