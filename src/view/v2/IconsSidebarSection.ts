@@ -1,15 +1,27 @@
 import { SidebarSection } from "./SidebarSection";
 import { SVG_SYMBOL_DATA } from "../../data/svgSymbols";
+import { ColourPicker } from "./ColourPicker";
+
+const ICON_COLOURS = [
+    '#ffffff', '#e9ecef', '#adb5bd', '#212529',
+    '#e63946', '#f4a261', '#ffd166', '#74c476',
+    '#2d6a4f', '#4a90d9', '#9b5de5', '#f72585',
+    '#8b4513', '#e9c46a', '#89cff0', '#1a3a5c',
+];
 
 export class IconsSidebarSection extends SidebarSection {
     private selectedKey: string | null = null;
     private buttons: Map<string, HTMLElement>;
+    private picker: ColourPicker;
 
     getId()    { return 'icons'; }
     getLabel() { return 'Icons'; }
 
     protected build(): void {
         this.buttons = new Map<string, HTMLElement>();
+
+        this.picker = new ColourPicker(this.body, ICON_COLOURS, ICON_COLOURS[0], () => {});
+
         const grid = this.body.createDiv({ cls: 'hex-icon-grid' });
 
         for (const [key, data] of Object.entries(SVG_SYMBOL_DATA)) {
@@ -25,7 +37,6 @@ export class IconsSidebarSection extends SidebarSection {
             btn.appendChild(svgEl);
 
             btn.addEventListener('click', () => this.select(key));
-            console.log(key)
             this.buttons.set(key, btn);
         }
     }

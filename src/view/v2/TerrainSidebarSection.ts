@@ -1,4 +1,5 @@
 import { SidebarSection } from "./SidebarSection";
+import { ColourPicker } from "./ColourPicker";
 
 const TERRAIN_COLOURS = [
     { label: 'Grassland',     colour: '#74c476' },
@@ -19,10 +20,10 @@ const TERRAIN_COLOURS = [
     { label: 'Magic',         colour: '#9b5de5' },
 ];
 
-// Pointy-top hexagon path in a 100×100 viewBox
 const HEX_PATH = 'M50,4 L89.8,27 L89.8,73 L50,96 L10.2,73 L10.2,27 Z';
 
 export class TerrainSidebarSection extends SidebarSection {
+    private picker: ColourPicker;
     private selectedColour: string | null = null;
     private buttons: Map<string, HTMLElement>;
 
@@ -31,6 +32,14 @@ export class TerrainSidebarSection extends SidebarSection {
 
     protected build(): void {
         this.buttons = new Map<string, HTMLElement>();
+
+        this.picker = new ColourPicker(
+            this.body,
+            TERRAIN_COLOURS.map(t => t.colour),
+            TERRAIN_COLOURS[0].colour,
+            () => {}
+        );
+
         const grid = this.body.createDiv({ cls: 'hex-icon-grid' });
 
         for (const { label, colour } of TERRAIN_COLOURS) {
@@ -53,14 +62,10 @@ export class TerrainSidebarSection extends SidebarSection {
     }
 
     private select(colour: string): void {
-        if (this.selectedColour) {
-            this.buttons.get(this.selectedColour)?.classList.remove('is-selected');
-        }
+        this.buttons.get(this.selectedColour ?? '')?.classList.remove('is-selected');
         this.selectedColour = colour;
         this.buttons.get(colour)?.classList.add('is-selected');
     }
 
-    getSelectedColour(): string | null {
-        return this.selectedColour;
-    }
+    getSelectedColour(): string | null { return this.selectedColour; }
 }

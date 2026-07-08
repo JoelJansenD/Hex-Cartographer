@@ -80,6 +80,51 @@
     overflow-x: hidden;
 }
 
+/* Colour picker */
+.hex-colour-picker {
+    display: flex;
+    align-items: stretch;
+    gap: 8px;
+    padding: 8px 12px;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background-color: var(--background-secondary);
+    border-bottom: 1px solid var(--divider-color);
+}
+
+.hex-colour-picker-active {
+    width: 52px;
+    flex-shrink: 0;
+    border-radius: var(--radius-s);
+    border: 2px solid var(--background-modifier-border);
+    box-sizing: border-box;
+    cursor: pointer;
+}
+
+.hex-colour-picker-swatches {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 3px;
+    flex: 1;
+}
+
+.hex-colour-swatch {
+    aspect-ratio: 1;
+    border-radius: 3px;
+    cursor: pointer;
+    border: 2px solid transparent;
+    box-sizing: border-box;
+}
+
+.hex-colour-swatch:hover {
+    border-color: var(--text-muted);
+}
+
+.hex-colour-swatch.is-selected {
+    border-color: var(--color-accent);
+}
+
 /* Icon grid */
 .hex-icon-grid {
     display: grid;
