@@ -165,6 +165,38 @@
     fill: unset;
 }
 
+/* Section add button */
+.hex-section-add-btn {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: var(--font-smaller);
+    color: var(--text-muted);
+    background-color: var(--background-secondary);
+    border-bottom: 1px solid var(--divider-color);
+    user-select: none;
+}
+
+.hex-section-add-btn:hover {
+    color: var(--text-normal);
+    background-color: var(--background-modifier-hover);
+}
+
+.hex-section-add-btn svg {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+}
+
+.hex-section-add-btn > div {
+    display: contents;
+}
+
 /* Faction list */
 .hex-faction-list {
     display: flex;

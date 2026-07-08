@@ -14,6 +14,7 @@ export class FactionsSidebarSection extends SidebarSection {
     getLabel() { return 'Factions'; }
 
     protected build(): void {
+        this.createAddButton('New faction', () => {});
         const list = this.body.createDiv({ cls: 'hex-faction-list' });
 
         for (const data of MOCK_FACTIONS) {

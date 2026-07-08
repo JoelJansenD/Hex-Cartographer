@@ -1,3 +1,5 @@
+import { setIcon } from 'obsidian';
+
 export abstract class SidebarSection {
     protected readonly body: HTMLElement;
     onOpen: (() => void) | null = null;
@@ -27,4 +29,12 @@ export abstract class SidebarSection {
 
     open(): void  { this.body.closest('.hex-accordion-item')?.classList.add('is-open'); }
     close(): void { this.body.closest('.hex-accordion-item')?.classList.remove('is-open'); }
+
+    protected createAddButton(label: string, onClick: () => void): HTMLElement {
+        const btn = this.body.createDiv({ cls: 'hex-section-add-btn' });
+        setIcon(btn.createDiv(), 'plus');
+        btn.createSpan({ text: label });
+        btn.addEventListener('click', onClick);
+        return btn;
+    }
 }
