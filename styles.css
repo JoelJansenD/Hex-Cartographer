@@ -256,3 +256,37 @@
     width: 14px;
     height: 14px;
 }
+
+/* Text label row */
+.hex-text-swatch {
+    width: 16px;
+    height: 36px;
+    flex-shrink: 0;
+    border-radius: 3px;
+    border: 1px solid var(--background-modifier-border);
+}
+
+.hex-text-info {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
+    gap: 2px;
+}
+
+.hex-text-name {
+    font-size: var(--font-smaller);
+    font-weight: var(--font-semibold);
+    color: var(--text-normal);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.hex-text-descriptor {
+    font-size: var(--font-smallest);
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
