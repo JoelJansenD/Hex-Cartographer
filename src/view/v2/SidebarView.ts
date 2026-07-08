@@ -6,7 +6,7 @@ import { RoadsSidebarSection } from "./RoadsSidebarSection";
 import { FactionsSidebarSection } from "./FactionsSidebarSection";
 
 export default class SidebarView {
-    private readonly sidebar: HTMLElement;
+    readonly el: HTMLElement;
     readonly terrain: TerrainSidebarSection;
     readonly icons: IconsSidebarSection;
     readonly text: TextSidebarSection;
@@ -15,14 +15,14 @@ export default class SidebarView {
     readonly factions: FactionsSidebarSection;
 
     constructor(container: HTMLElement) {
-        this.sidebar = container.createDiv({ cls: 'hex-cartographer-sidebar' });
+        this.el = container.createDiv({ cls: 'hex-cartographer-sidebar' });
 
-        this.terrain  = new TerrainSidebarSection(this.sidebar);
-        this.icons    = new IconsSidebarSection(this.sidebar);
-        this.text     = new TextSidebarSection(this.sidebar);
-        this.rivers   = new RiversSidebarSection(this.sidebar);
-        this.roads    = new RoadsSidebarSection(this.sidebar);
-        this.factions = new FactionsSidebarSection(this.sidebar);
+        this.terrain  = new TerrainSidebarSection(this.el);
+        this.icons    = new IconsSidebarSection(this.el);
+        this.text     = new TextSidebarSection(this.el);
+        this.rivers   = new RiversSidebarSection(this.el);
+        this.roads    = new RoadsSidebarSection(this.el);
+        this.factions = new FactionsSidebarSection(this.el);
 
         const all = [this.terrain, this.icons, this.text, this.rivers, this.roads, this.factions];
         for (const section of all) {

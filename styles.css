@@ -23,6 +23,35 @@
     border-left: 1px solid var(--divider-color);
     background-color: var(--background-secondary);
     overflow: hidden;
+    transition: width 250ms linear;
+}
+
+.hex-cartographer-sidebar.is-collapsed {
+    width: 0;
+}
+
+.hex-sidebar-toggle-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    flex-shrink: 0;
+    cursor: pointer;
+    background-color: var(--background-secondary);
+    border-left: 1px solid var(--divider-color);
+    color: var(--text-muted);
+    transition: background-color 150ms, color 150ms;
+    order: 1;
+}
+
+.hex-sidebar-toggle-btn:hover {
+    background-color: var(--background-modifier-hover);
+    color: var(--text-normal);
+}
+
+.hex-sidebar-toggle-btn svg {
+    width: 16px;
+    height: 16px;
 }
 
 .hex-accordion-item {
