@@ -11,6 +11,7 @@
 
 .hex-cartographer-map {
     flex: 1;
+    position: relative;
 }
 
 .hex-cartographer-sidebar {
@@ -427,4 +428,59 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+/* Paint action bar — floating column in bottom-right of map */
+.hex-paint-action-bar {
+    position: absolute;
+    bottom: 16px;
+    right: 16px;
+    display: flex;
+    flex-direction: column;
+    z-index: 10;
+    border-radius: var(--radius-m);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+    overflow: hidden;
+    border: 1px solid var(--background-modifier-border);
+}
+
+.hex-paint-action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background-color: var(--background-primary);
+    border: none;
+    cursor: pointer;
+    color: var(--text-muted);
+    transition: background-color 100ms, color 100ms;
+}
+
+.hex-paint-action-btn:not(.is-hidden) + .hex-paint-action-btn:not(.is-hidden) {
+    border-top: 1px solid var(--background-modifier-border);
+}
+
+.hex-paint-action-btn:hover {
+    background-color: var(--background-modifier-hover);
+    color: var(--text-normal);
+}
+
+.hex-paint-action-btn.is-active {
+    background-color: var(--interactive-accent);
+    border-color: var(--interactive-accent);
+    color: var(--text-on-accent);
+}
+
+.hex-paint-action-btn.is-hidden {
+    display: none;
+}
+
+.hex-paint-action-icon {
+    display: contents;
+}
+
+.hex-paint-action-icon svg {
+    width: 18px;
+    height: 18px;
 }

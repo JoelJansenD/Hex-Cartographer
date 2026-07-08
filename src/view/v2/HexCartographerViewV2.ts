@@ -1,6 +1,7 @@
 import { ItemView, WorkspaceLeaf, setIcon } from "obsidian";
 import HexCartographerPlugin from "../../main";
 import SidebarView from "./SidebarView";
+import { PaintActionBar } from "./PaintActionBar";
 
 const MIN_WIDTH    = 2 * 54 + 1 * 6 + 2 * 12; // 138 px — 2 icons
 const DEF_WIDTH    = 4 * 54 + 3 * 6 + 2 * 12; // 258 px — 4 icons (default)
@@ -17,9 +18,14 @@ export default class HexCartographerViewV2 extends ItemView {
     protected async onOpen(): Promise<void> {
         const { contentEl } = this;
         contentEl.addClass('hex-cartographer-container');
-        contentEl.createDiv({ cls: 'hex-cartographer-map' });
+        const mapEl = contentEl.createDiv({ cls: 'hex-cartographer-map' });
+
+        const paintBar = new PaintActionBar(mapEl);
 
         const sidebar  = new SidebarView(contentEl);
+        sidebar.onSectionOpen = (id) => paintBar.setSection(id);
+        // Initialise bar to match the default open section (terrain).
+        paintBar.setSection('terrain');
         const sidebarEl = sidebar.el;
         sidebarEl.style.width = `${DEF_WIDTH}px`;
 

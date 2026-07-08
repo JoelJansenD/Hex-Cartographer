@@ -14,6 +14,9 @@ export default class SidebarView {
     readonly roads: RoadsSidebarSection;
     readonly factions: FactionsSidebarSection;
 
+    /** Called whenever a section becomes the active one, with its id. */
+    onSectionOpen: ((sectionId: string) => void) | null = null;
+
     constructor(container: HTMLElement) {
         this.el = container.createDiv({ cls: 'hex-cartographer-sidebar' });
 
@@ -26,7 +29,10 @@ export default class SidebarView {
 
         const all = [this.terrain, this.icons, this.text, this.rivers, this.roads, this.factions];
         for (const section of all) {
-            section.onOpen = () => all.filter(s => s !== section).forEach(s => s.close());
+            section.onOpen = () => {
+                all.filter(s => s !== section).forEach(s => s.close());
+                this.onSectionOpen?.(section.getId());
+            };
         }
 
         this.terrain.open();
