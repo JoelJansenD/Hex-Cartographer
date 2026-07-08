@@ -15,6 +15,11 @@ export default class SidebarView {
         this.icons    = new IconsSidebarSection(this.sidebar);
         this.factions = new FactionsSidebarSection(this.sidebar);
 
+        const all = [this.terrain, this.icons, this.factions];
+        for (const section of all) {
+            section.onOpen = () => all.filter(s => s !== section).forEach(s => s.close());
+        }
+
         this.terrain.open();
     }
 }

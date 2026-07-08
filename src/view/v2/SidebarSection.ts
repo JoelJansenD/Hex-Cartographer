@@ -1,5 +1,6 @@
 export abstract class SidebarSection {
     protected readonly body: HTMLElement;
+    onOpen: (() => void) | null = null;
 
     constructor(container: HTMLElement) {
         const item = container.createDiv({ cls: 'hex-accordion-item' });
@@ -11,7 +12,10 @@ export abstract class SidebarSection {
         this.body = item.createDiv({ cls: 'hex-accordion-body', attr: { 'data-panel': this.getId() } });
 
         header.addEventListener('click', () => {
-            item.toggleClass('is-open', !item.hasClass('is-open'));
+            if (!item.hasClass('is-open')) {
+                this.onOpen?.();
+                item.addClass('is-open');
+            }
         });
 
         this.build();

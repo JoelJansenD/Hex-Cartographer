@@ -20,11 +20,22 @@
     height: 100%;
     border-left: 1px solid var(--divider-color);
     background-color: var(--background-secondary);
-    overflow-y: auto;
+    overflow: hidden;
 }
 
 .hex-accordion-item {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    flex-shrink: 0;
+    flex-grow: 0;
     border-bottom: 1px solid var(--divider-color);
+    transition: flex-grow 300ms linear;
+}
+
+.hex-accordion-item.is-open {
+    flex-grow: 1;
+    flex-shrink: 1;
 }
 
 .hex-accordion-header {
@@ -37,6 +48,7 @@
     font-size: var(--font-smaller);
     font-weight: var(--font-semibold);
     color: var(--text-muted);
+    flex-shrink: 0;
 }
 
 .hex-accordion-header:hover {
@@ -62,12 +74,10 @@
 }
 
 .hex-accordion-body {
-    display: none;
-    padding: 8px 12px;
-}
-
-.hex-accordion-item.is-open > .hex-accordion-body {
-    display: block;
+    flex: 1 1 0;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 /* Icon grid */
@@ -75,7 +85,7 @@
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(36px, 1fr));
     gap: 4px;
-    padding: 4px 0;
+    padding: 8px 12px;
 }
 
 .hex-icon-btn {
