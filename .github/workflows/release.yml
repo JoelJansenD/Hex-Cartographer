@@ -1,34 +1,83 @@
-name: Release Hex Cartographer Plugin
+name: Release
 
 on:
   push:
     tags:
-      - "*"
+      - "[0-9]+.[0-9]+.[0-9]+"
+      - "[0-9]+.[0-9]+.[0-9]+-beta*"
+      - "[0-9]+.[0-9]+.[0-9]+-alpha*"
+
+permissions:
+  contents: write
 
 jobs:
-  release:
+  build-and-test:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      id-token: write
-      attestations: write
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Generate Attestation
-        uses: actions/attest-build-provenance@v2
+      - uses: actions/setup-node@v4
         with:
-          subject-path: |
+          node-version: "24"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: plugin-build
+          path: |
             main.js
             styles.css
             manifest.json
 
-      - name: Create Release
+  release:
+    needs: build-and-test
+    if: ${{ !contains(github.ref_name, 'beta') && !contains(github.ref_name, 'alpha') }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: plugin-build
+
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
             main.js
-            manifest.json
             styles.css
+            manifest.json
+
+  prerelease:
+    needs: build-and-test
+    if: ${{ contains(github.ref_name, 'beta') || contains(github.ref_name, 'alpha') }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: plugin-build
+
+      - name: Create release archive
+        run: zip hex-cartographer-${{ github.ref_name }}.zip main.js styles.css manifest.json
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          prerelease: true
+          files: |
+            main.js
+            styles.css
+            manifest.json
+            hex-cartographer-${{ github.ref_name }}.zip

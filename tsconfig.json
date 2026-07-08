@@ -1,0 +1,25 @@
+{
+	"compilerOptions": {
+		"inlineSourceMap": true,
+		"inlineSources": true,
+		"module": "ESNext",
+		"target": "ESNext",
+		"allowJs": true,
+		"noImplicitAny": false,
+		"strict": false,
+		"strictNullChecks": false,
+		"moduleResolution": "bundler",
+		"importHelpers": true,
+		"isolatedModules": true,
+		"skipLibCheck": true,
+		"esModuleInterop": true,
+		"allowSyntheticDefaultImports": true,
+		"lib": [
+			"DOM",
+			"ESNext"
+		]
+	},
+	"include": [
+		"src/**/*.ts"
+	]
+}
