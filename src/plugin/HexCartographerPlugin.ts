@@ -4,6 +4,7 @@ import { serializeMapToFileContent, createInitialMapData } from '../data/seriali
 import { DEFAULT_SETTINGS, PluginSettings } from './settings';
 import { HexCartographerSettingTab } from '../settings/HexCartographerSettingTab';
 import { HexCartographerView } from '../view/HexCartographerView';
+import HexCartographerViewV2 from '../view/v2/HexCartographerViewV2';
 
 /** Generates the default filename for a new hex map based on the given date. */
 export function buildNewMapFileName(now: Date): string {
@@ -28,7 +29,8 @@ class HexCartographerPlugin extends Plugin {
         setCurrentLanguage(getObsidianLanguage());
         this.addSettingTab(new HexCartographerSettingTab(this.app, this as any));
 
-        this.registerView('hex-cartographer', (leaf) => new HexCartographerView(leaf, this));
+        // this.registerView('hex-cartographer', (leaf) => new HexCartographerView(leaf, this));
+        this.registerView('hex-cartographer', (leaf) => new HexCartographerViewV2(leaf, this));
 
         this.registerExtensions(['hexcartographer.md'], 'hex-cartographer');
 
