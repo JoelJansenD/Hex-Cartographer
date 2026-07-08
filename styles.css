@@ -16,7 +16,9 @@
 .hex-cartographer-sidebar {
     display: flex;
     flex-direction: column;
-    width: 25%;
+    /* 4 icons × 54px + 3 gaps × 6px + 2 × 12px padding */
+    width: calc(4 * 54px + 3 * 6px + 2 * 12px);
+    flex-shrink: 0;
     height: 100%;
     border-left: 1px solid var(--divider-color);
     background-color: var(--background-secondary);
@@ -185,7 +187,7 @@
 /* Icon grid */
 .hex-icon-grid {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 6px;
     padding: 8px 12px;
 }
