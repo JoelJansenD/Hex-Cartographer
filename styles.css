@@ -83,8 +83,8 @@
 /* Icon grid */
 .hex-icon-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(36px, 1fr));
-    gap: 4px;
+    grid-template-columns: repeat(auto-fill, minmax(54px, 1fr));
+    gap: 6px;
     padding: 8px 12px;
 }
 
@@ -92,11 +92,11 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 36px;
-    height: 36px;
+    width: 54px;
+    height: 54px;
     border-radius: var(--radius-s);
     cursor: pointer;
-    padding: 5px;
+    padding: 7px;
     box-sizing: border-box;
 }
 
@@ -130,8 +130,8 @@
 .hex-faction-row {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 4px 12px;
+    gap: 10px;
+    padding: 8px 12px;
 }
 
 .hex-faction-row:hover {
@@ -139,8 +139,8 @@
 }
 
 .hex-faction-swatch {
-    width: 24px;
-    height: 24px;
+    width: 36px;
+    height: 36px;
     flex-shrink: 0;
 }
 
