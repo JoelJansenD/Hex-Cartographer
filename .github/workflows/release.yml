@@ -5,6 +5,7 @@ on:
     tags:
       - "[0-9]+.[0-9]+.[0-9]+"
       - "[0-9]+.[0-9]+.[0-9]+-beta*"
+      - "[0-9]+.[0-9]+.[0-9]+-alpha*"
 
 permissions:
   contents: write
@@ -40,7 +41,7 @@ jobs:
 
   release:
     needs: build-and-test
-    if: ${{ !contains(github.ref_name, 'beta') }}
+    if: ${{ !contains(github.ref_name, 'beta') && !contains(github.ref_name, 'alpha') }}
     runs-on: ubuntu-latest
 
     steps:
@@ -59,7 +60,7 @@ jobs:
 
   beta-release:
     needs: build-and-test
-    if: ${{ contains(github.ref_name, 'beta') }}
+    if: ${{ contains(github.ref_name, 'beta') || contains(github.ref_name, 'alpha') }}
     runs-on: ubuntu-latest
 
     steps:
