@@ -65,3 +65,39 @@
 .hex-accordion-item.is-open > .hex-accordion-body {
     display: block;
 }
+
+/* Icon grid */
+.hex-icon-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(36px, 1fr));
+    gap: 4px;
+    padding: 4px 0;
+}
+
+.hex-icon-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-s);
+    cursor: pointer;
+    padding: 5px;
+    box-sizing: border-box;
+}
+
+.hex-icon-btn:hover {
+    background-color: var(--background-modifier-hover);
+}
+
+.hex-icon-btn.is-selected {
+    background-color: var(--background-modifier-active-hover);
+    outline: 2px solid var(--color-accent);
+}
+
+.hex-icon-btn svg {
+    width: 100%;
+    height: 100%;
+    fill: var(--text-normal);
+    overflow: visible;
+}
