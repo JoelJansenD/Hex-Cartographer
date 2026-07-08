@@ -81,6 +81,63 @@
 }
 
 /* Colour picker */
+.hex-icons-sticky-header {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background-color: var(--background-secondary);
+    border-bottom: 1px solid var(--divider-color);
+}
+
+.hex-icons-sticky-header .hex-colour-picker {
+    position: static;
+    border-bottom: none;
+}
+
+.hex-icon-set-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-bottom: 1px solid var(--divider-color);
+}
+
+.hex-icon-set-select {
+    flex: 1;
+    min-width: 0;
+    background-color: var(--background-primary);
+    color: var(--text-normal);
+    border: 1px solid var(--background-modifier-border);
+    border-radius: var(--radius-s);
+    padding: 3px 6px;
+    font-size: var(--font-smaller);
+    cursor: pointer;
+}
+
+.hex-icon-set-add-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    flex-shrink: 0;
+    border-radius: var(--radius-s);
+    border: 1px solid var(--background-modifier-border);
+    cursor: pointer;
+    color: var(--text-muted);
+}
+
+.hex-icon-set-add-btn:hover {
+    background-color: var(--background-modifier-hover);
+    color: var(--text-normal);
+}
+
+.hex-icon-set-add-btn svg {
+    width: 14px;
+    height: 14px;
+}
+
+/* Colour picker */
 .hex-colour-picker {
     display: flex;
     align-items: stretch;

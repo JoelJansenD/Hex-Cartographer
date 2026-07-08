@@ -1,12 +1,19 @@
 import { SidebarSection } from "./SidebarSection";
 import { SVG_SYMBOL_DATA } from "../../data/svgSymbols";
 import { ColourPicker } from "./ColourPicker";
+import { setIcon } from "obsidian";
 
 const ICON_COLOURS = [
     '#ffffff', '#e9ecef', '#adb5bd', '#212529',
     '#e63946', '#f4a261', '#ffd166', '#74c476',
     '#2d6a4f', '#4a90d9', '#9b5de5', '#f72585',
     '#8b4513', '#e9c46a', '#89cff0', '#1a3a5c',
+];
+
+const ICON_SETS = [
+    'Hex Cartographer',
+    'Lore of Middle-earth',
+    'Thedas Codex',
 ];
 
 export class IconsSidebarSection extends SidebarSection {
@@ -20,7 +27,17 @@ export class IconsSidebarSection extends SidebarSection {
     protected build(): void {
         this.buttons = new Map<string, HTMLElement>();
 
-        this.picker = new ColourPicker(this.body, ICON_COLOURS, ICON_COLOURS[0], () => {});
+        const stickyHeader = this.body.createDiv({ cls: 'hex-icons-sticky-header' });
+
+        const setRow = stickyHeader.createDiv({ cls: 'hex-icon-set-row' });
+        const select = setRow.createEl('select', { cls: 'hex-icon-set-select' });
+        for (const name of ICON_SETS) {
+            select.createEl('option', { text: name, value: name });
+        }
+        const addBtn = setRow.createDiv({ cls: 'hex-icon-set-add-btn', attr: { 'aria-label': 'Add icon set' } });
+        setIcon(addBtn, 'plus');
+
+        this.picker = new ColourPicker(stickyHeader, ICON_COLOURS, ICON_COLOURS[0], () => {});
 
         const grid = this.body.createDiv({ cls: 'hex-icon-grid' });
 
