@@ -12,6 +12,7 @@ const MOCK_ROADS = [
 export class RoadsSidebarSection extends SidebarSection {
     getId()    { return 'roads'; }
     getLabel() { return 'Roads'; }
+    getIcon()  { return 'route'; }
 
     protected build(): void {
         this.createAddButton('New road', () => {});

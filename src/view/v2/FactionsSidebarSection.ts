@@ -12,6 +12,7 @@ const MOCK_FACTIONS = [
 export class FactionsSidebarSection extends SidebarSection {
     getId()    { return 'factions'; }
     getLabel() { return 'Factions'; }
+    getIcon()  { return 'shield'; }
 
     protected build(): void {
         this.createAddButton('New faction', () => {});

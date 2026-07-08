@@ -8,6 +8,8 @@ export abstract class SidebarSection {
         const item = container.createDiv({ cls: 'hex-accordion-item' });
 
         const header = item.createDiv({ cls: 'hex-accordion-header' });
+        const iconEl = header.createDiv({ cls: 'hex-accordion-icon' });
+        setIcon(iconEl, this.getIcon());
         header.createSpan({ text: this.getLabel() });
         header.createDiv({ cls: 'hex-accordion-chevron' });
 
@@ -25,6 +27,7 @@ export abstract class SidebarSection {
 
     abstract getId(): string;
     abstract getLabel(): string;
+    abstract getIcon(): string;
     protected abstract build(): void;
 
     open(): void  { this.body.closest('.hex-accordion-item')?.classList.add('is-open'); }

@@ -29,6 +29,7 @@ export class TerrainSidebarSection extends SidebarSection {
 
     getId()    { return 'terrain'; }
     getLabel() { return 'Terrain'; }
+    getIcon()  { return 'mountain'; }
 
     protected build(): void {
         this.buttons = new Map<string, HTMLElement>();

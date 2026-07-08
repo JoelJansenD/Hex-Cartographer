@@ -23,6 +23,7 @@ export class IconsSidebarSection extends SidebarSection {
 
     getId()    { return 'icons'; }
     getLabel() { return 'Icons'; }
+    getIcon()  { return 'shapes'; }
 
     protected build(): void {
         this.buttons = new Map<string, HTMLElement>();

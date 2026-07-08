@@ -58,6 +58,18 @@
     color: var(--text-normal);
 }
 
+.hex-accordion-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.hex-accordion-icon svg {
+    width: 15px;
+    height: 15px;
+}
+
 .hex-accordion-item.is-open > .hex-accordion-header {
     color: var(--text-normal);
 }

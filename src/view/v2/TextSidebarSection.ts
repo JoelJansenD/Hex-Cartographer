@@ -12,6 +12,7 @@ const MOCK_LABELS = [
 export class TextSidebarSection extends SidebarSection {
     getId()    { return 'text'; }
     getLabel() { return 'Text'; }
+    getIcon()  { return 'type'; }
 
     protected build(): void {
         this.createAddButton('New label', () => {});

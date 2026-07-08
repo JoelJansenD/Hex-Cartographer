@@ -12,6 +12,7 @@ const MOCK_RIVERS = [
 export class RiversSidebarSection extends SidebarSection {
     getId()    { return 'rivers'; }
     getLabel() { return 'Rivers'; }
+    getIcon()  { return 'droplets'; }
 
     protected build(): void {
         this.createAddButton('New river', () => {});
