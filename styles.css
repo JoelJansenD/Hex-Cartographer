@@ -16,40 +16,49 @@
 .hex-cartographer-sidebar {
     display: flex;
     flex-direction: column;
-    /* 4 icons × 54px + 3 gaps × 6px + 2 × 12px padding */
-    width: calc(4 * 54px + 3 * 6px + 2 * 12px);
     flex-shrink: 0;
     height: 100%;
     border-left: 1px solid var(--divider-color);
     background-color: var(--background-secondary);
     overflow: hidden;
-    transition: width 250ms linear;
+    container-type: inline-size;
+    container-name: hc-sidebar;
 }
 
 .hex-cartographer-sidebar.is-collapsed {
-    width: 0;
+    width: 0 !important;
 }
 
-.hex-sidebar-toggle-btn {
+.hex-cartographer-sidebar.no-transition {
+    transition: none;
+}
+
+.hex-sidebar-handle {
+    width: 6px;
+    flex-shrink: 0;
+    cursor: col-resize;
+    position: relative;
+    z-index: 1;
+    transition: background-color 150ms;
+}
+
+.hex-sidebar-handle.is-anchored {
+    width: 24px;
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 24px;
-    flex-shrink: 0;
-    cursor: pointer;
     background-color: var(--background-secondary);
     border-left: 1px solid var(--divider-color);
+    cursor: pointer;
     color: var(--text-muted);
-    transition: background-color 150ms, color 150ms;
-    order: 1;
 }
 
-.hex-sidebar-toggle-btn:hover {
+.hex-sidebar-handle.is-anchored:hover {
     background-color: var(--background-modifier-hover);
     color: var(--text-normal);
 }
 
-.hex-sidebar-toggle-btn svg {
+.hex-sidebar-handle svg {
     width: 16px;
     height: 16px;
 }
@@ -225,10 +234,39 @@
     border-color: var(--color-accent);
 }
 
+/* Narrow mode: stack picker vertically, 4×4 palette grid */
+@container hc-sidebar (max-width: 197px) {
+    .hex-colour-picker {
+        flex-direction: column;
+    }
+
+    .hex-colour-picker-active {
+        width: 100%;
+        height: 40px;
+    }
+
+    .hex-colour-picker-swatches {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+/* Wide mode: fix picker width and centre it */
+@container hc-sidebar (min-width: 258px) {
+    .hex-colour-picker {
+        width: max-content;
+        margin: 0 auto;
+    }
+
+    .hex-colour-picker-swatches {
+        flex: none;
+        width: calc(8 * 22px + 7 * 3px);
+    }
+}
+
 /* Icon grid */
 .hex-icon-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(auto-fill, minmax(54px, 1fr));
     gap: 6px;
     padding: 8px 12px;
 }
@@ -237,11 +275,11 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 54px;
-    height: 54px;
+    width: 100%;
+    aspect-ratio: 1;
     border-radius: var(--radius-s);
     cursor: pointer;
-    padding: 7px;
+    padding: 13%;
     box-sizing: border-box;
 }
 
